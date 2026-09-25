@@ -945,40 +945,19 @@ export function getUtcInstantFromLocal(dateStr, timeStr, timezoneId, options = {
   return resolvedUtc;
 }
 
-// True Lahiri Ayanamsha (NC Lahiri / Chitra Paksha)
-export function getLahiriAyanamsha(jd) {
-  const T = (jd - 2451545.0) / 36525.0;
-  return 23.85709167 + 1.396971 * T + 0.0003086 * T * T;
-}
+import {
+  getLahiriAyanamsha,
+  getKPAyanamsha,
+  getRamanAyanamsha,
+  getAyanamshaForSystem
+} from "../astrology/astronomy/ayanamsha.js";
 
-// Krishnamurti Padhdhati (KP) Ayanamsha
-export function getKPAyanamsha(jd) {
-  const T = (jd - 2451545.0) / 36525.0;
-  return 23.76555556 + 1.3955235 * T;
-}
-
-// B.V. Raman Ayanamsha (397 AD zero-year epoch)
-export function getRamanAyanamsha(jd) {
-  const T = (jd - 2451545.0) / 36525.0;
-  const decimalYear = 2000.0 + T * 100.0;
-  return (decimalYear - 397.0) * (50.2388475 / 3600.0);
-}
-
-// Universal Multi-System Ayanamsha Resolver
-export function getAyanamshaForSystem(jd, systemOrConfig = "lahiri") {
-  if (typeof systemOrConfig === "number") return systemOrConfig;
-  const sysNorm = (typeof systemOrConfig === "string" ? systemOrConfig : (systemOrConfig?.id || systemOrConfig?.system || "lahiri")).toLowerCase();
-  if (sysNorm === "vedic" || sysNorm === "lahiri") {
-    return getLahiriAyanamsha(jd);
-  } else if (sysNorm === "kp") {
-    return getKPAyanamsha(jd);
-  } else if (sysNorm === "raman") {
-    return getRamanAyanamsha(jd);
-  } else if (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana") {
-    return 0.0;
-  }
-  return getLahiriAyanamsha(jd);
-}
+export {
+  getLahiriAyanamsha,
+  getKPAyanamsha,
+  getRamanAyanamsha,
+  getAyanamshaForSystem
+};
 
 
 // Precise Sun Calculation
@@ -2310,7 +2289,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
 
   let activeMahadasha = null;
   const curMd = dashaTable.find(d => d.isCurrent) || null;
-  const curBk = curMd ? (curMd.bukthis?.find(b => b.isCurrent) || curMd.bukthis?.[0] || null) : null;
+  const curBk = curMd ? (curMd.bukthis?.find(b => b.isCurrent) || null) : null;
 
   activeMahadasha = curMd ? {
     lord: curMd.lord,

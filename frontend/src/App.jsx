@@ -14,7 +14,7 @@ import PricingModal from "./components/Monetization/PricingModal";
 import BirthRecoveryWizard from "./components/Horoscope/BirthRecoveryWizard";
 import GocharDashboard from "./components/Horoscope/GocharDashboard";
 import PanchangMuhurta from "./components/Horoscope/PanchangMuhurta";
-import { calculatePlanetaryPositions } from "./services/astroEngine";
+import { calculateChartBySystem } from "./astrology";
 import { fetchUserCredits } from "./services/aiAstrologyService";
 import { TRANSLATIONS } from "./services/localization";
 import { Sparkles, FileText } from "lucide-react";
@@ -74,14 +74,9 @@ export default function App() {
   React.useEffect(() => {
     if (birthProfile && !chartData && birthProfile.latitude !== null && birthProfile.longitude !== null && birthProfile.birthDate && birthProfile.birthTime) {
       try {
-        const dateObj = new Date(birthProfile.birthDate);
-        const data = calculatePlanetaryPositions(
-          dateObj,
-          birthProfile.birthTime,
-          birthProfile.latitude,
-          birthProfile.longitude,
-          birthProfile.system || "vedic",
-          birthProfile.timezoneId || birthProfile.utcOffset
+        const data = calculateChartBySystem(
+          birthProfile.system || "lahiri",
+          birthProfile
         );
         setChartData({ ...data, profile: birthProfile });
       } catch (err) {
@@ -140,14 +135,9 @@ export default function App() {
     }
 
     if (hasValidCoords) {
-      const dateObj = new Date(birthDate);
-      const updatedData = calculatePlanetaryPositions(
-        dateObj,
-        birthTime,
-        lat,
-        lon,
-        "vedic",
-        recoveredProfile.timezoneId || recoveredProfile.utcOffset
+      const updatedData = calculateChartBySystem(
+        recoveredProfile.system || "lahiri",
+        recoveredProfile
       );
       setChartData({ ...updatedData, profile: recoveredProfile });
     } else {

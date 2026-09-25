@@ -90,8 +90,18 @@ export const ASTROLOGY_SYSTEMS = {
 export const DEFAULT_ASTROLOGY_SYSTEM = "lahiri";
 
 export function getSystemConfig(systemId = DEFAULT_ASTROLOGY_SYSTEM) {
-  const normalized = (systemId || "").toUpperCase();
-  return ASTROLOGY_SYSTEMS[normalized] || ASTROLOGY_SYSTEMS.LAHIRI;
+  if (!systemId) {
+    return ASTROLOGY_SYSTEMS.LAHIRI;
+  }
+  const normalized = String(systemId).trim().toUpperCase();
+  if (normalized === "VEDIC") return ASTROLOGY_SYSTEMS.LAHIRI;
+  if (normalized === "SAYANA" || normalized === "WESTERN") return ASTROLOGY_SYSTEMS.TROPICAL;
+
+  const config = ASTROLOGY_SYSTEMS[normalized];
+  if (!config) {
+    throw new Error(`Unknown astrology system: "${systemId}". Valid systems are lahiri, kp, raman, tropical.`);
+  }
+  return config;
 }
 
 export function isTechniqueApplicable(systemId, techniqueKey) {

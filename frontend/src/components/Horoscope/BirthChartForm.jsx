@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Compass, Calendar, Clock, MapPin, Sparkles, Globe, ArrowRight, AlertCircle, User } from "lucide-react";
-import { calculatePlanetaryPositions } from "../../services/astroEngine";
+import { calculateChartBySystem } from "../../astrology";
 import { TRANSLATIONS } from "../../services/localization";
 import { EMPTY_BIRTH_PROFILE, DEMO_BIRTH_PROFILE, validateBirthProfile } from "../../types/birthProfile";
 import PlaceAutocomplete from "../Common/PlaceAutocomplete";
@@ -40,13 +40,9 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
     const demo = { ...DEMO_BIRTH_PROFILE };
     setFormData(demo);
     setErrors([]);
-    const chartData = calculatePlanetaryPositions(
-      demo.birthDate,
-      demo.birthTime,
-      demo.latitude,
-      demo.longitude,
-      demo.system,
-      demo.timezoneId || (demo.utcOffset ?? 5.5)
+    const chartData = calculateChartBySystem(
+      demo.system || "lahiri",
+      demo
     );
     onCalculate({ ...chartData, profile: demo });
   };
@@ -92,18 +88,10 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
       return;
     }
 
-    const resolvedOffset = tzOffset !== undefined && tzOffset !== null
-      ? Number(tzOffset)
-      : (formData.timezone !== undefined && formData.timezone !== null ? Number(formData.timezone) : 5.5);
-
     try {
-      const chartData = calculatePlanetaryPositions(
-        formData.birthDate,
-        formData.birthTime,
-        Number(lat),
-        Number(lng),
-        formData.system || "vedic",
-        tzId || resolvedOffset
+      const chartData = calculateChartBySystem(
+        profileToValidate.system || "lahiri",
+        profileToValidate
       );
       onCalculate({ ...chartData, profile: profileToValidate });
     } catch (err) {

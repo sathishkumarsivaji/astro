@@ -21,36 +21,53 @@ export function norm360(d) {
  * Strict check: latitude [-90, 90], longitude [-180, 180], finite utcOffset.
  */
 export function normalizeBirthData(data) {
-  if (!data) {
+  if (!data || typeof data !== "object") {
     throw new Error("Birth data object is required");
   }
 
   const {
     birthDate,
-    birthTime = "12:00",
+    birthTime,
     latitude,
     longitude,
     utcOffset,
-    timezoneId = "UTC"
+    timezoneId
   } = data;
 
-  if (!birthDate || typeof birthDate !== "string") {
-    throw new Error("Invalid birth date: expected string in YYYY-MM-DD format");
+  if (!birthDate || typeof birthDate !== "string" || !birthDate.trim()) {
+    throw new Error("Birth date is required in YYYY-MM-DD format");
   }
 
-  const dateParts = birthDate.split("-").map(Number);
+  const dateParts = birthDate.trim().split("-").map(Number);
   if (dateParts.length < 3 || isNaN(dateParts[0]) || isNaN(dateParts[1]) || isNaN(dateParts[2])) {
     throw new Error(`Invalid birth date format: "${birthDate}". Expected YYYY-MM-DD.`);
   }
 
   const [year, month, day] = dateParts;
-  if (month < 1 || month > 12 || day < 1 || day > 31) {
-    throw new Error(`Birth date values out of calendar bounds: ${birthDate}`);
+  if (year < 100 || year > 3000) {
+    throw new Error(`Birth year out of supported range (100-3000): ${year}`);
+  }
+  if (month < 1 || month > 12) {
+    throw new Error(`Birth month out of bounds (1-12): ${month}`);
   }
 
-  const timeParts = (birthTime || "12:00").split(":").map(Number);
-  const hour = isNaN(timeParts[0]) ? 12 : timeParts[0];
-  const minute = isNaN(timeParts[1]) ? 0 : timeParts[1];
+  // Strict Gregorian calendar validation (e.g. reject Feb 30, Feb 29 in non-leap year)
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day < 1 || day > daysInMonth) {
+    throw new Error(`Invalid calendar date: "${birthDate}". Month ${month} in year ${year} has ${daysInMonth} days.`);
+  }
+
+  // STRICT: Birth time is required (no silent 12:00 noon default)
+  if (!birthTime || typeof birthTime !== "string" || !birthTime.trim()) {
+    throw new Error("Birth time is required for astrological calculation");
+  }
+
+  const timeParts = birthTime.trim().split(":").map(Number);
+  if (timeParts.length < 2 || isNaN(timeParts[0]) || isNaN(timeParts[1])) {
+    throw new Error(`Invalid birth time format: "${birthTime}". Expected HH:MM or HH:MM:SS.`);
+  }
+  const hour = timeParts[0];
+  const minute = timeParts[1];
   const second = (timeParts.length > 2 && !isNaN(timeParts[2])) ? timeParts[2] : 0;
 
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
@@ -66,27 +83,38 @@ export function normalizeBirthData(data) {
     throw new Error(`Invalid longitude: ${longitude}. Must be between -180 and +180 degrees.`);
   }
 
-  // CRITICAL: utcOffset = 0.0 is completely valid (UTC/GMT/London) and MUST NOT fall back to 5.5
-  let tzOffset = (utcOffset !== undefined && utcOffset !== null && !isNaN(Number(utcOffset))) ? Number(utcOffset) : null;
+  // STRICT: Timezone or UTC offset required (no silent 5.5 IST default)
+  const hasTimezoneId = Boolean(timezoneId && typeof timezoneId === "string" && timezoneId.trim());
+  const tzId = hasTimezoneId ? timezoneId.trim() : null;
+  const hasUtcOffset = (utcOffset !== undefined && utcOffset !== null && !isNaN(Number(utcOffset)));
+  let tzOffset = hasUtcOffset ? Number(utcOffset) : null;
+
+  if (!tzId && tzOffset === null) {
+    throw new Error("Timezone or UTC offset required for astrological calculation");
+  }
+
   let utcDate = null;
 
-  if (timezoneId && timezoneId !== "UTC") {
+  if (tzId && tzId !== "UTC") {
     try {
       const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      utcDate = getUtcInstantFromLocal(birthDate, timeStr, timezoneId, { fold: data.fold ?? 0 });
+      utcDate = getUtcInstantFromLocal(birthDate, timeStr, tzId, { fold: data.fold ?? 0 });
       const localMs = Date.UTC(year, month - 1, day, hour, minute, second);
       const effOffset = (localMs - utcDate.getTime()) / 3600000;
       if (tzOffset === null) {
         tzOffset = effOffset;
       }
-    } catch (_err) {
-      // If error (e.g. unknown timezone ID or gap), fallback to numerical offset
+    } catch (err) {
+      // Do NOT silently catch/swallow timezone errors
+      throw new Error(`Invalid or unresolvable IANA timezone "${tzId}": ${err.message}`);
     }
+  } else if (tzId === "UTC" && tzOffset === null) {
+    tzOffset = 0.0;
   }
 
   if (!utcDate) {
     if (tzOffset === null) {
-      tzOffset = 5.5;
+      throw new Error("Timezone or UTC offset required for astrological calculation");
     }
     const decimalLocalHours = hour + minute / 60 + second / 3600;
     const decimalUTCHours = decimalLocalHours - tzOffset;
@@ -111,7 +139,7 @@ export function normalizeBirthData(data) {
     latitude: lat,
     longitude: lng,
     utcOffset: tzOffset,
-    timezoneId,
+    timezoneId: tzId || (tzOffset === 0 ? "UTC" : null),
     utcDate,
     jd,
     T

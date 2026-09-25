@@ -393,7 +393,7 @@ ${retrospectiveSummary}
 
 ---
 
-### நீங்கள் அறிக்கையில் விரிவாக எழுத வேண்டிய 16 முக்கிய அத்தியாயங்கள்:
+### நீங்கள் அறிக்கையில் விரிவாக எழுத வேண்டிய 19 விரிவான அத்தியாயங்கள்:
 
 1. **அத்தியாயம் 1: மூல ஜாதக கட்டமைப்பு & ஆன்ம ஆளுமை (Core Natal Blueprint & Atmakaraka)**
    - லக்னாதிபதி பலம், உடல் தேகம், மனோதிடம், சூரிய ராசி ஆளுமை, மற்றும் ஜைமினி ஆத்மகாரகன் காட்டும் ஆன்ம லட்சியம்.
@@ -534,7 +534,7 @@ ${retrospectiveSummary}
 
 ---
 
-### Structure Your Master Report into 18 Exhaustive Chapters Matching the System Tabs:
+### Structure Your Master Report into 19 Comprehensive Chapters Matching the System Tabs:
 
 1. **Chapter 1: Natal Blueprint, Ascendant Power & Karmic Disposition**
    - Lagna Lord vitality, physical endurance, Sun Sign signification, and Jaimini Atmakaraka soul mission.

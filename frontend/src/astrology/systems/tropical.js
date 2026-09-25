@@ -96,6 +96,7 @@ export function calculateTropicalChart(observations, birthData) {
       isRetrograde: raw.isRetrograde,
       house: occupiedHouse,
       signIndex: signIdx,
+      sign: signName,
       signName,
       degreeInSign: long % 30,
       dignity
@@ -144,6 +145,8 @@ export function calculateTropicalChart(observations, birthData) {
 
   const ascCusp = houseCusps[0];
   const mcCusp = houseCusps[9];
+  const sun = planets.find(p => p.name === "Sun");
+  const moon = planets.find(p => p.name === "Moon");
 
   return {
     system: {
@@ -154,10 +157,19 @@ export function calculateTropicalChart(observations, birthData) {
       houseSystem: "Placidus"
     },
     ascendant: ascCusp,
+    ascendantSign: { name: ascCusp.signName, index: ascCusp.signIndex },
     midheaven: mcCusp,
+    sunSign: sun ? { name: sun.signName, index: sun.signIndex } : null,
+    moonSign: moon ? { name: moon.signName, index: moon.signIndex } : null,
+    ayanamsa: 0.0,
+    ayanamsaValue: 0.0,
     houses: houseCusps,
     planets,
     aspects,
+    dashaTable: [],
+    currentDasha: null,
+    curMd: null,
+    curBk: null,
     // Explicitly null / flagged inapplicable Vedic frameworks
     shadbala: {
       status: "NOT_APPLICABLE",

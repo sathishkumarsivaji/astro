@@ -39,8 +39,9 @@ export function calculateChartBySystem(systemId = "lahiri", birthData, options =
       return calculateRamanChart(birthData, options);
     case "lahiri":
     case "vedic":
-    default:
       return calculateLahiriChart(birthData, options);
+    default:
+      throw new Error(`Unknown astrological system: "${systemId}". Valid systems are lahiri, kp, raman, tropical.`);
   }
 }
 

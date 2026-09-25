@@ -323,6 +323,23 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     { id: "multiSystemComparison", label: isTamil ? "19. பல ஜோதிட முறைகளின் ஒப்பீடு" : "19. Multi-System Comparative Analysis", icon: Compass }
   ];
 
+  const chartSys = (chartData.system?.id || chartData.system || chartData.profile?.system || "lahiri").toLowerCase();
+  const isTropical = chartSys === "tropical" || chartSys === "sayana" || chartSys === "western";
+  const isKP = chartSys === "kp";
+
+  const visibleTabs = tabs.filter(tab => {
+    if (tab.id === "all" || tab.id === "execSummary" || tab.id === "blueprint" || tab.id === "bhavas" || tab.id === "health" || tab.id === "studies" || tab.id === "career" || tab.id === "property" || tab.id === "politics" || tab.id === "relationships" || tab.id === "foreign" || tab.id === "auspicious" || tab.id === "risks" || tab.id === "technicalAppendix" || tab.id === "multiSystemComparison") {
+      return true;
+    }
+    if (isTropical) {
+      return false; // Tropical isolates from Vedic techniques
+    }
+    if (isKP) {
+      return tab.id === "timeline"; // KP includes Vimshottari Dasha
+    }
+    return true;
+  });
+
   return (
     <div className="detailed-report-modal-overlay fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-2 md:p-4 overflow-y-auto">
       <div className="detailed-report-modal-card max-w-5xl w-full my-4 md:my-8 p-4 md:p-8 rounded-3xl bg-[#FFFDF9] border border-amber-300 relative space-y-6 shadow-2xl text-stone-800 max-h-[92vh] overflow-y-auto">
@@ -647,7 +664,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
         {/* Detailed Mode: Chapter Navigation Tabs */}
         {viewMode === "algorithmic" && reportTier === "detailed" && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs border-b border-amber-200/80 no-scrollbar no-print print:hidden">
-            {tabs.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
@@ -781,10 +798,10 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                       <Crown className="w-3.5 h-3.5 text-amber-600" />
                       {isTamil ? "2. முழு மகா அறிக்கை PDF (Detailed Master)" : "2. Save Complete Master PDF"}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">All 18 Chapters</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">All 19 Chapters</span>
                   </div>
                   <p className="text-[10px] text-stone-600">
-                    {isTamil ? "18 அத்தியாயங்கள், 16 வர்க்க சக்கரங்கள், ஷட்பலம், அஷ்டகவர்க்கம் மற்றும் முழு காலக்கோடுடன் சேமிக்க." : "Saves full multi-domain life dossier, 16 harmonic vargas, Shadbala, Ashtakavarga, and technical calculations."}
+                    {isTamil ? "19 அத்தியாயங்கள், 16 வர்க்க சக்கரங்கள், ஷட்பலம், அஷ்டகவர்க்கம், பல முறை ஒப்பீடு மற்றும் முழு காலக்கோடுடன் சேமிக்க." : "Saves full multi-domain life dossier, 16 harmonic vargas, Shadbala, Ashtakavarga, multi-system comparison, and technical calculations."}
                   </p>
                 </button>
               </div>
@@ -796,7 +813,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 <Sparkles className="w-5 h-5" />
               </div>
               <h4 className="text-base font-bold text-stone-900">
-                {isTamil ? "முழுமையான மகா ஜாதக வாழ்க்கை வழிகாட்டி அறிக்கையைப் பார்க்கவும்" : "Unlock Full Master Astrological Dossier (18 Chapters + Technical Appendix)"}
+                {isTamil ? "முழுமையான மகா ஜாதக வாழ்க்கை வழிகாட்டி அறிக்கையைப் பார்க்கவும்" : "Unlock Full Master Astrological Dossier (19 Chapters + Technical Appendix)"}
               </h4>
               <p className="text-xs text-stone-700 max-w-xl mx-auto">
                 {isTamil
@@ -1065,7 +1082,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 2: Detected Auspicious Vedic Yogas */}
-            {(activeTab === "all" || activeTab === "yogas") && (
+            {!isTropical && !isKP && (activeTab === "all" || activeTab === "yogas") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-amber-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2">
@@ -1687,7 +1704,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 11: Ayurvedic Dosha & Health Vitality */}
-            {(activeTab === "all" || activeTab === "dosha") && (
+            {!isTropical && !isKP && (activeTab === "all" || activeTab === "dosha") && (
               <div className="space-y-4">
                 <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2 border-b border-amber-300 pb-2">
                   <Flame className="w-4 h-4 text-orange-600" />
@@ -1768,7 +1785,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 12: Vedic Remedies & Gemstone Prescription */}
-            {(activeTab === "all" || activeTab === "remedies") && (
+            {!isTropical && !isKP && (activeTab === "all" || activeTab === "remedies") && (
               <div className="space-y-4">
                 <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2 border-b border-amber-300 pb-2">
                   <Gem className="w-4 h-4 text-purple-600" />
@@ -2135,7 +2152,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 15: Complete Vimshottari Dasha Life-Stage Timeline (0–120 Yrs) */}
-            {(activeTab === "all" || activeTab === "timeline") && (
+            {!isTropical && (activeTab === "all" || activeTab === "timeline") && (
               <div className="space-y-6">
                 <div className="border-b border-amber-300 pb-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -2279,7 +2296,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 16: RETROSPECTIVE LIFE MILESTONE VERIFICATION (SENIOR VALIDATION) */}
-            {(activeTab === "all" || activeTab === "milestoneAudit") && retrospectiveAudit && retrospectiveAudit.length > 0 && (
+            {!isTropical && !isKP && (activeTab === "all" || activeTab === "milestoneAudit") && retrospectiveAudit && retrospectiveAudit.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-purple-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-purple-900 flex items-center gap-2">
@@ -2356,7 +2373,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 17: ASTROLOGER EVIDENCE DOSSIER & REASONING CHAINS */}
-            {(activeTab === "all" || audienceMode === "astrologer" || activeTab === "reasoningDossier") && (
+            {!isTropical && !isKP && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "reasoningDossier") && (
               <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-amber-50/60 border-2 border-purple-300 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-200 pb-3">
                   <div className="flex items-center gap-2">
@@ -2490,7 +2507,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">Timezone / Offset</span>
-                      <strong className="text-stone-900">{chartData.timezoneId || `UTC${(chartData.tz ?? chartData.utcOffset ?? 5.5) >= 0 ? "+" : ""}${chartData.tz ?? chartData.utcOffset ?? 5.5}`}</strong>
+                      <strong className="text-stone-900">{chartData.timezoneId || (chartData.tz !== undefined || chartData.utcOffset !== undefined ? `UTC${(chartData.tz ?? chartData.utcOffset) >= 0 ? "+" : ""}${chartData.tz ?? chartData.utcOffset}` : "N/A")}</strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">Geo Latitude</span>
@@ -2502,15 +2519,15 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">Ayanamsha at Birth Date</span>
-                      <strong className="text-stone-900">{chartData.ayanamsaDms || (typeof chartData.ayanamsa === "number" ? `${chartData.ayanamsa.toFixed(4)}°` : "23° 51' 25.5\"")} (Chitrapaksha)</strong>
+                      <strong className="text-stone-900">{chartData.ayanamsaDms || (typeof chartData.ayanamsa === "number" ? `${chartData.ayanamsa.toFixed(4)}°` : (typeof chartData.ayanamsaValue === "number" ? `${chartData.ayanamsaValue.toFixed(4)}°` : "N/A"))} {chartData.system?.name ? `(${chartData.system.name})` : (chartData.system ? `(${chartData.system})` : "(Lahiri)")}</strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">Lagna Speed</span>
-                      <strong className="text-stone-900">{chartData.ascendantSpeedDegPerMin ? `${chartData.ascendantSpeedDegPerMin.toFixed(4)}°/min` : "~0.25°/min"}</strong>
+                      <strong className="text-stone-900">{chartData.ascendantSpeedDegPerMin ? `${chartData.ascendantSpeedDegPerMin.toFixed(4)}°/min` : "N/A"}</strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">D9 / D60 Sensitivity</span>
-                      <strong className="text-stone-900">D9: ~{chartData.birthDataConfidence?.repD9Min || 13.3}m | D60: ~{chartData.birthDataConfidence?.repD60Min || 2.0}m</strong>
+                      <strong className="text-stone-900">D9: {chartData.birthDataConfidence?.repD9Min ? `~${chartData.birthDataConfidence.repD9Min}m` : "N/A"} | D60: {chartData.birthDataConfidence?.repD60Min ? `~${chartData.birthDataConfidence.repD60Min}m` : "N/A"}</strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">Ephemeris Engine</span>
@@ -2643,12 +2660,14 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                   </div>
                 </div>
 
-                {/* 18.4 Complete Shodashavarga (16 Divisional Charts D1-D60) Matrix */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                    <Crown className="w-3.5 h-3.5 text-amber-600" />
-                    {isTamil ? "18.4 சோடசவர்க்க சக்கரங்கள் முழுமை அட்டவணை (D1 - D60)" : "18.4 Complete Shodashavarga Harmonic Matrix (D1 to D60)"}
-                  </h4>
+                {!isTropical && !isKP && (
+                  <>
+                    {/* 18.4 Complete Shodashavarga (16 Divisional Charts D1-D60) Matrix */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                        <Crown className="w-3.5 h-3.5 text-amber-600" />
+                        {isTamil ? "18.4 சோடசவர்க்க சக்கரங்கள் முழுமை அட்டவணை (D1 - D60)" : "18.4 Complete Shodashavarga Harmonic Matrix (D1 to D60)"}
+                      </h4>
                   <div className="overflow-x-auto rounded-2xl border border-amber-200 shadow-2xs bg-white">
                     <table className="w-full text-[10px] text-center border-collapse">
                       <thead>
@@ -2987,6 +3006,144 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                   </div>
                 </div>
+                  </>
+                )}
+
+                {/* System-Specific Section for KP System */}
+                {isKP && (
+                  <div className="space-y-4">
+                    {/* KP 12 Placidus Cuspal Sub-Lords Table */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                        <Compass className="w-3.5 h-3.5 text-amber-600" />
+                        {isTamil ? "18.4 கே.பி. 12 பாவ சப்-லார்டு அட்டவணை (Cuspal Sub-Lords)" : "18.4 KP 12 Cuspal Sub-Lords & Star Lords"}
+                      </h4>
+                      <div className="overflow-x-auto rounded-2xl border border-amber-200 shadow-2xs bg-white">
+                        <table className="w-full text-[11px] text-left border-collapse">
+                          <thead>
+                            <tr className="bg-amber-100/70 border-b border-amber-200 text-stone-800 font-mono uppercase text-[10px]">
+                              <th className="p-2">Cusp</th>
+                              <th className="p-2">Longitude</th>
+                              <th className="p-2">Sign</th>
+                              <th className="p-2">Sign Lord</th>
+                              <th className="p-2">Star Lord</th>
+                              <th className="p-2 font-bold text-purple-900">Sub-Lord</th>
+                              <th className="p-2">Sub-Sub Lord</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-amber-100 font-mono text-[10px]">
+                            {(chartData.houses || []).map((c) => (
+                              <tr key={c.house} className="hover:bg-amber-50/50">
+                                <td className="p-2 font-bold text-stone-900">Cusp {c.house}</td>
+                                <td className="p-2">{c.longitude?.toFixed(2)}°</td>
+                                <td className="p-2">{c.signName}</td>
+                                <td className="p-2">{c.signLord}</td>
+                                <td className="p-2">{c.starLord}</td>
+                                <td className="p-2 font-bold text-purple-900 bg-purple-50/30">{c.subLord}</td>
+                                <td className="p-2 text-stone-600">{c.subSubLord}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* KP 4-Tier Significator Matrix */}
+                    {chartData.significators && (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                          <Layers className="w-3.5 h-3.5 text-amber-600" />
+                          {isTamil ? "18.5 கே.பி. 4-அடுக்கு காரகத்துவங்கள் (4-Tier Significators)" : "18.5 KP 4-Tier House Significators"}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.values(chartData.significators).map(sig => (
+                            <div key={sig.house} className="p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1">
+                              <span className="font-bold text-stone-900 block border-b border-amber-100 pb-0.5">House {sig.house}</span>
+                              <div className="text-[10px] text-stone-600 space-y-0.5">
+                                <div><strong className="text-purple-900">Tier 1 (Star of Occ):</strong> {sig.level1?.length > 0 ? sig.level1.join(", ") : "-"}</div>
+                                <div><strong className="text-blue-900">Tier 2 (Occupant):</strong> {sig.level2?.length > 0 ? sig.level2.join(", ") : "-"}</div>
+                                <div><strong className="text-emerald-900">Tier 3 (Star of Lord):</strong> {sig.level3?.length > 0 ? sig.level3.join(", ") : "-"}</div>
+                                <div><strong className="text-stone-700">Tier 4 (House Lord):</strong> {sig.level4?.join(", ")}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* System-Specific Section for Tropical / Sayana System */}
+                {isTropical && (
+                  <div className="space-y-4">
+                    {/* Tropical Ptolemaic Aspects Table */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                        <Compass className="w-3.5 h-3.5 text-amber-600" />
+                        {isTamil ? "18.4 மேற்கத்திய கோண இணைப்புகள் (Ptolemaic Aspects & Orbs)" : "18.4 Ptolemaic Aspects Matrix & Orb Dynamics"}
+                      </h4>
+                      <div className="overflow-x-auto rounded-2xl border border-amber-200 shadow-2xs bg-white">
+                        <table className="w-full text-[11px] text-left border-collapse">
+                          <thead>
+                            <tr className="bg-amber-100/70 border-b border-amber-200 text-stone-800 font-mono uppercase text-[10px]">
+                              <th className="p-2">Bodies</th>
+                              <th className="p-2">Aspect</th>
+                              <th className="p-2">Exact Angle</th>
+                              <th className="p-2">Orb Separation</th>
+                              <th className="p-2">Dynamics</th>
+                              <th className="p-2">Nature</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-amber-100 font-mono text-[10px]">
+                            {(chartData.aspects || []).map((asp, idx) => (
+                              <tr key={idx} className="hover:bg-amber-50/50">
+                                <td className="p-2 font-bold text-stone-900">{asp.planet1} – {asp.planet2}</td>
+                                <td className="p-2 text-purple-900 font-semibold">{asp.aspect} ({asp.angle}°)</td>
+                                <td className="p-2">{asp.actualSeparation?.toFixed(2)}°</td>
+                                <td className="p-2 font-bold text-amber-900">{asp.orb?.toFixed(2)}°</td>
+                                <td className="p-2">
+                                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${asp.status === "Applying" ? "bg-emerald-100 text-emerald-800" : "bg-stone-100 text-stone-600"}`}>
+                                    {asp.status}
+                                  </span>
+                                </td>
+                                <td className="p-2 text-stone-600">{asp.nature}</td>
+                              </tr>
+                            ))}
+                            {(!chartData.aspects || chartData.aspects.length === 0) && (
+                              <tr>
+                                <td colSpan="6" className="p-4 text-center text-stone-500 italic">No major Ptolemaic aspects within canonical orbs.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Tropical Essential Dignities */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-amber-600" />
+                        {isTamil ? "18.5 மேற்கத்திய கிரக நிலைகள் (Essential Dignities)" : "18.5 Western Essential Dignities & Conditions"}
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {(chartData.planets || []).map(p => (
+                          <div key={p.name} className="p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-stone-900">{p.name}</span>
+                              <span className="text-[10px] text-stone-500">{p.signName}</span>
+                            </div>
+                            <div className="text-[10px] font-semibold text-purple-900">
+                              {p.dignity || "Peregrine"}
+                            </div>
+                            <div className="text-[9px] text-stone-500">
+                              Speed: {p.speed ? `${p.speed.toFixed(3)}°/day` : "N/A"} {p.isRetrograde ? "(Rx)" : "(Direct)"}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 18.10 Standards Registry & Ephemeris Conventions */}
                 <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-2">
@@ -2995,8 +3152,8 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11px] font-mono text-stone-700">
                     <div><strong>Sidereal Engine:</strong> AstroVerse 4.2.0 (VSOP87)</div>
-                    <div><strong>Ayanamsha:</strong> Lahiri (Chitra Paksha Anchor 23° 51' 25.5")</div>
-                    <div><strong>House System:</strong> Whole-Sign + Sripati / Equal Chalit</div>
+                    <div><strong>Ayanamsha:</strong> {chartData.system?.ayanamshaName || (chartData.system === "kp" ? "KP Original" : (chartData.system === "raman" ? "B.V. Raman" : (chartData.system === "tropical" ? "None (Sayana)" : "Lahiri / Chitrapaksha")))} {typeof chartData.ayanamsa === "number" ? `(${chartData.ayanamsa.toFixed(4)}° at birth; J2000 Anchor: 23° 51' 25.5")` : ""}</div>
+                    <div><strong>House System:</strong> {chartData.system?.houseSystem || "Whole-Sign + Sripati / Equal Chalit"}</div>
                     <div><strong>Dasha Year:</strong> 365.24219878 Tropical Solar Days</div>
                     <div><strong>Lunar Nodes:</strong> Astronomical Mean Node</div>
                     <div><strong>Shadbala System:</strong> Classical Parashari 6-Fold (Virupas)</div>
@@ -3289,10 +3446,10 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                       <Crown className="w-3.5 h-3.5 text-amber-600" />
                       {isTamil ? "2. முழு மகா அறிக்கை PDF (Detailed Master)" : "2. Save Complete Master PDF"}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">All 18 Chapters</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">All 19 Chapters</span>
                   </div>
                   <p className="text-[10px] text-stone-600">
-                    {isTamil ? "18 அத்தியாயங்கள், 16 வர்க்க சக்கரங்கள், ஷட்பலம், அஷ்டகவர்க்கம் மற்றும் முழு காலக்கோடுடன் சேமிக்க." : "Saves full multi-domain life dossier, 16 harmonic vargas, Shadbala, Ashtakavarga, and technical calculations."}
+                    {isTamil ? "19 அத்தியாயங்கள், 16 வர்க்க சக்கரங்கள், ஷட்பலம், அஷ்டகவர்க்கம், பல முறை ஒப்பீடு மற்றும் முழு காலக்கோடுடன் சேமிக்க." : "Saves full multi-domain life dossier, 16 harmonic vargas, Shadbala, Ashtakavarga, multi-system comparison, and technical calculations."}
                   </p>
                 </button>
               </div>

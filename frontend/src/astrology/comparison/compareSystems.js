@@ -9,6 +9,14 @@
 
 import { degToDms, norm360 } from "../../services/astroEngine.js";
 
+/**
+ * Calculates shortest angular distance between two longitudes on a 360° circle
+ */
+export function angularDistance(a, b) {
+  const d = Math.abs(norm360(a) - norm360(b));
+  return Math.min(d, 360 - d);
+}
+
 export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart }) {
   if (!lahiriChart || !kpChart) {
     throw new Error("At least Lahiri and KP charts are required for multi-system comparison.");
@@ -96,7 +104,7 @@ export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart
       lahiriPos = {
         longitude: lPlanet.long ?? lPlanet.longitude,
         sign: lPlanet.sign ?? lPlanet.signName ?? "N/A",
-        house: lPlanet.house ?? 1,
+        house: lPlanet.house ?? null,
         nakshatra: lPlanet.nakshatra ?? "N/A",
         pada: lPlanet.nakshatraPada ?? lPlanet.pada ?? null
       };
@@ -104,7 +112,7 @@ export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart
       kpPos = {
         longitude: kpPlanet.longitude,
         sign: kpPlanet.signName ?? "N/A",
-        house: kpPlanet.house ?? 1,
+        house: kpPlanet.house ?? null,
         starLord: kpPlanet.starLord ?? "N/A",
         subLord: kpPlanet.subLord ?? "N/A"
       };
@@ -112,13 +120,13 @@ export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart
       ramanPos = rPlanet ? {
         longitude: rPlanet.long ?? rPlanet.longitude,
         sign: rPlanet.sign ?? rPlanet.signName ?? "N/A",
-        house: rPlanet.house ?? 1
+        house: rPlanet.house ?? null
       } : null;
 
       tropPos = tPlanet ? {
         longitude: tPlanet.longitude,
         sign: tPlanet.signName ?? "N/A",
-        house: tPlanet.house ?? 1,
+        house: tPlanet.house ?? null,
         dignity: tPlanet.dignity ?? "Peregrine"
       } : null;
     }
@@ -126,15 +134,15 @@ export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart
     comparableCount++;
 
     // Compare Sidereal Systems (Lahiri vs KP vs Raman)
-    const sameSignLahiriKp = lahiriPos.sign === kpPos.sign;
-    const sameHouseLahiriKp = lahiriPos.house === kpPos.house;
-    const sameSignLahiriRaman = ramanPos ? lahiriPos.sign === ramanPos.sign : true;
-    const sameHouseLahiriRaman = ramanPos ? lahiriPos.house === ramanPos.house : true;
+    const sameSignLahiriKp = lahiriPos.sign !== "N/A" && kpPos.sign !== "N/A" && lahiriPos.sign === kpPos.sign;
+    const sameHouseLahiriKp = lahiriPos.house !== null && kpPos.house !== null && lahiriPos.house === kpPos.house;
+    const sameSignLahiriRaman = ramanPos ? (lahiriPos.sign !== "N/A" && ramanPos.sign !== "N/A" && lahiriPos.sign === ramanPos.sign) : true;
+    const sameHouseLahiriRaman = ramanPos ? (lahiriPos.house !== null && ramanPos.house !== null && lahiriPos.house === ramanPos.house) : true;
 
     if (sameSignLahiriKp && sameSignLahiriRaman) signAgreementCount++;
     if (sameHouseLahiriKp && sameHouseLahiriRaman) houseAgreementCount++;
 
-    const angDiffKp = Math.abs(lahiriPos.longitude - kpPos.longitude);
+    const angDiffKp = angularDistance(lahiriPos.longitude, kpPos.longitude);
     totalAngularDiff += angDiffKp;
     if (angDiffKp > maxAngularDifference) maxAngularDifference = angDiffKp;
 
@@ -206,12 +214,19 @@ export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart
       divergenceCount,
       signAgreementCount,
       houseAgreementCount,
+      meanLahiriKpAngularDifference: (totalAngularDiff / Math.max(1, comparableCount)).toFixed(4),
       meanAbsoluteAngularDifference: (totalAngularDiff / Math.max(1, comparableCount)).toFixed(4),
       maxAngularDifference: maxAngularDifference.toFixed(4),
       agreementPercentage: Math.round((fullAgreementCount / Math.max(1, comparableCount)) * 100),
-      lahiriAyanamsha: degToDms(lahiriChart.ayanamsaValue ?? lahiriChart.ayanamsha ?? 23.85),
-      kpAyanamsha: degToDms(kpChart.system?.ayanamshaValue ?? 23.76),
-      ramanAyanamsha: ramanChart ? degToDms(ramanChart.ayanamsaValue ?? 22.37) : "N/A"
+      lahiriAyanamsha: (typeof lahiriChart.ayanamsa === "number" || typeof lahiriChart.ayanamsaValue === "number")
+        ? degToDms(lahiriChart.ayanamsa ?? lahiriChart.ayanamsaValue)
+        : "N/A",
+      kpAyanamsha: (typeof kpChart.system?.ayanamshaValue === "number")
+        ? degToDms(kpChart.system.ayanamshaValue)
+        : "N/A",
+      ramanAyanamsha: ramanChart && (typeof ramanChart.ayanamsa === "number" || typeof ramanChart.ayanamsaValue === "number")
+        ? degToDms(ramanChart.ayanamsa ?? ramanChart.ayanamsaValue)
+        : "N/A"
     },
     comparisons,
     techniqueMatrix
