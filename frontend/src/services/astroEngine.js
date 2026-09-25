@@ -625,25 +625,29 @@ export function getTimezoneOffsetMinutes(date, timeZone) {
 /**
  * Resolve timezone offset and IANA ID from mixed parameter formats
  */
-export function resolveTimezone(tz = 5.5, timezoneId = null, refDate = new Date()) {
-  let numericOffset = 5.5;
+export function resolveTimezone(tz = 0, timezoneId = null, refDate = new Date()) {
+  let numericOffset = (typeof tz === "number" && Number.isFinite(tz)) ? tz : 0;
   let ianaId = null;
 
-  if (typeof timezoneId === "string" && isNaN(Number(timezoneId))) {
-    ianaId = timezoneId;
+  if (typeof timezoneId === "string" && timezoneId.trim() && isNaN(Number(timezoneId))) {
+    ianaId = timezoneId.trim();
   }
 
-  if (typeof tz === "string" && isNaN(Number(tz))) {
-    ianaId = tz;
+  if (typeof tz === "string" && tz.trim() && isNaN(Number(tz))) {
+    ianaId = tz.trim();
     try {
-      numericOffset = getTimezoneOffsetMinutes(refDate instanceof Date && !isNaN(refDate) ? refDate : new Date(), ianaId) / 60;
+      numericOffset = getTimezoneOffsetMinutes(refDate instanceof Date && !isNaN(refDate.getTime()) ? refDate : new Date(), ianaId) / 60;
     } catch {
-      numericOffset = 5.5;
+      numericOffset = 0;
     }
   } else if (typeof tz === "number" && Number.isFinite(tz)) {
     numericOffset = tz;
   } else if (typeof tz === "string" && !isNaN(Number(tz))) {
     numericOffset = Number(tz);
+  }
+
+  if (!Number.isFinite(numericOffset) || numericOffset < -14 || numericOffset > 14) {
+    numericOffset = 0;
   }
 
   return { numericOffset, ianaId };
@@ -1899,13 +1903,22 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   } else {
     throw new Error("Valid date (string YYYY-MM-DD or UTC Date object) is required for planetary ephemeris calculation.");
   }
-  const [hour, min] = timeString.split(":").map(Number);
+  const [hour, min, sec = 0] = String(timeString || "00:00:00").split(":").map(Number);
 
   let tzOffsetHours;
   let timezoneId = null;
   let utcDate;
 
-  if (typeof tz === "string") {
+  if (options?.utcDate instanceof Date && !isNaN(options.utcDate.getTime())) {
+    utcDate = options.utcDate;
+    if (typeof tz === "string") {
+      timezoneId = tz;
+      tzOffsetHours = getTimezoneOffsetMinutes(utcDate, timezoneId) / 60;
+    } else if (typeof tz === "number" && Number.isFinite(tz)) {
+      tzOffsetHours = tz;
+      timezoneId = options?.timezoneId || (tzOffsetHours === 5.5 ? "Asia/Kolkata" : (tzOffsetHours === 0 ? "UTC" : null));
+    }
+  } else if (typeof tz === "string") {
     timezoneId = tz;
     const isoDateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     // Resolve exact UTC instant respecting DST fold ambiguity
@@ -1915,8 +1928,8 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   } else if (typeof tz === "number" && Number.isFinite(tz)) {
     tzOffsetHours = tz;
     timezoneId = options?.timezoneId || (tzOffsetHours === 5.5 ? "Asia/Kolkata" : (tzOffsetHours === 0 ? "UTC" : null));
-    const totalUtcMinutes = Math.round((hour + min / 60.0 - tzOffsetHours) * 60);
-    const utcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + totalUtcMinutes * 60000;
+    const totalUtcSeconds = (hour * 3600 + min * 60 + sec) - tzOffsetHours * 3600;
+    const utcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + Math.round(totalUtcSeconds * 1000);
     utcDate = new Date(utcMs);
   } else {
     throw new Error("Timezone (IANA string or numeric offset in hours) is required for planetary ephemeris calculation.");
@@ -9928,8 +9941,15 @@ function parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDas
  * Universal Varga Chart Context Extractor
  * Calculates divisional positions, house placements from Varga Lagna, and dignities
  */
-export function getVargaChartData(planets = [], ascendantLong = 0, vargaFn) {
-  const ascLong = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long ?? 0);
+export function getVargaChartData(planets = [], ascendantLong, vargaFn) {
+  if (typeof vargaFn !== "function") {
+    return { status: "INSUFFICIENT_DATA", planets: [], ascendantSign: "Unknown", ascendantSignIdx: 0 };
+  }
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  if (!Number.isFinite(rawAsc)) {
+    return { status: "INSUFFICIENT_DATA", planets: [], ascendantSign: "Unknown", ascendantSignIdx: 0 };
+  }
+  const ascLong = rawAsc;
   const ascVarga = vargaFn(ascLong);
   const ascSignIdx = ascVarga.index;
   const mapped = planets.map(p => {

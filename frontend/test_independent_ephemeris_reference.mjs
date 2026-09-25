@@ -396,7 +396,7 @@ const ephemerisFixture = JSON.parse(fs.readFileSync(ephemerisFixturePath, "utf8"
 assert(Array.isArray(ephemerisFixture.placidus_benchmarks), "ephemeris_reference.json must contain placidus_benchmarks");
 
 ephemerisFixture.placidus_benchmarks.forEach(({ location, latitude, ramc, eps, ascendant, mc, cusps }) => {
-  const result = calculatePlacidusCusps(ramc, eps, latitude);
+  const result = calculatePlacidusCusps(ramc, latitude, 0.0);
   assert(Math.abs(result.ascendant - ascendant) < 0.01, `Placidus Ascendant at ${location} (${latitude}°) matches golden reference within 0.01°`);
   assert(Math.abs(result.mc - mc) < 0.01, `Placidus MC at ${location} (${latitude}°) matches golden reference within 0.01°`);
   for (let h = 1; h <= 12; h++) {

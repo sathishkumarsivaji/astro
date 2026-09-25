@@ -802,16 +802,25 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {isTamil ? "மீண்டும் கணக்கிடு" : "Recalculate"}
                 </button>
                 <button
-                  onClick={() => onApplyEstimatedChart({
-                    birthDate: result.candidateMonthWindow.exactEstimatedDOB,
-                    birthTime: result.timeWindow?.mostProbable ? result.timeWindow.mostProbable.replace(/\s*(AM|PM)/i, "") : "06:45",
-                    name: isTamil ? "ஜாதகர்" : "Native",
-                    birthPlace: result.birthPlace || (isTamil ? "சென்னை, தமிழ்நாடு" : "Chennai, Tamil Nadu"),
-                    latitude: result.latitude || 13.0827,
-                    longitude: result.longitude || 80.2707,
-                    utcOffset: result.utcOffset || 5.5,
-                    timezoneId: result.timezoneId || "Asia/Kolkata"
-                  })}
+                  onClick={() => {
+                    const lat = answers.latitude ?? result.latitude;
+                    const lng = answers.longitude ?? result.longitude;
+                    if (lat === null || lng === null || lat === undefined || lng === undefined) {
+                      alert(isTamil ? "தயவுசெய்து உங்கள் பிறந்த இடத்தை தேர்ந்தெடுக்கவும்" : "Please select your birth location from the suggestions in Step 2.");
+                      setCurrentStep(2);
+                      return;
+                    }
+                    onApplyEstimatedChart({
+                      birthDate: result.candidateMonthWindow.exactEstimatedDOB,
+                      birthTime: result.timeWindow?.mostProbable ? result.timeWindow.mostProbable.replace(/\s*(AM|PM)/i, "") : "06:45",
+                      name: isTamil ? "ஜாதகர்" : "Native",
+                      birthPlace: answers.birthCity || result.birthPlace || "",
+                      latitude: lat,
+                      longitude: lng,
+                      utcOffset: answers.utcOffset ?? result.utcOffset,
+                      timezoneId: answers.timezoneId ?? result.timezoneId ?? null
+                    });
+                  }}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />

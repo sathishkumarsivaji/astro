@@ -329,6 +329,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const isKP = chartSys === "kp";
 
   const systemChapterIds = new Set(getChaptersForSystem(chartSys).map(c => c.id));
+  const isChapterApplicable = (id) => systemChapterIds.has(id);
   const visibleTabs = tabs.filter(tab => tab.id === "all" || systemChapterIds.has(tab.id));
 
   return (
@@ -884,7 +885,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             </div>
 
             {/* CHAPTER 0: EXECUTIVE SUMMARY */}
-            {(activeTab === "all" || activeTab === "execSummary") && execSummary && (
+            {isChapterApplicable("execSummary") && (activeTab === "all" || activeTab === "execSummary") && execSummary && (
               <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-100/30 to-purple-500/10 border-2 border-amber-300 shadow-md space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-300/80 pb-3">
                   <div className="flex items-center gap-2">
@@ -998,7 +999,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 1: Core Astrological Configuration */}
-            {(activeTab === "all" || activeTab === "blueprint") && (
+            {isChapterApplicable("blueprint") && (activeTab === "all" || activeTab === "blueprint") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-amber-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2">
@@ -1079,7 +1080,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 2: Detected Auspicious Vedic Yogas */}
-            {!isTropical && !isKP && (activeTab === "all" || activeTab === "yogas") && (
+            {isChapterApplicable("yogas") && (activeTab === "all" || activeTab === "yogas") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-amber-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2">
@@ -1120,7 +1121,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 3: Exhaustive 12 House Predictions */}
-            {(activeTab === "all" || activeTab === "bhavas") && (
+            {isChapterApplicable("bhavas") && (activeTab === "all" || activeTab === "bhavas") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-amber-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2">
@@ -1186,7 +1187,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 4: Traditional Astrological Health Tendencies & Preventive Wellness */}
-            {(activeTab === "all" || activeTab === "health") && (
+            {isChapterApplicable("health") && (activeTab === "all" || activeTab === "health") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-emerald-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-emerald-900 flex items-center gap-2">
@@ -1283,7 +1284,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 5: Studies, Higher Education & Competitive Exams */}
-            {(activeTab === "all" || activeTab === "studies") && (
+            {isChapterApplicable("studies") && (activeTab === "all" || activeTab === "studies") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-cyan-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-cyan-900 flex items-center gap-2">
@@ -1369,7 +1370,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 6: Career, Vocations & Executive Leadership */}
-            {(activeTab === "all" || activeTab === "career") && (
+            {isChapterApplicable("career") && (activeTab === "all" || activeTab === "career") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-purple-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-purple-900 flex items-center gap-2">
@@ -1477,7 +1478,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 7: Property, Real Estate & Vehicles */}
-            {(activeTab === "all" || activeTab === "property") && (
+            {isChapterApplicable("property") && (activeTab === "all" || activeTab === "property") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-amber-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2">
@@ -1527,7 +1528,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 8: Leadership, Public Service & Governance Themes */}
-            {(activeTab === "all" || activeTab === "politics") && (
+            {isChapterApplicable("politics") && (activeTab === "all" || activeTab === "politics") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-rose-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-rose-900 flex items-center gap-2">
@@ -1591,7 +1592,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 9: Marriage, Partner & Progeny Karma */}
-            {(activeTab === "all" || activeTab === "relationships") && (
+            {isChapterApplicable("relationships") && (activeTab === "all" || activeTab === "relationships") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-pink-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-pink-900 flex items-center gap-2">
@@ -1676,7 +1677,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 10: Foreign Travel, Settlement & Moksha */}
-            {(activeTab === "all" || activeTab === "foreign") && (
+            {isChapterApplicable("foreign") && (activeTab === "all" || activeTab === "foreign") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-indigo-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-indigo-900 flex items-center gap-2">
@@ -1701,7 +1702,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 11: Ayurvedic Dosha & Health Vitality */}
-            {!isTropical && !isKP && (activeTab === "all" || activeTab === "dosha") && (
+            {isChapterApplicable("dosha") && (activeTab === "all" || activeTab === "dosha") && (
               <div className="space-y-4">
                 <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2 border-b border-amber-300 pb-2">
                   <Flame className="w-4 h-4 text-orange-600" />
@@ -1782,7 +1783,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 12: Vedic Remedies & Gemstone Prescription */}
-            {!isTropical && !isKP && (activeTab === "all" || activeTab === "remedies") && (
+            {isChapterApplicable("remedies") && (activeTab === "all" || activeTab === "remedies") && (
               <div className="space-y-4">
                 <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2 border-b border-amber-300 pb-2">
                   <Gem className="w-4 h-4 text-purple-600" />
@@ -1855,7 +1856,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 13: Auspicious Life Milestones & Day-to-Day Muhurtha Timeline */}
-            {(activeTab === "all" || activeTab === "auspicious") && (
+            {isChapterApplicable("auspicious") && (activeTab === "all" || activeTab === "auspicious") && (
               <div className="space-y-6">
                 <div className="border-b border-amber-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2">
@@ -2035,7 +2036,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 14: Traditional Caution Indicators & Timing Windows */}
-            {(activeTab === "all" || activeTab === "risks") && (
+            {isChapterApplicable("risks") && (activeTab === "all" || activeTab === "risks") && (
               <div className="space-y-6">
                 <div className="border-b border-rose-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-rose-900 flex items-center gap-2">
@@ -2149,7 +2150,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 15: Complete Vimshottari Dasha Life-Stage Timeline (0–120 Yrs) */}
-            {!isTropical && (activeTab === "all" || activeTab === "timeline") && (
+            {isChapterApplicable("timeline") && (activeTab === "all" || activeTab === "timeline") && (
               <div className="space-y-6">
                 <div className="border-b border-amber-300 pb-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -2293,7 +2294,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 16: RETROSPECTIVE LIFE MILESTONE VERIFICATION (SENIOR VALIDATION) */}
-            {!isTropical && !isKP && (activeTab === "all" || activeTab === "milestoneAudit") && retrospectiveAudit && retrospectiveAudit.length > 0 && (
+            {isChapterApplicable("milestoneAudit") && (activeTab === "all" || activeTab === "milestoneAudit") && retrospectiveAudit && retrospectiveAudit.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-purple-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-purple-900 flex items-center gap-2">
@@ -2370,7 +2371,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 17: ASTROLOGER EVIDENCE DOSSIER & REASONING CHAINS */}
-            {!isTropical && !isKP && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "reasoningDossier") && (
+            {isChapterApplicable("reasoningDossier") && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "reasoningDossier") && (
               <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-amber-50/60 border-2 border-purple-300 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-200 pb-3">
                   <div className="flex items-center gap-2">
@@ -2471,7 +2472,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 18: COMPREHENSIVE TECHNICAL CALCULATION APPENDIX */}
-            {(activeTab === "all" || audienceMode === "astrologer" || activeTab === "technicalAppendix") && (
+            {isChapterApplicable("technicalAppendix") && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "technicalAppendix") && (
               <div className="p-5 md:p-6 rounded-3xl bg-white border-2 border-amber-400 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200 pb-3">
                   <div className="flex items-center gap-2">
@@ -2528,7 +2529,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">Ephemeris Engine</span>
-                      <strong className="text-stone-900">VSOP87 / NOVAS</strong>
+                      <strong className="text-stone-900">Astronomy Engine 2.1.19 / VSOP87 & ELP/MPP02</strong>
                     </div>
                   </div>
                 </div>
@@ -3187,7 +3188,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* 19. Multi-System Comparative Analysis (Lahiri vs KP vs Raman vs Tropical) */}
-            {(activeTab === "all" || audienceMode === "astrologer" || activeTab === "multiSystemComparison") && multiSystemBundle && (
+            {isChapterApplicable("multiSystemComparison") && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "multiSystemComparison") && multiSystemBundle && (
               <div className="p-5 md:p-6 rounded-3xl bg-white border-2 border-indigo-400 shadow-md space-y-6">
                 {/* Chapter Header */}
                 <div className="border-b border-indigo-200 pb-4">

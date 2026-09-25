@@ -13,8 +13,19 @@
 
 import { calculatePlanetaryPositions } from "../../services/astroEngine.js";
 
-export function calculateLahiriChart(birthData, options = {}) {
-  const { birthDate, birthTime, latitude, longitude, utcOffset, timezoneId } = birthData;
+export function calculateLahiriChart(observationsOrBirthData, maybeBirthData, options = {}) {
+  let birthData;
+  let opts;
+  let observations;
+  if (observationsOrBirthData && observationsOrBirthData.tropicalBodies) {
+    observations = observationsOrBirthData;
+    birthData = maybeBirthData || {};
+    opts = options;
+  } else {
+    birthData = observationsOrBirthData || {};
+    opts = maybeBirthData || {};
+  }
+  const { birthDate, birthTime, latitude, longitude, utcOffset, timezoneId, utcDate } = birthData;
   return calculatePlanetaryPositions(
     birthDate,
     birthTime,
@@ -22,6 +33,6 @@ export function calculateLahiriChart(birthData, options = {}) {
     longitude,
     "lahiri",
     utcOffset,
-    { ...options, timezoneId }
+    { ...opts, timezoneId, utcDate, observations }
   );
 }

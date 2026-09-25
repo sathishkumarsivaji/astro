@@ -36,10 +36,10 @@ export function calculateChartBySystem(systemId = "lahiri", birthData, options =
     case "western":
       return calculateTropicalChart(observations, normData);
     case "raman":
-      return calculateRamanChart(normData, options);
+      return calculateRamanChart(observations, normData, options);
     case "lahiri":
     case "vedic":
-      return calculateLahiriChart(normData, options);
+      return calculateLahiriChart(observations, normData, options);
     default:
       throw new Error(`Unknown astrological system: "${systemId}". Valid systems are lahiri, kp, raman, tropical.`);
   }
@@ -52,9 +52,9 @@ export function calculateMultiSystemBundle(birthData, options = {}) {
   const normData = normalizeBirthData(birthData);
   const observations = getAstronomicalObservations(normData);
 
-  const lahiri = calculateLahiriChart(normData, options);
+  const lahiri = calculateLahiriChart(observations, normData, options);
   const kp = calculateKPChart(observations, normData);
-  const raman = calculateRamanChart(normData, options);
+  const raman = calculateRamanChart(observations, normData, options);
   const tropical = calculateTropicalChart(observations, normData);
 
   const comparison = compareSystems({

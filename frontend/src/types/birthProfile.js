@@ -11,8 +11,8 @@ export const EMPTY_BIRTH_PROFILE = {
   birthPlace: "",
   latitude: null,
   longitude: null,
-  timezoneId: "Asia/Kolkata",
-  utcOffset: 5.5,
+  timezoneId: null,
+  utcOffset: null,
   system: "vedic",
   isDemo: false
 };

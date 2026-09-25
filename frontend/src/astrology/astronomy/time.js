@@ -89,6 +89,10 @@ export function normalizeBirthData(data) {
   const hasUtcOffset = (utcOffset !== undefined && utcOffset !== null && !isNaN(Number(utcOffset)));
   let tzOffset = hasUtcOffset ? Number(utcOffset) : null;
 
+  if (tzOffset !== null && (!Number.isFinite(tzOffset) || tzOffset < -14 || tzOffset > 14)) {
+    throw new Error(`Invalid UTC offset: ${utcOffset}. Must be a finite number between -14 and +14 hours.`);
+  }
+
   if (!tzId && tzOffset === null) {
     throw new Error("Timezone or UTC offset required for astrological calculation");
   }
@@ -116,6 +120,10 @@ export function normalizeBirthData(data) {
       throw new Error(`Contradictory timezone input: timezoneId is "UTC" but utcOffset is ${utcOffset}. For UTC, offset must be 0.`);
     }
     tzOffset = 0.0;
+  }
+
+  if (!Number.isFinite(tzOffset) || tzOffset < -14 || tzOffset > 14) {
+    throw new Error(`Resolved UTC offset out of bounds (-14 to +14): ${tzOffset}`);
   }
 
   if (!utcDate) {
