@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       watch: {
-        ignored: ['**/*.rartemp', '**/*rartemp*', '**/*.zip', '**/dist/**', '**/.git/**']
+        ignored: ['**/*.rar', '**/*.rartemp', '**/*rartemp*', '**/*.zip', '**/*.7z', '**/*.tar*', '**/*.gz', '**/dist/**', '**/.git/**']
       }
     },
     plugins: [
