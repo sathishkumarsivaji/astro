@@ -73,6 +73,32 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
     { sign: "Aquarius", x: 10, y: 105, w: 95, h: 95 },
   ];
 
+  const SIGN_META = {
+    Aries: { symbol: "♈", element: "Fire", ruler: "Mars", quality: "Chara (Movable)" },
+    Taurus: { symbol: "♉", element: "Earth", ruler: "Venus", quality: "Sthira (Fixed)" },
+    Gemini: { symbol: "♊", element: "Air", ruler: "Mercury", quality: "Dvisvabhava (Dual)" },
+    Cancer: { symbol: "♋", element: "Water", ruler: "Moon", quality: "Chara (Movable)" },
+    Leo: { symbol: "♌", element: "Fire", ruler: "Sun", quality: "Sthira (Fixed)" },
+    Virgo: { symbol: "♍", element: "Earth", ruler: "Mercury", quality: "Dvisvabhava (Dual)" },
+    Libra: { symbol: "♎", element: "Air", ruler: "Venus", quality: "Chara (Movable)" },
+    Scorpio: { symbol: "♏", element: "Water", ruler: "Mars", quality: "Sthira (Fixed)" },
+    Sagittarius: { symbol: "♐", element: "Fire", ruler: "Jupiter", quality: "Dvisvabhava (Dual)" },
+    Capricorn: { symbol: "♑", element: "Earth", ruler: "Saturn", quality: "Chara (Movable)" },
+    Aquarius: { symbol: "♒", element: "Air", ruler: "Saturn", quality: "Sthira (Fixed)" },
+    Pisces: { symbol: "♓", element: "Water", ruler: "Jupiter", quality: "Dvisvabhava (Dual)" }
+  };
+
+  const currentSystemId = (
+    typeof chartData?.system === "object"
+      ? (chartData.system?.id || chartData.system?.name || "lahiri")
+      : (chartData?.system || chartData?.profile?.system || "lahiri")
+  ).toLowerCase();
+
+  const isKP = currentSystemId === "kp";
+  const isTropical = currentSystemId === "tropical" || currentSystemId === "sayana" || currentSystemId === "western";
+  const isRaman = currentSystemId === "raman";
+  const isVedic = !isKP && !isTropical;
+
   // Shodashavarga Metadata
   const VARGA_LIST = [
     { code: "D1", name: "Rasi", nameTa: "ராசி", purpose: "Physical body, vitality & overall destiny" },
@@ -134,7 +160,7 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
   // Generic Varga Renderer
   const renderVargaSvg = (vargaCode, titleLabel) => {
     const vData = getVargaChartData(vargaCode);
-    const ascSignName = vData.ascendantSign;
+    const ascSignName = vData.ascendantSign || "Aries";
 
     const getVPlanetsInSign = (signName) => (vData.planets || []).filter(p => {
       const s = p.signName || p.sign;
@@ -160,7 +186,7 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
 
           {SOUTH_BOXES.map(box => {
             const boxPlanets = getVPlanetsInSign(box.sign);
-            const isAsc = box.sign.toLowerCase() === ascSignName.toLowerCase();
+            const isAsc = ascSignName ? box.sign.toLowerCase() === ascSignName.toLowerCase() : false;
             const boxTitle = isTamil ? (SIGN_NAMES_TAMIL[box.sign] || box.sign) : box.sign.substring(0, 3).toUpperCase();
             const isCrowded = boxPlanets.length > 3;
 
@@ -240,7 +266,7 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
             { h: 11, cx: 350, cy: 105, numX: 320, numY: 140 },
             { h: 12, cx: 295, cy: 50, numX: 260, numY: 80 }
           ].map(cell => {
-            const ascIdx = SOUTH_BOXES.findIndex(b => b.sign.toLowerCase() === ascSignName.toLowerCase());
+            const ascIdx = SOUTH_BOXES.findIndex(b => b.sign.toLowerCase() === (ascSignName || "Aries").toLowerCase());
             const signIdx = (ascIdx + (cell.h - 1)) % 12;
             const signName = SOUTH_BOXES[signIdx]?.sign || "Aries";
             const boxPlanets = getVPlanetsInSign(signName);
@@ -316,7 +342,7 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
             { sign: "Pisces", cx: 105, cy: 55 }
           ].map(h => {
             const boxPlanets = getVPlanetsInSign(h.sign);
-            const isAsc = h.sign.toLowerCase() === ascSignName.toLowerCase();
+            const isAsc = ascSignName ? h.sign.toLowerCase() === ascSignName.toLowerCase() : false;
 
             return (
               <g key={h.sign}>
@@ -340,27 +366,28 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
   const lat = chartData?.profile?.latitude ?? chartData?.latitude ?? null;
   const lng = chartData?.profile?.longitude ?? chartData?.longitude ?? null;
   const ascLong = chartData?.ascendant?.longitude ?? chartData?.ascendantLong ?? null;
-  const chalitData = (ascLong !== null && lat !== null && lng !== null) ? calculateBhavaChalit(ascLong, planets, lat, lng) : null;
-  const avasthasData = ascLong !== null ? calculatePlanetaryAvasthas(planets, ascLong) : null;
+  const hasValidAscLong = typeof ascLong === "number" && Number.isFinite(ascLong);
+  const chalitData = (hasValidAscLong && typeof lat === "number" && typeof lng === "number" && !isTropical && !isKP) ? calculateBhavaChalit(ascLong, planets, lat, lng) : null;
+  const avasthasData = (hasValidAscLong && !isTropical && !isKP) ? calculatePlanetaryAvasthas(planets, ascLong) : null;
   const functionalLordship = ascendantSign?.name ? getFunctionalLordshipMatrix(ascendantSign.name) : null;
-  const jaiminiSystem = ascLong !== null ? calculateJaiminiSystem(planets, ascLong, divisionalCharts) : null;
+  const jaiminiSystem = (hasValidAscLong && !isTropical && !isKP) ? calculateJaiminiSystem(planets, ascLong, divisionalCharts) : null;
 
   // Compute D60 Stability
   const tzOffsetForD60 = chartData?.utcOffset ?? chartData?.profile?.utcOffset;
-  const d60Stability = chartData?.d60StabilityTest || ((lat !== null && lng !== null && tzOffsetForD60 !== undefined && tzOffsetForD60 !== null) ? calculateD60StabilityTest(chartData?.birthInstantUtc || chartData?.date || new Date(), lat, lng, tzOffsetForD60) : null);
+  const d60Stability = chartData?.d60StabilityTest || ((lat !== null && lng !== null && tzOffsetForD60 !== undefined && tzOffsetForD60 !== null && !isTropical && !isKP) ? calculateD60StabilityTest(chartData?.birthInstantUtc || chartData?.date || new Date(), lat, lng, tzOffsetForD60) : null);
 
   return (
     <div className="space-y-6">
       {/* 1. Traditional Panchangam & Birth Details Banner */}
-      {panchangam && (
+      {panchangam && panchangam.status !== "NOT_APPLICABLE" && panchangam.thithi && (
         <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-orange-50 to-amber-100/70 border border-amber-300/80 shadow-md space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
               <Sun className="w-4 h-4 text-amber-600" />
-              {isTamil ? "ஜனன பஞ்சாங்கம் (Thirukanitha / Lahiri Ephemeris)" : "Natal Panchangam (Vedic Ephemeris)"}
+              {isTamil ? (isRaman ? "ஜனன பஞ்சாங்கம் (ராமன் கணிதம்)" : "ஜனன பஞ்சாங்கம் (லஹிரி திருக்கணிதம்)") : (isRaman ? "Natal Panchangam (B.V. Raman Ephemeris)" : "Natal Panchangam (Lahiri Vedic Ephemeris)")}
             </span>
             <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white text-amber-900 border border-amber-300 font-semibold shadow-sm">
-              {isTamil ? `லஹிரி அயனாம்சம்: ${chartData.ayanamsaDms}` : `Lahiri Ayanamsa: ${chartData.ayanamsaDms}`}
+              {chartData.ayanamsaDms ? (isTamil ? `அயனாம்சம்: ${chartData.ayanamsaDms}` : `Ayanamsa: ${chartData.ayanamsaDms}`) : `Ayanamsa: ${(chartData.ayanamsa ?? 0).toFixed(4)}°`}
             </span>
           </div>
 
@@ -390,23 +417,95 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
         </div>
       )}
 
+      {/* KP Summary Banner */}
+      {isKP && (
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-50 to-blue-100/70 border border-blue-300/80 shadow-md space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200/80 pb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+              <Compass className="w-4 h-4 text-blue-600" />
+              {isTamil ? "கே.பி. முறை (Krishnamurti Padhdhati - Placidus Cusps)" : "KP System (Krishnamurti Padhdhati - Placidus Cusps)"}
+            </span>
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white text-blue-900 border border-blue-300 font-semibold shadow-sm">
+              {isTamil ? `KP அயனாம்சம்: ${(chartData.ayanamsa ?? 0).toFixed(4)}°` : `KP Ayanamsa: ${(chartData.ayanamsa ?? 0).toFixed(4)}°`}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-white border border-blue-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">{isTamil ? "லக்ன நட்சத்திராதிபதி" : "Lagna Star Lord"}</span>
+              <span className="font-bold text-blue-900">{chartData?.rulingPlanets?.lagnaStarLord || "—"}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-blue-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">{isTamil ? "லக்ன உப-அதிபதி (Sub Lord)" : "Lagna Sub Lord"}</span>
+              <span className="font-bold text-indigo-700">{chartData?.rulingPlanets?.lagnaSubLord || "—"}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-blue-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">{isTamil ? "சந்திர உப-அதிபதி" : "Moon Sub Lord"}</span>
+              <span className="font-bold text-purple-700">{chartData?.rulingPlanets?.moonSubLord || "—"}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-blue-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">{isTamil ? "கிழமையதிபதி (Day Lord)" : "Birth Day Lord"}</span>
+              <span className="font-bold text-emerald-700">{chartData?.rulingPlanets?.dayLord || "—"}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tropical / Western Summary Banner */}
+      {isTropical && (
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-teal-500/10 via-cyan-50 to-teal-100/70 border border-teal-300/80 shadow-md space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-200/80 pb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-900 flex items-center gap-1.5">
+              <Compass className="w-4 h-4 text-teal-600" />
+              {isTamil ? "மேற்கத்திய சாயன முறை (Western Sayana / Tropical - Placidus Cusps)" : "Western Tropical Astrology (Sayana - Placidus Cusps)"}
+            </span>
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white text-teal-900 border border-teal-300 font-semibold shadow-sm">
+              Ayanamsa: 0.0000° (Sayana Equinox Reference)
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-white border border-teal-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">Ascendant (Lagna)</span>
+              <span className="font-bold text-teal-900">{chartData?.ascendant?.signName} {Number(chartData?.ascendant?.degreeInSign ?? 0).toFixed(2)}°</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-teal-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">Midheaven (MC - 10th Cusp)</span>
+              <span className="font-bold text-cyan-700">{chartData?.midheaven?.signName} {Number(chartData?.midheaven?.degreeInSign ?? 0).toFixed(2)}°</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-teal-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">House System</span>
+              <span className="font-bold text-purple-700">Placidus Semi-Arc</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-teal-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 block uppercase font-semibold">Total Aspects Found</span>
+              <span className="font-bold text-emerald-700">{chartData?.aspects?.length || 0} Ptolemaic Aspects</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. Planetary Triad Highlights (Sun, Moon, Ascendant) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Sun Sign */}
         <div className="p-5 rounded-2xl glass-card border border-amber-300/80 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-700">{t.sunSignTitle}</span>
-            <span className="text-2xl">{sunSign.symbol}</span>
+            <span className="text-2xl">{sunSign?.symbol || SIGN_META[sunSign?.name]?.symbol || "☉"}</span>
           </div>
           <h3 className="text-xl font-serif font-bold text-stone-900 mt-2">
-            {isTamil ? `${SIGN_NAMES_TAMIL[sunSign.name] || sunSign.name} (${sunSign.name})` : sunSign.name}
+            {sunSign?.name ? (isTamil ? `${SIGN_NAMES_TAMIL[sunSign.name] || sunSign.name} (${sunSign.name})` : sunSign.name) : "—"}
           </h3>
-          <p className="text-xs text-stone-600 mt-1">
-            {isTamil ? `நட்சத்திரம்: ${sunNakshatra.tamil} (பாதம் ${sunNakshatra.pada})` : `Nakshatra: ${sunNakshatra.name} (Pada ${sunNakshatra.pada})`}
-          </p>
+          {sunNakshatra ? (
+            <p className="text-xs text-stone-600 mt-1">
+              {isTamil ? `நட்சத்திரம்: ${sunNakshatra.tamil || sunNakshatra.name} (பாதம் ${sunNakshatra.pada || 1})` : `Nakshatra: ${sunNakshatra.name} (Pada ${sunNakshatra.pada || 1})`}
+            </p>
+          ) : (
+            <p className="text-xs text-stone-500 mt-1 italic">
+              {isTropical ? (isTamil ? "சாயன முறை (நட்சத்திரங்கள் இல்லை)" : "Tropical Sayana (No Nakshatras)") : "—"}
+            </p>
+          )}
           <div className="mt-3 pt-3 border-t border-amber-200/80 flex items-center justify-between text-[11px] text-stone-600">
-            <span>{t.element} <strong className="text-amber-800 font-bold">{sunSign.element}</strong></span>
-            <span>{t.ruler} <strong className="text-amber-800 font-bold">{sunSign.ruler}</strong></span>
+            <span>{t.element} <strong className="text-amber-800 font-bold">{sunSign?.element || SIGN_META[sunSign?.name]?.element || "—"}</strong></span>
+            <span>{t.ruler} <strong className="text-amber-800 font-bold">{sunSign?.ruler || SIGN_META[sunSign?.name]?.ruler || "—"}</strong></span>
           </div>
         </div>
 
@@ -414,35 +513,55 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
         <div className="p-5 rounded-2xl glass-card border border-purple-300/80 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-purple-700">{t.moonSignTitle}</span>
-            <span className="text-2xl">{moonSign.symbol}</span>
+            <span className="text-2xl">{moonSign?.symbol || SIGN_META[moonSign?.name]?.symbol || "☽"}</span>
           </div>
           <h3 className="text-xl font-serif font-bold text-stone-900 mt-2">
-            {isTamil ? `${SIGN_NAMES_TAMIL[moonSign.name] || moonSign.name} (${moonSign.name})` : moonSign.name}
+            {moonSign?.name ? (isTamil ? `${SIGN_NAMES_TAMIL[moonSign.name] || moonSign.name} (${moonSign.name})` : moonSign.name) : "—"}
           </h3>
-          <p className="text-xs text-stone-600 mt-1">
-            {t.nakshatraLabel} <span className="text-purple-800 font-semibold">{isTamil ? moonNakshatra.tamil : moonNakshatra.name} (பாதம் {moonNakshatra.pada})</span>
-          </p>
-          <div className="mt-3 pt-3 border-t border-purple-200/80 flex items-center justify-between text-[11px] text-stone-600">
-            <span>{t.lordLabel} <strong className="text-purple-800 font-bold">{moonNakshatra.ruler}</strong></span>
-            <span>{t.syllableLabel} <strong className="text-purple-800 font-bold">{moonNakshatra.luckySyllable}</strong></span>
-          </div>
+          {moonNakshatra ? (
+            <>
+              <p className="text-xs text-stone-600 mt-1">
+                {t.nakshatraLabel} <span className="text-purple-800 font-semibold">{isTamil ? (moonNakshatra.tamil || moonNakshatra.name) : moonNakshatra.name} (பாதம் {moonNakshatra.pada || 1})</span>
+              </p>
+              <div className="mt-3 pt-3 border-t border-purple-200/80 flex items-center justify-between text-[11px] text-stone-600">
+                <span>{t.lordLabel} <strong className="text-purple-800 font-bold">{moonNakshatra.ruler || "—"}</strong></span>
+                <span>{t.syllableLabel} <strong className="text-purple-800 font-bold">{moonNakshatra.luckySyllable || "—"}</strong></span>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-stone-500 mt-1 italic">
+                {isTropical ? (isTamil ? "சாயன முறை (நட்சத்திரங்கள் இல்லை)" : "Tropical Sayana (No Nakshatras)") : "—"}
+              </p>
+              <div className="mt-3 pt-3 border-t border-purple-200/80 flex items-center justify-between text-[11px] text-stone-600">
+                <span>{t.element} <strong className="text-purple-800 font-bold">{SIGN_META[moonSign?.name]?.element || "—"}</strong></span>
+                <span>{t.ruler} <strong className="text-purple-800 font-bold">{SIGN_META[moonSign?.name]?.ruler || "—"}</strong></span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Ascendant */}
         <div className="p-5 rounded-2xl glass-card border border-orange-300/80 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-orange-700">{t.ascendantTitle}</span>
-            <span className="text-2xl">{ascendantSign.symbol}</span>
+            <span className="text-2xl">{ascendantSign?.symbol || SIGN_META[ascendantSign?.name]?.symbol || "Asc"}</span>
           </div>
           <h3 className="text-xl font-serif font-bold text-stone-900 mt-2">
-            {isTamil ? `${SIGN_NAMES_TAMIL[ascendantSign.name] || ascendantSign.name} (${ascendantSign.name})` : ascendantSign.name}
+            {ascendantSign?.name ? (isTamil ? `${SIGN_NAMES_TAMIL[ascendantSign.name] || ascendantSign.name} (${ascendantSign.name})` : ascendantSign.name) : "—"}
           </h3>
           <p className="text-xs text-stone-600 mt-1">
-            {isTamil ? `நவாம்ச லக்னம்: ${ascendantNavamsa?.signTamil || ""}` : `Navamsa Lagna: ${ascendantNavamsa?.signName || ""}`}
+            {ascendantNavamsa ? (
+              isTamil ? `நவாம்ச லக்னம்: ${ascendantNavamsa?.signTamil || ascendantNavamsa?.signName || ""}` : `Navamsa Lagna: ${ascendantNavamsa?.signName || ""}`
+            ) : (
+              isKP ? (isTamil ? `KP உப-அதிபதி: ${chartData?.ascendant?.subLord || "—"}` : `KP Sub-Lord: ${chartData?.ascendant?.subLord || "—"}`)
+              : isTropical ? (isTamil ? `MC (10th Cusp): ${chartData?.midheaven?.signName || "—"}` : `Midheaven (MC): ${chartData?.midheaven?.signName || "—"}`)
+              : "—"
+            )}
           </p>
           <div className="mt-3 pt-3 border-t border-orange-200/80 flex items-center justify-between text-[11px] text-stone-600">
-            <span>{t.house1Cusps}</span>
-            <span>{t.qualityLabel} <strong className="text-orange-800 font-bold">{ascendantSign.quality}</strong></span>
+            <span>{isKP ? "KP Cusp 1" : isTropical ? "Placidus Asc" : t.house1Cusps}</span>
+            <span>{t.qualityLabel} <strong className="text-orange-800 font-bold">{ascendantSign?.quality || SIGN_META[ascendantSign?.name]?.quality || "—"}</strong></span>
           </div>
         </div>
       </div>
@@ -540,25 +659,85 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
           </div>
         </div>
 
-        {/* View Mode 1: D1 & D9 Side-by-Side */}
+        {/* View Mode 1: D1 & D9 or System Special Views */}
         {chartViewMode === "d1_d9" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-2 text-center">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold uppercase shadow-sm">
-                {isTamil ? "ராசி கட்டம் (D1 - Rasi Chart)" : "D1 Rasi Chart"}
+                {isTamil ? (isKP ? "கே.பி. ராசி சக்கரம் (Placidus Cusps)" : isTropical ? "மேற்கத்திய சாயன கட்டம்" : "ராசி கட்டம் (D1 - Rasi Chart)") : (isKP ? "KP Rasi Chart (Placidus)" : isTropical ? "Western Tropical Chart" : "D1 Rasi Chart")}
               </div>
               <div className="relative aspect-square max-w-[480px] mx-auto bg-[#FFFDF9] rounded-2xl border-2 border-amber-400 p-2 shadow-md">
-                {renderVargaSvg("D1", isTamil ? "ராசி" : "RASI")}
+                {renderVargaSvg("D1", isTamil ? (isKP ? "கே.பி" : isTropical ? "சாயனம்" : "ராசி") : (isKP ? "KP" : isTropical ? "TROPICAL" : "RASI"))}
               </div>
             </div>
 
             <div className="space-y-2 text-center">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 border border-purple-300 text-purple-900 text-xs font-bold uppercase shadow-sm">
-                {isTamil ? "நவாம்ச கட்டம் (D9 - Navamsa Chart)" : "D9 Navamsa Chart"}
-              </div>
-              <div className="relative aspect-square max-w-[480px] mx-auto bg-[#FFFDF9] rounded-2xl border-2 border-purple-400 p-2 shadow-md">
-                {renderVargaSvg("D9", isTamil ? "நவாம்சம்" : "NAVAMSA")}
-              </div>
+              {isKP ? (
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 border border-blue-300 text-blue-900 text-xs font-bold uppercase shadow-sm">
+                    {isTamil ? "கே.பி. 12 பாவ உப-அதிபதிகள் (KP Cuspal Sub-Lords)" : "KP 12 Cuspal Sub-Lords (Placidus)"}
+                  </div>
+                  <div className="max-w-[480px] mx-auto bg-white rounded-2xl border-2 border-blue-400 p-3 shadow-md overflow-hidden text-left">
+                    <table className="w-full text-xs">
+                      <thead className="bg-blue-50 text-blue-900 font-bold border-b border-blue-200">
+                        <tr>
+                          <th className="p-1.5">Cusp</th>
+                          <th className="p-1.5">Sign</th>
+                          <th className="p-1.5">Star Lord</th>
+                          <th className="p-1.5">Sub Lord</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-blue-100">
+                        {(chartData?.houses || []).slice(0, 12).map(h => (
+                          <tr key={h.house} className="hover:bg-blue-50/50">
+                            <td className="p-1.5 font-bold text-stone-900">Cusp {h.house}</td>
+                            <td className="p-1.5 text-stone-700">{h.signName} ({Number(h.degreeInSign ?? 0).toFixed(1)}°)</td>
+                            <td className="p-1.5 text-blue-800 font-medium">{h.starLord}</td>
+                            <td className="p-1.5 text-indigo-700 font-bold">{h.subLord}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : isTropical ? (
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-100 border border-teal-300 text-teal-900 text-xs font-bold uppercase shadow-sm">
+                    {isTamil ? "மேற்கத்திய திருஷ்டி அட்டவணை (Ptolemaic Aspects)" : "Western Ptolemaic Aspects"}
+                  </div>
+                  <div className="max-w-[480px] mx-auto bg-white rounded-2xl border-2 border-teal-400 p-3 shadow-md overflow-hidden text-left">
+                    <table className="w-full text-xs">
+                      <thead className="bg-teal-50 text-teal-900 font-bold border-b border-teal-200">
+                        <tr>
+                          <th className="p-1.5">Bodies</th>
+                          <th className="p-1.5">Aspect</th>
+                          <th className="p-1.5">Orb</th>
+                          <th className="p-1.5">Motion</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-teal-100">
+                        {(chartData?.aspects || []).slice(0, 10).map((asp, idx) => (
+                          <tr key={idx} className="hover:bg-teal-50/50">
+                            <td className="p-1.5 font-bold text-stone-900">{asp.planet1} - {asp.planet2}</td>
+                            <td className="p-1.5 text-stone-700 font-medium">{asp.aspect} ({asp.angle}°)</td>
+                            <td className="p-1.5 font-mono text-purple-700">{Number(asp.orb ?? 0).toFixed(2)}°</td>
+                            <td className={`p-1.5 font-bold ${asp.status === "Applying" ? "text-emerald-700" : "text-amber-700"}`}>{asp.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 border border-purple-300 text-purple-900 text-xs font-bold uppercase shadow-sm">
+                    {isTamil ? "நவாம்ச கட்டம் (D9 - Navamsa Chart)" : "D9 Navamsa Chart"}
+                  </div>
+                  <div className="relative aspect-square max-w-[480px] mx-auto bg-[#FFFDF9] rounded-2xl border-2 border-purple-400 p-2 shadow-md">
+                    {renderVargaSvg("D9", isTamil ? "நவாம்சம்" : "NAVAMSA")}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -885,16 +1064,24 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-100">
-                {planets.map(planet => (
+                {(planets || []).map(planet => (
                   <tr key={planet.name} className="hover:bg-amber-50/60 transition-colors">
                     <td className="p-2.5 font-bold text-stone-900 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      {isTamil ? planet.tamil : planet.name}
+                      {isTamil ? (planet.tamil || PLANET_NAMES_TAMIL[planet.name] || planet.name) : planet.name}
                     </td>
-                    <td className="p-2.5 text-amber-800 font-bold">{isTamil ? planet.signTamil : planet.sign}</td>
-                    <td className="p-2.5 font-mono text-stone-700">{planet.deg}°</td>
-                    <td className="p-2.5 text-purple-800 font-medium">{isTamil ? planet.nakshatraTamil : planet.nakshatra} ({planet.pada})</td>
-                    <td className="p-2.5 text-cyan-800 font-medium">{isTamil ? planet.navamsaTamil : planet.navamsaSign}</td>
+                    <td className="p-2.5 text-amber-800 font-bold">
+                      {isTamil ? (planet.signTamil || SIGN_NAMES_TAMIL[planet.sign || planet.signName] || planet.sign || planet.signName) : (planet.sign || planet.signName)}
+                    </td>
+                    <td className="p-2.5 font-mono text-stone-700">
+                      {typeof planet.deg !== "undefined" ? planet.deg : (typeof planet.degreeInSign === "number" ? planet.degreeInSign.toFixed(2) : (planet.longitude % 30).toFixed(2))}°
+                    </td>
+                    <td className="p-2.5 text-purple-800 font-medium">
+                      {planet.nakshatra ? `${isTamil ? (planet.nakshatraTamil || planet.nakshatra) : planet.nakshatra} (${planet.pada ?? 1})` : "—"}
+                    </td>
+                    <td className="p-2.5 text-cyan-800 font-medium">
+                      {planet.navamsaSign ? (isTamil ? (planet.navamsaTamil || SIGN_NAMES_TAMIL[planet.navamsaSign] || planet.navamsaSign) : planet.navamsaSign) : (planet.dignity || "—")}
+                    </td>
                     <td className="p-2.5 font-bold text-stone-900">{planet.house}</td>
                   </tr>
                 ))}
@@ -906,59 +1093,86 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
         {/* Dosha & Mahadasha Status Card */}
         <div className="lg:col-span-5 space-y-4">
           {/* Active Mahadasha */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-100/90 via-orange-50 to-amber-50 border border-amber-300 shadow-sm space-y-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-800 block">
-              {t.activeDashaTitle}
-            </span>
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xl font-bold font-serif text-stone-900">
-                  {isTamil ? `${currentDasha.tamil} மகா தசை` : `${currentDasha.lord} Mahadasha`}
-                </h4>
-                <p className="text-xs text-stone-600 font-medium">
-                  {isTamil ? `வயது ${currentDasha.startAge} முதல் ${currentDasha.endAge} வரை` : `Ages ${currentDasha.startAge} to ${currentDasha.endAge}`}
-                </p>
+          {currentDasha ? (
+            <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-100/90 via-orange-50 to-amber-50 border border-amber-300 shadow-sm space-y-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-800 block">
+                {t.activeDashaTitle}
+              </span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xl font-bold font-serif text-stone-900">
+                    {isTamil ? `${currentDasha.tamil || currentDasha.lord} மகா தசை` : `${currentDasha.lord} Mahadasha`}
+                  </h4>
+                  <p className="text-xs text-stone-600 font-medium">
+                    {isTamil ? `வயது ${currentDasha.startAge} முதல் ${currentDasha.endAge} வரை` : `Ages ${currentDasha.startAge} to ${currentDasha.endAge}`}
+                  </p>
+                </div>
+                <div className="px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-bold shadow-sm">
+                  {t.activeDashaBadge}
+                </div>
               </div>
-              <div className="px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-bold shadow-sm">
-                {t.activeDashaBadge}
-              </div>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                {t.activeDashaDesc}
+              </p>
             </div>
-            <p className="text-xs text-stone-600 leading-relaxed">
-              {t.activeDashaDesc}
-            </p>
-          </div>
+          ) : (
+            <div className="p-5 rounded-3xl bg-white border border-stone-200 shadow-sm space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500 block">
+                {isTamil ? "தசா அமைப்பு நிலை" : "Dasha System Status"}
+              </span>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                {isTamil
+                  ? "விம்சோத்தரி தசா அமைப்பு மேற்கத்திய சாயன (Sayana/Tropical) முறையில் பயன்படுத்தப்படுவதில்லை."
+                  : "Vimshottari Dasha cycles are not applicable to the Western Tropical system."}
+              </p>
+            </div>
+          )}
 
           {/* Dosha Diagnostics */}
-          <div className="p-5 rounded-3xl glass-card border border-amber-300/80 space-y-3 shadow-sm">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-amber-600" />
-              {isTamil ? "தோஷ பரிசீலனை (Dosha Diagnostics)" : "Dosha Diagnostics"}
-            </h4>
+          {doshaAnalysis ? (
+            <div className="p-5 rounded-3xl glass-card border border-amber-300/80 space-y-3 shadow-sm">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-amber-600" />
+                {isTamil ? "தோஷ பரிசீலனை (Dosha Diagnostics)" : "Dosha Diagnostics"}
+              </h4>
 
-            <div className="space-y-2">
-              <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-stone-900">{isTamil ? "செவ்வாய் தோஷம் (Kuja / Mars Dosha)" : "Chevvai (Mars) Dosha"}</span>
-                  <p className="text-[10px] text-stone-500">{doshaAnalysis.marsHouses}</p>
+              <div className="space-y-2">
+                <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-stone-900">{isTamil ? "செவ்வாய் தோஷம் (Kuja / Mars Dosha)" : "Chevvai (Mars) Dosha"}</span>
+                    <p className="text-[10px] text-stone-500">{doshaAnalysis.marsHouses || "—"}</p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                    doshaAnalysis.isChevvaiDosha ? "bg-rose-100 text-rose-800 border border-rose-300" : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                  }`}>
+                    {doshaAnalysis.chevvaiStatus || (doshaAnalysis.isChevvaiDosha ? "Dosha Present" : "No Dosha")}
+                  </span>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                  doshaAnalysis.isChevvaiDosha ? "bg-rose-100 text-rose-800 border border-rose-300" : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                }`}>
-                  {doshaAnalysis.chevvaiStatus}
-                </span>
-              </div>
 
-              <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-stone-900">{isTamil ? "ஏழரை சனி / அஷ்டம சனி நிலை" : "Sade Sati (Ezharai Sani) Status"}</span>
-                  <p className="text-[10px] text-stone-500">{isTamil ? "கோச்சார சனி சஞ்சார நிலை" : "Transit Saturn influence on Moon sign"}</p>
+                <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-stone-900">{isTamil ? "ஏழரை சனி / அஷ்டம சனி நிலை" : "Sade Sati (Ezharai Sani) Status"}</span>
+                    <p className="text-[10px] text-stone-500">{isTamil ? "கோச்சார சனி சஞ்சார நிலை" : "Transit Saturn influence on Moon sign"}</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-bold">
+                    {isTamil ? "தற்போது ஏழரை சனி இல்லை" : "No Active Sade Sati"}
+                  </span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-bold">
-                  {isTamil ? "தற்போது ஏழரை சனி இல்லை" : "No Active Sade Sati"}
-                </span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-5 rounded-3xl bg-white border border-stone-200 shadow-sm space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-stone-500" />
+                {isTamil ? "தோஷ பகுப்பாய்வு" : "Dosha Diagnostics"}
+              </h4>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                {isTamil
+                  ? "தோஷ பரிசீலனைகள் பாரம்பரிய வேத ஜோதிட விதிமுறைகளுக்கு மட்டுமே பொருந்தும்."
+                  : "Classical Vedic Dosha diagnostics (Chevvai / Sade Sati) are specific to Lahiri / Raman sidereal astrology."}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1035,143 +1249,277 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
           )}
         </div>
 
-        {/* 3-Column Grid: Karakas, Shadbala, Vargas */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 1. Jaimini Chara Karakas */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-amber-700" />
-              {isTamil ? "ஜைமினி சப்த காரகங்கள் (Soul Matrix)" : "Jaimini Chara Karakas"}
-            </h4>
-
-            <div className="space-y-2">
-              {(jaiminiKarakas || []).map((k) => (
-                <div
-                  key={k.code}
-                  className="p-3 rounded-xl bg-white border border-amber-200 hover:border-amber-400 transition-all flex items-center justify-between text-xs shadow-sm"
-                >
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-bold text-[10px]">
-                        {k.code}
-                      </span>
-                      <span className="font-bold text-stone-900">
-                        {isTamil ? k.planetTa : k.planet}
-                      </span>
+        {/* System Matrix: Vedic / KP / Tropical Dedicated Panels */}
+        {isKP ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* KP 4-Tier Significators */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-blue-700" />
+                {isTamil ? "கே.பி. 4-அடுக்கு காரகத்துவ மேட்ரிக்ஸ் (Significators)" : "KP 4-Tier House Significator Matrix"}
+              </h4>
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {Object.entries(chartData?.significators || {}).map(([houseNum, sig]) => (
+                  <div key={houseNum} className="p-3 rounded-xl bg-white border border-blue-200 text-xs shadow-xs space-y-1">
+                    <div className="flex justify-between items-center font-bold text-blue-950">
+                      <span>House {houseNum} Significators</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-mono">H{houseNum}</span>
                     </div>
-                    <span className="text-[10px] text-stone-500 block mt-0.5">
-                      {isTamil ? k.roleTa : k.role}
-                    </span>
+                    <div className="grid grid-cols-2 gap-1 text-[11px] text-stone-600">
+                      <div>L1 (Star of Occ): <strong className="text-blue-900">{sig.level1?.join(", ") || "—"}</strong></div>
+                      <div>L2 (Occupants): <strong className="text-indigo-900">{sig.level2?.join(", ") || "—"}</strong></div>
+                      <div>L3 (Star of Lord): <strong className="text-purple-900">{sig.level3?.join(", ") || "—"}</strong></div>
+                      <div>L4 (House Lord): <strong className="text-stone-900">{sig.level4?.join(", ") || "—"}</strong></div>
+                    </div>
                   </div>
-
-                  <div className="text-right">
-                    <span className="font-mono text-purple-800 text-[11px] font-bold block">{k.degInSign}</span>
-                    <span className="text-[10px] text-stone-500 block">H{k.house} ({k.sign})</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* 2. Shadbala 6-Fold Strengths */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-purple-800 flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-purple-700" />
-              {isTamil ? "ஷட்பல கிரக பலங்கள் (Shadbala Rupas)" : "Shadbala Strength Matrix"}
-            </h4>
-
-            <div className="space-y-2">
-              {(shadbala || []).map((s) => {
-                const ratioVal = s.ratio || (s.totalRupas / (s.requiredRupas || 6.0));
-                const ratioPercent = Math.round(ratioVal * 100);
-                return (
-                  <div
-                    key={s.planet}
-                    className="p-3 rounded-xl bg-white border border-purple-200 space-y-1.5 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-stone-900">
-                        {isTamil ? s.planetTa : s.planet}
-                      </span>
-                      <span className="font-mono text-emerald-700 font-bold text-[11px]">
-                        {s.totalRupas} / {s.requiredRupas} Rupas (Ratio: {s.ratio})
-                      </span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full h-1.5 rounded-full bg-stone-200 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          ratioPercent >= 110
-                            ? "bg-gradient-to-r from-emerald-500 to-teal-500"
-                            : ratioPercent >= 95
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500"
-                            : "bg-gradient-to-r from-purple-500 to-indigo-500"
-                        }`}
-                        style={{ width: `${Math.min(100, ratioPercent)}%` }}
-                      />
-                    </div>
-
-                    <span className="text-[10px] text-stone-500 block">
-                      {s.status}
-                    </span>
+            {/* KP Ruling Planets */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-indigo-700" />
+                {isTamil ? "கே.பி. ஆளும் கிரகங்கள் (Ruling Planets at Birth)" : "KP Ruling Planets (RP Matrix)"}
+              </h4>
+              <div className="p-5 rounded-2xl bg-white border border-indigo-200 space-y-3 shadow-xs">
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                    <span className="text-[10px] text-stone-500 block uppercase">Lagna Sign Lord</span>
+                    <strong className="text-stone-900 font-bold">{chartData?.rulingPlanets?.lagnaSignLord || "—"}</strong>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 3. Micro-Divisional Charts (D7, D10, D60) */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-800 flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-cyan-700" />
-              {isTamil ? "வர்க்க சக்கரங்கள் (Divisional Vargas)" : "Micro-Divisional Vargas"}
-            </h4>
-
-            {divisionalCharts && (
-              <div className="space-y-3 text-xs">
-                {/* D10 Dasamsha */}
-                <div className="p-3.5 rounded-2xl bg-white border border-cyan-200 space-y-1.5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-cyan-900">D10 Dasamsha (தசாம்சம்)</span>
-                    <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 text-[10px] font-bold border border-cyan-300">
-                      {isTamil ? `லக்னம்: ${divisionalCharts.d10Dasamsha?.ascendant?.tamil}` : `Asc: ${divisionalCharts.d10Dasamsha?.ascendant?.name}`}
-                    </span>
+                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                    <span className="text-[10px] text-stone-500 block uppercase">Lagna Star Lord</span>
+                    <strong className="text-stone-900 font-bold">{chartData?.rulingPlanets?.lagnaStarLord || "—"}</strong>
                   </div>
-                  <p className="text-[11px] text-stone-600">
-                    {isTamil ? "தொழில் தலைமை, அரசு பதவிகள் & பொது அந்தஸ்து" : "Executive career command, public authority & high status"}
-                  </p>
+                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                    <span className="text-[10px] text-stone-500 block uppercase">Lagna Sub Lord</span>
+                    <strong className="text-indigo-700 font-bold">{chartData?.rulingPlanets?.lagnaSubLord || "—"}</strong>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                    <span className="text-[10px] text-stone-500 block uppercase">Moon Sign Lord</span>
+                    <strong className="text-stone-900 font-bold">{chartData?.rulingPlanets?.moonSignLord || "—"}</strong>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                    <span className="text-[10px] text-stone-500 block uppercase">Moon Star Lord</span>
+                    <strong className="text-stone-900 font-bold">{chartData?.rulingPlanets?.moonStarLord || "—"}</strong>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                    <span className="text-[10px] text-stone-500 block uppercase">Moon Sub Lord</span>
+                    <strong className="text-purple-700 font-bold">{chartData?.rulingPlanets?.moonSubLord || "—"}</strong>
+                  </div>
                 </div>
-
-                {/* D60 Shashtiamsha */}
-                <div className="p-3.5 rounded-2xl bg-white border border-purple-200 space-y-1.5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-purple-900">D60 Shashtiamsha (ஷஷ்டியாம்சம்)</span>
-                    <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-900 text-[10px] font-bold border border-purple-300">
-                      {isTamil ? `லக்னம்: ${divisionalCharts.d60Shashtiamsha?.ascendant?.tamil}` : `Asc: ${divisionalCharts.d60Shashtiamsha?.ascendant?.name}`}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-600">
-                    {isTamil ? "பாரம்பரிய கர்ம வினைகள் & இரட்டைப் பிறப்பு நுணுக்க கணிப்பு" : "Traditional karmic themes, twin birth differentiation & micro-zodiac calibration"}
-                  </p>
-                </div>
-
-                {/* D7 Saptamsha */}
-                <div className="p-3.5 rounded-2xl bg-white border border-amber-200 space-y-1.5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-amber-900">D7 Saptamsha (சப்தாம்சம்)</span>
-                    <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
-                      {isTamil ? `லக்னம்: ${divisionalCharts.d7Saptamsha?.ascendant?.tamil}` : `Asc: ${divisionalCharts.d7Saptamsha?.ascendant?.name}`}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-600">
-                    {isTamil ? "புத்ர பாக்கியம், வம்ச விருத்தி & படைப்பாற்றல்" : "Progeny fortune, lineage continuity & creative fruitfulness"}
-                  </p>
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                  <span className="font-bold block">Birth Day Lord (Vaara Lord): {chartData?.rulingPlanets?.dayLord}</span>
+                  <p className="text-[11px] text-stone-600 mt-1">In KP Krishnamurti Padhdhati, Ruling Planets at birth determine the fruition of events and verify birth-time synchronization.</p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        ) : isTropical ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Western Aspects Grid */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-teal-900 flex items-center gap-1.5">
+                <Compass className="w-4 h-4 text-teal-700" />
+                {isTamil ? "மேற்கத்திய டாலமி திருஷ்டிகள் (Ptolemaic Aspects)" : "Western Ptolemaic Aspects Matrix"}
+              </h4>
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {(chartData?.aspects || []).map((asp, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-white border border-teal-200 text-xs shadow-xs flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-stone-900">{asp.planet1} {asp.aspect} {asp.planet2}</span>
+                      <span className="text-[10px] text-stone-500 block">Angle: {asp.angle}° (Orb: {Number(asp.orb ?? 0).toFixed(2)}°)</span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${asp.status === "Applying" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                        {asp.status}
+                      </span>
+                      <span className="text-[10px] text-stone-500 block mt-0.5">{asp.nature}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Western Dignities */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-900 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-cyan-700" />
+                {isTamil ? "கிரக ஆதிபத்திய பலங்கள் (Essential Dignities)" : "Western Essential Planetary Dignities"}
+              </h4>
+              <div className="p-5 rounded-2xl bg-white border border-cyan-200 space-y-2 shadow-xs">
+                {(planets || []).map(p => (
+                  <div key={p.name} className="flex items-center justify-between p-2 rounded-xl bg-stone-50 border border-stone-200 text-xs">
+                    <span className="font-bold text-stone-900">{p.name} in {p.signName || p.sign}</span>
+                    <span className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded ${
+                      p.dignity?.includes("Domicile") || p.dignity?.includes("Exaltation")
+                        ? "bg-emerald-100 text-emerald-800"
+                        : p.dignity?.includes("Detriment") || p.dignity?.includes("Fall")
+                        ? "bg-rose-100 text-rose-800"
+                        : "bg-stone-200 text-stone-700"
+                    }`}>
+                      {p.dignity || "Peregrine"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 1. Jaimini Chara Karakas */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-amber-700" />
+                {isTamil ? "ஜைமினி சப்த காரகங்கள் (Soul Matrix)" : "Jaimini Chara Karakas"}
+              </h4>
+
+              {Array.isArray(jaiminiKarakas) && jaiminiKarakas.length > 0 ? (
+                <div className="space-y-2">
+                  {jaiminiKarakas.map((k) => (
+                    <div
+                      key={k.code}
+                      className="p-3 rounded-xl bg-white border border-amber-200 hover:border-amber-400 transition-all flex items-center justify-between text-xs shadow-sm"
+                    >
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-bold text-[10px]">
+                            {k.code}
+                          </span>
+                          <span className="font-bold text-stone-900">
+                            {isTamil ? k.planetTa : k.planet}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-stone-500 block mt-0.5">
+                          {isTamil ? k.roleTa : k.role}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="font-mono text-purple-800 text-[11px] font-bold block">{k.degInSign}</span>
+                        <span className="text-[10px] text-stone-500 block">H{k.house} ({k.sign})</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-white border border-stone-200 text-xs text-stone-500">
+                  {isTamil ? "ஜைமினி காரகங்கள் இந்த கணிப்பு முறையில் பொருந்தாது." : (chartData?.jaimini?.reason || "Jaimini Chara Karakas are specific to Vedic Sidereal astrology.")}
+                </div>
+              )}
+            </div>
+
+            {/* 2. Shadbala 6-Fold Strengths */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-purple-800 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-purple-700" />
+                {isTamil ? "ஷட்பல கிரக பலங்கள் (Shadbala Rupas)" : "Shadbala Strength Matrix"}
+              </h4>
+
+              {Array.isArray(shadbala) && shadbala.length > 0 ? (
+                <div className="space-y-2">
+                  {shadbala.map((s) => {
+                    const ratioVal = s.ratio || (s.totalRupas / (s.requiredRupas || 6.0));
+                    const ratioPercent = Math.round(ratioVal * 100);
+                    return (
+                      <div
+                        key={s.planet}
+                        className="p-3 rounded-xl bg-white border border-purple-200 space-y-1.5 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-stone-900">
+                            {isTamil ? s.planetTa : s.planet}
+                          </span>
+                          <span className="font-mono text-emerald-700 font-bold text-[11px]">
+                            {s.totalRupas} / {s.requiredRupas} Rupas (Ratio: {s.ratio})
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full h-1.5 rounded-full bg-stone-200 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              ratioPercent >= 110
+                                ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                                : ratioPercent >= 95
+                                ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                                : "bg-gradient-to-r from-purple-500 to-indigo-500"
+                            }`}
+                            style={{ width: `${Math.min(100, ratioPercent)}%` }}
+                          />
+                        </div>
+
+                        <span className="text-[10px] text-stone-500 block">
+                          {s.status}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-white border border-stone-200 text-xs text-stone-500">
+                  {isTamil ? "ஷட்பல பலங்கள் இந்த கணிப்பு முறையில் பொருந்தாது." : (chartData?.shadbala?.reason || "Shadbala rupas are specific to Vedic Sidereal astrology.")}
+                </div>
+              )}
+            </div>
+
+            {/* 3. Micro-Divisional Charts (D7, D10, D60) */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-800 flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-cyan-700" />
+                {isTamil ? "வர்க்க சக்கரங்கள் (Divisional Vargas)" : "Micro-Divisional Vargas"}
+              </h4>
+
+              {divisionalCharts && divisionalCharts.status !== "NOT_APPLICABLE" && divisionalCharts.d10Dasamsha ? (
+                <div className="space-y-3 text-xs">
+                  {/* D10 Dasamsha */}
+                  <div className="p-3.5 rounded-2xl bg-white border border-cyan-200 space-y-1.5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-cyan-900">D10 Dasamsha (தசாம்சம்)</span>
+                      <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 text-[10px] font-bold border border-cyan-300">
+                        {isTamil ? `லக்னம்: ${divisionalCharts.d10Dasamsha?.ascendant?.tamil}` : `Asc: ${divisionalCharts.d10Dasamsha?.ascendant?.name}`}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600">
+                      {isTamil ? "தொழில் தலைமை, அரசு பதவிகள் & பொது அந்தஸ்து" : "Executive career command, public authority & high status"}
+                    </p>
+                  </div>
+
+                  {/* D60 Shashtiamsha */}
+                  <div className="p-3.5 rounded-2xl bg-white border border-purple-200 space-y-1.5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-purple-900">D60 Shashtiamsha (ஷஷ்டியாம்சம்)</span>
+                      <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-900 text-[10px] font-bold border border-purple-300">
+                        {isTamil ? `லக்னம்: ${divisionalCharts.d60Shashtiamsha?.ascendant?.tamil}` : `Asc: ${divisionalCharts.d60Shashtiamsha?.ascendant?.name}`}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600">
+                      {isTamil ? "பாரம்பரிய கர்ம வினைகள் & இரட்டைப் பிறப்பு நுணுக்க கணிப்பு" : "Traditional karmic themes, twin birth differentiation & micro-zodiac calibration"}
+                    </p>
+                  </div>
+
+                  {/* D7 Saptamsha */}
+                  <div className="p-3.5 rounded-2xl bg-white border border-amber-200 space-y-1.5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-amber-900">D7 Saptamsha (சப்தாம்சம்)</span>
+                      <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
+                        {isTamil ? `லக்னம்: ${divisionalCharts.d7Saptamsha?.ascendant?.tamil}` : `Asc: ${divisionalCharts.d7Saptamsha?.ascendant?.name}`}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600">
+                      {isTamil ? "புத்ர பாக்கியம், வம்ச விருத்தி & படைப்பாற்றல்" : "Progeny fortune, lineage continuity & creative fruitfulness"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-white border border-stone-200 text-xs text-stone-500">
+                  {isTamil ? "வர்க்க சக்கரங்கள் பாரம்பரிய வேத ஜோதிட முறைக்கு மட்டுமே பொருந்தும்." : "Harmonic divisional charts (D1–D60) are specific to Indian Parasara Jyotisha."}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 7. Parashari Sarvashtakavarga (337 Bindus) - 12 Bhava Matrix */}

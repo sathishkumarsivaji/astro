@@ -309,7 +309,7 @@ export default function App() {
                </div>
 
                <div className="text-xs text-stone-500">
-                 {t.currentSystem} <span className="text-amber-700 font-bold uppercase">{chartData?.system || "vedic"}</span>
+                 {t.currentSystem} <span className="text-amber-700 font-bold uppercase">{typeof chartData?.system === "object" ? (chartData.system?.name || chartData.system?.id) : (chartData?.system || "vedic")}</span>
                </div>
              </div>
 
