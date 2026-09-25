@@ -68,23 +68,24 @@ export function calculatePlacidusCusps(lmstDegrees, lat, T) {
   // isDiurnal: true for cusps 11, 12; false for cusps 2, 3
   function solvePlacidusCusp(ramcTarget, f, isDiurnal) {
     let ra = ramcTarget * DEG2RAD;
-    for (let iter = 0; iter < 50; iter++) {
-      // Find declination from RA and eps
-      // tan(dec) = sin(ra) * tan(eps)
-      const sinDec = Math.sin(ra) * Math.sin(epsRad);
-      const dec = Math.asin(Math.max(-1, Math.min(1, sinDec)));
+    for (let iter = 0; iter < 100; iter++) {
+      // Exact relation for ecliptic point: tan(dec) = tan(eps) * sin(ra)
+      const tanDec = Math.tan(epsRad) * Math.sin(ra);
+      const sinAD = Math.tan(phiRad) * tanDec;
+      const clampedSinAD = Math.max(-0.999999, Math.min(0.999999, sinAD));
+      const ad = Math.asin(clampedSinAD);
+      const dsa = Math.PI / 2 + ad;
+      const nsa = Math.PI / 2 - ad;
       
-      // Semi-arc
-      const val = -Math.tan(phiRad) * Math.tan(dec);
-      const clampedVal = Math.max(-0.999999, Math.min(0.999999, val));
-      const semiArc = isDiurnal ? Math.acos(clampedVal) : (Math.PI - Math.acos(clampedVal));
-      
-      const targetRA = (ramcTarget * DEG2RAD) + (isDiurnal ? (f * semiArc) : -(f * semiArc));
-      const diff = targetRA - ra;
-      ra += diff * 0.5;
-      if (Math.abs(diff) < 1e-7) break;
+      const targetRA = isDiurnal 
+        ? (ramcTarget * DEG2RAD + f * dsa)
+        : (ramcTarget * DEG2RAD - f * nsa);
+        
+      const diff = (targetRA - ra);
+      ra += diff * 0.6;
+      if (Math.abs(diff) < 1e-9) break;
     }
-    // Convert RA to Ecliptic Longitude
+    // Convert RA to Ecliptic Longitude: tan(long) = sin(ra) / (cos(ra) * cos(eps))
     const y = Math.sin(ra);
     const x = Math.cos(ra) * Math.cos(epsRad);
     return norm360(Math.atan2(y, x) * RAD2DEG);

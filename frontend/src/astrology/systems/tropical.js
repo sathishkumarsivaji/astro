@@ -63,7 +63,7 @@ export function calculateTropicalChart(observations, birthData) {
     const signName = SIGN_NAMES[signIdx];
 
     // Determine occupied house from Placidus cusps
-    let occupiedHouse = 1;
+    let occupiedHouse = null;
     for (let h = 1; h <= 12; h++) {
       const currentCusp = houseCusps[h - 1].longitude;
       const nextCusp = houseCusps[h % 12].longitude;
@@ -78,6 +78,9 @@ export function calculateTropicalChart(observations, birthData) {
         break;
       }
     }
+    if (occupiedHouse === null) {
+      throw new Error(`House cusp geometry error: body "${name}" at ${long.toFixed(4)}° could not be mapped to any Placidus cusp boundary.`);
+    }
 
     // Essential Dignity evaluation
     let dignity = "Peregrine";
@@ -90,7 +93,7 @@ export function calculateTropicalChart(observations, birthData) {
     }
 
     planets.push({
-      name,
+      name, displayName: name === "Rahu" ? "Mean North Node (Rahu)" : name === "Ketu" ? "Mean South Node (Ketu)" : name,
       longitude: long,
       speed: raw.speed,
       isRetrograde: raw.isRetrograde,

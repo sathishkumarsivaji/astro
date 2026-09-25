@@ -384,6 +384,30 @@ swissEphemerisBenchmarks.forEach(({ epoch, birthData, referenceTropical, toleran
 });
 
 // ---------------------------------------------------------------------------
+// 5.1 PLACIDUS HOUSE CUSPS BENCHMARKS ACROSS LATITUDES
+// ---------------------------------------------------------------------------
+console.log("\n5.1 Testing Placidus House Cusps Precision Across Latitudes...");
+import fs from "fs";
+import path from "path";
+
+const ephemerisFixturePath = path.resolve("./test_fixtures/ephemeris_reference.json");
+assert(fs.existsSync(ephemerisFixturePath), "ephemeris_reference.json fixture file must exist");
+const ephemerisFixture = JSON.parse(fs.readFileSync(ephemerisFixturePath, "utf8"));
+assert(Array.isArray(ephemerisFixture.placidus_benchmarks), "ephemeris_reference.json must contain placidus_benchmarks");
+
+ephemerisFixture.placidus_benchmarks.forEach(({ location, latitude, ramc, eps, ascendant, mc, cusps }) => {
+  const result = calculatePlacidusCusps(ramc, eps, latitude);
+  assert(Math.abs(result.ascendant - ascendant) < 0.01, `Placidus Ascendant at ${location} (${latitude}°) matches golden reference within 0.01°`);
+  assert(Math.abs(result.mc - mc) < 0.01, `Placidus MC at ${location} (${latitude}°) matches golden reference within 0.01°`);
+  for (let h = 1; h <= 12; h++) {
+    const cuspKey = String(h);
+    const expectedCusp = cusps[cuspKey];
+    const actualCusp = result.cusps[cuspKey];
+    assert(Math.abs(actualCusp - expectedCusp) < 0.01, `Placidus House ${h} at ${location} (${latitude}°) matches golden reference within 0.01° (got ${actualCusp.toFixed(4)}°, expected ${expectedCusp.toFixed(4)}°)`);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 6. ASPECT DYNAMICS & CIRCULAR BOUNDARY CONDITIONS
 // ---------------------------------------------------------------------------
 console.log("\n6. Testing Aspect Dynamics: Applying vs Separating & Boundary Transitions...");

@@ -869,18 +869,19 @@ export function getUtcInstantFromLocal(dateStr, timeStr, timezoneId, options = {
 
   const timeParts = timeStr.split(":").map(Number);
   if (timeParts.length < 2 || timeParts.slice(0, 2).some(p => !Number.isFinite(p))) {
-    throw new Error(`Invalid time format "${timeStr}". Expected HH:mm.`);
+    throw new Error(`Invalid time format "${timeStr}". Expected HH:mm or HH:mm:ss.`);
   }
   const [h, min] = timeParts;
-  if (h < 0 || h > 23 || min < 0 || min > 59) {
-    throw new Error(`Invalid time components in "${timeStr}". Hour must be 0-23, Minute must be 0-59.`);
+  const sec = (timeParts.length > 2 && Number.isFinite(timeParts[2])) ? timeParts[2] : 0;
+  if (h < 0 || h > 23 || min < 0 || min > 59 || sec < 0 || sec > 59) {
+    throw new Error(`Invalid time components in "${timeStr}". Hour must be 0-23, Minute must be 0-59, Second must be 0-59.`);
   }
 
   if (options.fold !== undefined && options.fold !== 0 && options.fold !== 1) {
     throw new Error(`Invalid fold option: ${options.fold}. fold must be 0 or 1.`);
   }
 
-  const approxUtc = new Date(Date.UTC(y, m - 1, d, h, min, 0));
+  const approxUtc = new Date(Date.UTC(y, m - 1, d, h, min, sec));
   const offsetMins = getTimezoneOffsetMinutes(approxUtc, timezoneId);
   const exactUtc = new Date(approxUtc.getTime() - offsetMins * 60000);
   const finalOffsetMins = getTimezoneOffsetMinutes(exactUtc, timezoneId);
@@ -912,7 +913,8 @@ export function getUtcInstantFromLocal(dateStr, timeStr, timezoneId, options = {
         for (const p of parts) val[p.type] = p.value;
         const roundH = val.hour === "24" ? 0 : Number(val.hour);
         const roundMin = Number(val.minute);
-        if (roundH === h && roundMin === min) {
+        const roundSec = Number(val.second || 0);
+        if (roundH === h && roundMin === min && (timeParts.length < 3 || Math.abs(roundSec - sec) <= 1)) {
           matchingUtcs.push({ utc: testInstant, offset: off });
         }
       } catch {
@@ -1912,6 +1914,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     tzOffsetHours = getTimezoneOffsetMinutes(utcDate, timezoneId) / 60;
   } else if (typeof tz === "number" && Number.isFinite(tz)) {
     tzOffsetHours = tz;
+    timezoneId = options?.timezoneId || (tzOffsetHours === 5.5 ? "Asia/Kolkata" : (tzOffsetHours === 0 ? "UTC" : null));
     const totalUtcMinutes = Math.round((hour + min / 60.0 - tzOffsetHours) * 60);
     const utcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + totalUtcMinutes * 60000;
     utcDate = new Date(utcMs);
@@ -2475,14 +2478,14 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     get masterPredictions() {
       if (options?.lightweight) return null;
       if (!this._masterPredictions) {
-        this._masterPredictions = calculateMasterPredictions(planets, ascendantLong, moonLong, dashaTable, year, "en");
+        this._masterPredictions = calculateMasterPredictions(this, "en");
       }
       return this._masterPredictions;
     },
     get masterPredictionsTamil() {
       if (options?.lightweight) return null;
       if (!this._masterPredictionsTamil) {
-        this._masterPredictionsTamil = calculateMasterPredictions(planets, ascendantLong, moonLong, dashaTable, year, "ta");
+        this._masterPredictionsTamil = calculateMasterPredictions(this, "ta");
       }
       return this._masterPredictionsTamil;
     },
@@ -2531,14 +2534,14 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     get timeline() {
       if (options?.lightweight) return null;
       if (!this._timeline) {
-        this._timeline = calculateChronologicalDashaTimeline(planets, ascendantLong, moonLong, dashaTable, year, "en", ascendantSign, moonSign, moonNakshatra, calculatedShadbala);
+        this._timeline = calculateChronologicalDashaTimeline(this, "en");
       }
       return this._timeline;
     },
     get timelineTamil() {
       if (options?.lightweight) return null;
       if (!this._timelineTamil) {
-        this._timelineTamil = calculateChronologicalDashaTimeline(planets, ascendantLong, moonLong, dashaTable, year, "ta", ascendantSign, moonSign, moonNakshatra, calculatedShadbala);
+        this._timelineTamil = calculateChronologicalDashaTimeline(this, "ta");
       }
       return this._timelineTamil;
     },
@@ -9876,33 +9879,37 @@ function parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDas
     let birthJd = null;
     if (birthInstant instanceof Date && !isNaN(birthInstant.getTime())) {
       birthJd = getJulianDateFromUtc(birthInstant);
-    } else if (typeof chartOrPlanets.birthDateStr === "string" && /^\d{4}-\d{2}-\d{2}$/.test(chartOrPlanets.birthDateStr)) {
+    } else if (typeof chartOrPlanets.birthDateStr === "string" && /^\d{4}-\d{2}-\d{2}$/.test(chartOrPlanets.birthDateStr) && chartOrPlanets.birthTimeStr) {
       const [by, bm, bd] = chartOrPlanets.birthDateStr.split("-").map(Number);
-      const [bh, bmin] = (chartOrPlanets.birthTimeStr || "12:00").split(":").map(Number);
-      const tzOff = chartOrPlanets.timezoneOffsetHours ?? chartOrPlanets.tz ?? 5.5;
-      birthJd = getJulianDate(by, bm, bd, bh || 12, bmin || 0, 0) - (tzOff / 24.0);
+      const [bh, bmin, bsec] = chartOrPlanets.birthTimeStr.split(":").map(Number);
+      const tzOff = chartOrPlanets.timezoneOffsetHours ?? chartOrPlanets.utcOffset ?? chartOrPlanets.tz ?? 0;
+      birthJd = getJulianDate(by, bm, bd, bh, bmin, bsec || 0) - (tzOff / 24.0);
     }
+    const ascLongVal = chartOrPlanets.ascendant?.longitude ?? chartOrPlanets.ascendantLong ?? chartOrPlanets.ascendantDeg ?? (typeof maybeAscLong === "number" ? maybeAscLong : null);
+    const moonPlanet = chartOrPlanets.planets?.find(p => p.name === "Moon");
+    const moonLongVal = chartOrPlanets.moon?.longitude ?? chartOrPlanets.moonLong ?? moonPlanet?.longitude ?? (typeof maybeMoonLong === "number" ? maybeMoonLong : null);
+
     return {
       planets: chartOrPlanets.planets,
-      ascendantLong: chartOrPlanets.ascendantLong ?? chartOrPlanets.ascendantDeg ?? 0,
-      moonLong: chartOrPlanets.moonLong ?? 0,
+      ascendantLong: ascLongVal,
+      moonLong: moonLongVal,
       dashaTable: chartOrPlanets.dashaTable ?? [],
-      birthYear: chartOrPlanets.birthYear ?? (birthInstant ? birthInstant.getUTCFullYear() : 1995),
+      birthYear: chartOrPlanets.birthYear ?? (birthInstant ? birthInstant.getUTCFullYear() : (typeof chartOrPlanets.birthDateStr === "string" ? Number(chartOrPlanets.birthDateStr.split("-")[0]) : null)),
       birthInstantUtc: birthInstant,
       birthJd,
       lang: typeof maybeAscLong === "string" ? maybeAscLong : (chartOrPlanets.lang || "en"),
       divisionalCharts: chartOrPlanets.divisionalCharts || null,
       shadbala: chartOrPlanets.shadbala || [],
-      timezoneOffsetHours: chartOrPlanets.timezoneOffsetHours ?? chartOrPlanets.tz ?? 5.5,
-      timezoneId: chartOrPlanets.timezoneId ?? "Asia/Kolkata"
+      timezoneOffsetHours: chartOrPlanets.timezoneOffsetHours ?? chartOrPlanets.utcOffset ?? chartOrPlanets.tz ?? null,
+      timezoneId: chartOrPlanets.timezoneId || (chartOrPlanets.timezoneOffsetHours === 5.5 || chartOrPlanets.utcOffset === 5.5 || chartOrPlanets.tz === 5.5 ? "Asia/Kolkata" : (chartOrPlanets.timezoneOffsetHours === 0 || chartOrPlanets.utcOffset === 0 || chartOrPlanets.tz === 0 ? "UTC" : null))
     };
   }
   return {
     planets: Array.isArray(chartOrPlanets) ? chartOrPlanets : [],
-    ascendantLong: maybeAscLong ?? 0,
-    moonLong: maybeMoonLong ?? 0,
-    dashaTable: maybeDashaTable ?? [],
-    birthYear: maybeBirthYear ?? 1995,
+    ascendantLong: typeof maybeAscLong === "number" ? maybeAscLong : null,
+    moonLong: typeof maybeMoonLong === "number" ? maybeMoonLong : null,
+    dashaTable: Array.isArray(maybeDashaTable) ? maybeDashaTable : [],
+    birthYear: typeof maybeBirthYear === "number" ? maybeBirthYear : null,
     birthInstantUtc: null,
     birthJd: null,
     lang: maybeLang ?? "en",
@@ -9996,8 +10003,8 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
   const isTamil = ctx?.lang === "ta";
   const lagnaSignIdx = Math.floor(norm360(ctx?.ascendantLong ?? 0) / 30);
   const planets = ctx?.planets || [];
-  const tzOffset = ctx?.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx?.timezoneId ?? "Asia/Kolkata";
+  const tzOffset = ctx?.timezoneOffsetHours ?? (ctx?.timezoneId === "UTC" ? 0 : (ctx?.timezoneId === "Asia/Kolkata" ? 5.5 : null));
+  const tzId = ctx?.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const getBhavaSignAndLord = (bhavaNum) => {
     const bhavaSignIdx = (lagnaSignIdx + (bhavaNum - 1)) % 12;
@@ -10249,7 +10256,7 @@ export function calculateMarriageTimingEvents(chartOrPlanets, maybeAscLong, mayb
   const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
   const isTamil = ctx.lang === "ta";
   const tzOffset = ctx.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx.timezoneId ?? "Asia/Kolkata";
+  const tzId = ctx.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const lagnaSignIdx = Math.floor(norm360(ctx.ascendantLong) / 30);
   const h7SignIdx = (lagnaSignIdx + 6) % 12;
@@ -10480,7 +10487,7 @@ export function calculateCareerTimingEvents(chartOrPlanets, maybeAscLong, maybeM
   const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
   const isTamil = ctx.lang === "ta";
   const tzOffset = ctx.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx.timezoneId ?? "Asia/Kolkata";
+  const tzId = ctx.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const lagnaSignIdx = Math.floor(norm360(ctx.ascendantLong) / 30);
   const h10SignIdx = (lagnaSignIdx + 9) % 12;
@@ -10703,7 +10710,7 @@ export function calculatePropertyTimingEvents(chartOrPlanets, maybeAscLong, mayb
   const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
   const isTamil = ctx.lang === "ta";
   const tzOffset = ctx.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx.timezoneId ?? "Asia/Kolkata";
+  const tzId = ctx.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const lagnaSignIdx = Math.floor(norm360(ctx.ascendantLong) / 30);
   const h4SignIdx = (lagnaSignIdx + 3) % 12;
@@ -10914,7 +10921,7 @@ export function calculateEducationTimingEvents(chartOrPlanets, maybeAscLong, may
   const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
   const isTamil = ctx.lang === "ta";
   const tzOffset = ctx.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx.timezoneId ?? "Asia/Kolkata";
+  const tzId = ctx.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const lagnaSignIdx = Math.floor(norm360(ctx.ascendantLong) / 30);
   const h4SignIdx = (lagnaSignIdx + 3) % 12;
@@ -11126,7 +11133,7 @@ export function calculateProgenyTimingEvents(chartOrPlanets, maybeAscLong, maybe
   const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
   const isTamil = ctx.lang === "ta";
   const tzOffset = ctx.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx.timezoneId ?? "Asia/Kolkata";
+  const tzId = ctx.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const lagnaSignIdx = Math.floor(norm360(ctx.ascendantLong) / 30);
   const h5SignIdx = (lagnaSignIdx + 4) % 12;
@@ -11336,7 +11343,7 @@ export function calculateHealthVulnerabilityEvents(chartOrPlanets, maybeAscLong,
   const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
   const isTamil = ctx.lang === "ta";
   const tzOffset = ctx.timezoneOffsetHours ?? 5.5;
-  const tzId = ctx.timezoneId ?? "Asia/Kolkata";
+  const tzId = ctx.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
 
   const lagnaSignIdx = Math.floor(norm360(ctx.ascendantLong) / 30);
   const h6SignIdx = (lagnaSignIdx + 5) % 12;
@@ -12225,17 +12232,46 @@ export function calculateComprehensiveRiskMatrix(planets = [], ascendantLong = 0
  * planetary dignities, and normalized astrological support scores.
  */
 export function calculateChronologicalDashaTimeline(
-  planets = [],
-  ascendantLong = 0,
-  moonLong = 0,
-  dashaTable = [],
-  birthYear = 1995,
-  lang = "en",
+  chartOrPlanets = [],
+  maybeAscLong = 0,
+  maybeMoonLong = 0,
+  maybeDashaTable = [],
+  maybeBirthYear = 1995,
+  maybeLang = "en",
   ascendantSign = null,
   moonSign = null,
   moonNakshatra = null,
   shadbala = []
 ) {
+  let planets = Array.isArray(chartOrPlanets) ? chartOrPlanets : [];
+  let ascendantLong = typeof maybeAscLong === "number" ? maybeAscLong : 0;
+  let moonLong = typeof maybeMoonLong === "number" ? maybeMoonLong : 0;
+  let dashaTable = Array.isArray(maybeDashaTable) ? maybeDashaTable : [];
+  let birthYear = typeof maybeBirthYear === "number" ? maybeBirthYear : 1995;
+  let lang = typeof maybeLang === "string" ? maybeLang : (typeof maybeAscLong === "string" ? maybeAscLong : "en");
+  let tzOffsetHours = 5.5;
+  let timezoneId = "Asia/Kolkata";
+  let birthJd = null;
+  let birthInstantUtc = null;
+
+  if (chartOrPlanets && !Array.isArray(chartOrPlanets)) {
+    const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
+    planets = ctx.planets || [];
+    ascendantLong = ctx.ascendantLong ?? 0;
+    moonLong = ctx.moonLong ?? 0;
+    dashaTable = ctx.dashaTable && ctx.dashaTable.length > 0 ? ctx.dashaTable : [];
+    birthYear = ctx.birthYear ?? birthYear;
+    lang = ctx.lang || lang;
+    shadbala = ctx.shadbala || shadbala || [];
+    tzOffsetHours = ctx.timezoneOffsetHours ?? tzOffsetHours;
+    timezoneId = ctx.timezoneId || timezoneId;
+    birthJd = ctx.birthJd;
+    birthInstantUtc = ctx.birthInstantUtc;
+    ascendantSign = chartOrPlanets.ascendantSign || ascendantSign;
+    moonSign = chartOrPlanets.moonSign || moonSign;
+    moonNakshatra = chartOrPlanets.moonNakshatra || moonNakshatra;
+  }
+
   const isTamil = lang === "ta";
   const lagnaSignIdx = Math.floor(norm360(ascendantLong) / 30);
   const lagnaSign = ZODIAC_SIGNS[lagnaSignIdx];
@@ -12591,7 +12627,19 @@ export function calculateChronologicalDashaTimeline(
     }
   }
 
-  const events = calculateMasterPredictions({ planets, ascendantLong, moonLong, dashaTable, birthYear, lang, shadbala });
+  const events = calculateMasterPredictions({
+    planets,
+    ascendantLong,
+    moonLong,
+    dashaTable,
+    birthYear,
+    lang,
+    shadbala,
+    timezoneOffsetHours: tzOffsetHours,
+    timezoneId,
+    birthJd,
+    birthInstantUtc
+  });
 
   return {
     summary: isTamil

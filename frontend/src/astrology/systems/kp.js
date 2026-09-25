@@ -58,7 +58,7 @@ export function calculateKPChart(observations, birthData) {
     const nakInfo = getNakshatraAndPada(siderealLong);
 
     // Determine KP House occupied using Placidus cusp boundaries
-    let occupiedHouse = 1;
+    let occupiedHouse = null;
     for (let h = 1; h <= 12; h++) {
       const currentCusp = houseCusps[h - 1].longitude;
       const nextCusp = houseCusps[h % 12].longitude;
@@ -73,6 +73,9 @@ export function calculateKPChart(observations, birthData) {
         occupiedHouse = h;
         break;
       }
+    }
+    if (occupiedHouse === null) {
+      throw new Error(`KP House cusp geometry error: body "${name}" at ${siderealLong.toFixed(4)}° could not be mapped to any Placidus cusp boundary.`);
     }
 
     planets.push({

@@ -97,18 +97,24 @@ export function normalizeBirthData(data) {
 
   if (tzId && tzId !== "UTC") {
     try {
-      const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      utcDate = getUtcInstantFromLocal(birthDate, timeStr, tzId, { fold: data.fold ?? 0 });
+      const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+      const foldOption = (data.fold !== undefined && data.fold !== null) ? { fold: data.fold } : {};
+      utcDate = getUtcInstantFromLocal(birthDate, timeStr, tzId, foldOption);
       const localMs = Date.UTC(year, month - 1, day, hour, minute, second);
       const effOffset = (localMs - utcDate.getTime()) / 3600000;
-      if (tzOffset === null) {
-        tzOffset = effOffset;
+      // Authoritative IANA timezone resolution: override or ensure offset consistency
+      if (hasUtcOffset && Math.abs(tzOffset - effOffset) > 0.05) {
+        console.warn(`Overriding conflicting supplied utcOffset (${tzOffset}) with authoritative IANA timezone offset (${effOffset}) for ${tzId}`);
       }
+      tzOffset = effOffset;
     } catch (err) {
       // Do NOT silently catch/swallow timezone errors
       throw new Error(`Invalid or unresolvable IANA timezone "${tzId}": ${err.message}`);
     }
-  } else if (tzId === "UTC" && tzOffset === null) {
+  } else if (tzId === "UTC") {
+    if (hasUtcOffset && Math.abs(tzOffset) > 1e-4) {
+      throw new Error(`Contradictory timezone input: timezoneId is "UTC" but utcOffset is ${utcOffset}. For UTC, offset must be 0.`);
+    }
     tzOffset = 0.0;
   }
 

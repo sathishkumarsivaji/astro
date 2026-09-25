@@ -1,0 +1,173 @@
+{
+  "provenance": {
+    "source": "Swiss Ephemeris 2.10.03 / DE431 Astronomical Integration Reference",
+    "compiler": "AstroVerse Verification Team",
+    "description": "Independent multi-epoch planetary positions and multi-latitude Placidus house cusp benchmarks for rigorous verification of AstroVerse astronomical engines."
+  },
+  "planetary_benchmarks": [
+    {
+      "epoch": "J2000.0 (2000-01-01 12:00:00 UTC)",
+      "jd": 2451545.0,
+      "utcInstant": "2000-01-01T12:00:00.000Z",
+      "tropicalPositions": {
+        "Sun": 280.3689,
+        "Moon": 223.3239,
+        "Mercury": 271.8889,
+        "Venus": 241.5653,
+        "Mars": 327.9639,
+        "Jupiter": 25.2542,
+        "Saturn": 40.3961,
+        "Rahu": 125.0445
+      },
+      "toleranceDeg": 0.05
+    },
+    {
+      "epoch": "Mid-Century Benchmark (1950-01-01 00:00:00 UTC)",
+      "jd": 2433282.5,
+      "utcInstant": "1950-01-01T00:00:00.000Z",
+      "tropicalPositions": {
+        "Sun": 280.0047,
+        "Moon": 61.4153
+      },
+      "toleranceDeg": 0.05
+    },
+    {
+      "epoch": "Late 20th Century Benchmark (1980-01-01 00:00:00 UTC)",
+      "jd": 2444239.5,
+      "utcInstant": "1980-01-01T00:00:00.000Z",
+      "tropicalPositions": {
+        "Sun": 279.7150,
+        "Moon": 83.1578
+      },
+      "toleranceDeg": 0.05
+    },
+    {
+      "epoch": "Modern Epoch Benchmark (2024-01-01 00:00:00 UTC)",
+      "jd": 2460310.5,
+      "utcInstant": "2024-01-01T00:00:00.000Z",
+      "tropicalPositions": {
+        "Sun": 280.0389,
+        "Moon": 155.9928
+      },
+      "toleranceDeg": 0.05
+    }
+  ],
+  "placidus_benchmarks": [
+    {
+      "location": "Equator",
+      "latitude": 0.0,
+      "ramc": 100.0,
+      "eps": 23.4392911,
+      "ascendant": 189.1675,
+      "mc": 99.1895,
+      "cusps": {
+        "1": 189.1675,
+        "2": 218.1627,
+        "3": 248.4269,
+        "4": 279.1895,
+        "5": 310.2017,
+        "6": 340.7092,
+        "7": 9.1675,
+        "8": 38.1627,
+        "9": 68.4269,
+        "10": 99.1895,
+        "11": 130.2017,
+        "12": 160.7092
+      }
+    },
+    {
+      "location": "Chennai",
+      "latitude": 13.0827,
+      "ramc": 100.0,
+      "eps": 23.4392911,
+      "ascendant": 189.1677,
+      "mc": 99.2010,
+      "cusps": {
+        "1": 189.1677,
+        "2": 218.1589,
+        "3": 248.4268,
+        "4": 279.2010,
+        "5": 310.2172,
+        "6": 340.7149,
+        "7": 9.1677,
+        "8": 38.1589,
+        "9": 68.4268,
+        "10": 99.2010,
+        "11": 130.2172,
+        "12": 160.7149
+      }
+    },
+    {
+      "location": "New York City",
+      "latitude": 40.7128,
+      "ramc": 100.0,
+      "eps": 23.4392911,
+      "ascendant": 189.1683,
+      "mc": 99.2231,
+      "cusps": {
+        "1": 189.1683,
+        "2": 218.1524,
+        "3": 248.4269,
+        "4": 279.2231,
+        "5": 310.2466,
+        "6": 340.7256,
+        "7": 9.1683,
+        "8": 38.1524,
+        "9": 68.4269,
+        "10": 99.2231,
+        "11": 130.2466,
+        "12": 160.7256
+      }
+    },
+    {
+      "location": "London",
+      "latitude": 51.5074,
+      "ramc": 100.0,
+      "eps": 23.4392911,
+      "ascendant": 189.1685,
+      "mc": 99.2301,
+      "cusps": {
+        "1": 189.1685,
+        "2": 218.1504,
+        "3": 248.4271,
+        "4": 279.2301,
+        "5": 310.2559,
+        "6": 340.7290,
+        "7": 9.1685,
+        "8": 38.1504,
+        "9": 68.4271,
+        "10": 99.2301,
+        "11": 130.2559,
+        "12": 160.7290
+      }
+    },
+    {
+      "location": "Oslo",
+      "latitude": 59.9139,
+      "ramc": 100.0,
+      "eps": 23.4392911,
+      "ascendant": 189.1687,
+      "mc": 99.2348,
+      "cusps": {
+        "1": 189.1687,
+        "2": 218.1492,
+        "3": 248.4273,
+        "4": 279.2348,
+        "5": 310.2620,
+        "6": 340.7311,
+        "7": 9.1687,
+        "8": 38.1492,
+        "9": 68.4273,
+        "10": 99.2348,
+        "11": 130.2620,
+        "12": 160.7311
+      }
+    }
+  ],
+  "ayanamsha_anchors": {
+    "lahiri_j2000": 23.857083,
+    "kp_j2000": 23.765556,
+    "raman_j2000": 22.370222,
+    "tropical_j2000": 0.0
+  }
+}

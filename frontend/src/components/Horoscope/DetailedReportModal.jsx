@@ -44,6 +44,7 @@ import {
   calculateMultiSystemBundle,
   CALCULATION_CONVENTIONS
 } from "../../services/astroEngine";
+import { getChaptersForSystem } from "../../config/reportChapters";
 
 function CertaintyBadge({ type = "calculated", isTamil = false }) {
   if (type === "calculated") {
@@ -327,18 +328,8 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const isTropical = chartSys === "tropical" || chartSys === "sayana" || chartSys === "western";
   const isKP = chartSys === "kp";
 
-  const visibleTabs = tabs.filter(tab => {
-    if (tab.id === "all" || tab.id === "execSummary" || tab.id === "blueprint" || tab.id === "bhavas" || tab.id === "health" || tab.id === "studies" || tab.id === "career" || tab.id === "property" || tab.id === "politics" || tab.id === "relationships" || tab.id === "foreign" || tab.id === "auspicious" || tab.id === "risks" || tab.id === "technicalAppendix" || tab.id === "multiSystemComparison") {
-      return true;
-    }
-    if (isTropical) {
-      return false; // Tropical isolates from Vedic techniques
-    }
-    if (isKP) {
-      return tab.id === "timeline"; // KP includes Vimshottari Dasha
-    }
-    return true;
-  });
+  const systemChapterIds = new Set(getChaptersForSystem(chartSys).map(c => c.id));
+  const visibleTabs = tabs.filter(tab => tab.id === "all" || systemChapterIds.has(tab.id));
 
   return (
     <div className="detailed-report-modal-overlay fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-2 md:p-4 overflow-y-auto">
@@ -403,9 +394,9 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
         {/* Astronomical Calculation Conventions Disclosure */}
         <div className="px-3.5 py-2 rounded-xl bg-amber-50/70 border border-amber-200/80 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-600 font-mono">
           <div className="flex flex-wrap items-center gap-3">
-            <span><strong>Ephemeris:</strong> Astronomy Engine (VSOP87/NOVAS-derived) — AstroVerse Lahiri/Chitrapaksha</span>
-            <span><strong>Synthesis:</strong> Parashari & Jaimini</span>
-            <span><strong>House System:</strong> Whole Sign / Equal-House Bhava Chalit</span>
+            <span><strong>Ephemeris:</strong> Astronomy Engine 2.1.19 ({isTropical ? "Western Tropical / Sayana" : isKP ? "KP Sidereal" : chartSys === "raman" ? "Raman Sidereal" : "Lahiri / Chitrapaksha"})</span>
+            <span><strong>Synthesis:</strong> {isTropical ? "Western Psychological & Modern Tropical" : isKP ? "Krishnamurti Padhdhati (KP Sub-Lords)" : "Parashari & Jaimini"}</span>
+            <span><strong>House System:</strong> {isTropical ? "Placidus Quadrant Houses" : isKP ? "Placidus Cusps (Siderealized)" : "Whole Sign / Equal-House Bhava Chalit"}</span>
             <span><strong>Engine:</strong> AstroVerse Engine 4.2.0</span>
           </div>
           <span className="text-[10px] text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded font-sans font-medium">
@@ -519,7 +510,13 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
           <div className="text-[11px] text-stone-500 hidden sm:block">
             {viewMode === "ai" 
               ? (isTamil ? "Google Gemini AI மூலம் இயங்குகிறது" : "Powered by Google Gemini 1.5/2.5 AI")
-              : (isTamil ? "லாஹிரி அயனாம்சம் & நவகிரக பாகை கணிதம்" : "Lahiri Ayanamsha & Ephemeris Matrix")}
+              : (isTropical
+                  ? (isTamil ? "சயன அயனாம்சமற்ற வானியல் கணிதம்" : "Sayana Tropical Ephemeris Matrix")
+                  : isKP
+                    ? (isTamil ? "கே.பி. அயனாம்சம் & உப-அதிபதி கணிதம்" : "KP Ayanamsha & Sub-Lord Matrix")
+                    : chartSys === "raman"
+                      ? (isTamil ? "ராமன் அயனாம்சம் & நவகிரக கணிதம்" : "Raman Ayanamsha & Ephemeris Matrix")
+                      : (isTamil ? "லாஹிரி அயனாம்சம் & நவகிரக பாகை கணிதம்" : "Lahiri Ayanamsha & Ephemeris Matrix"))}
           </div>
         </div>
 
@@ -3179,7 +3176,11 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                   )}
                   <p className="text-[10px] text-stone-500 pt-1 border-t border-stone-200 italic leading-relaxed">
-                    All astronomical planetary coordinates and spherical conversions are calculated directly in local memory. Astrological interpretations follow classical Parashari and Jaimini methodologies and do not constitute legal, medical, or financial assurances.
+                    {isTropical
+                      ? "All astronomical planetary coordinates and spherical conversions are calculated directly in local memory via Astronomy Engine 2.1.19. Astrological interpretations follow Western Tropical / Psychological astrological principles and do not constitute legal, medical, or financial assurances."
+                      : isKP
+                        ? "All astronomical planetary coordinates and spherical conversions are calculated directly in local memory via Astronomy Engine 2.1.19. Astrological interpretations follow Krishnamurti Padhdhati (KP) sub-lord principles and do not constitute legal, medical, or financial assurances."
+                        : "All astronomical planetary coordinates and spherical conversions are calculated directly in local memory via Astronomy Engine 2.1.19. Astrological interpretations follow classical Parashari and Jaimini methodologies and do not constitute legal, medical, or financial assurances."}
                   </p>
                 </div>
               </div>
