@@ -91,8 +91,9 @@ export function validateBirthProfile(profile) {
   }
 
   // 6. Astrological System
-  if (profile.system && profile.system !== "vedic") {
-    errors.push("Astrological system must be 'vedic'");
+  const validSystems = ["vedic", "lahiri", "kp", "raman", "tropical", "sayana", "western"];
+  if (profile.system && !validSystems.includes(String(profile.system).toLowerCase())) {
+    errors.push(`Astrological system must be one of: ${validSystems.join(", ")}`);
   }
 
   return {

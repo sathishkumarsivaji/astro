@@ -41,6 +41,7 @@ import {
   calculateExecutiveSummary,
   calculatePredictionReasoningChain,
   reconcileEvidenceContradictions,
+  calculateMultiSystemBundle,
   CALCULATION_CONVENTIONS
 } from "../../services/astroEngine";
 
@@ -135,6 +136,34 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const [aiReportText, setAiReportText] = useState("");
   const [aiError, setAiError] = useState("");
   const [copied, setCopied] = useState(false);
+
+  const multiSystemBundle = React.useMemo(() => {
+    if (!isOpen || !chartData) return null;
+    try {
+      const lat = chartData?.latitude ?? chartData?.lat ?? chartData?.profile?.latitude;
+      const lng = chartData?.longitude ?? chartData?.lng ?? chartData?.profile?.longitude;
+      const bDate = chartData?.birthDateStr || chartData?.birthDate || chartData?.profile?.birthDate;
+      const bTime = chartData?.birthTimeStr || chartData?.time || chartData?.profile?.birthTime || "12:00";
+      const tz = chartData?.utcOffset ?? chartData?.tz ?? chartData?.profile?.utcOffset;
+      const tzId = chartData?.timezoneId ?? chartData?.profile?.timezoneId ?? null;
+
+      if (lat === undefined || lat === null || lng === undefined || lng === null || !bDate || tz === undefined || tz === null) {
+        return null;
+      }
+      const bData = {
+        birthDate: bDate,
+        birthTime: bTime,
+        latitude: Number(lat),
+        longitude: Number(lng),
+        utcOffset: Number(tz),
+        timezoneId: tzId
+      };
+      return calculateMultiSystemBundle(bData);
+    } catch (err) {
+      console.warn("Multi-system bundle computation skipped:", err);
+      return null;
+    }
+  }, [isOpen, chartData]);
 
   if (!isOpen || !chartData) return null;
 
@@ -286,11 +315,12 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     { id: "dosha", label: isTamil ? "11. திரிதோஷ சமநிலை" : "11. Tridosha Balance", icon: Flame },
     { id: "remedies", label: isTamil ? "12. பரிகாரங்கள் & ரத்தினம்" : "12. Remedies & Gem Associations", icon: Gem },
     { id: "auspicious", label: isTamil ? "13. சுப முகூர்த்த காலங்கள்" : "13. Auspicious Timing Principles", icon: Clock },
-    { id: "risks", label: isTamil ? "14. எச்சரிக்கை காலங்கள் & பரிகாரம்" : "14. Comprehensive Risk Matrix", icon: ShieldAlert },
+    { id: "risks", label: isTamil ? "14. எச்சரிக்கை காலங்கள் & பரிகாரம்" : "14. Traditional Caution Indicators & Timing Windows", icon: ShieldAlert },
     { id: "timeline", label: isTamil ? "15. விம்சோத்தரி தசா காலக்கோடு (0-120 ஆண்டு)" : "15. Complete Vimshottari Timeline (0–120 Yrs)", icon: Calendar },
     { id: "milestoneAudit", label: isTamil ? "16. கடந்த கால மைல்கற்கள் சரிபார்ப்பு" : "16. Retrospective Milestone Verification", icon: CheckCheck },
     { id: "reasoningDossier", label: isTamil ? "17. ஜோதிட ஆதார சங்கிலி (Astrologer Dossier)" : "17. Astrologer Evidence Dossier", icon: Sparkles },
-    { id: "technicalAppendix", label: isTamil ? "18. தொழில்நுட்ப கணக்கீட்டு பிற்சேர்க்கை" : "18. Technical Calculation Appendix", icon: Layers }
+    { id: "technicalAppendix", label: isTamil ? "18. தொழில்நுட்ப கணக்கீட்டு பிற்சேர்க்கை" : "18. Technical Calculation Appendix", icon: Layers },
+    { id: "multiSystemComparison", label: isTamil ? "19. பல ஜோதிட முறைகளின் ஒப்பீடு" : "19. Multi-System Comparative Analysis", icon: Compass }
   ];
 
   return (
@@ -1990,13 +2020,13 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               </div>
             )}
 
-            {/* CHAPTER 14: Comprehensive Multi-Dimensional Risk Matrix & Vulnerability Timelines */}
+            {/* CHAPTER 14: Traditional Caution Indicators & Timing Windows */}
             {(activeTab === "all" || activeTab === "risks") && (
               <div className="space-y-6">
                 <div className="border-b border-rose-300 pb-2">
                   <h3 className="text-base font-serif font-bold text-rose-900 flex items-center gap-2">
                     <ShieldAlert className="w-4 h-4 text-rose-600" />
-                    {isTamil ? "14. பல பரிமாண ஆபத்துக்கள் & எச்சரிக்கை கால அட்டவணை" : "14. Comprehensive Multi-Dimensional Risk Matrix & Vulnerability Timelines"}
+                    {isTamil ? "14. பாரம்பரிய எச்சரிக்கை குறிகாட்டிகள் & கால அட்டவணை" : "14. Traditional Caution Indicators & Timing Windows"}
                   </h3>
                   <p className="text-xs text-stone-600 mt-0.5">
                     {riskData.summary}
@@ -2973,6 +3003,169 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                   </div>
                   <p className="text-[10px] text-stone-500 pt-1 border-t border-stone-200 italic leading-relaxed">
                     All astronomical planetary coordinates and spherical conversions are calculated directly in local memory. Astrological interpretations follow classical Parashari and Jaimini methodologies and do not constitute legal, medical, or financial assurances.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 19. Multi-System Comparative Analysis (Lahiri vs KP vs Raman vs Tropical) */}
+            {(activeTab === "all" || audienceMode === "astrologer" || activeTab === "multiSystemComparison") && multiSystemBundle && (
+              <div className="p-5 md:p-6 rounded-3xl bg-white border-2 border-indigo-400 shadow-md space-y-6">
+                {/* Chapter Header */}
+                <div className="border-b border-indigo-200 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="font-serif font-bold text-lg md:text-xl text-stone-900 flex items-center gap-2">
+                        <Compass className="w-5 h-5 text-indigo-600" />
+                        {isTamil ? "19. பல ஜோதிட முறைகளின் ஒப்பீட்டு ஆய்வு" : "19. Multi-System Comparative Analysis"}
+                      </h3>
+                      <p className="text-xs text-stone-600 mt-1">
+                        {isTamil
+                          ? "லஹிரி, கே.பி., பி.வி. ராமன் மற்றும் மேற்கத்திய சாயன முறைகளின் சுயாதீன வானியல் கணக்கீடுகள் மற்றும் உடன்பாட்டு பகுப்பாய்வு."
+                          : "Deterministic side-by-side comparison across Lahiri (Chitrapaksha), KP (Krishnamurti), Raman, and Tropical (Sayana) systems."}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-indigo-100 text-indigo-900 border border-indigo-200">
+                        {multiSystemBundle.comparison.summary.agreementPercentage}% {isTamil ? "உடன்பாடு" : "Sidereal Agreement"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4 Systems Architectural Overview */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1">
+                    <span className="text-[10px] font-bold text-amber-900 uppercase block tracking-wider">1. Lahiri Sidereal</span>
+                    <strong className="text-xs text-stone-900 block">Chitrapaksha Ayanamsha</strong>
+                    <p className="text-[11px] text-stone-600">Ayanamsha: {multiSystemBundle.comparison.summary.lahiriAyanamsha}</p>
+                    <p className="text-[10px] text-stone-500">Whole Sign / Sripati, 16 Vargas, Shadbala, 337-SAV, Jaimini, Dasha.</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1">
+                    <span className="text-[10px] font-bold text-blue-900 uppercase block tracking-wider">2. KP System</span>
+                    <strong className="text-xs text-stone-900 block">Krishnamurti Padhdhati</strong>
+                    <p className="text-[11px] text-stone-600">Ayanamsha: {multiSystemBundle.comparison.summary.kpAyanamsha}</p>
+                    <p className="text-[10px] text-stone-500">Placidus Cusps, 249 Star/Sub-lords, 4-Tier Significators, Ruling Planets.</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1">
+                    <span className="text-[10px] font-bold text-emerald-900 uppercase block tracking-wider">3. Raman Sidereal</span>
+                    <strong className="text-xs text-stone-900 block">B.V. Raman (397 AD)</strong>
+                    <p className="text-[11px] text-stone-600">Ayanamsha: {multiSystemBundle.comparison.summary.ramanAyanamsha}</p>
+                    <p className="text-[10px] text-stone-500">Independent recalculation from 397 AD epoch. Full Vedic methodology.</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200 space-y-1">
+                    <span className="text-[10px] font-bold text-purple-900 uppercase block tracking-wider">4. Tropical / Sayana</span>
+                    <strong className="text-xs text-stone-900 block">Western Astronomical</strong>
+                    <p className="text-[11px] text-stone-600">Ayanamsha: None (0°00'00'')</p>
+                    <p className="text-[10px] text-stone-500">Vernal Equinox base, Placidus Houses, Ptolemaic Aspects, Western Dignities.</p>
+                  </div>
+                </div>
+
+                {/* Cross-System Planetary & Cusp Coordinates Table */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                    {isTamil ? "19.1 நவகிரகங்கள் & லக்ன ஒப்பீட்டு அட்டவணை" : "19.1 Multi-System Calculated Coordinates & Agreement Table"}
+                  </h4>
+                  <div className="overflow-x-auto rounded-2xl border border-indigo-200 shadow-2xs bg-white">
+                    <table className="w-full text-[11px] text-left border-collapse">
+                      <thead>
+                        <tr className="bg-indigo-100/70 border-b border-indigo-200 text-stone-800 font-mono text-[10px] uppercase">
+                          <th className="py-2.5 px-3">Body / Point</th>
+                          <th className="py-2.5 px-3">Lahiri (Chitrapaksha)</th>
+                          <th className="py-2.5 px-3">KP (Placidus + Sub)</th>
+                          <th className="py-2.5 px-3">Raman (397 AD)</th>
+                          <th className="py-2.5 px-3">Tropical (Sayana)</th>
+                          <th className="py-2.5 px-3 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-indigo-100 font-mono text-stone-700">
+                        {multiSystemBundle.comparison.comparisons.map((row, idx) => {
+                          const badgeColor = row.classification === "AGREEMENT" 
+                            ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            : row.classification === "PARTIAL AGREEMENT"
+                            ? "bg-amber-100 text-amber-900 border-amber-200"
+                            : "bg-rose-100 text-rose-800 border-rose-200";
+
+                          return (
+                            <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-indigo-50/20"}>
+                              <td className="py-2 px-3 font-bold font-sans text-stone-900">{row.body}</td>
+                              <td className="py-2 px-3">
+                                <div>{row.lahiri.formatted}</div>
+                                <div className="text-[10px] font-sans text-stone-500">{row.lahiri.sign} (H{row.lahiri.house}) • {row.lahiri.nakshatra} ({row.lahiri.pada})</div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <div>{row.kp.formatted}</div>
+                                <div className="text-[10px] font-sans text-stone-500">{row.kp.sign} (H{row.kp.house}) • Sub: {row.kp.subLord}</div>
+                              </td>
+                              <td className="py-2 px-3">
+                                {row.raman ? (
+                                  <>
+                                    <div>{row.raman.formatted}</div>
+                                    <div className="text-[10px] font-sans text-stone-500">{row.raman.sign} (H{row.raman.house})</div>
+                                  </>
+                                ) : "—"}
+                              </td>
+                              <td className="py-2 px-3">
+                                {row.tropical ? (
+                                  <>
+                                    <div>{row.tropical.formatted}</div>
+                                    <div className="text-[10px] font-sans text-stone-500">{row.tropical.sign} (H{row.tropical.house}) • {row.tropical.dignity || "—"}</div>
+                                  </>
+                                ) : "—"}
+                              </td>
+                              <td className="py-2 px-3 text-center">
+                                <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${badgeColor}`}>
+                                  {row.classification}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Technique Applicability Matrix */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                    {isTamil ? "19.2 ஜோதிட முறைகளின் கோட்பாட்டு பொருத்தம்" : "19.2 Cross-System Astrological Technique Applicability Matrix"}
+                  </h4>
+                  <div className="overflow-x-auto rounded-2xl border border-indigo-200 shadow-2xs bg-white">
+                    <table className="w-full text-[11px] text-left border-collapse">
+                      <thead>
+                        <tr className="bg-indigo-100/70 border-b border-indigo-200 text-stone-800 font-mono text-[10px] uppercase">
+                          <th className="py-2 px-3">Technique / Framework</th>
+                          <th className="py-2 px-3">Lahiri Sidereal</th>
+                          <th className="py-2 px-3">KP System</th>
+                          <th className="py-2 px-3">Raman Sidereal</th>
+                          <th className="py-2 px-3">Tropical Sayana</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-indigo-100 text-stone-700 text-[11px]">
+                        {multiSystemBundle.comparison.techniqueMatrix.map((tRow, tIdx) => (
+                          <tr key={tIdx} className={tIdx % 2 === 0 ? "bg-white" : "bg-indigo-50/20"}>
+                            <td className="py-2 px-3 font-semibold text-stone-900">{tRow.technique}</td>
+                            <td className="py-2 px-3">{tRow.lahiri}</td>
+                            <td className="py-2 px-3">{tRow.kp}</td>
+                            <td className="py-2 px-3">{tRow.raman}</td>
+                            <td className="py-2 px-3 text-stone-500 italic">{tRow.tropical}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Transparency Notice */}
+                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 text-xs text-indigo-950 space-y-1">
+                  <span className="font-bold uppercase tracking-wider block text-[11px] text-indigo-900">
+                    Computational Integrity & Anti-Fabrication Guarantee
+                  </span>
+                  <p className="text-[10px] text-indigo-800 leading-relaxed">
+                    AstroVerse enforces absolute mathematical isolation across astrology systems. Lahiri, KP, Raman, and Tropical models share astronomical ephemeris observations (VSOP87) but strictly execute their own coordinate transformations and interpretation logic. Classical techniques (Shadbala, Ashtakavarga, Vargas) are never fabricated or silently evaluated on Sayana tropical coordinates.
                   </p>
                 </div>
               </div>

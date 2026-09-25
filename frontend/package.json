@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node test_full_audit.mjs && node test_find_claims.mjs && node test_golden_astronomy.mjs && node test_d3_d9.mjs && node test_regression.mjs",
+    "test": "node test_full_audit.mjs && node test_find_claims.mjs && node test_golden_astronomy.mjs && node test_d3_d9.mjs && node test_regression.mjs && node test_detailed_report_integrity.mjs && node test_multi_system_precision.mjs && node test_independent_ephemeris_reference.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

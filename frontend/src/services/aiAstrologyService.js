@@ -449,7 +449,10 @@ ${retrospectiveSummary}
 18. **அத்தியாயம் 18: தொழில்நுட்ப கணக்கீட்டு பிற்சேர்க்கை (Comprehensive Technical Calculation Appendix)**
     - நவகிரக வானியல் பாகைகள், 16 சோடசவர்க்க நிலைகள் (D1-D60), 6-வகை ஷட்பல விருபாக்கள், 337-பிந்து அஷ்டகவர்க்க அட்டவணை, ஜைமினி காரகங்கள் மற்றும் மூல வானியல் பஞ்சாங்க தரவுத்தளம்.
 
-முழு அறிக்கையையும் நடுவில் எங்கும் நிறுத்தாமல், அத்தியாயம் 1 முதல் அத்தியாயம் 18 வரை முழுமையாக வழங்கி முடிக்கவும்.`;
+19. **அத்தியாயம் 19: பல ஜோதிட முறைகளின் ஒப்பீட்டு ஆய்வு (Multi-System Comparative Analysis)**
+    - சித்திரபக்ஷ லஹிரி, கே.பி. முறை, பி.வி. ராமன் முறை மற்றும் மேற்கத்திய சாயன முறைகளின் ஒப்பீடு, பாவ சலித மாற்றங்கள் மற்றும் உடன்பாட்டு நிலைகள்.
+
+முழு அறிக்கையையும் நடுவில் எங்கும் நிறுத்தாமல், அத்தியாயம் 1 முதல் அத்தியாயம் 19 வரை முழுமையாக வழங்கி முடிக்கவும்.`;
   }
 
   // English Prompt
@@ -587,7 +590,10 @@ ${retrospectiveSummary}
 18. **Chapter 18: Comprehensive Technical Calculation Appendix & Astronomical Dataset**
     - Complete deterministic computational ledger: Ephemeris & Dispositors, Whole-Sign vs Bhava Chalit Cusps, Shodashavarga Matrix (D1–D60), 6-Fold Shadbala virupas, 337-Bindu Ashtakavarga, Jaimini 7-Karaka System & Arudha Padas, Planetary Avasthas, and Root-Solved Panchanga.
 
-Do NOT truncate or stop mid-way. Generate the complete, comprehensive master dossier from Chapter 1 through Chapter 18.`;
+19. **Chapter 19: Multi-System Comparative Analysis & Cross-System Agreement**
+    - Rigorous cross-comparison across Lahiri (Chitrapaksha Sidereal), KP (Krishnamurti Padhdhati with Placidus cusps and 249 sub-lords), B.V. Raman Sidereal (397 AD epoch), and Western Tropical (Sayana). Highlight agreement areas, cuspal shifts, and technique applicability.
+
+Do NOT truncate or stop mid-way. Generate the complete, comprehensive master dossier across all chapters.`;
 }
 
 /**

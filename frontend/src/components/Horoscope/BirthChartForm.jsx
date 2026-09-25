@@ -133,11 +133,38 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Astrological System Badge */}
-        <div className="flex items-center justify-center">
-          <div className="bg-amber-50/90 px-4 py-2 rounded-2xl border border-amber-200/80 flex items-center gap-2 shadow-inner text-amber-900 text-xs font-bold">
-            <Compass className="w-4 h-4 text-amber-700" />
-            <span>{isTamil ? "வேத ஜோதிடம் / நிராயண முறை (சித்திரபக்ஷ லஹரி அயனாம்சம்)" : "Vedic Sidereal — Chitrapaksha / Lahiri Ayanamsha"}</span>
+        {/* Astrological System Selector */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-stone-700 flex items-center gap-1.5 justify-center">
+            <Compass className="w-3.5 h-3.5 text-amber-600" />
+            <span>{isTamil ? "ஜோதிட கணக்கீட்டு முறை (Calculation System)" : "Astrological Calculation System"}</span>
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { id: "lahiri", labelEn: "Lahiri (Chitrapaksha)", labelTa: "லஹரி (சித்திரபக்ஷ)", descEn: "Vedic Sidereal Standard", descTa: "வேத நிராயணம்" },
+              { id: "kp", labelEn: "KP System", labelTa: "கே.பி. முறை", descEn: "Placidus Cusps & Sub-Lords", descTa: "உப-அதிபதி முறை" },
+              { id: "raman", labelEn: "B.V. Raman", labelTa: "பி.வி. ராமன்", descEn: "Sidereal (397 AD Epoch)", descTa: "ராமன் நிராயணம்" },
+              { id: "tropical", labelEn: "Western (Sayana)", labelTa: "சாயனம் (மேற்கத்திய)", descEn: "Vernal Equinox (0° Aries)", descTa: "சாயன அயனம்" },
+            ].map(sys => {
+              const isSelected = (formData.system || "lahiri").toLowerCase() === sys.id || (sys.id === "lahiri" && formData.system === "vedic");
+              return (
+                <button
+                  key={sys.id}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, system: sys.id }))}
+                  className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 ${
+                    isSelected
+                      ? "bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/20 font-bold"
+                      : "bg-white text-stone-700 border-amber-200/80 hover:bg-amber-50"
+                  }`}
+                >
+                  <span className="text-xs font-semibold">{isTamil ? sys.labelTa : sys.labelEn}</span>
+                  <span className={`text-[10px] ${isSelected ? "text-amber-100" : "text-stone-500"}`}>
+                    {isTamil ? sys.descTa : sys.descEn}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

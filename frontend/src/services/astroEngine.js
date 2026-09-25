@@ -751,11 +751,11 @@ export function parseCivilDateInTimezone(dateInput, tz = 5.5, timezoneId = null,
 /**
  * Sidereal Sun and Moon positions for any UTC instant
  */
-export function getSiderealSunMoon(dateObj) {
+export function getSiderealSunMoon(dateObj, system = "lahiri") {
   const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
   const jd = getJulianDateFromUtc(d);
   const T = (jd - 2451545.0) / 36525.0;
-  const ayanamsa = getLahiriAyanamsha(jd);
+  const ayanamsa = getAyanamshaForSystem(jd, system);
 
   let sunLong = 0;
   let moonLong = 0;
@@ -950,6 +950,36 @@ export function getLahiriAyanamsha(jd) {
   const T = (jd - 2451545.0) / 36525.0;
   return 23.85709167 + 1.396971 * T + 0.0003086 * T * T;
 }
+
+// Krishnamurti Padhdhati (KP) Ayanamsha
+export function getKPAyanamsha(jd) {
+  const T = (jd - 2451545.0) / 36525.0;
+  return 23.76555556 + 1.3955235 * T;
+}
+
+// B.V. Raman Ayanamsha (397 AD zero-year epoch)
+export function getRamanAyanamsha(jd) {
+  const T = (jd - 2451545.0) / 36525.0;
+  const decimalYear = 2000.0 + T * 100.0;
+  return (decimalYear - 397.0) * (50.2388475 / 3600.0);
+}
+
+// Universal Multi-System Ayanamsha Resolver
+export function getAyanamshaForSystem(jd, systemOrConfig = "lahiri") {
+  if (typeof systemOrConfig === "number") return systemOrConfig;
+  const sysNorm = (typeof systemOrConfig === "string" ? systemOrConfig : (systemOrConfig?.id || systemOrConfig?.system || "lahiri")).toLowerCase();
+  if (sysNorm === "vedic" || sysNorm === "lahiri") {
+    return getLahiriAyanamsha(jd);
+  } else if (sysNorm === "kp") {
+    return getKPAyanamsha(jd);
+  } else if (sysNorm === "raman") {
+    return getRamanAyanamsha(jd);
+  } else if (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana") {
+    return 0.0;
+  }
+  return getLahiriAyanamsha(jd);
+}
+
 
 // Precise Sun Calculation
 function calculateSunPosition(T) {
@@ -1913,7 +1943,21 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   // Exact Julian Day of birth instant derived directly from resolved UTC instant Date
   const jd = getJulianDateFromUtc(utcDate);
   const T = (jd - 2451545.0) / 36525.0;
-  const ayanamsha = system === "vedic" ? getLahiriAyanamsha(jd) : 0;
+  const sysNorm = (system || "vedic").toLowerCase();
+  let ayanamsha = 0;
+  if (sysNorm === "vedic" || sysNorm === "lahiri") {
+    ayanamsha = getLahiriAyanamsha(jd);
+  } else if (sysNorm === "kp") {
+    ayanamsha = getKPAyanamsha(jd);
+  } else if (sysNorm === "raman") {
+    ayanamsha = getRamanAyanamsha(jd);
+  } else if (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana") {
+    ayanamsha = 0;
+  } else if (typeof options?.ayanamshaValue === "number") {
+    ayanamsha = options.ayanamshaValue;
+  } else {
+    ayanamsha = getLahiriAyanamsha(jd);
+  }
   const adjustLong = (deg) => norm360(deg - ayanamsha);
 
   const utcPlus1Hour = new Date(utcDate.getTime() + 3600000);
@@ -2265,10 +2309,10 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   const dashaTable = computeDetailedVimshottari(birthLordIndex, balanceRatio, date, jd, tzOffsetHours);
 
   let activeMahadasha = null;
-  const curMd = dashaTable.find(d => d.isCurrent) || dashaTable[0];
-  const curBk = curMd.bukthis?.find(b => b.isCurrent) || curMd.bukthis?.[0] || null;
+  const curMd = dashaTable.find(d => d.isCurrent) || null;
+  const curBk = curMd ? (curMd.bukthis?.find(b => b.isCurrent) || curMd.bukthis?.[0] || null) : null;
 
-  activeMahadasha = {
+  activeMahadasha = curMd ? {
     lord: curMd.lord,
     tamil: curMd.tamil,
     startAge: curMd.startAge,
@@ -2279,7 +2323,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     currentAntarTamil: curBk?.subTamil || curMd.tamil,
     bkStartAge: curBk?.startAge || curMd.startAge,
     bkEndAge: curBk?.endAge || curMd.endAge
-  };
+  } : null;
 
   // 5. Chevvai (Mars) Dosham Diagnostic (Houses 1, 2, 4, 7, 8, 12 from Lagna, Moon, Venus)
   const marsFromLagna = getHouse(marsLong, ascendantLong);
@@ -2312,7 +2356,8 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   try {
     const nowUtc = new Date();
     const transitSaturnTrop = Astronomy.Ecliptic(Astronomy.GeoVector("Saturn", nowUtc, true)).elon;
-    const ayanamshaNow = system === "vedic" ? getLahiriAyanamsha(getJulianDate(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth() + 1, nowUtc.getUTCDate(), nowUtc.getUTCHours(), nowUtc.getUTCMinutes(), 0)) : 0;
+    const nowJd = getJulianDate(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth() + 1, nowUtc.getUTCDate(), nowUtc.getUTCHours(), nowUtc.getUTCMinutes(), 0);
+    const ayanamshaNow = getAyanamshaForSystem(nowJd, system);
     const transitSaturnSidereal = norm360(transitSaturnTrop - ayanamshaNow);
     const transitSaturnSignIdx = getSignIdx(transitSaturnSidereal);
     const transitSaturnFromMoon = (transitSaturnSignIdx - moonSignIdx + 12) % 12;
@@ -2337,7 +2382,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   const decimalHours = hour + min / 60.0;
   const isDayBirth = (sunTimes.sunriseHours !== null && sunTimes.sunsetHours !== null)
     ? (decimalHours >= sunTimes.sunriseHours && decimalHours < sunTimes.sunsetHours)
-    : (decimalHours >= 6.0 && decimalHours < 18.0);
+    : (sunTimes.isPolarDay ? true : (sunTimes.isPolarNight ? false : (decimalHours >= 6.0 && decimalHours < 18.0)));
   const birthDateObj = (date instanceof Date) ? date : new Date(Date.UTC(year, month - 1, day, hour, min, 0));
 
   const calculatedShadbala = calculateShadbala(
@@ -2377,6 +2422,10 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     birthDate: dateStr,
     ayanamsa: ayanamsha.toFixed(4),
     ayanamsaDms: degToDms(ayanamsha),
+    ayanamsaValue: ayanamsha,
+    ayanamshaValue: ayanamsha,
+    system: sysNorm,
+    ayanamshaName: sysNorm === "kp" ? "KP Original" : (sysNorm === "raman" ? "B.V. Raman (397 AD)" : (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana" ? "None (Sayana)" : "Lahiri (Chitrapaksha)")),
     ascendantLong,
     ascendantDeg: norm360(ascendantLong),
     ascendantSpeedDegPerMin,
@@ -6386,7 +6435,7 @@ export function calculateTraditionalLongevityIndicators(
     const chart = planetsOrChart;
     planets = chart.planets || [];
     ascLong = requireLongitude(chart.ascendant?.longitude ?? chart.ascendantLong, "calculateTraditionalLongevityIndicators Ascendant");
-    dasha = dasha || chart.currentDasha || (chart.dashaTable && chart.dashaTable[0]) || null;
+    dasha = dasha || chart.currentDasha || chart.dashaTable?.find(d => d.isCurrent) || null;
     const langArg = typeof ascendantLong === "string" ? ascendantLong : (typeof lang === "string" ? lang : "en");
     isTamil = langArg === "ta";
   } else {
@@ -6603,7 +6652,8 @@ export function calculateDedicatedGocharDashboard(chartData = {}, targetDate = n
   }
   const jd = getJulianDateFromUtc(tDate);
   const T = (jd - 2451545.0) / 36525.0;
-  const ayanamsa = getLahiriAyanamsha(jd);
+  const chartSystem = chartData?.system || "lahiri";
+  const ayanamsa = getAyanamshaForSystem(jd, chartSystem);
 
   // Extract Natal Moon & Lagna
   const natalMoonLong = chartData.moon?.longitude ?? chartData.moonLong ?? 0;
@@ -6623,10 +6673,10 @@ export function calculateDedicatedGocharDashboard(chartData = {}, targetDate = n
     let siderealLong = 0;
     let isRetrograde = false;
     if (gName === "Sun") {
-      const sm = getSiderealSunMoon(tDate);
+      const sm = getSiderealSunMoon(tDate, chartSystem);
       siderealLong = sm.sunLong;
     } else if (gName === "Moon") {
-      const sm = getSiderealSunMoon(tDate);
+      const sm = getSiderealSunMoon(tDate, chartSystem);
       siderealLong = sm.moonLong;
     } else if (gName === "Rahu") {
       const rahuTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
@@ -7209,10 +7259,11 @@ export function calculateEventMuhurta(eventType = "Marriage", startDate = new Da
 // ---------------------------------------------------------------------------
 export function calculateD60StabilityTest(birthDate = new Date(), lat = 13.0827, lng = 80.2707, tz = 5.5, options = {}) {
   const bDate = birthDate instanceof Date ? birthDate : new Date(birthDate);
+  const sys = options?.system || "lahiri";
 
   const getD60AtTime = (dateObj) => {
     const jd = getJulianDateFromUtc(dateObj);
-    const ayanamsa = getLahiriAyanamsha(jd);
+    const ayanamsa = getAyanamshaForSystem(jd, sys);
     let siderealAsc = 0;
     if (typeof Astronomy !== "undefined" && Astronomy.SiderealTime) {
       const gastHours = Astronomy.SiderealTime(dateObj);
@@ -7612,7 +7663,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   const shadRatio = (shadbalaObj && typeof shadbalaObj.ratio === "number") ? shadbalaObj.ratio : ((shadbalaObj && typeof shadbalaObj.strengthRatio === "number") ? shadbalaObj.strengthRatio : (virupas !== null && reqRupas > 0 ? virupas / (reqRupas * 60) : null));
   const isStrongCapacity = shadbalaObj && typeof shadbalaObj.isSufficient === "boolean"
     ? shadbalaObj.isSufficient
-    : (shadRatio !== null ? shadRatio >= 1.0 : (virupas !== null ? virupas >= 390 : false));
+    : (shadRatio !== null ? shadRatio >= 1.0 : false);
   
   const l3Title = isTamil
     ? `நிலை 3 — கிரக திறன் vs சுபத்தன்மை (${virupas !== null ? "ஷட்பலம்: " + virupas.toFixed(1) + " விருபாக்கள்" : "ஷட்பல விபரம் இல்லை"})`
@@ -7723,7 +7774,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
     ? `நிலை 6 — கோச்சார கிரக தூண்டுதல் & அஷ்டகவர்க்கம்${savNote}` 
     : `Level 6 — Gochara Transit Triggers & Ashtakavarga${savNote}`;
   const l6Desc = typeof savBindus === "number"
-    ? `Transiting Jupiter and Saturn activate the ${cfg.domainName} axis, supported by ${savBindus} SAV bindus in the target bhava sign.`
+    ? `Sarvashtakavarga reserve in target bhava sign is ${savBindus} bindus. Dynamic activation occurs when transiting Jupiter and Saturn aspect or transit the natal ${cfg.primaryHouse}-th house axis.`
     : `Transit triggers operate as dynamic catalysts when Jupiter and Saturn aspect or transit the natal ${cfg.primaryHouse}-th house axis.`;
 
   levels.push({
@@ -7805,7 +7856,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
     : `Level 8 — Counter-Indicator & Cancellation Filter (${mitigations.length > 0 ? mitigations.join('; ') : 'No primary afflictions'})`;
   const l8Desc = mitigations.length > 0
     ? `Evaluation of astrological modifications: ${mitigations.join('. ')}.`
-    : `No critical functional afflictions (such as severe Kendradhipati Dosha or uncancelled debilitation) detected for ${pLordName}.`;
+    : `No evaluated critical structural afflictions (such as severe combustion or uncancelled debilitation) detected for ${pLordName}.`;
 
   levels.push({
     level: 8,
@@ -8222,21 +8273,21 @@ export function calculateDigBala(p, ascendantAngles = 0) {
  * Astronomical Solar Ingress Root Finder
  * Computes exact Julian Day for any target sidereal Sun longitude (e.g. 0° Aries for Mesha Sankranti)
  */
-export function getSiderealSunLongitudeAtJd(testJd) {
+export function getSiderealSunLongitudeAtJd(testJd, system = "lahiri") {
   const testDate = julianDateToDate(testJd);
   const el = Astronomy.Ecliptic(Astronomy.GeoVector("Sun", testDate, true));
-  const ayan = getLahiriAyanamsha(testJd);
+  const ayan = getAyanamshaForSystem(testJd, system);
   return norm360(el.elon - ayan);
 }
 
-export function findExactSolarIngressJd(targetSiderealDeg, approxJdStart, approxJdEnd) {
+export function findExactSolarIngressJd(targetSiderealDeg, approxJdStart, approxJdEnd, system = "lahiri") {
   let low = approxJdStart;
   let high = approxJdEnd;
   const target = norm360(targetSiderealDeg);
 
   // Bracket verification: ensure target is bounded in [low, high]
-  let sLow = getSiderealSunLongitudeAtJd(low);
-  let sHigh = getSiderealSunLongitudeAtJd(high);
+  let sLow = getSiderealSunLongitudeAtJd(low, system);
+  let sHigh = getSiderealSunLongitudeAtJd(high, system);
   let diffLow = sLow - target;
   if (diffLow > 180) diffLow -= 360;
   if (diffLow < -180) diffLow += 360;
@@ -8247,13 +8298,13 @@ export function findExactSolarIngressJd(targetSiderealDeg, approxJdStart, approx
   if (diffLow > 0 && diffHigh > 0) {
     low -= 15.0;
     // Re-evaluate after shift
-    diffLow = getSiderealSunLongitudeAtJd(low) - target;
+    diffLow = getSiderealSunLongitudeAtJd(low, system) - target;
     if (diffLow > 180) diffLow -= 360;
     if (diffLow < -180) diffLow += 360;
   } else if (diffLow < 0 && diffHigh < 0) {
     high += 15.0;
     // Re-evaluate after shift
-    diffHigh = getSiderealSunLongitudeAtJd(high) - target;
+    diffHigh = getSiderealSunLongitudeAtJd(high, system) - target;
     if (diffHigh > 180) diffHigh -= 360;
     if (diffHigh < -180) diffHigh += 360;
   }
@@ -8269,7 +8320,7 @@ export function findExactSolarIngressJd(targetSiderealDeg, approxJdStart, approx
 
   for (let iter = 0; iter < 50; iter++) {
     const mid = (low + high) / 2;
-    const sLong = getSiderealSunLongitudeAtJd(mid);
+    const sLong = getSiderealSunLongitudeAtJd(mid, system);
     let diff = sLong - target;
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
@@ -8294,12 +8345,24 @@ export function calculateKalaBala(p, isDayBirth = true, moonLng = 0, sunLong = 0
   if (timezoneOffsetHours === null || timezoneOffsetHours === undefined || !Number.isFinite(timezoneOffsetHours)) {
     throw new Error("Explicit timezoneOffsetHours is required for astronomical Kala Bala calculation.");
   }
-  if (!sunTimes || !Number.isFinite(sunTimes.sunriseHours) || !Number.isFinite(sunTimes.sunsetHours)) {
-    throw new Error("Valid astronomical sunrise and sunset times (sunriseHours, sunsetHours) are required for Kala Bala calculation.");
-  }
+  let sunriseHours = sunTimes?.sunriseHours;
+  let sunsetHours = sunTimes?.sunsetHours;
 
-  const sunriseHours = sunTimes.sunriseHours;
-  const sunsetHours = sunTimes.sunsetHours;
+  if (sunTimes?.isPolarNight || sunTimes?.isPolarDay || !Number.isFinite(sunriseHours) || !Number.isFinite(sunsetHours)) {
+    const noonH = Number.isFinite(sunTimes?.solarNoonHours) ? sunTimes.solarNoonHours : 12.0;
+    if (sunTimes?.isPolarNight) {
+      isDayBirth = false;
+      sunriseHours = (noonH - 6.0 + 24) % 24;
+      sunsetHours = (noonH + 6.0 + 24) % 24;
+    } else if (sunTimes?.isPolarDay) {
+      isDayBirth = true;
+      sunriseHours = (noonH - 12.0 + 24) % 24;
+      sunsetHours = (noonH + 12.0 + 24) % 24;
+    } else {
+      sunriseHours = 6.0;
+      sunsetHours = 18.0;
+    }
+  }
 
   // 3a. Nathonnatha Bala (Continuous Diurnal/Nocturnal: 0 to 60 virupas based on distance from local solar noon/midnight)
   const noonHour = sunriseHours + (sunsetHours - sunriseHours) / 2.0;
@@ -8704,6 +8767,17 @@ export function calculateDrikBala(p, allPlanets = []) {
 }
 
 /**
+ * True 3D Spherical Declination: sin δ = sin β cos ε + cos β sin ε sin λ
+ */
+export function calculateSphericalDeclination(eclipticLongDeg, eclipticLatDeg = 0, obliquityDeg = 23.439291) {
+  const epsRad = obliquityDeg * DEG2RAD;
+  const lambdaRad = eclipticLongDeg * DEG2RAD;
+  const betaRad = eclipticLatDeg * DEG2RAD;
+  const sinDec = Math.sin(betaRad) * Math.cos(epsRad) + Math.cos(betaRad) * Math.sin(epsRad) * Math.sin(lambdaRad);
+  return Math.asin(Math.max(-1, Math.min(1, sinDec))) * RAD2DEG;
+}
+
+/**
  * Graha Yuddha (Planetary War) Engine
  * Evaluates wars between Tara Grahas (Mars, Mercury, Jupiter, Venus, Saturn) within 1° separation
  */
@@ -8718,6 +8792,15 @@ export function calculateGrahaYuddha(planets = []) {
     warDetails[p.name] = { inWar: false, opponent: null, isVictor: false, virupasAdjustment: 0, warCorrectionImplemented: false };
   });
 
+  const getPlanetDec = (p) => {
+    if (p.declination !== undefined && p.declination !== null && Number.isFinite(p.declination)) {
+      return p.declination;
+    }
+    const trop = p.tropicalLongitude !== undefined ? p.tropicalLongitude : (p.longitude || 0);
+    const lat = p.eclipticLat !== undefined ? p.eclipticLat : 0;
+    return calculateSphericalDeclination(trop, lat);
+  };
+
   for (let i = 0; i < taraPlanets.length; i++) {
     for (let j = i + 1; j < taraPlanets.length; j++) {
       const p1 = taraPlanets[i];
@@ -8725,8 +8808,8 @@ export function calculateGrahaYuddha(planets = []) {
       const dist = angularDistance(p1.longitude, p2.longitude);
 
       if (dist <= 1.0) {
-        const dec1 = p1.declination !== undefined ? p1.declination : (p1.eclipticLat || 0);
-        const dec2 = p2.declination !== undefined ? p2.declination : (p2.eclipticLat || 0);
+        const dec1 = getPlanetDec(p1);
+        const dec2 = getPlanetDec(p2);
         let p1Wins;
         if (Math.abs(dec1 - dec2) > 0.01) {
           p1Wins = dec1 > dec2;
@@ -9279,10 +9362,10 @@ export function calculateAuspiciousMilestoneTimelines(planets = [], ascendantLon
 }
 
 /**
- * Exact Sidereal Longitude for Any Celestial Body at Julian Date (Lahiri Ayanamsha)
+ * Exact Sidereal Longitude for Any Celestial Body at Julian Date
  */
-export function getSiderealLongitudeForBody(bodyName, jd) {
-  const ayanamsha = getLahiriAyanamsha(jd);
+export function getSiderealLongitudeForBody(bodyName, jd, system = "lahiri") {
+  const ayanamsha = getAyanamshaForSystem(jd, system);
   if (bodyName === "Rahu" || bodyName === "Ketu") {
     const T = (jd - 2451545.0) / 36525.0;
     const rahuMeanTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
@@ -11467,7 +11550,7 @@ export function calculateMasterPredictions(chartOrPlanets, maybeAscLong, maybeMo
  * Calculates real-time or future planetary positions of major transiting planets
  * (Saturn, Jupiter, Mars, Rahu, Ketu) against natal Lagna and Moon.
  */
-export function calculateTransitEphemeris(targetDate = new Date(), natalAscendantLong = 0, natalMoonLong = 0) {
+export function calculateTransitEphemeris(targetDate = new Date(), natalAscendantLong = 0, natalMoonLong = 0, systemOrOptions = "lahiri") {
   let tDate;
   if (targetDate instanceof Date) {
     if (isNaN(targetDate.getTime())) throw new Error("Invalid targetDate Date object provided to calculateTransitEphemeris.");
@@ -11484,7 +11567,8 @@ export function calculateTransitEphemeris(targetDate = new Date(), natalAscendan
   }
 
   const jd = (tDate.getTime() / 86400000) + 2440587.5;
-  const ayanamsha = getLahiriAyanamsha(jd);
+  const sys = typeof systemOrOptions === "string" ? systemOrOptions : (systemOrOptions?.system || "lahiri");
+  const ayanamsha = getAyanamshaForSystem(jd, sys);
 
   const getSidereal = (bodyName) => {
     try {
@@ -13013,3 +13097,9 @@ export const MATCHING_CONVENTION = {
   bhakootCancellation: "Allowed when Rashi lords are identical or mutual friends, or in 1-7 Kendra axis",
   nadiCancellation: "Allowed when Moon nakshatras have different padas, or same nakshatra across different rashis"
 };
+
+// Multi-System Astrology Re-exports
+export { calculateChartBySystem, calculateMultiSystemBundle } from "../astrology/index.js";
+export { ASTROLOGY_SYSTEMS, getSystemConfig } from "../config/astrologySystems.js";
+export { REPORT_CHAPTERS, getChaptersForSystem } from "../config/reportChapters.js";
+
