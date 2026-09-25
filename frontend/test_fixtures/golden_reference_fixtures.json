@@ -1,0 +1,762 @@
+{
+  "description": "Static Golden Reference Fixtures for Independent Astronomy & Vedic Calculation Verification",
+  "version": "1.0.0",
+  "d60_benchmarks": [
+    {
+      "longitude": 0.25,
+      "natalSign": "Aries",
+      "isOddSign": true,
+      "part": 0,
+      "expectedTargetSign": "Aries",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 0.75,
+      "natalSign": "Aries",
+      "isOddSign": true,
+      "part": 1,
+      "expectedTargetSign": "Taurus",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 15.25,
+      "natalSign": "Aries",
+      "isOddSign": true,
+      "part": 30,
+      "expectedTargetSign": "Libra",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 30,
+      "expectedDeityName": "Mrityu",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 29.25,
+      "natalSign": "Aries",
+      "isOddSign": true,
+      "part": 58,
+      "expectedTargetSign": "Aquarius",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 29.75,
+      "natalSign": "Aries",
+      "isOddSign": true,
+      "part": 59,
+      "expectedTargetSign": "Pisces",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 30.25,
+      "natalSign": "Taurus",
+      "isOddSign": false,
+      "part": 0,
+      "expectedTargetSign": "Taurus",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 30.75,
+      "natalSign": "Taurus",
+      "isOddSign": false,
+      "part": 1,
+      "expectedTargetSign": "Gemini",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 45.25,
+      "natalSign": "Taurus",
+      "isOddSign": false,
+      "part": 30,
+      "expectedTargetSign": "Scorpio",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 29,
+      "expectedDeityName": "Gulika",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 59.25,
+      "natalSign": "Taurus",
+      "isOddSign": false,
+      "part": 58,
+      "expectedTargetSign": "Pisces",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 59.75,
+      "natalSign": "Taurus",
+      "isOddSign": false,
+      "part": 59,
+      "expectedTargetSign": "Aries",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 60.25,
+      "natalSign": "Gemini",
+      "isOddSign": true,
+      "part": 0,
+      "expectedTargetSign": "Gemini",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 60.75,
+      "natalSign": "Gemini",
+      "isOddSign": true,
+      "part": 1,
+      "expectedTargetSign": "Cancer",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 75.25,
+      "natalSign": "Gemini",
+      "isOddSign": true,
+      "part": 30,
+      "expectedTargetSign": "Sagittarius",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 30,
+      "expectedDeityName": "Mrityu",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 89.25,
+      "natalSign": "Gemini",
+      "isOddSign": true,
+      "part": 58,
+      "expectedTargetSign": "Aries",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 89.75,
+      "natalSign": "Gemini",
+      "isOddSign": true,
+      "part": 59,
+      "expectedTargetSign": "Taurus",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 90.25,
+      "natalSign": "Cancer",
+      "isOddSign": false,
+      "part": 0,
+      "expectedTargetSign": "Cancer",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 90.75,
+      "natalSign": "Cancer",
+      "isOddSign": false,
+      "part": 1,
+      "expectedTargetSign": "Leo",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 105.25,
+      "natalSign": "Cancer",
+      "isOddSign": false,
+      "part": 30,
+      "expectedTargetSign": "Capricorn",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 29,
+      "expectedDeityName": "Gulika",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 119.25,
+      "natalSign": "Cancer",
+      "isOddSign": false,
+      "part": 58,
+      "expectedTargetSign": "Taurus",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 119.75,
+      "natalSign": "Cancer",
+      "isOddSign": false,
+      "part": 59,
+      "expectedTargetSign": "Gemini",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 120.25,
+      "natalSign": "Leo",
+      "isOddSign": true,
+      "part": 0,
+      "expectedTargetSign": "Leo",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 120.75,
+      "natalSign": "Leo",
+      "isOddSign": true,
+      "part": 1,
+      "expectedTargetSign": "Virgo",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 135.25,
+      "natalSign": "Leo",
+      "isOddSign": true,
+      "part": 30,
+      "expectedTargetSign": "Aquarius",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 30,
+      "expectedDeityName": "Mrityu",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 149.25,
+      "natalSign": "Leo",
+      "isOddSign": true,
+      "part": 58,
+      "expectedTargetSign": "Gemini",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 149.75,
+      "natalSign": "Leo",
+      "isOddSign": true,
+      "part": 59,
+      "expectedTargetSign": "Cancer",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 150.25,
+      "natalSign": "Virgo",
+      "isOddSign": false,
+      "part": 0,
+      "expectedTargetSign": "Virgo",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 150.75,
+      "natalSign": "Virgo",
+      "isOddSign": false,
+      "part": 1,
+      "expectedTargetSign": "Libra",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 165.25,
+      "natalSign": "Virgo",
+      "isOddSign": false,
+      "part": 30,
+      "expectedTargetSign": "Pisces",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 29,
+      "expectedDeityName": "Gulika",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 179.25,
+      "natalSign": "Virgo",
+      "isOddSign": false,
+      "part": 58,
+      "expectedTargetSign": "Cancer",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 179.75,
+      "natalSign": "Virgo",
+      "isOddSign": false,
+      "part": 59,
+      "expectedTargetSign": "Leo",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 180.25,
+      "natalSign": "Libra",
+      "isOddSign": true,
+      "part": 0,
+      "expectedTargetSign": "Libra",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 180.75,
+      "natalSign": "Libra",
+      "isOddSign": true,
+      "part": 1,
+      "expectedTargetSign": "Scorpio",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 195.25,
+      "natalSign": "Libra",
+      "isOddSign": true,
+      "part": 30,
+      "expectedTargetSign": "Aries",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 30,
+      "expectedDeityName": "Mrityu",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 209.25,
+      "natalSign": "Libra",
+      "isOddSign": true,
+      "part": 58,
+      "expectedTargetSign": "Leo",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 209.75,
+      "natalSign": "Libra",
+      "isOddSign": true,
+      "part": 59,
+      "expectedTargetSign": "Virgo",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 210.25,
+      "natalSign": "Scorpio",
+      "isOddSign": false,
+      "part": 0,
+      "expectedTargetSign": "Scorpio",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 210.75,
+      "natalSign": "Scorpio",
+      "isOddSign": false,
+      "part": 1,
+      "expectedTargetSign": "Sagittarius",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 225.25,
+      "natalSign": "Scorpio",
+      "isOddSign": false,
+      "part": 30,
+      "expectedTargetSign": "Taurus",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 29,
+      "expectedDeityName": "Gulika",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 239.25,
+      "natalSign": "Scorpio",
+      "isOddSign": false,
+      "part": 58,
+      "expectedTargetSign": "Virgo",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 239.75,
+      "natalSign": "Scorpio",
+      "isOddSign": false,
+      "part": 59,
+      "expectedTargetSign": "Libra",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 240.25,
+      "natalSign": "Sagittarius",
+      "isOddSign": true,
+      "part": 0,
+      "expectedTargetSign": "Sagittarius",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 240.75,
+      "natalSign": "Sagittarius",
+      "isOddSign": true,
+      "part": 1,
+      "expectedTargetSign": "Capricorn",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 255.25,
+      "natalSign": "Sagittarius",
+      "isOddSign": true,
+      "part": 30,
+      "expectedTargetSign": "Gemini",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 30,
+      "expectedDeityName": "Mrityu",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 269.25,
+      "natalSign": "Sagittarius",
+      "isOddSign": true,
+      "part": 58,
+      "expectedTargetSign": "Libra",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 269.75,
+      "natalSign": "Sagittarius",
+      "isOddSign": true,
+      "part": 59,
+      "expectedTargetSign": "Scorpio",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 270.25,
+      "natalSign": "Capricorn",
+      "isOddSign": false,
+      "part": 0,
+      "expectedTargetSign": "Capricorn",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 270.75,
+      "natalSign": "Capricorn",
+      "isOddSign": false,
+      "part": 1,
+      "expectedTargetSign": "Aquarius",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 285.25,
+      "natalSign": "Capricorn",
+      "isOddSign": false,
+      "part": 30,
+      "expectedTargetSign": "Cancer",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 29,
+      "expectedDeityName": "Gulika",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 299.25,
+      "natalSign": "Capricorn",
+      "isOddSign": false,
+      "part": 58,
+      "expectedTargetSign": "Scorpio",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 299.75,
+      "natalSign": "Capricorn",
+      "isOddSign": false,
+      "part": 59,
+      "expectedTargetSign": "Sagittarius",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 300.25,
+      "natalSign": "Aquarius",
+      "isOddSign": true,
+      "part": 0,
+      "expectedTargetSign": "Aquarius",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 300.75,
+      "natalSign": "Aquarius",
+      "isOddSign": true,
+      "part": 1,
+      "expectedTargetSign": "Pisces",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 315.25,
+      "natalSign": "Aquarius",
+      "isOddSign": true,
+      "part": 30,
+      "expectedTargetSign": "Leo",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 30,
+      "expectedDeityName": "Mrityu",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 329.25,
+      "natalSign": "Aquarius",
+      "isOddSign": true,
+      "part": 58,
+      "expectedTargetSign": "Sagittarius",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 329.75,
+      "natalSign": "Aquarius",
+      "isOddSign": true,
+      "part": 59,
+      "expectedTargetSign": "Capricorn",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": false
+    },
+    {
+      "longitude": 330.25,
+      "natalSign": "Pisces",
+      "isOddSign": false,
+      "part": 0,
+      "expectedTargetSign": "Pisces",
+      "expectedAlternativeSign": "Aries",
+      "expectedDeityIndex": 59,
+      "expectedDeityName": "Chandrarekha",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 330.75,
+      "natalSign": "Pisces",
+      "isOddSign": false,
+      "part": 1,
+      "expectedTargetSign": "Aries",
+      "expectedAlternativeSign": "Taurus",
+      "expectedDeityIndex": 58,
+      "expectedDeityName": "Brahmana",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 345.25,
+      "natalSign": "Pisces",
+      "isOddSign": false,
+      "part": 30,
+      "expectedTargetSign": "Virgo",
+      "expectedAlternativeSign": "Libra",
+      "expectedDeityIndex": 29,
+      "expectedDeityName": "Gulika",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 359.25,
+      "natalSign": "Pisces",
+      "isOddSign": false,
+      "part": 58,
+      "expectedTargetSign": "Capricorn",
+      "expectedAlternativeSign": "Aquarius",
+      "expectedDeityIndex": 1,
+      "expectedDeityName": "Rakshasa",
+      "isDeityReversed": true
+    },
+    {
+      "longitude": 359.75,
+      "natalSign": "Pisces",
+      "isOddSign": false,
+      "part": 59,
+      "expectedTargetSign": "Aquarius",
+      "expectedAlternativeSign": "Pisces",
+      "expectedDeityIndex": 0,
+      "expectedDeityName": "Ghora",
+      "isDeityReversed": true
+    }
+  ],
+  "d3_benchmarks": [
+    {
+      "longitude": 5,
+      "natalSign": "Aries",
+      "expectedD3Sign": "Aries",
+      "expectedD3SignIdx": 0
+    },
+    {
+      "longitude": 15,
+      "natalSign": "Aries",
+      "expectedD3Sign": "Leo",
+      "expectedD3SignIdx": 4
+    },
+    {
+      "longitude": 25,
+      "natalSign": "Aries",
+      "expectedD3Sign": "Sagittarius",
+      "expectedD3SignIdx": 8
+    },
+    {
+      "longitude": 35,
+      "natalSign": "Taurus",
+      "expectedD3Sign": "Taurus",
+      "expectedD3SignIdx": 1
+    },
+    {
+      "longitude": 45,
+      "natalSign": "Taurus",
+      "expectedD3Sign": "Virgo",
+      "expectedD3SignIdx": 5
+    },
+    {
+      "longitude": 55,
+      "natalSign": "Taurus",
+      "expectedD3Sign": "Capricorn",
+      "expectedD3SignIdx": 9
+    }
+  ],
+  "d9_benchmarks": [
+    {
+      "longitude": 1.5,
+      "expectedD9Sign": "Aries",
+      "expectedD9SignIdx": 0
+    },
+    {
+      "longitude": 4.5,
+      "expectedD9Sign": "Taurus",
+      "expectedD9SignIdx": 1
+    },
+    {
+      "longitude": 31.5,
+      "expectedD9Sign": "Capricorn",
+      "expectedD9SignIdx": 9
+    },
+    {
+      "longitude": 34.5,
+      "expectedD9Sign": "Aquarius",
+      "expectedD9SignIdx": 10
+    },
+    {
+      "longitude": 61.5,
+      "expectedD9Sign": "Libra",
+      "expectedD9SignIdx": 6
+    },
+    {
+      "longitude": 91.5,
+      "expectedD9Sign": "Cancer",
+      "expectedD9SignIdx": 3
+    }
+  ],
+  "dasha_benchmarks": [
+    {
+      "moonLongitude": 0,
+      "expectedFirstLord": "Ketu",
+      "expectedFullYears": 7,
+      "expectedElapsedFraction": 0
+    },
+    {
+      "moonLongitude": 6.666666666666667,
+      "expectedFirstLord": "Ketu",
+      "expectedFullYears": 7,
+      "expectedElapsedFraction": 0.5
+    },
+    {
+      "moonLongitude": 13.333333333333334,
+      "expectedFirstLord": "Venus",
+      "expectedFullYears": 20,
+      "expectedElapsedFraction": 0
+    },
+    {
+      "moonLongitude": 26.666666666666668,
+      "expectedFirstLord": "Sun",
+      "expectedFullYears": 6,
+      "expectedElapsedFraction": 0
+    }
+  ]
+}

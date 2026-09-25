@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#FAF7F2] text-stone-800 font-sans antialiased selection:bg-amber-500/25 selection:text-amber-950 overflow-x-hidden;
+  }
+}
+
+/* Custom Warm Mystical Glows & Aesthetics */
+.mystic-gradient {
+  background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.09) 0%, rgba(250, 247, 242, 0) 70%),
+              radial-gradient(circle at 85% 30%, rgba(234, 88, 12, 0.06) 0%, rgba(250, 247, 242, 0) 60%),
+              #FAF7F2;
+}
+
+.gold-glow {
+  text-shadow: 0 0 12px rgba(217, 119, 6, 0.3);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  box-shadow: 0 4px 20px -2px rgba(180, 83, 9, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: 0 12px 28px -5px rgba(217, 119, 6, 0.15);
+}
+
+/* Palm Scanner Hand Silhouette Overlay Pulse */
+@keyframes palmScanLine {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    top: 90%;
+    opacity: 0.2;
+  }
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #E2B755, #EE46BC, #E2B755, transparent);
+  box-shadow: 0 0 15px #E2B755, 0 0 30px #EE46BC;
+  animation: palmScanLine 2.5s ease-in-out infinite;
+}
+
+/* ========================================================================= */
+/* PRINT & PDF EXPORT STYLING */
+/* ========================================================================= */
+@media print {
+  @page {
+    margin: 12mm 10mm 12mm 10mm;
+    size: A4 portrait;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+    color: #1C1917 !important;
+    font-size: 11pt !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Hide navigation, toolbars, and interactive buttons in print mode */
+  nav,
+  footer,
+  header,
+  .no-print,
+  [data-no-print="true"] {
+    display: none !important;
+  }
+
+  /* Unconstrain modal wrapper to full printable page stream */
+  .detailed-report-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .detailed-report-modal-card {
+    position: static !important;
+    max-height: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #FFFFFF !important;
+    overflow: visible !important;
+  }
+
+  /* Prevent page breaks inside cards, tables, charts, and chapter summaries */
+  .print-avoid-break,
+  .glass-card,
+  table,
+  tr,
+  [class*="rounded-2xl"],
+  [class*="rounded-3xl"] {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Ensure background colors and borders render properly in PDF */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
