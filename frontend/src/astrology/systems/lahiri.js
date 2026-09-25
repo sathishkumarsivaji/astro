@@ -17,7 +17,7 @@ export function calculateLahiriChart(birthData, options = {}) {
   const { birthDate, birthTime, latitude, longitude, utcOffset, timezoneId } = birthData;
   return calculatePlanetaryPositions(
     birthDate,
-    birthTime || "12:00",
+    birthTime,
     latitude,
     longitude,
     "lahiri",

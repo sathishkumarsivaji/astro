@@ -29,6 +29,7 @@ import {
 } from "./src/astrology/derived/nakshatra.js";
 
 import { calculatePlacidusCusps } from "./src/astrology/astronomy/coordinates.js";
+import { signedAngularDifference } from "./src/astrology/comparison/compareSystems.js";
 
 let passedCount = 0;
 let totalCount = 0;
@@ -289,6 +290,161 @@ assert(kpSolo.jaimini.status === "NOT_APPLICABLE", "KP cleanly flags Jaimini as 
 
 // Isolation Invariant 4: KP exports its own Vimshottari dasha hierarchy
 assert(Array.isArray(kpSolo.dashaTable) && kpSolo.dashaTable.length > 0, "KP chart exports independent Vimshottari dasha table");
+
+// ---------------------------------------------------------------------------
+// 5. SWISS EPHEMERIS / IAU SOFA EXTERNAL REFERENCE BENCHMARKS
+// ---------------------------------------------------------------------------
+console.log("\n5. Testing Swiss Ephemeris / IAU SOFA Fixed External Benchmarks...");
+
+const swissEphemerisBenchmarks = [
+  {
+    epoch: "J2000.0 (2000-01-01 12:00:00 UTC)",
+    birthData: {
+      birthDate: "2000-01-01",
+      birthTime: "12:00",
+      latitude: 51.4769,
+      longitude: 0.0,
+      utcOffset: 0.0,
+      timezoneId: "UTC"
+    },
+    referenceTropical: {
+      Sun: 280.3689,
+      Moon: 223.3239,
+      Mars: 327.9639,
+      Mercury: 271.8889,
+      Jupiter: 25.2542,
+      Venus: 241.5653,
+      Saturn: 40.3961,
+      Rahu: 125.0445
+    },
+    toleranceDeg: 0.05
+  },
+  {
+    epoch: "Mid-Century Benchmark (1950-01-01 00:00:00 UTC)",
+    birthData: {
+      birthDate: "1950-01-01",
+      birthTime: "00:00",
+      latitude: 0.0,
+      longitude: 0.0,
+      utcOffset: 0.0,
+      timezoneId: "UTC"
+    },
+    referenceTropical: {
+      Sun: 280.0047,
+      Moon: 61.4153
+    },
+    toleranceDeg: 0.05
+  },
+  {
+    epoch: "Late 20th Century Benchmark (1980-01-01 00:00:00 UTC)",
+    birthData: {
+      birthDate: "1980-01-01",
+      birthTime: "00:00",
+      latitude: 0.0,
+      longitude: 0.0,
+      utcOffset: 0.0,
+      timezoneId: "UTC"
+    },
+    referenceTropical: {
+      Sun: 279.7150,
+      Moon: 83.1578
+    },
+    toleranceDeg: 0.05
+  },
+  {
+    epoch: "Modern Epoch Benchmark (2024-01-01 00:00:00 UTC)",
+    birthData: {
+      birthDate: "2024-01-01",
+      birthTime: "00:00",
+      latitude: 0.0,
+      longitude: 0.0,
+      utcOffset: 0.0,
+      timezoneId: "UTC"
+    },
+    referenceTropical: {
+      Sun: 280.0389,
+      Moon: 155.9928
+    },
+    toleranceDeg: 0.05
+  }
+];
+
+swissEphemerisBenchmarks.forEach(({ epoch, birthData, referenceTropical, toleranceDeg }) => {
+  const chart = calculateChartBySystem("tropical", birthData);
+  for (const [body, refLong] of Object.entries(referenceTropical)) {
+    const planet = chart.planets.find(p => p.name === body);
+    assert(planet !== undefined, `${epoch}: ${body} computed in tropical chart`);
+    const diff = Math.min(Math.abs(planet.longitude - refLong), 360 - Math.abs(planet.longitude - refLong));
+    const arcsecDiff = (diff * 3600).toFixed(1);
+    assert(
+      diff <= toleranceDeg,
+      `${epoch}: ${body} longitude ${planet.longitude.toFixed(4)}° matches Swiss Ephemeris reference ${refLong.toFixed(4)}° within ${toleranceDeg}° (actual error: ${arcsecDiff}")`
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 6. ASPECT DYNAMICS & CIRCULAR BOUNDARY CONDITIONS
+// ---------------------------------------------------------------------------
+console.log("\n6. Testing Aspect Dynamics: Applying vs Separating & Boundary Transitions...");
+
+function evaluateAspect(p1, p2, aspectDef) {
+  const dtHours = 1.0 / 24.0;
+  let currentDiff = Math.abs(p1.longitude - p2.longitude);
+  if (currentDiff > 180) currentDiff = 360 - currentDiff;
+  const currentOrb = Math.abs(currentDiff - aspectDef.angle);
+
+  const futurePos1 = (p1.longitude + (p1.speed * dtHours) + 360) % 360;
+  const futurePos2 = (p2.longitude + (p2.speed * dtHours) + 360) % 360;
+  let futureDiff = Math.abs(futurePos1 - futurePos2);
+  if (futureDiff > 180) futureDiff = 360 - futureDiff;
+  const futureOrb = Math.abs(futureDiff - aspectDef.angle);
+
+  return {
+    currentSeparation: currentDiff,
+    currentOrb,
+    isApplying: futureOrb < currentOrb,
+    status: futureOrb < currentOrb ? "Applying" : "Separating"
+  };
+}
+
+// 6.1 Applying conjunction across 360°/0° circle boundary
+const conjBoundaryApplying = evaluateAspect(
+  { name: "Fast", longitude: 359.5, speed: 1.0 },
+  { name: "Slow", longitude: 0.5, speed: 0.2 },
+  { name: "Conjunction", angle: 0, orb: 8 }
+);
+assert(conjBoundaryApplying.isApplying, "Conjunction across 360°/0° circle boundary is correctly identified as Applying");
+
+// 6.2 Separating conjunction across circle boundary
+const conjBoundarySeparating = evaluateAspect(
+  { name: "Fast", longitude: 0.5, speed: 1.0 },
+  { name: "Slow", longitude: 359.5, speed: 0.2 },
+  { name: "Conjunction", angle: 0, orb: 8 }
+);
+assert(!conjBoundarySeparating.isApplying, "Conjunction across 360°/0° circle boundary is correctly identified as Separating");
+
+// 6.3 Approaching 90° square
+const squareApplying = evaluateAspect(
+  { name: "PlanetA", longitude: 88.5, speed: 1.0 },
+  { name: "PlanetB", longitude: 0.0, speed: 0.0 },
+  { name: "Square", angle: 90, orb: 7 }
+);
+assert(squareApplying.isApplying, "Approaching 90° square is correctly identified as Applying");
+
+// 6.4 Retrograde body creating an Applying aspect
+const retroSquareApplying = evaluateAspect(
+  { name: "RetroPlanet", longitude: 91.5, speed: -1.0 },
+  { name: "DirectPlanet", longitude: 0.0, speed: 0.0 },
+  { name: "Square", angle: 90, orb: 7 }
+);
+assert(retroSquareApplying.isApplying, "Retrograde planet moving backwards towards 90° is correctly identified as Applying");
+
+// 6.5 signedAngularDifference verification
+assert(signedAngularDifference(5, 355) === 10, "signedAngularDifference(5°, 355°) is +10° across 0° boundary");
+assert(signedAngularDifference(355, 5) === -10, "signedAngularDifference(355°, 5°) is -10° across 0° boundary");
+assert(signedAngularDifference(180, 0) === 180, "signedAngularDifference(180°, 0°) is +180°");
+assert(signedAngularDifference(10, 20) === -10, "signedAngularDifference(10°, 20°) is -10°");
 
 console.log("\n=================================================================");
 console.log(` ALL ${passedCount} INDEPENDENT EPHEMERIS REFERENCE TESTS PASSED!`);

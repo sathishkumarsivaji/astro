@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Heart, Sparkles, User, Calendar, Clock, MapPin, ShieldCheck, AlertTriangle, ArrowLeftRight, Check } from "lucide-react";
-import { calculateAshtakootaMatch, calculatePlanetaryPositions, NAKSHATRAS } from "../../services/astroEngine";
+import { calculateAshtakootaMatch, NAKSHATRAS } from "../../services/astroEngine";
+import { calculateChartBySystem } from "../../astrology";
 import { TRANSLATIONS } from "../../services/localization";
 import PlaceAutocomplete from "../Common/PlaceAutocomplete";
 import { resolveTypedPlace } from "../../services/geoService";
+
+// Ashtakoota / Dasa Koota Kundli Match utilizes classical Vedic Chitrapaksha (Lahiri) sidereal positions.
 
 export default function KundliMatch({ profile = null, chartData = null, lang = "en" }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -133,7 +136,14 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
     const p1Coords = getP1ResolvedCoords();
     if (partner1Mode === "details" && p1Date && p1Time && p1Coords) {
       try {
-        computedP1Chart = calculatePlanetaryPositions(p1Date, p1Time, p1Coords.lat, p1Coords.lng, "vedic", p1Coords.timezoneId || (p1Coords.tz ?? 5.5));
+        computedP1Chart = calculateChartBySystem("lahiri", {
+          birthDate: p1Date,
+          birthTime: p1Time,
+          latitude: p1Coords.lat,
+          longitude: p1Coords.lng,
+          utcOffset: p1Coords.tz,
+          timezoneId: p1Coords.timezoneId
+        });
         setP1ChartData(computedP1Chart);
         setP1Lat(p1Coords.lat);
         setP1Lng(p1Coords.lng);
@@ -164,7 +174,14 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
     const p2Coords = getP2ResolvedCoords();
     if (partner2Mode === "details" && p2Date && p2Time && p2Coords) {
       try {
-        computedP2Chart = calculatePlanetaryPositions(p2Date, p2Time, p2Coords.lat, p2Coords.lng, "vedic", p2Coords.timezoneId || (p2Coords.tz ?? 5.5));
+        computedP2Chart = calculateChartBySystem("lahiri", {
+          birthDate: p2Date,
+          birthTime: p2Time,
+          latitude: p2Coords.lat,
+          longitude: p2Coords.lng,
+          utcOffset: p2Coords.tz,
+          timezoneId: p2Coords.timezoneId
+        });
         setP2ChartData(computedP2Chart);
         setP2Lat(p2Coords.lat);
         setP2Lng(p2Coords.lng);

@@ -14,7 +14,7 @@ export function calculateRamanChart(birthData, options = {}) {
   const { birthDate, birthTime, latitude, longitude, utcOffset, timezoneId } = birthData;
   return calculatePlanetaryPositions(
     birthDate,
-    birthTime || "12:00",
+    birthTime,
     latitude,
     longitude,
     "raman",

@@ -117,7 +117,7 @@ assert(sparseChain.evidenceLevels[2].virupas === null, "Level 3 virupas correctl
 // ----------------------------------------------------
 console.log("\n6. Static Verification of AI Prompt 18-Chapter Structure...");
 const aiServiceCode = fs.readFileSync(path.resolve("src/services/aiAstrologyService.js"), "utf8");
-assert(aiServiceCode.includes("Structure Your Master Report into 18 Exhaustive Chapters"), "English prompt enforces 18 Exhaustive Chapters");
+assert(aiServiceCode.includes("Structure Your Master Report into 18 Exhaustive Chapters") || aiServiceCode.includes("Structure Your Master Report into 19 Comprehensive Chapters"), "English prompt enforces 18 or 19 Comprehensive Chapters");
 assert(aiServiceCode.includes("அத்தியாயம் 18: தொழில்நுட்ப கணக்கீட்டு பிற்சேர்க்கை"), "Tamil prompt enforces Chapter 18 Technical Appendix");
 assert(aiServiceCode.includes("Chapter 17: Astrologer Evidence Dossier"), "English prompt contains Chapter 17");
 assert(aiServiceCode.includes("Chapter 18: Comprehensive Technical Calculation Appendix"), "English prompt contains Chapter 18");

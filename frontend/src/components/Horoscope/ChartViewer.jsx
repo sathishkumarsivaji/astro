@@ -346,7 +346,8 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
   const jaiminiSystem = ascLong !== null ? calculateJaiminiSystem(planets, ascLong, divisionalCharts) : null;
 
   // Compute D60 Stability
-  const d60Stability = chartData?.d60StabilityTest || ((lat !== null && lng !== null) ? calculateD60StabilityTest(chartData?.birthInstantUtc || chartData?.date || new Date(), lat, lng, chartData?.utcOffset || chartData?.profile?.utcOffset || 5.5) : null);
+  const tzOffsetForD60 = chartData?.utcOffset ?? chartData?.profile?.utcOffset;
+  const d60Stability = chartData?.d60StabilityTest || ((lat !== null && lng !== null && tzOffsetForD60 !== undefined && tzOffsetForD60 !== null) ? calculateD60StabilityTest(chartData?.birthInstantUtc || chartData?.date || new Date(), lat, lng, tzOffsetForD60) : null);
 
   return (
     <div className="space-y-6">

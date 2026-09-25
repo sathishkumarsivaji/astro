@@ -1,6 +1,7 @@
 /* Comprehensive Baby Name & Newborn Astrological Namakarana Engine */
 
-import { calculatePlanetaryPositions, NAKSHATRAS, ZODIAC_SIGNS, NAKSHATRA_PADA_SYLLABLES } from "./astroEngine.js";
+import { NAKSHATRAS, ZODIAC_SIGNS, NAKSHATRA_PADA_SYLLABLES } from "./astroEngine.js";
+import { calculateChartBySystem } from "../astrology/index.js";
 import { calculateNumerology } from "./numerologyEngine.js";
 import { getSessionToken } from "./aiAstrologyService.js";
 
@@ -741,10 +742,14 @@ export function calculateNewbornAstroProfile(input = {}) {
   const lang = input.lang || "en";
   const isTamil = lang === "ta";
 
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const birthDate = new Date(y, m - 1, d);
-
-  const chart = calculatePlanetaryPositions(birthDate, timeStr, lat, lon, "vedic", tz);
+  const chart = calculateChartBySystem("lahiri", {
+    birthDate: dateStr,
+    birthTime: timeStr,
+    latitude: lat,
+    longitude: lon,
+    utcOffset: typeof tz === "number" ? tz : null,
+    timezoneId: typeof tz === "string" ? tz : null
+  });
   const { ascendantSign, moonSign, moonNakshatra } = chart;
 
   if (!moonNakshatra || !moonNakshatra.name) {

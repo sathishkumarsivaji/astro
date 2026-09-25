@@ -17,6 +17,16 @@ export function angularDistance(a, b) {
   return Math.min(d, 360 - d);
 }
 
+/**
+ * Calculates signed shortest angular difference (a - b) wrapped to (-180, +180] degrees
+ */
+export function signedAngularDifference(a, b) {
+  let d = (norm360(a) - norm360(b)) % 360;
+  if (d > 180) d -= 360;
+  if (d <= -180) d += 360;
+  return d;
+}
+
 export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart }) {
   if (!lahiriChart || !kpChart) {
     throw new Error("At least Lahiri and KP charts are required for multi-system comparison.");
@@ -182,9 +192,9 @@ export function compareSystems({ lahiriChart, kpChart, ramanChart, tropicalChart
         formatted: degToDms(tropPos.longitude)
       } : null,
       divergence: {
-        lahiriMinusKp: (lahiriPos.longitude - kpPos.longitude).toFixed(4),
-        lahiriMinusRaman: ramanPos ? (lahiriPos.longitude - ramanPos.longitude).toFixed(4) : "N/A",
-        tropicalMinusLahiri: tropPos ? (tropPos.longitude - lahiriPos.longitude).toFixed(4) : "N/A"
+        lahiriMinusKp: signedAngularDifference(lahiriPos.longitude, kpPos.longitude).toFixed(4),
+        lahiriMinusRaman: ramanPos ? signedAngularDifference(lahiriPos.longitude, ramanPos.longitude).toFixed(4) : "N/A",
+        tropicalMinusLahiri: tropPos ? signedAngularDifference(tropPos.longitude, lahiriPos.longitude).toFixed(4) : "N/A"
       },
       classification,
       explanation

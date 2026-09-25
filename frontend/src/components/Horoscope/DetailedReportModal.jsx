@@ -143,11 +143,11 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
       const lat = chartData?.latitude ?? chartData?.lat ?? chartData?.profile?.latitude;
       const lng = chartData?.longitude ?? chartData?.lng ?? chartData?.profile?.longitude;
       const bDate = chartData?.birthDateStr || chartData?.birthDate || chartData?.profile?.birthDate;
-      const bTime = chartData?.birthTimeStr || chartData?.time || chartData?.profile?.birthTime || "12:00";
+      const bTime = chartData?.birthTimeStr || chartData?.time || chartData?.profile?.birthTime;
       const tz = chartData?.utcOffset ?? chartData?.tz ?? chartData?.profile?.utcOffset;
       const tzId = chartData?.timezoneId ?? chartData?.profile?.timezoneId ?? null;
 
-      if (lat === undefined || lat === null || lng === undefined || lng === null || !bDate || tz === undefined || tz === null) {
+      if (lat === undefined || lat === null || lng === undefined || lng === null || !bDate || !bTime || tz === undefined || tz === null) {
         return null;
       }
       const bData = {
@@ -2971,7 +2971,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                           ? (typeof chartData.dailyPanchang.nakshatra === "object"
                             ? `${chartData.dailyPanchang.nakshatra.name || "N/A"}${chartData.dailyPanchang.nakshatra.until ? ` until ${chartData.dailyPanchang.nakshatra.until}` : ""}`
                             : chartData.dailyPanchang.nakshatra)
-                          : (chartData.moonNakshatra?.name || "N/A")}
+                          : "N/A"}
                       </strong>
                     </div>
                     <div className="p-2 rounded-xl bg-white border border-amber-100">
@@ -3150,14 +3150,34 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                   <span className="font-bold text-stone-800 uppercase tracking-wider block">
                     18.10 Standards Registry & Computational Reproducibility Specification
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11px] font-mono text-stone-700">
-                    <div><strong>Sidereal Engine:</strong> AstroVerse 4.2.0 (VSOP87)</div>
-                    <div><strong>Ayanamsha:</strong> {chartData.system?.ayanamshaName || (chartData.system === "kp" ? "KP Original" : (chartData.system === "raman" ? "B.V. Raman" : (chartData.system === "tropical" ? "None (Sayana)" : "Lahiri / Chitrapaksha")))} {typeof chartData.ayanamsa === "number" ? `(${chartData.ayanamsa.toFixed(4)}° at birth; J2000 Anchor: 23° 51' 25.5")` : ""}</div>
-                    <div><strong>House System:</strong> {chartData.system?.houseSystem || "Whole-Sign + Sripati / Equal Chalit"}</div>
-                    <div><strong>Dasha Year:</strong> 365.24219878 Tropical Solar Days</div>
-                    <div><strong>Lunar Nodes:</strong> Astronomical Mean Node</div>
-                    <div><strong>Shadbala System:</strong> Classical Parashari 6-Fold (Virupas)</div>
-                  </div>
+                  {isTropical ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11px] font-mono text-stone-700">
+                      <div><strong>Ephemeris Engine:</strong> Western Tropical / Sayana (VSOP87)</div>
+                      <div><strong>Ayanamsha:</strong> None (0.0000° Sayana Vernal Equinox base)</div>
+                      <div><strong>House System:</strong> {chartData.system?.houseSystem || "Placidus Cusps"}</div>
+                      <div><strong>Aspect System:</strong> Ptolemaic Classical Orbs (Applying / Separating)</div>
+                      <div><strong>Shadbala System:</strong> Not Applicable (Western Essential & Accidental Dignities used)</div>
+                      <div><strong>Dasha / SAV:</strong> Not Applicable (Vedic Sidereal framework)</div>
+                    </div>
+                  ) : isKP ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11px] font-mono text-stone-700">
+                      <div><strong>Ephemeris Engine:</strong> KP / Krishnamurti Padhdhati (VSOP87)</div>
+                      <div><strong>Ayanamsha:</strong> KP Original {typeof chartData.ayanamsa === "number" ? `(${chartData.ayanamsa.toFixed(4)}° at birth)` : ""}</div>
+                      <div><strong>House System:</strong> {chartData.system?.houseSystem || "Placidus Cusps (Siderealized)"}</div>
+                      <div><strong>Dasha System:</strong> Vimshottari (KP Star-Lord base; 365.24219878 days/year)</div>
+                      <div><strong>Significators:</strong> 4-Tier Cuspal & Planetary Significators</div>
+                      <div><strong>Shadbala / SAV:</strong> Not Applicable (Replaced by Cuspal Sub-Lords & 4-Tier Significators)</div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11px] font-mono text-stone-700">
+                      <div><strong>Sidereal Engine:</strong> AstroVerse {chartSys === "raman" ? "B.V. Raman" : "Lahiri"} (VSOP87)</div>
+                      <div><strong>Ayanamsha:</strong> {chartData.system?.ayanamshaName || (chartSys === "raman" ? "B.V. Raman (397 AD Zero Epoch)" : "Lahiri / Chitrapaksha")} {typeof chartData.ayanamsa === "number" ? `(${chartData.ayanamsa.toFixed(4)}° at birth; ${chartSys === "raman" ? "397 AD Epoch" : "J2000 Anchor: 23° 51' 25.5\""})` : ""}</div>
+                      <div><strong>House System:</strong> {chartData.system?.houseSystem || "Whole-Sign + Sripati / Equal Chalit"}</div>
+                      <div><strong>Dasha Year:</strong> 365.24219878 Tropical Solar Days (Vimshottari)</div>
+                      <div><strong>Lunar Nodes:</strong> Astronomical Mean Node</div>
+                      <div><strong>Shadbala System:</strong> Classical Parashari 6-Fold (Virupas)</div>
+                    </div>
+                  )}
                   <p className="text-[10px] text-stone-500 pt-1 border-t border-stone-200 italic leading-relaxed">
                     All astronomical planetary coordinates and spherical conversions are calculated directly in local memory. Astrological interpretations follow classical Parashari and Jaimini methodologies and do not constitute legal, medical, or financial assurances.
                   </p>
@@ -3182,9 +3202,15 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                           : "Deterministic side-by-side comparison across Lahiri (Chitrapaksha), KP (Krishnamurti), Raman, and Tropical (Sayana) systems."}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-indigo-100 text-indigo-900 border border-indigo-200">
-                        {multiSystemBundle.comparison.summary.agreementPercentage}% {isTamil ? "உடன்பாடு" : "Sidereal Agreement"}
+                        {isTamil ? "ராசி உடன்பாடு" : "Sign Convergence"}: {multiSystemBundle.comparison.summary.signAgreementCount}/{multiSystemBundle.comparison.summary.totalPointsCompared}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-blue-100 text-blue-900 border border-blue-200">
+                        {isTamil ? "பாவக உடன்பாடு" : "House Convergence"}: {multiSystemBundle.comparison.summary.houseAgreementCount}/{multiSystemBundle.comparison.summary.totalPointsCompared}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-amber-100 text-amber-900 border border-amber-200">
+                        {isTamil ? "சராசரி லஹிரி-கே.பி. வேறுபாடு" : "Mean Lahiri-KP Diff"}: {multiSystemBundle.comparison.summary.meanLahiriKpAngularDifference}°
                       </span>
                     </div>
                   </div>

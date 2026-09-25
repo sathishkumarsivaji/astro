@@ -3,11 +3,14 @@ import { Compass, Moon, Sun, AlertTriangle, ShieldCheck, Sparkles, Clock, Calend
 import { calculateDedicatedGocharDashboard, formatDateInTimezone } from "../../services/astroEngine";
 
 export default function GocharDashboard({ chartData, lang = "en" }) {
-  const tzOffset = chartData?.tz ?? chartData?.utcOffset ?? chartData?.profile?.utcOffset ?? 5.5;
-  const tzId = chartData?.timezoneId ?? chartData?.ianaTimezone ?? chartData?.profile?.timezoneId ?? chartData?.profile?.ianaTimezone ?? (tzOffset === 5.5 ? "Asia/Kolkata" : null);
+  const tzOffset = chartData?.tz ?? chartData?.utcOffset ?? chartData?.profile?.utcOffset;
+  const tzId = chartData?.timezoneId ?? chartData?.ianaTimezone ?? chartData?.profile?.timezoneId ?? chartData?.profile?.ianaTimezone ?? null;
 
   const [targetDateStr, setTargetDateStr] = useState(() => {
-    return formatDateInTimezone(new Date(), tzOffset, tzId) || new Date().toISOString().split("T")[0];
+    if (tzOffset !== undefined && tzOffset !== null) {
+      return formatDateInTimezone(new Date(), tzOffset, tzId) || new Date().toISOString().split("T")[0];
+    }
+    return new Date().toISOString().split("T")[0];
   });
   const isTamil = lang === "ta";
 

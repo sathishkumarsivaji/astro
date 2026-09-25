@@ -14,7 +14,8 @@
  *
  * Do not expose fitScore to end users as a classical confidence metric.
  */
-import { ZODIAC_SIGNS, NAKSHATRAS, calculatePlanetaryPositions } from "./astroEngine.js";
+import { ZODIAC_SIGNS, NAKSHATRAS } from "./astroEngine.js";
+import { calculateChartBySystem } from "../astrology/index.js";
 
 // Month names reference
 export const MONTHS = [
@@ -606,7 +607,7 @@ export function reverseCalculateBirthTimeAndDOB({
     { start: "03:00", mid: "04:00", end: "05:00", labelEn: "03:00 AM - 05:00 AM", labelTa: "அதிகாலை 03:00 - 05:00" }
   ];
 
-  const candidateDateObj = new Date(candidateBirthYear, candidateBirthMonthNum - 1, candidateBirthDayNum);
+  const formattedCandidateDate = `${candidateBirthYear}-${String(candidateBirthMonthNum).padStart(2, "0")}-${String(candidateBirthDayNum).padStart(2, "0")}`;
 
   let bestCandidate = null;
   let maxFitScore = -999;
@@ -614,7 +615,14 @@ export function reverseCalculateBirthTimeAndDOB({
   for (const cTime of candidateTimes) {
     let fitScore = 10;
     try {
-      const testChart = calculatePlanetaryPositions(candidateDateObj, cTime.mid, lat, lng, "vedic", tz, { lightweight: true });
+      const testChart = calculateChartBySystem("lahiri", {
+        birthDate: formattedCandidateDate,
+        birthTime: cTime.mid,
+        latitude: lat,
+        longitude: lng,
+        utcOffset: typeof tz === "number" ? tz : null,
+        timezoneId: typeof tz === "string" ? tz : null
+      }, { lightweight: true });
       const ascName = testChart.ascendantSign.name;
       const ascLagnaLord = testChart.ascendantSign.ruler;
 

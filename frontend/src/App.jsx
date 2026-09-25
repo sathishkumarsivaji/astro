@@ -111,7 +111,8 @@ export default function App() {
     const hasValidCoords = !isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 
     const parsedOffset = Number(utcOffset);
-    const validUtcOffset = Number.isFinite(parsedOffset) ? parsedOffset : 5.5;
+    const validUtcOffset = Number.isFinite(parsedOffset) ? parsedOffset : null;
+    const validTimezoneId = timezoneId || null;
 
     const recoveredProfile = {
       name: name?.trim() || (lang === "ta" ? "ஜாதகர்" : "Native"),
@@ -121,8 +122,8 @@ export default function App() {
       latitude: hasValidCoords ? lat : null,
       longitude: hasValidCoords ? lon : null,
       utcOffset: validUtcOffset,
-      timezoneId: timezoneId || (validUtcOffset === 0 ? "UTC" : "Asia/Kolkata"),
-      system: "vedic",
+      timezoneId: validTimezoneId,
+      system: "lahiri",
       isDemo: false,
       source: "inferred"
     };
@@ -134,12 +135,21 @@ export default function App() {
       console.warn("Could not persist recovered profile:", e);
     }
 
-    if (hasValidCoords) {
-      const updatedData = calculateChartBySystem(
-        recoveredProfile.system || "lahiri",
-        recoveredProfile
-      );
-      setChartData({ ...updatedData, profile: recoveredProfile });
+    if (hasValidCoords && validUtcOffset !== null) {
+      try {
+        const updatedData = calculateChartBySystem(
+          recoveredProfile.system || "lahiri",
+          recoveredProfile
+        );
+        setChartData({ ...updatedData, profile: recoveredProfile });
+      } catch (err) {
+        console.warn("Recovered chart calculation deferred until location confirmed:", err);
+        showToast(lang === "ta"
+          ? "கணிக்கப்பட்ட பிறந்த நாள் மற்றும் நேரம் படிவத்தில் நிரப்பப்பட்டுள்ளது. துல்லியமான கணிப்பிற்கு உங்கள் பிறந்த ஊரை படிவத்தில் தேர்ந்தெடுக்கவும்."
+          : "Estimated birth date and time loaded. Please select your birth city in the form to verify coordinates and timezone.",
+          "info"
+        );
+      }
     } else {
       showToast(lang === "ta"
         ? "கணிக்கப்பட்ட பிறந்த நாள் மற்றும் நேரம் படிவத்தில் நிரப்பப்பட்டுள்ளது. துல்லியமான லக்னத்திற்கு தயவுசெய்து உங்கள் பிறந்த ஊரை படிவத்தில் தேர்ந்தெடுக்கவும்."

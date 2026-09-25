@@ -211,6 +211,9 @@ export function calculateKPChart(observations, birthData) {
     }
   }
 
+  const curMd = dashaTable.find(d => d.isCurrent) || null;
+  const curBk = curMd?.bukthis?.find(b => b.isCurrent) || null;
+
   const isPolar = Math.abs(lat) >= 66.0;
   const houseSystemName = isPolar ? "Equal (Placidus Polar Fallback)" : "Placidus Cusps";
 
@@ -236,9 +239,9 @@ export function calculateKPChart(observations, birthData) {
     eventSignificators,
     rulingPlanets,
     dashaTable,
-    currentDasha: dashaTable?.[0] || null,
-    curMd: dashaTable?.[0] || null,
-    curBk: dashaTable?.[0]?.bukthis?.[0] || null,
+    currentDasha: curMd,
+    curMd,
+    curBk,
     dasha: {
       status: "APPLICABLE",
       system: "Vimshottari (KP Nakshatra Base)",

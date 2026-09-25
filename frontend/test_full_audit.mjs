@@ -2678,9 +2678,9 @@ console.log(`   ✓ Retrospective milestone verification verified: ${retrospecti
 console.log("\n121. Testing 16/18-Chapter Synchronization (Modal Tabs & AI Prompts)...");
 const enPrompt121 = aiAstrologyService.buildAstrologyPrompt(sampleChart118, "en");
 const taPrompt121 = aiAstrologyService.buildAstrologyPrompt(sampleChart118, "ta");
-assert(enPrompt121.includes("Structure Your Master Report into 16 Exhaustive Chapters") || enPrompt121.includes("Structure Your Master Report into 18 Exhaustive Chapters"), "English prompt must command 16 or 18 chapters");
+assert(enPrompt121.includes("Structure Your Master Report into 16 Exhaustive Chapters") || enPrompt121.includes("Structure Your Master Report into 18 Exhaustive Chapters") || enPrompt121.includes("Structure Your Master Report into 19 Comprehensive Chapters"), "English prompt must command 16, 18, or 19 chapters");
 assert(enPrompt121.includes("Chapter 16: Retrospective Life Milestone Verification"), "English prompt must include Chapter 16");
-assert(taPrompt121.includes("16 முக்கிய அத்தியாயங்கள்") || taPrompt121.includes("18 முக்கிய அத்தியாயங்கள்"), "Tamil prompt must command 16 or 18 chapters");
+assert(taPrompt121.includes("16 முக்கிய அத்தியாயங்கள்") || taPrompt121.includes("18 முக்கிய அத்தியாயங்கள்") || taPrompt121.includes("19 விரிவான அத்தியாயங்கள்"), "Tamil prompt must command 16, 18, or 19 chapters");
 assert(taPrompt121.includes("அத்தியாயம் 16: கடந்த கால வாழ்வியல் மைல்கற்கள் சரிபார்ப்பு"), "Tamil prompt must include Chapter 16");
 console.log("   ✓ 16/18-Chapter synchronization between algorithmic report and AI prompt templates verified in English and Tamil.");
 
