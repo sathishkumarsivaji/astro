@@ -31,8 +31,8 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
       birthPlace: city.displayString || city.name,
       latitude: city.lat,
       longitude: city.lon || city.lng,
-      utcOffset: city.tz ?? 5.5,
-      timezoneId: city.timezoneId || (city.tz === 5.5 ? "Asia/Kolkata" : (city.tz === 0.0 ? "Europe/London" : (city.tz === 8.0 ? "Asia/Singapore" : "UTC")))
+      utcOffset: city.tz ?? null,
+      timezoneId: city.timezoneId || null
     }));
   };
 
@@ -61,8 +61,8 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
       if (match) {
         lat = match.lat;
         lng = match.lon ?? match.lng;
-        tzOffset = match.tz ?? 5.5;
-        tzId = match.timezoneId || "Asia/Kolkata";
+        tzOffset = match.tz ?? null;
+        tzId = match.timezoneId || null;
       }
     }
 
@@ -70,7 +70,7 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
       ...formData,
       latitude: lat,
       longitude: lng,
-      utcOffset: tzOffset ?? 5.5,
+      utcOffset: tzOffset,
       timezoneId: tzId,
       name: formData.name?.trim() || (isTamil ? "ஜாதகர்" : "Native"),
       isDemo: false
@@ -85,6 +85,11 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
 
     if (lat === null || lng === null) {
       alert(lang === "ta" ? "பிறந்த இடத்தை பரிந்துரையிலிருந்து தேர்வு செய்யவும் அல்லது சரியான பெயரை உள்ளிடவும்" : "Please select a birth location from the suggestions or enter a recognized city name.");
+      return;
+    }
+
+    if (profileToValidate.utcOffset === null && !profileToValidate.timezoneId) {
+      alert(lang === "ta" ? "நேர மண்டலம் அல்லது UTC ஈடு தேவை. தயவுசெய்து பிறந்த இடத்தை தேர்வு செய்யவும்." : "Timezone information is required. Please select a birth location from the suggestions.");
       return;
     }
 
@@ -245,7 +250,7 @@ export default function BirthChartForm({ onCalculate, initialProfile = null, lan
                   birthPlace: p.displayString || p.name,
                   latitude: p.lat,
                   longitude: p.lon ?? p.lng,
-                  utcOffset: p.tz ?? 5.5,
+                  utcOffset: p.tz ?? null,
                   timezoneId: p.timezoneId || null
                 }));
               }}

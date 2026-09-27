@@ -58,22 +58,25 @@ export function calculatePlacidusCusps(lmstDegrees, lat, T) {
   const phiRad = lat * DEG2RAD;
   const ramcDeg = norm360(lmstDegrees);
 
-  // If near polar circle (|lat| > 66.5°), Placidus breaks down; fall back gracefully to Equal
-  if (Math.abs(lat) >= 66.0) {
-    return calculateEqualCusps(ascendant, mc);
-  }
+  let hasDivergence = false;
+  let divergenceReason = null;
 
   // Helper function to solve Placidus cusp iteratively
   // f = fraction of semi-arc (1/3 for cusp 11 & 3; 2/3 for cusp 12 & 2)
   // isDiurnal: true for cusps 11, 12; false for cusps 2, 3
   function solvePlacidusCusp(ramcTarget, f, isDiurnal) {
     let ra = ramcTarget * DEG2RAD;
+    let converged = false;
     for (let iter = 0; iter < 100; iter++) {
       // Exact relation for ecliptic point: tan(dec) = tan(eps) * sin(ra)
       const tanDec = Math.tan(epsRad) * Math.sin(ra);
       const sinAD = Math.tan(phiRad) * tanDec;
-      const clampedSinAD = Math.max(-0.999999, Math.min(0.999999, sinAD));
-      const ad = Math.asin(clampedSinAD);
+      if (Math.abs(sinAD) >= 1.0) {
+        hasDivergence = true;
+        divergenceReason = `Circumpolar divergence (|tan(phi)*tan(dec)| >= 1 at latitude ${lat}°)`;
+        break;
+      }
+      const ad = Math.asin(sinAD);
       const dsa = Math.PI / 2 + ad;
       const nsa = Math.PI / 2 - ad;
       
@@ -83,7 +86,13 @@ export function calculatePlacidusCusps(lmstDegrees, lat, T) {
         
       const diff = (targetRA - ra);
       ra += diff * 0.6;
-      if (Math.abs(diff) < 1e-9) break;
+      if (Math.abs(diff) < 1e-9) {
+        converged = true;
+        break;
+      }
+    }
+    if (!converged || hasDivergence) {
+      return null;
     }
     // Convert RA to Ecliptic Longitude: tan(long) = sin(ra) / (cos(ra) * cos(eps))
     const y = Math.sin(ra);
@@ -103,6 +112,20 @@ export function calculatePlacidusCusps(lmstDegrees, lat, T) {
   const cusp2 = solvePlacidusCusp(ramcIC, 2.0 / 3.0, false);
   const cusp3 = solvePlacidusCusp(ramcIC, 1.0 / 3.0, false);
 
+  if (hasDivergence || cusp11 === null || cusp12 === null || cusp2 === null || cusp3 === null) {
+    const fallback = calculateEqualCusps(ascendant, mc);
+    return {
+      ...fallback,
+      system: "Equal (Placidus Polar Fallback)",
+      effectiveHouseSystem: "Equal",
+      requestedHouseSystem: "Placidus",
+      isFallbackSubstituted: true,
+      placidusCuspStatus: "diverged_fallback_equal",
+      divergenceReason: divergenceReason || "Iterative solver did not converge due to extreme geographic latitude (circumpolar).",
+      disclosure: "Placidus house cusps cannot mathematically form at this polar latitude (|tan(φ)·tan(δ)| ≥ 1). Equal house system was substituted for astronomical safety."
+    };
+  }
+
   const cusps = {
     1: cusp1,
     2: cusp2,
@@ -120,6 +143,7 @@ export function calculatePlacidusCusps(lmstDegrees, lat, T) {
 
   return {
     system: "Placidus",
+    placidusCuspStatus: "exact_converged",
     cusps,
     mc,
     ascendant

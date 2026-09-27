@@ -35,3 +35,9 @@ Thumbs.db
 
 # Temporary archives
 *.zip
+
+# Database & runtime stores
+backend/data/*.json
+backend/data/*.tmp*
+data/*.json
+*.json.tmp*

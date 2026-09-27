@@ -212,8 +212,8 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
         </h2>
         <p className="text-xs text-stone-600 max-w-2xl mx-auto leading-relaxed">
           {isTamil
-            ? "சாமுத்ரிகா லட்சணம் மற்றும் வேத நஷ்ட ஜாதக முறைப்படி, உங்களின் பள்ளி/கல்லூரி, முதல் வேலை, திருமணம் போன்ற நிகழ்வுகளின் மாதம்/ஆண்டை கொண்டு ± சில மாதங்களுக்குள் பிறந்த ஆண்டு, மாதம், தேதி மற்றும் லக்னத்தை துல்லியமாக கணக்கிடலாம்."
-            : "Using classical Samudrika chiromancy and Vedic Nashta Jataka algorithms, we calibrate your palm millimeter line segments with the exact Month & Year of your life milestones to isolate your birth date within a few months precision (± 2 to 4 months)."}
+            ? "சாமுத்ரிகா லட்சண மாதிரிகள் மற்றும் வேத நஷ்ட ஜாதக சூத்திரங்களின்படி, பள்ளி/கல்லூரி, தொழில், திருமணம் போன்ற முக்கிய வாழ்க்கை நிகழ்வுகளின் மாதம்/ஆண்டுகளைக் கொண்டு உத்தேச பிறந்த காலக்கட்டத்தை அறியலாம். (கைப்படங்கள் உருவக மாதிரியாக பயன்படுகின்றன; வரலாற்று மைல்கற்கள் கணித அடிப்படையை வழங்குகின்றன)."
+            : "Using classical Samudrika chiromancy archetypes and Vedic Nashta Jataka algorithms, we calibrate life event milestones (education, career, marriage) to hypothesize a likely birth time window. (Note: Hand photos provide illustrative geometric guidance; historical milestones provide the mathematical basis)."}
         </p>
 
         {/* Accuracy Target Highlight Banner */}
@@ -445,7 +445,7 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   birthCity: p.displayString || p.name,
                   latitude: p.lat,
                   longitude: p.lon ?? p.lng,
-                  utcOffset: p.tz ?? 5.5,
+                  utcOffset: p.tz ?? null,
                   timezoneId: p.timezoneId || null
                 }))}
                 lang={lang}

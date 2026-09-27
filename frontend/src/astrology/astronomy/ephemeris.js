@@ -61,11 +61,30 @@ function calculateTropicalBody(bodyName, dateObj) {
 /**
  * Calculate Lunar Nodes (Mean and True)
  */
-function calculateLunarNodes(T, dateObj) {
+function calculateLunarNodes(T, dateObj, nodeModel = "mean") {
   // Mean Rahu (apparent geocentric longitude)
   const omega = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + (T * T * T) / 450000.0);
   const meanRahu = norm360(omega);
   const meanKetu = norm360(meanRahu + 180);
+
+  // Periodic perturbations to calculate True (Oscillating) Node (Jean Meeus Astronomical Algorithms)
+  const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) * DEG2RAD;
+  const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) * DEG2RAD;
+  const Mprime = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T) * DEG2RAD;
+  const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) * DEG2RAD;
+
+  const deltaNodeDeg = -1.4979 * Math.sin(2 * (F - D))
+    - 0.1500 * Math.sin(M)
+    - 0.1226 * Math.sin(2 * F)
+    + 0.1176 * Math.sin(2 * D)
+    - 0.0801 * Math.sin(2 * (F - Mprime));
+
+  const trueRahu = norm360(meanRahu + deltaNodeDeg);
+  const trueKetu = norm360(trueRahu + 180);
+
+  const selectedModel = (nodeModel || "mean").toLowerCase() === "true" ? "true" : "mean";
+  const rahuLong = selectedModel === "true" ? trueRahu : meanRahu;
+  const ketuLong = selectedModel === "true" ? trueKetu : meanKetu;
 
   // Mean node daily speed is always retrograde (~ -0.05295 deg/day)
   const nodeSpeed = -1934.136261 / 36525.0;
@@ -73,18 +92,29 @@ function calculateLunarNodes(T, dateObj) {
   return {
     rahu: {
       name: "Rahu",
-      tropicalLongitude: meanRahu,
+      tropicalLongitude: rahuLong,
+      meanLongitude: meanRahu,
+      trueLongitude: trueRahu,
+      nodeModel: selectedModel,
       latitude: 0,
       speed: nodeSpeed,
       isRetrograde: true
     },
     ketu: {
       name: "Ketu",
-      tropicalLongitude: meanKetu,
+      tropicalLongitude: ketuLong,
+      meanLongitude: meanKetu,
+      trueLongitude: trueKetu,
+      nodeModel: selectedModel,
       latitude: 0,
       speed: nodeSpeed,
       isRetrograde: true
-    }
+    },
+    meanRahu,
+    meanKetu,
+    trueRahu,
+    trueKetu,
+    nodeModel: selectedModel
   };
 }
 

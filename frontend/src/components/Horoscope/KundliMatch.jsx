@@ -24,7 +24,7 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
   const [p1City, setP1City] = useState(() => profile?.birthPlace || "");
   const [p1Lat, setP1Lat] = useState(() => profile?.latitude ?? null);
   const [p1Lng, setP1Lng] = useState(() => profile?.longitude ?? null);
-  const [p1Tz, setP1Tz] = useState(() => profile?.utcOffset ?? 5.5);
+  const [p1Tz, setP1Tz] = useState(() => profile?.utcOffset ?? null);
   const [p1TimezoneId, setP1TimezoneId] = useState(() => profile?.timezoneId || null);
   const [p1Nak, setP1Nak] = useState(() => chartData?.moonNakshatra?.name || "Ashwini");
   const [p1Pada, setP1Pada] = useState(() => chartData?.moonNakshatra?.pada ?? null);
@@ -98,7 +98,7 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
     }
     if (p1City?.trim()) {
       const match = resolveTypedPlace(p1City, isTamil);
-      if (match) return { lat: match.lat, lng: match.lon ?? match.lng, tz: match.tz ?? 5.5, timezoneId: match.timezoneId };
+      if (match) return { lat: match.lat, lng: match.lon ?? match.lng, tz: match.tz ?? null, timezoneId: match.timezoneId };
     }
     return null;
   };
@@ -109,7 +109,7 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
     }
     if (p2City?.trim()) {
       const match = resolveTypedPlace(p2City, isTamil);
-      if (match) return { lat: match.lat, lng: match.lon ?? match.lng, tz: match.tz ?? 5.5, timezoneId: match.timezoneId };
+      if (match) return { lat: match.lat, lng: match.lon ?? match.lng, tz: match.tz ?? null, timezoneId: match.timezoneId };
     }
     return null;
   };
@@ -459,7 +459,7 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
                       setP1City(p.displayString || p.name);
                       setP1Lat(p.lat);
                       setP1Lng(p.lon ?? p.lng);
-                      setP1Tz(p.tz ?? 5.5);
+                      setP1Tz(p.tz ?? null);
                       setP1TimezoneId(p.timezoneId || null);
                     }}
                     lang={lang}
@@ -633,7 +633,7 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
                       setP2City(p.displayString || p.name);
                       setP2Lat(p.lat);
                       setP2Lng(p.lon ?? p.lng);
-                      setP2Tz(p.tz ?? 5.5);
+                      setP2Tz(p.tz ?? null);
                       setP2TimezoneId(p.timezoneId || null);
                     }}
                     lang={lang}

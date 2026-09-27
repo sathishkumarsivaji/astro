@@ -1592,10 +1592,11 @@ assert.strictEqual(warRes1.warDetails.Mars.inWar, true, "Mars must be in planeta
 assert.strictEqual(warRes1.warDetails.Venus.inWar, true, "Venus must be in planetary war");
 assert.strictEqual(warRes1.warDetails.Mars.isVictor, true, "Mars (higher declination 15° vs 12°) must be victor");
 assert.strictEqual(warRes1.warDetails.Venus.isVictor, false, "Venus must be defeated in planetary war");
-assert.strictEqual(warRes1.warDetails.Mars.warCorrectionImplemented, false, "Graha Yuddha metadata must declare warCorrectionImplemented: false");
-assert.strictEqual(warRes1.warDetails.Venus.warCorrectionImplemented, false, "Graha Yuddha metadata must declare warCorrectionImplemented: false");
-assert.strictEqual(warRes1.warAdjustments.Mars, 0, "Clean classical war reporting without unverified virupa multipliers");
-assert.strictEqual(warRes1.warAdjustments.Venus, 0, "Clean classical war reporting without unverified virupa multipliers");
+assert.strictEqual(warRes1.warDetails.Mars.warCorrectionImplemented, true, "Graha Yuddha metadata must declare warCorrectionImplemented: true");
+assert.strictEqual(warRes1.warDetails.Venus.warCorrectionImplemented, true, "Graha Yuddha metadata must declare warCorrectionImplemented: true");
+assert.strictEqual(warRes1.warAdjustments.Mars > 0, true, "Victor receives positive Graha Yuddha Virupas");
+assert.strictEqual(warRes1.warAdjustments.Venus < 0, true, "Defeated planet receives negative Graha Yuddha Virupas");
+assert.strictEqual(warRes1.warAdjustments.Mars + warRes1.warAdjustments.Venus, 0, "Graha Yuddha Virupa adjustments conserve total points");
 
 // Case 2: Mars and Venus separated by 2.5° (> 1.0° threshold) -> No war
 const warPlanetsNoWar = [
@@ -1605,7 +1606,7 @@ const warPlanetsNoWar = [
 const warRes2 = calculateGrahaYuddha(warPlanetsNoWar);
 assert.strictEqual(warRes2.warDetails.Mars.inWar, false, "Mars must not be in war when separation > 1.0°");
 assert.strictEqual(warRes2.warDetails.Venus.inWar, false, "Venus must not be in war when separation > 1.0°");
-assert.strictEqual(warRes2.warDetails.Mars.warCorrectionImplemented, false, "Non-war planets also report warCorrectionImplemented: false");
+assert.strictEqual(warRes2.warDetails.Mars.warCorrectionImplemented, true, "Non-war planets also report warCorrectionImplemented: true");
 assert.strictEqual(warRes2.warAdjustments.Mars, 0, "No adjustment when no war");
 assert.strictEqual(warRes2.warAdjustments.Venus, 0, "No adjustment when no war");
 console.log("   ✓ Graha Yuddha (Planetary War) engine verified: <1.0° threshold, northern declination victory, classical metadata.");

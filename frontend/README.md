@@ -19,7 +19,7 @@ Designed for both seekers (via intuitive plain-language chapters and tooltips) a
 - **4 Astrological Calculation Systems**:
   - **Lahiri (Chitrapaksha Sidereal)**: Classical Chitrapaksha Ayanamsha ($23^\circ 51' 25.5''$ at J2000.0), Whole Sign / Sripati cusps, 16 Divisional Vargas, Parashari 6-fold Shadbala, 337-SAV, Jaimini Chara Karakas, and Vimshottari Dasha.
   - **KP System (Krishnamurti Padhdhati)**: KP Ayanamsha (precession rate 50.2388475"/year), Placidus Cusps (Siderealized), 249 Star/Sub/Sub-sub Lords for all 12 Cusps & 9 Planets, AstroVerse KP significator prioritization model (4-Tier significators), and Ruling Planets (RP).
-  - **Raman Sidereal**: Independent recalculation from the 397 AD zero-point epoch ($21^\circ 04' 14.5''$ at J2000.0), Whole Sign houses, full Vedic harmonic suite.
+  - **Raman Sidereal**: Independent recalculation from the 397 AD zero-point epoch ($22^\circ 24' 51''$ at J2000.0 with precession rate 50⅓"/year), Whole Sign houses, full Vedic harmonic suite.
   - **Tropical / Sayana (Western)**: 0° Aries tied strictly to the Vernal Equinox (Zero Ayanamsha), Tropical Placidus Cusps, Classical Ptolemaic Aspects with Orbs and Applying/Separating dynamics, and Essential Dignities.
 - **Placidus House Cusps**: Iterative semi-diurnal arc trisection across latitudes with high-latitude polar fallbacks.
 - **Calculated Solar Times**: Apparent geocentric sunrise, sunset, solar noon, and dynamic 1/8th daytime Muhurta slots computed using NOAA solar refraction models (90.833° zenith) with Equation of Time.
@@ -119,7 +119,7 @@ npm test
 ```
 
 ### Key Tested Benchmarks:
-- **Astronomical Multi-Epoch Reference (1900–2050)**: Exact verification against Swiss Ephemeris / VSOP87 within $< 0.001^\circ$.
+- **Astronomical Multi-Epoch Reference (1900–2050)**: Exact verification against VSOP87 reference ephemerides within $< 0.001^\circ$.
 - **Placidus House Cusps Across Latitudes**: Tested across Equator (0°), Chennai (13°N), New York (40.7°N), London (51.5°N), Oslo (59.9°N).
 - **Panchanga Root Solver**: Newton-Raphson convergence within $< 0.0001^\circ$ and target timezone formatting.
 - **Jaimini 7-Karaka**: Deterministic degree tie-breaking and Arudha Pada exception logic across all 12 Lagnas.

@@ -51,10 +51,29 @@ export function normalizeBirthData(data) {
     throw new Error(`Birth month out of bounds (1-12): ${month}`);
   }
 
-  // Strict Gregorian calendar validation (e.g. reject Feb 30, Feb 29 in non-leap year)
-  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  if (day < 1 || day > daysInMonth) {
-    throw new Error(`Invalid calendar date: "${birthDate}". Month ${month} in year ${year} has ${daysInMonth} days.`);
+  const calendarMode = (data.calendar || "auto").toLowerCase();
+  if (!["auto", "gregorian", "julian"].includes(calendarMode)) {
+    throw new Error(`Unsupported calendar mode: "${data.calendar}". Must be "auto", "gregorian", or "julian".`);
+  }
+
+  // Calendar-aware month-length validation (Gregorian vs Julian leap years)
+  let maxDays = 31;
+  if (month === 2) {
+    const isLeap = calendarMode === "julian"
+      ? (year % 4 === 0)
+      : (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0));
+    maxDays = isLeap ? 29 : 28;
+  } else if ([4, 6, 9, 11].includes(month)) {
+    maxDays = 30;
+  }
+
+  // Check omitted dates in Gregorian reform (1582-10-05 to 1582-10-14 did not exist in Catholic reform)
+  if (calendarMode === "gregorian" && year === 1582 && month === 10 && day >= 5 && day <= 14) {
+    throw new Error(`Invalid Gregorian calendar date: "${birthDate}". Days October 5-14, 1582 were dropped during the Gregorian calendar reform.`);
+  }
+
+  if (day < 1 || day > maxDays) {
+    throw new Error(`Invalid calendar date: "${birthDate}". Month ${month} in year ${year} has ${maxDays} days.`);
   }
 
   // STRICT: Birth time is required (no silent 12:00 noon default)
@@ -136,7 +155,7 @@ export function normalizeBirthData(data) {
     utcDate.setUTCMilliseconds(Math.round(decimalUTCHours * 3600 * 1000));
   }
 
-  const jd = calculateJulianDate(utcDate);
+  const jd = calculateJulianDate(utcDate, calendarMode);
   const T = (jd - 2451545.0) / 36525.0;
 
   return {
@@ -154,6 +173,7 @@ export function normalizeBirthData(data) {
     longitude: lng,
     utcOffset: tzOffset,
     timezoneId: tzId || (tzOffset === 0 ? "UTC" : null),
+    calendar: calendarMode,
     utcDate,
     jd,
     T
@@ -163,7 +183,7 @@ export function normalizeBirthData(data) {
 /**
  * Calculates high-precision Julian Date from UTC Date object
  */
-export function calculateJulianDate(dateObj) {
+export function calculateJulianDate(dateObj, calendar = "auto") {
   const y = dateObj.getUTCFullYear();
   const m = dateObj.getUTCMonth() + 1;
   const d = dateObj.getUTCDate() +
@@ -179,8 +199,13 @@ export function calculateJulianDate(dateObj) {
     M += 12;
   }
 
-  const A = Math.floor(Y / 100);
-  const B = 2 - A + Math.floor(A / 4);
+  // Meeus Astronomical Algorithms Ch. 7: Julian vs Gregorian calendar reform (1582-10-15)
+  const isJulian = calendar === "julian" || (calendar === "auto" && (y < 1582 || (y === 1582 && (m < 10 || (m === 10 && d < 15)))));
+  let B = 0;
+  if (!isJulian) {
+    const A = Math.floor(Y / 100);
+    B = 2 - A + Math.floor(A / 4);
+  }
 
   return Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + d + B - 1524.5;
 }

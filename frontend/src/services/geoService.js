@@ -835,10 +835,10 @@ export async function searchPlaces(query, lang = "en") {
   try {
     let onlineResults = [];
 
-    // Try backend proxy if available
+    // Try authoritative backend geocoding proxy first
     try {
       const proxyController = new AbortController();
-      const proxyTimeout = setTimeout(() => proxyController.abort(), 1200);
+      const proxyTimeout = setTimeout(() => proxyController.abort(), 2000);
       const proxyRes = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&lang=${isTamil ? "ta" : "en"}`, {
         signal: proxyController.signal,
         headers: { "Accept": "application/json" }
@@ -861,11 +861,6 @@ export async function searchPlaces(query, lang = "en") {
         }
       }
     } catch {}
-
-    // If proxy yielded nothing, fallback directly to Nominatim
-    if (onlineResults.length === 0) {
-      onlineResults = await fetchNominatimPlaces(query, lang);
-    }
 
     if (onlineResults.length > 0) {
       // Merge unique local and online results

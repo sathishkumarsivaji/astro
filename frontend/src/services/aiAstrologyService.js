@@ -4,10 +4,8 @@
  * into deeply personalized, multi-page classical Vedic astrology dossiers.
  */
 
-// Server-side session & credit management: API keys are securely isolated on the backend.
-let cachedSessionToken = (typeof window !== "undefined" && window.localStorage)
-  ? localStorage.getItem("astro_session_token")
-  : null;
+// Server-side session & credit management: Session tokens are stored in-memory; authentication relies on secure HttpOnly cookies.
+let cachedSessionToken = null;
 
 /**
  * Ensures an authenticated session exists with the backend server via cryptographic handshake.
@@ -19,19 +17,30 @@ export async function ensureSessionToken() {
 
   const authUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL)
     ? import.meta.env.VITE_AI_PROXY_URL.replace(/\/generate-astrology$/, "/auth/session")
-    : "http://localhost:5000/api/auth/session";
+    : "/api/auth/session";
 
   try {
-    const res = await fetch(authUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-    if (res.ok) {
+    let res;
+    try {
+      res = await fetch(authUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+    } catch {
+      res = await fetch("http://localhost:5000/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+    }
+
+    if (res && res.ok) {
       const data = await res.json();
       if (data.sessionToken) {
         cachedSessionToken = data.sessionToken;
         if (typeof window !== "undefined" && window.localStorage) {
-          localStorage.setItem("astro_session_token", data.sessionToken);
+          if (data.userId) localStorage.setItem("astro_user_id", data.userId);
         }
         return cachedSessionToken;
       }
@@ -44,23 +53,36 @@ export async function ensureSessionToken() {
 }
 
 export function getSessionToken() {
-  return cachedSessionToken || (typeof window !== "undefined" && window.localStorage?.getItem("astro_session_token")) || "unauthenticated_session";
+  return cachedSessionToken || "unauthenticated_session";
 }
 
 export async function fetchUserCredits() {
   const token = await ensureSessionToken();
   const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL)
-    ? import.meta.env.VITE_AI_PROXY_URL.replace(/\/generate-astrology$/, "/user/credits")
-    : "http://localhost:5000/api/user/credits";
+    ? import.meta.env.VITE_AI_PROXY_URL.replace(/\/generate-astrology$/, "/user/entitlements")
+    : "/api/user/entitlements";
 
   try {
-    const res = await fetch(proxyUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
-    if (res.ok) {
+    let res;
+    try {
+      res = await fetch(proxyUrl, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        credentials: "include"
+      });
+    } catch {
+      res = await fetch("http://localhost:5000/api/user/entitlements", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        credentials: "include"
+      });
+    }
+
+    if (res && res.ok) {
       const data = await res.json();
       return typeof data.availableCredits === "number" ? data.availableCredits : null;
     }
@@ -634,7 +656,7 @@ export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCr
   const prompt = buildAstrologyPrompt(chartData, lang);
 
   // 1. Dispatch request through the secure backend proxy (keeping API keys isolated on the server)
-  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL) || "/api/astrology-report";
+  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL) || "/api/generate-astrology";
   const token = await ensureSessionToken();
   
   try {
@@ -646,6 +668,7 @@ export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCr
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
+        credentials: "include",
         body: JSON.stringify({ prompt, lang })
       });
     } catch {
@@ -656,6 +679,7 @@ export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCr
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
+        credentials: "include",
         body: JSON.stringify({ prompt, lang })
       });
     }

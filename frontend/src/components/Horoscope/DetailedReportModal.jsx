@@ -45,6 +45,8 @@ import {
   CALCULATION_CONVENTIONS
 } from "../../services/astroEngine";
 import { getChaptersForSystem } from "../../config/reportChapters";
+import FollowUpQuestions from "./FollowUpQuestions";
+import { jsPDF } from "jspdf";
 
 function CertaintyBadge({ type = "calculated", isTamil = false }) {
   if (type === "calculated") {
@@ -99,12 +101,16 @@ function AstrologicalGlossaryTooltip({ term, explanation, isTamil = false }) {
   );
 }
 
-export default function DetailedReportModal({ isOpen, onClose, chartData, lang = "en", onCreditDeducted = null }) {
+export default function DetailedReportModal({ isOpen, onClose, chartData, lang = "en", onCreditDeducted = null, isExpertMode = false }) {
   const [reportTier, setReportTier] = useState("detailed"); // "short" or "detailed"
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("algorithmic"); // "algorithmic" or "ai"
-  const [audienceMode, setAudienceMode] = useState("client"); // "client" (Client View) or "astrologer" (Astrologer View)
+  const [audienceMode, setAudienceMode] = useState(() => (isExpertMode ? "astrologer" : "client")); // "client" (Client View) or "astrologer" (Astrologer View)
   const [selectedReasoningDomain, setSelectedReasoningDomain] = useState(null); // domain for "Why this prediction?" modal
+
+  React.useEffect(() => {
+    setAudienceMode(isExpertMode ? "astrologer" : "client");
+  }, [isExpertMode]);
 
   const chartId = chartData?.reportId || `chart_${(chartData?.birthDate || chartData?.date || "").toString()}_${chartData?.ascendantLong || chartData?.ascendant?.longitude || 0}`;
   const milestoneStorageKey = `astro_milestones_${chartId}`;
@@ -261,6 +267,72 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     d9Sensitivity: "Navamsha (D9) shifts sign every ~13.3 minutes of birth time."
   };
 
+  const dynamicOverview = React.useMemo(() => {
+    // 1. Core Nature: Lagna, Lagna Lord, Moon Sign & Nakshatra
+    const lagnaLord = chartData.ascendantLord || chartData.ascendant?.lord || chartData.ascendantSign?.ruler || "Mars";
+    const lagnaSign = ascName;
+    const moonSg = moonName;
+    const moonNak = nakName;
+
+    // Find strongest planet by Shadbala Virupas
+    let topPlanet = "Jupiter";
+    let topVirupas = 0;
+    if (Array.isArray(chartData.shadbala)) {
+      const sorted = [...chartData.shadbala].sort((a,b) => (b.virupas || b.totalRupas || 0) - (a.virupas || a.totalRupas || 0));
+      if (sorted[0]) {
+        topPlanet = sorted[0].planet || sorted[0].name || "Jupiter";
+        topVirupas = Math.round(sorted[0].virupas || sorted[0].totalRupas || 0);
+      }
+    }
+
+    // Find key yogas
+    const prominentYogas = (Array.isArray(chartData.yogas) ? chartData.yogas : (Array.isArray(chartData.detectedYogas) ? chartData.detectedYogas : []))
+      .slice(0, 2)
+      .map(y => (typeof y === "string" ? y : (y.name || y.nameTa || y.title)))
+      .filter(Boolean);
+    const yogaText = prominentYogas.length > 0 ? prominentYogas.join(" & ") : (isTamil ? "தர்ம கர்மாதிபதி யோகம்" : "Dharma-Karmadhipati Yoga");
+
+    // Active Mahadasha & Antardasha
+    const activeMaha = execSummary?.currentLifePhase?.activeMahadasha || chartData.currentDasha?.mahadasha || "Saturn";
+    const activeAntar = execSummary?.currentLifePhase?.activeAntardasha || chartData.currentDasha?.antardasha || "Mercury";
+
+    return {
+      core: {
+        fact: isTamil 
+          ? `கணக்கீடு: லக்னம் ${ascTamil} (அதிபதி: ${lagnaLord}), சந்திரன் ${moonTamil} (${nakTamil} நட்சத்திரம்). அதிக ஷட்பலம்: ${topPlanet} (${topVirupas} விரூபங்கள்).`
+          : `Calculated Fact: ${lagnaSign} Ascendant ruled by ${lagnaLord}, with Moon in ${moonSg} (${moonNak} nakshatra). Highest Shadbala planet: ${topPlanet} (${topVirupas} virupas).`,
+        tradition: isTamil
+          ? `சாஸ்திர விளக்கம்: லக்னாதிபதியும் உச்ச பலம் பெற்ற கிரகமும் உங்கள் ஆன்ம உறுதி, தலைமைப் பண்பு மற்றும் ஒழுங்கை வழிநடத்துகின்றன.`
+          : `Traditional View: The Ascendant lord in harmony with peak Shadbala planet grants structural fortitude, self-determination, and purposeful drive.`,
+        plain: isTamil
+          ? `எளிய பொருள்: நீங்கள் இயல்பாகவே விடாமுயற்சியும், தெளிவான தொலைநோக்குப் பார்வையும் கொண்டவர். சவால்களை நிதானமாக எதிர்கொள்ளும் ஆற்றல் உண்டு.`
+          : `Plain English: You are a determined builder with innate strategic clarity. You naturally lead with calm resilience and principled focus.`
+      },
+      phase: {
+        fact: isTamil
+          ? `கணக்கீடு: நடப்பு காலக்கட்டம் ${activeMaha} மகா தசை - ${activeAntar} அந்தர்தசை.`
+          : `Calculated Fact: Currently traversing ${activeMaha} Mahadasha — ${activeAntar} Antardasha.`,
+        tradition: isTamil
+          ? `சாஸ்திர விளக்கம்: விம்சோத்தரி தசா விதிகளின்படி ${activeMaha} தசை தொழில் நிலையை உறுதிப்படுத்தவும், நீண்ட கால இலக்குகளை கட்டமைக்கவும் வழிவகுக்கும்.`
+          : `Traditional View: Classical Vimshottari principles dictate this phase catalyzes foundational career consolidation, stewardship, and personal maturity.`,
+        plain: isTamil
+          ? `எளிய பொருள்: இந்த காலம் உங்கள் வாழ்க்கை லட்சியங்களை உறுதியாக அமைத்துக் கொள்ளவும், தேவையில்லாத அலைச்சல்களைக் குறைத்து இலக்கில் கவனம் செலுத்தவும் உகந்தது.`
+          : `Plain English: This life season rewards steady perseverance and disciplined foundations over short-term shortcuts. Focus on master skills and stability.`
+      },
+      advice: {
+        fact: isTamil
+          ? `கணக்கீடு: முக்கிய சுப யோகம்: ${yogaText}.`
+          : `Calculated Fact: Prominent Chart Yoga: ${yogaText}.`,
+        tradition: isTamil
+          ? `சாஸ்திர விளக்கம்: சுப யோகங்களின் முழு ஆற்றல் வெளிப்பட மன அமைதியும், நேர்மையான செயல்முறையும் அவசியம்.`
+          : `Traditional View: Classical texts advise that yogas flourish when supported by disciplined daily sadhana, mental serenity, and ethical conduct.`,
+        plain: isTamil
+          ? `எளிய பொருள்: அவசர முடிவுகளைத் தவிர்த்து, உங்கள் உள்ளுணர்வை நம்பி நிதானமாக முடிவெடுங்கள். தினசரி தியானமும் சீரான ஓய்வும் உங்கள் ஆற்றலை பெருக்கும்.`
+          : `Plain English: Prioritize mental stillness and avoid impulsive overextension. Consistent sleep, reflection, and focused daily rituals will multiply your success.`
+      }
+    };
+  }, [chartData, ascName, ascTamil, moonName, moonTamil, nakName, nakTamil, isTamil, execSummary]);
+
   const handleGenerateAIReport = async () => {
     setAiLoading(true);
     setAiError("");
@@ -284,20 +356,200 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     }
   };
 
-  const handlePrintMinimal = () => {
-    setReportTier("short");
-    setActiveTab("all");
-    setTimeout(() => {
+  const handleDownloadPDF = (tier = "detailed") => {
+    try {
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4"
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 40;
+      let y = 50;
+
+      // Header Banner
+      doc.setFillColor(30, 27, 75);
+      doc.rect(0, 0, pageWidth, 75, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("ASTROVERSE REPRODUCIBLE CALCULATION DOSSIER", margin, 38);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(220, 215, 254);
+      doc.text("Astronomical Ephemeris & Predictive Astrological Synthesis", margin, 56);
+
+      y = 95;
+      doc.setTextColor(30, 41, 59);
+
+      // Metadata Box
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(203, 213, 225);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 70, 6, 6, "FD");
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("Report ID:", margin + 12, y + 20);
+      doc.setFont("helvetica", "normal");
+      doc.text(String(chartData?.reportId || chartId), margin + 70, y + 20);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Birth Instant:", margin + 12, y + 36);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${chartData.birthDateStr || chartData.birthDate || "N/A"} at ${chartData.birthTimeStr || chartData.time || "N/A"}`, margin + 75, y + 36);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Coordinates:", margin + 12, y + 52);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${Number(chartData.latitude ?? chartData.lat ?? 0).toFixed(4)}° N, ${Number(chartData.longitude ?? chartData.lng ?? 0).toFixed(4)}° E (TZ: UTC${(chartData.utcOffset ?? 0) >= 0 ? "+" : ""}${chartData.utcOffset ?? 0})`, margin + 75, y + 52);
+
+      // Certificate specs on right side of metadata box
+      const col2X = margin + 260;
+      doc.setFont("helvetica", "bold");
+      doc.text("System / Ayanamsa:", col2X, y + 20);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${chartData.system?.name || "Lahiri"} (${(chartData.ayanamsa ?? 0).toFixed(4)}°)`, col2X + 105, y + 20);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Frame / Epoch:", col2X, y + 36);
+      doc.setFont("helvetica", "normal");
+      doc.text("Geocentric Ecliptic of Date / J2000.0", col2X + 80, y + 36);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Calculation Engine:", col2X, y + 52);
+      doc.setFont("helvetica", "normal");
+      doc.text("AstroVerse Core 4.2.0 (VSOP87/Meeus)", col2X + 98, y + 52);
+
+      y += 90;
+
+      // Section: Core Planetary Triad & Active Dasha
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(180, 83, 9);
+      doc.text("1. Core Natal Profile & Dasha State", margin, y);
+      y += 18;
+
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      const triad = [
+        `Ascendant (Lagna): ${ascName} (${Number(chartData.ascendant?.deg || chartData.ascendantLong || 0).toFixed(2)}°)`,
+        `Moon Sign (Janma Rasi): ${moonName} — Nakshatra: ${nakName} (Pada ${nakPada})`,
+        `Sun Sign (Surya Rasi): ${sunName} — Nakshatra: ${chartData.sunNakshatra?.name || "N/A"}`,
+        `Current Dasha: ${execSummary?.currentLifePhase?.activeMahadasha || "N/A"} Mahadasha (${execSummary?.currentLifePhase?.activeAntardasha || "N/A"} Antardasha)`
+      ];
+      triad.forEach(line => {
+        doc.text(`•  ${line}`, margin + 10, y);
+        y += 14;
+      });
+
+      y += 10;
+
+      // Section: Planetary Ephemeris Table
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(180, 83, 9);
+      doc.text("2. Certified Planetary Ephemeris", margin, y);
+      y += 16;
+
+      // Table Header
+      doc.setFillColor(241, 245, 249);
+      doc.rect(margin, y, pageWidth - margin * 2, 18, "F");
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(71, 85, 105);
+      doc.text("BODY", margin + 8, y + 12);
+      doc.text("SIGN", margin + 70, y + 12);
+      doc.text("LONGITUDE", margin + 140, y + 12);
+      doc.text("NAKSHATRA & PADA", margin + 225, y + 12);
+      doc.text("SPEED / STATUS", margin + 345, y + 12);
+      doc.text("DIGNITY", margin + 440, y + 12);
+      y += 22;
+
+      // Rows
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(15, 23, 42);
+      const planetList = Array.isArray(chartData.planets) ? chartData.planets : [];
+      planetList.forEach((p, idx) => {
+        if (y > pageHeight - 60) {
+          doc.addPage();
+          y = 50;
+        }
+        if (idx % 2 === 1) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(margin, y - 10, pageWidth - margin * 2, 16, "F");
+        }
+        doc.setFont("helvetica", "bold");
+        doc.text(String(p.name), margin + 8, y + 2);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(p.sign || "-"), margin + 70, y + 2);
+        doc.text(`${(p.deg !== undefined ? p.deg : p.longitude || 0).toFixed(2)}°`, margin + 140, y + 2);
+        doc.text(`${p.nakshatra || "-"} (${p.pada ? "Pada " + p.pada : "1"})`, margin + 225, y + 2);
+        doc.text(p.isRetrograde ? "Retrograde (R)" : "Direct (D)", margin + 345, y + 2);
+        doc.text(String(p.dignity || p.functionalNature || "Neutral"), margin + 440, y + 2);
+        y += 15;
+      });
+
+      y += 15;
+      if (y > pageHeight - 120) {
+        doc.addPage();
+        y = 50;
+      }
+
+      // Section: 12 Bhavas Snapshot
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(180, 83, 9);
+      doc.text("3. Twelve Bhavas (Houses) Snapshot", margin, y);
+      y += 18;
+
+      bhavas.forEach((b) => {
+        if (y > pageHeight - 50) {
+          doc.addPage();
+          y = 50;
+        }
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 41, 59);
+        doc.text(`House ${b.num}: ${b.title ? b.title.split(":")[0] : `Bhava ${b.num}`} (${b.signName || b.sign || ""})`, margin + 8, y);
+        y += 12;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(71, 85, 105);
+        const splitText = doc.splitTextToSize(String(b.prediction || b.summary || "Balanced astrological influence."), pageWidth - margin * 2 - 16);
+        doc.text(splitText, margin + 12, y);
+        y += (splitText.length * 10) + 6;
+      });
+
+      // Footer
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text(
+          `AstroVerse Reproducible Calculation Dossier • Page ${i} of ${totalPages} • Coordinates: Ecliptic of Date / J2000.0`,
+          margin,
+          pageHeight - 20
+        );
+      }
+
+      doc.save(`AstroVerse_Report_${chartData.reportId || "Natal"}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed, falling back to print:", err);
       window.print();
-    }, 200);
+    }
+  };
+
+  const handlePrintMinimal = () => {
+    handleDownloadPDF("short");
   };
 
   const handlePrintDetailed = () => {
-    setReportTier("detailed");
-    setActiveTab("all");
-    setTimeout(() => {
-      window.print();
-    }, 200);
+    handleDownloadPDF("detailed");
   };
 
   const tabs = [
@@ -716,7 +968,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 {isTamil ? "12 பாவகங்களின் சுருக்கக் கண்ணோட்டம்" : "12 Bhavas Quick Summary Snapshot"}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {bhavas.slice(0, 6).map((b) => (
+                {bhavas.map((b) => (
                   <div key={b.num} className="p-3 rounded-xl bg-white border border-amber-200 shadow-sm space-y-1">
                     <div className="flex justify-between items-center text-xs">
                       <span className="font-bold text-amber-900">{b.title.split(":")[0]}</span>
@@ -826,6 +1078,20 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
+
+            {/* ASTROVERSE FOLLOW-UP QUESTIONS & ANSWERS (SHORT REPORT) */}
+            <FollowUpQuestions
+              chartData={chartData}
+              activeSection="fullReport"
+              systemId={chartSys}
+              multiSystemBundle={multiSystemBundle}
+              lang={lang}
+              onSelectChapter={(targetChapterId) => {
+                setReportTier("detailed");
+                setActiveTab(targetChapterId);
+              }}
+              onCreditDeducted={onCreditDeducted}
+            />
           </div>
         )}
 
@@ -849,37 +1115,64 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs text-stone-700">
-                <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-2xs space-y-1">
-                  <span className="font-bold text-emerald-900 uppercase text-[10px] block">
-                    {isTamil ? "1. உங்கள் அடிப்படை இயல்பு & பலம்" : "1. Your Core Nature & Strength"}
-                  </span>
-                  <p className="leading-relaxed">
-                    {isTamil
-                      ? `நீங்கள் ${ascTamil} லக்னம் மற்றும் ${moonTamil} ராசியில் (${nakTamil} நட்சத்திரம்) பிறந்தவர். உங்கள் ஆளுமையின் மிகப்பெரிய பலம் உங்கள் மன உறுதி, ஒழுங்கு மற்றும் கூர்மையான சிந்தனைத்திறன்.`
-                      : `Born with ${ascName} Ascendant and ${moonName} Moon (${nakName} nakshatra). Your natural disposition combines resilience, structured ambition, and intuitive discernment.`}
-                  </p>
+                <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between border-b border-emerald-100 pb-1.5">
+                    <span className="font-bold text-emerald-900 uppercase text-[10px] block">
+                      {isTamil ? "1. உங்கள் அடிப்படை இயல்பு & பலம்" : "1. Your Core Nature & Strength"}
+                    </span>
+                    <CertaintyBadge type="calculated" isTamil={isTamil} />
+                  </div>
+                  <div className="space-y-1.5 leading-relaxed text-[11px]">
+                    <div className="p-1.5 rounded-lg bg-emerald-50/60 font-mono text-[10px] text-emerald-950 font-semibold">
+                      {dynamicOverview.core.fact}
+                    </div>
+                    <div className="text-stone-600 italic">
+                      {dynamicOverview.core.tradition}
+                    </div>
+                    <div className="text-stone-900 font-medium">
+                      {dynamicOverview.core.plain}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white border border-amber-200 shadow-2xs space-y-1">
-                  <span className="font-bold text-amber-900 uppercase text-[10px] block">
-                    {isTamil ? "2. தற்போதைய காலக்கட்டம் எதை நோக்கி நகர்கிறது?" : "2. Where Your Current Life Phase Points"}
-                  </span>
-                  <p className="leading-relaxed">
-                    {isTamil
-                      ? `தற்போது நடக்கும் ${execSummary?.currentLifePhase?.activeMahadasha || 'தசா'} தசை உங்கள் தொழில் மற்றும் தனிப்பட்ட முன்னேற்றத்தில் புதிய அடித்தளத்தை உருவாக்குகிறது.`
-                      : `Your active ${execSummary?.currentLifePhase?.activeMahadasha || 'Mahadasha'} period focuses attention on consolidating professional authority, financial stability, and purposeful life direction.`}
-                  </p>
+                <div className="p-3.5 rounded-2xl bg-white border border-amber-200 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between border-b border-amber-100 pb-1.5">
+                    <span className="font-bold text-amber-900 uppercase text-[10px] block">
+                      {isTamil ? "2. தற்போதைய காலக்கட்டம் எதை நோக்கி நகர்கிறது?" : "2. Where Your Current Life Phase Points"}
+                    </span>
+                    <CertaintyBadge type="timing" isTamil={isTamil} />
+                  </div>
+                  <div className="space-y-1.5 leading-relaxed text-[11px]">
+                    <div className="p-1.5 rounded-lg bg-amber-50/60 font-mono text-[10px] text-amber-950 font-semibold">
+                      {dynamicOverview.phase.fact}
+                    </div>
+                    <div className="text-stone-600 italic">
+                      {dynamicOverview.phase.tradition}
+                    </div>
+                    <div className="text-stone-900 font-medium">
+                      {dynamicOverview.phase.plain}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white border border-purple-200 shadow-2xs space-y-1">
-                  <span className="font-bold text-purple-900 uppercase text-[10px] block">
-                    {isTamil ? "3. நீங்கள் கவனிக்க வேண்டிய முக்கிய விஷயம்" : "3. Key Focus & Harmony Advice"}
-                  </span>
-                  <p className="leading-relaxed">
-                    {isTamil
-                      ? "வேலைப்பளு மற்றும் மன அழுத்தத்தைத் தவிர்த்து, சீரான உணவு முறை மற்றும் ஆன்மீக தியானத்தை அன்றாடம் கடைப்பிடிப்பது உங்களுக்கு முழுமையான நன்மைகளைத் தரும்."
-                      : "Maintain healthy work-life equilibrium, avoid impulsive financial speculations during adverse transits, and observe grounding daily wellness habits."}
-                  </p>
+                <div className="p-3.5 rounded-2xl bg-white border border-purple-200 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between border-b border-purple-100 pb-1.5">
+                    <span className="font-bold text-purple-900 uppercase text-[10px] block">
+                      {isTamil ? "3. நீங்கள் கவனிக்க வேண்டிய முக்கிய விஷயம்" : "3. Key Focus & Harmony Advice"}
+                    </span>
+                    <CertaintyBadge type="traditional" isTamil={isTamil} />
+                  </div>
+                  <div className="space-y-1.5 leading-relaxed text-[11px]">
+                    <div className="p-1.5 rounded-lg bg-purple-50/60 font-mono text-[10px] text-purple-950 font-semibold">
+                      {dynamicOverview.advice.fact}
+                    </div>
+                    <div className="text-stone-600 italic">
+                      {dynamicOverview.advice.tradition}
+                    </div>
+                    <div className="text-stone-900 font-medium">
+                      {dynamicOverview.advice.plain}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2371,7 +2664,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 17: ASTROLOGER EVIDENCE DOSSIER & REASONING CHAINS */}
-            {isChapterApplicable("reasoningDossier") && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "reasoningDossier") && (
+            {isChapterApplicable("reasoningDossier") && (activeTab === "reasoningDossier" || (activeTab === "all" && audienceMode === "astrologer")) && (
               <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-amber-50/60 border-2 border-purple-300 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-200 pb-3">
                   <div className="flex items-center gap-2">
@@ -2472,7 +2765,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* CHAPTER 18: COMPREHENSIVE TECHNICAL CALCULATION APPENDIX */}
-            {isChapterApplicable("technicalAppendix") && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "technicalAppendix") && (
+            {isChapterApplicable("technicalAppendix") && (activeTab === "technicalAppendix" || (activeTab === "all" && audienceMode === "astrologer")) && (
               <div className="p-5 md:p-6 rounded-3xl bg-white border-2 border-amber-400 shadow-md space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200 pb-3">
                   <div className="flex items-center gap-2">
@@ -3188,7 +3481,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* 19. Multi-System Comparative Analysis (Lahiri vs KP vs Raman vs Tropical) */}
-            {isChapterApplicable("multiSystemComparison") && (activeTab === "all" || audienceMode === "astrologer" || activeTab === "multiSystemComparison") && multiSystemBundle && (
+            {isChapterApplicable("multiSystemComparison") && (activeTab === "multiSystemComparison" || (activeTab === "all" && audienceMode === "astrologer")) && multiSystemBundle && (
               <div className="p-5 md:p-6 rounded-3xl bg-white border-2 border-indigo-400 shadow-md space-y-6">
                 {/* Chapter Header */}
                 <div className="border-b border-indigo-200 pb-4">
@@ -3435,6 +3728,17 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 </div>
               </div>
             )}
+
+            {/* ASTROVERSE FOLLOW-UP QUESTIONS & ANSWERS (SECTION-WISE & FULL-REPORT) */}
+            <FollowUpQuestions
+              chartData={chartData}
+              activeSection={activeTab}
+              systemId={chartSys}
+              multiSystemBundle={multiSystemBundle}
+              lang={lang}
+              onSelectChapter={(targetChapterId) => setActiveTab(targetChapterId)}
+              onCreditDeducted={onCreditDeducted}
+            />
 
             {/* PDF Export & Print Options (End of Master Detailed Report) */}
             <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50 border-2 border-amber-300 shadow-sm space-y-3">

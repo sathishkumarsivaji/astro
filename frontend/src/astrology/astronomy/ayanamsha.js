@@ -25,12 +25,12 @@ export function getKPAyanamsha(jd) {
 
 /**
  * B.V. Raman Ayanamsha
- * Zero year: 397 AD, precession rate 50.2388475"/year
+ * Zero year: 397 AD, J2000.0 anchor ≈ 22°24'51" = 22.4143°, precession rate 50⅓"/year
  */
 export function getRamanAyanamsha(jd) {
   const T = (jd - 2451545.0) / 36525.0;
   const decimalYear = 2000.0 + T * 100.0;
-  return (decimalYear - 397.0) * (50.2388475 / 3600.0);
+  return (decimalYear - 397.0) * ((50 + 1 / 3) / 3600.0);
 }
 
 /**

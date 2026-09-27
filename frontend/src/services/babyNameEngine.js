@@ -3,7 +3,7 @@
 import { NAKSHATRAS, ZODIAC_SIGNS, NAKSHATRA_PADA_SYLLABLES } from "./astroEngine.js";
 import { calculateChartBySystem } from "../astrology/index.js";
 import { calculateNumerology } from "./numerologyEngine.js";
-import { getSessionToken } from "./aiAstrologyService.js";
+import { getSessionToken, ensureSessionToken } from "./aiAstrologyService.js";
 
 export { NAKSHATRA_PADA_SYLLABLES };
 
@@ -1039,19 +1039,37 @@ export async function generateAINewbornNames({
     ? `நட்சத்திரம்: ${nakshatraName} (பாதம் ${pada}), சுப தொடக்க எழுத்து: ${syllableTa} (${syllable}), பாலினம்: ${gender}, லக்னாதிபதி: ${lagnaLord}, எண் கணிதம்: எண் ${destinyNumber}. இந்த அமைப்பிற்கு ஏற்ற 10 தெய்வீக, நவீன மற்றும் பாரம்பரிய குழந்தைப் பெயர்களை JSON வடிவில் பட்டியலிடுக. வடிவம்: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]`
     : `Nakshatra: ${nakshatraName} (Pada ${pada}), Auspicious Syllable: ${syllable} (${syllableTa}), Gender: ${gender}, Lagna Lord: ${lagnaLord}, Destiny Number: ${destinyNumber}. Generate 10 elegant, meaningful newborn baby names adhering strictly to these parameters in JSON format: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]. Return valid JSON array only.`;
 
-  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL) || "http://localhost:5000/api/generate-astrology";
+  const token = await ensureSessionToken();
+  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL) || "/api/generate-astrology";
 
-  const response = await fetch(proxyUrl, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${getSessionToken()}`
-    },
-    body: JSON.stringify({
-      prompt,
-      lang
-    })
-  });
+  let response;
+  try {
+    response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        prompt,
+        lang
+      })
+    });
+  } catch {
+    response = await fetch("http://localhost:5000/api/generate-astrology", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        prompt,
+        lang
+      })
+    });
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
