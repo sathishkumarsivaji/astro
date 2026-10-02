@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "AstroVerse Formal Validation Rules & Model Specifications",
+  "version": "1.0.0",
+  "lastUpdated": "2026-10-01T00:00:00.000Z",
+  "disclaimer": "All weights represent pre-specified classical Jyotish heuristics and ablation model weights for epistemic clarity. Predictions are rule-based hypotheses, not deterministic certainty.",
+  "models": {
+    "MODEL_A": {
+      "id": "MODEL_A",
+      "name": "Full Parashari Baseline (D1 + D9 + Vimshottari + Shadbala)",
+      "description": "Standard traditional model incorporating Rasi (D1), Navamsha (D9), Vimshottari Dasha-Bukthi, and 6-fold Shadbala.",
+      "weights": {
+        "D1_HOUSE_LORDS": 1.0,
+        "D9_NAVAMSHA": 1.0,
+        "VIMSHOTTARI_DASHA": 1.5,
+        "SHADBALA_STRENGTH": 0.8
+      }
+    },
+    "MODEL_B": {
+      "id": "MODEL_B",
+      "name": "Ablation Model B: D1 Rasi-Only (No Vargas / No D9)",
+      "description": "Evaluates predictive behavior when restricted strictly to Rasi chart placements and aspects.",
+      "weights": {
+        "D1_HOUSE_LORDS": 1.0,
+        "D9_NAVAMSHA": 0.0,
+        "VIMSHOTTARI_DASHA": 1.5,
+        "SHADBALA_STRENGTH": 0.8
+      }
+    },
+    "MODEL_C": {
+      "id": "MODEL_C",
+      "name": "Ablation Model C: Dasha-Only Chronological Timing",
+      "description": "Evaluates predictive power when relying exclusively on operating Vimshottari Mahadasha and Antardasha lords.",
+      "weights": {
+        "D1_HOUSE_LORDS": 0.0,
+        "D9_NAVAMSHA": 0.0,
+        "VIMSHOTTARI_DASHA": 2.0,
+        "SHADBALA_STRENGTH": 0.0
+      }
+    },
+    "MODEL_D": {
+      "id": "MODEL_D",
+      "name": "Ablation Model D: KP Cuspal Sub-Lord Model",
+      "description": "Krishnamurti Padhdhati cuspal sub-lord significators and Placidus/KP house cusps.",
+      "weights": {
+        "KP_CUSPAL_SUBLORDS": 1.8,
+        "KP_PLANETARY_STARLORDS": 1.5,
+        "VIMSHOTTARI_DASHA": 1.2,
+        "SHADBALA_STRENGTH": 0.0
+      }
+    },
+    "MODEL_E": {
+      "id": "MODEL_E",
+      "name": "Ablation Model E: Jaimini Chara Dasha & Karakas",
+      "description": "Jaimini system utilizing 7/8 Chara Karakas (Atmakaraka, Darakaraka, etc.) and sign-based Chara Dasha.",
+      "weights": {
+        "JAIMINI_KARAKAS": 1.5,
+        "CHARA_DASHA": 1.5,
+        "ARUDHA_PADAS": 1.0
+      }
+    },
+    "MODEL_F": {
+      "id": "MODEL_F",
+      "name": "Ablation Model F: Ashtakavarga Samudaya & Bhinna Points",
+      "description": "Evaluates planetary and transit strength purely based on Ashtakavarga bindu allocations (SAV / BAV).",
+      "weights": {
+        "ASHTAKAVARGA_SAV": 1.4,
+        "ASHTAKAVARGA_BAV": 1.2,
+        "TRANSIT_GOCHARA": 1.0
+      }
+    },
+    "MODEL_G": {
+      "id": "MODEL_G",
+      "name": "Ablation Model G: Synthesized Multi-System Ensemble",
+      "description": "Multi-tier ensemble weighting combining Parashari, Jaimini, KP sub-lords, and Ashtakavarga.",
+      "weights": {
+        "D1_HOUSE_LORDS": 1.0,
+        "D9_NAVAMSHA": 0.8,
+        "VIMSHOTTARI_DASHA": 1.2,
+        "KP_CUSPAL_SUBLORDS": 1.0,
+        "JAIMINI_KARAKAS": 0.8,
+        "ASHTAKAVARGA_SAV": 0.6,
+        "SHADBALA_STRENGTH": 0.6
+      }
+    }
+  },
+  "rules": [
+    {
+      "id": "RULE_MAR_7L_11H",
+      "name": "7th Lord in 11th House Relationship Fulfilment",
+      "domain": "MARRIAGE",
+      "source": "Brihat Parashara Hora Shastra, Ch. 24",
+      "weight": 1.25,
+      "direction": "FAVORABLE",
+      "rationale": "7th lord in 11th house signifies gain through marriage, social fulfillment, and supportive partnership."
+    },
+    {
+      "id": "RULE_MAR_VEN_JUP_CONJ",
+      "name": "Venus-Jupiter Benefic Conjunction",
+      "domain": "MARRIAGE",
+      "source": "Phaladeepika, Ch. 6",
+      "weight": 1.15,
+      "direction": "FAVORABLE",
+      "rationale": "Conjunction or trine of natural benefics Venus and Jupiter expands mutual virtue and relationship stability."
+    },
+    {
+      "id": "RULE_MAR_SAT_7H_DELAY",
+      "name": "Saturnian Influence on 7th House / Lord",
+      "domain": "MARRIAGE",
+      "source": "Saravali, Ch. 31",
+      "weight": -1.20,
+      "direction": "DELAY_MODERATION",
+      "rationale": "Saturn aspecting or residing in 7th introduces deliberateness, mature partner, or marriage timing post-28."
+    },
+    {
+      "id": "RULE_CAR_10L_1H",
+      "name": "10th Lord in 1st House Independent Authority",
+      "domain": "CAREER",
+      "source": "Brihat Parashara Hora Shastra, Ch. 24",
+      "weight": 1.30,
+      "direction": "FAVORABLE",
+      "rationale": "10th lord in Lagna establishes strong personal initiative, leadership identity, and professional prominence."
+    },
+    {
+      "id": "RULE_CAR_SUN_10H_DIGBALA",
+      "name": "Sun in 10th House Directional Strength (Digbala)",
+      "domain": "CAREER",
+      "source": "Jataka Parijata, Ch. 2",
+      "weight": 1.40,
+      "direction": "FAVORABLE",
+      "rationale": "Sun achieves maximum directional strength (Digbala) in the 10th house, indicating executive aptitude."
+    },
+    {
+      "id": "RULE_FIN_2L_11L_DHANA",
+      "name": "2nd Lord and 11th Lord Sambandha (Dhana Yoga)",
+      "domain": "FINANCE",
+      "source": "Brihat Parashara Hora Shastra, Ch. 41",
+      "weight": 1.45,
+      "direction": "FAVORABLE",
+      "rationale": "Mutual aspect, conjunction, or exchange between wealth (2nd) and gains (11th) lords forms potent Dhana Yoga."
+    },
+    {
+      "id": "RULE_HLT_6L_8H_VIPAREETA",
+      "name": "6th Lord in 8th House Vipareeta Raja Yoga",
+      "domain": "HEALTH_CHALLENGES",
+      "source": "Uttara Kalamrita, Ch. 4",
+      "weight": 1.10,
+      "direction": "NEUTRALIZING",
+      "rationale": "Dusthana lord in another dusthana creates Vipareeta resilience, overcoming acute health crises through latent endurance."
+    }
+  ]
+}

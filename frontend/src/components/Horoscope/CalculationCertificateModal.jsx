@@ -123,11 +123,26 @@ export default function CalculationCertificateModal({ isOpen, onClose, chartData
             <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">
               {isTamil ? "நாட்காட்டி & துல்லியம்" : "Calendar & Precision"}
             </span>
-            <p className="font-semibold text-stone-900">{cert.calendarSystem}</p>
+            <p className="font-semibold text-stone-900">{chartData.calendarSystem || cert.calendarSystem}</p>
             <p className="text-[10px] text-stone-500">Precision: {cert.accuracy}</p>
             <p className="text-[10px] text-stone-500">Generated: {new Date(cert.calculatedAt).toLocaleString()}</p>
           </div>
         </div>
+
+        {/* Polar Fallback Disclosure if Applicable */}
+        {(chartData.isHouseSystemFallback || chartData.houseSystemFallbackReason) && (
+          <div className="p-3.5 rounded-2xl bg-amber-100/70 border border-amber-300 text-xs text-amber-950 space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-amber-900">
+              <Shield className="w-4 h-4 text-amber-700" />
+              <span>{isTamil ? "துருவ அட்சரேகை பாவக மாற்று அறிவிப்பு:" : "House System Polar Fallback Disclosure:"}</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-amber-900">
+              {isTamil 
+                ? `கோரப்பட்ட பாவக முறை: ${chartData.houseSystemRequested || "Placidus"} | நடைமுறைப்படுத்தப்பட்ட முறை: ${chartData.houseSystemEffective || "Equal"}. காரணம்: ${chartData.houseSystemFallbackReason || "துருவ அட்சரேகை விலகல்"}.`
+                : `Requested System: ${chartData.houseSystemRequested || "Placidus"} | Effective System: ${chartData.houseSystemEffective || "Equal"}. Reason: ${chartData.houseSystemFallbackReason || "Circumpolar latitude divergence limit"}.`}
+            </p>
+          </div>
+        )}
 
         {/* Audit Disclaimer & D60 Sensitivity */}
         <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/80 text-xs text-stone-600 space-y-2">

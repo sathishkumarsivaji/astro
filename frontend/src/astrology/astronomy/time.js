@@ -57,9 +57,10 @@ export function normalizeBirthData(data) {
   }
 
   // Calendar-aware month-length validation (Gregorian vs Julian leap years)
+  const isJulianEffective = calendarMode === "julian" || (calendarMode === "auto" && (year < 1582 || (year === 1582 && month <= 10)));
   let maxDays = 31;
   if (month === 2) {
-    const isLeap = calendarMode === "julian"
+    const isLeap = isJulianEffective
       ? (year % 4 === 0)
       : (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0));
     maxDays = isLeap ? 29 : 28;
@@ -68,8 +69,8 @@ export function normalizeBirthData(data) {
   }
 
   // Check omitted dates in Gregorian reform (1582-10-05 to 1582-10-14 did not exist in Catholic reform)
-  if (calendarMode === "gregorian" && year === 1582 && month === 10 && day >= 5 && day <= 14) {
-    throw new Error(`Invalid Gregorian calendar date: "${birthDate}". Days October 5-14, 1582 were dropped during the Gregorian calendar reform.`);
+  if ((calendarMode === "gregorian" || calendarMode === "auto") && year === 1582 && month === 10 && day >= 5 && day <= 14) {
+    throw new Error(`Invalid calendar date: "${birthDate}". Days October 5-14, 1582 were dropped during the Gregorian calendar reform.`);
   }
 
   if (day < 1 || day > maxDays) {

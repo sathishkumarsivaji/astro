@@ -152,7 +152,7 @@ export function generateCalculationCertificate(systemId, birthData, calculationT
       verifiable: true,
       
       // Disclaimer
-      astronomicalDisclaimer: "Planetary positions are computed using VSOP87 theory via Astronomy Engine (MIT License) in the Geocentric True Ecliptic of Date (ECT) frame. Accuracy is approximately ±1 arcminute for planets and ±2 arcminutes for the Moon. Astrological interpretations are tradition-dependent symbolic frameworks and should not be construed as empirical predictions.",
+      astronomicalDisclaimer: "Planetary positions are computed using VSOP87 theory via Astronomy Engine in the Geocentric True Ecliptic of Date frame. Numerical verification uses locked external astronomical reference fixtures. Astrological interpretations are tradition-dependent symbolic frameworks and should not be construed as empirically validated predictions.",
       calendarDisclaimer: "Dates use the Proleptic Gregorian calendar with full Julian calendar switch support. For historical dates before October 15, 1582, the Julian calendar algorithm is applied when requested.",
       d60SensitivityNotice: "Ṣaṣṭyāṁśa (D60) shifts by 1 division every ~2 minutes of civil time (0.5° of Lagna). High precision birth-time verification is recommended for divisional chart interpretations."
     }
@@ -163,6 +163,10 @@ export function generateCalculationCertificate(systemId, birthData, calculationT
  * Returns the convention for a given system
  */
 export function getConvention(systemId) {
-  const norm = (systemId || "lahiri").toLowerCase();
-  return SYSTEM_CONVENTIONS[norm] || SYSTEM_CONVENTIONS.lahiri;
+  if (!systemId) return SYSTEM_CONVENTIONS.lahiri;
+  const norm = String(systemId).toLowerCase();
+  if (SYSTEM_CONVENTIONS[norm]) {
+    return SYSTEM_CONVENTIONS[norm];
+  }
+  throw new Error(`Unknown astrology system convention: "${systemId}". Supported systems: lahiri, kp, raman, tropical.`);
 }

@@ -59,32 +59,41 @@ function calculateTropicalBody(bodyName, dateObj) {
 }
 
 /**
- * Calculate Lunar Nodes (Mean and True)
+ * Calculate Lunar Nodes (Mean and True) - Authoritative Unified Implementation
  */
-function calculateLunarNodes(T, dateObj, nodeModel = "mean") {
-  // Mean Rahu (apparent geocentric longitude)
-  const omega = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + (T * T * T) / 450000.0);
-  const meanRahu = norm360(omega);
-  const meanKetu = norm360(meanRahu + 180);
+export function calculateLunarNodes(T, dateObj, nodeModel = "mean") {
+  // Mean Lunar Node polynomial (Chapront 2002 / IAU Standard J2000 anchor 125.04455°)
+  const meanRahuTrop = norm360(125.04455 - 1934.136261 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0);
+  const meanKetuTrop = norm360(meanRahuTrop + 180);
 
-  // Periodic perturbations to calculate True (Oscillating) Node (Jean Meeus Astronomical Algorithms)
-  const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) * DEG2RAD;
-  const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) * DEG2RAD;
-  const Mprime = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T) * DEG2RAD;
-  const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) * DEG2RAD;
-
-  const deltaNodeDeg = -1.4979 * Math.sin(2 * (F - D))
-    - 0.1500 * Math.sin(M)
-    - 0.1226 * Math.sin(2 * F)
-    + 0.1176 * Math.sin(2 * D)
-    - 0.0801 * Math.sin(2 * (F - Mprime));
-
-  const trueRahu = norm360(meanRahu + deltaNodeDeg);
-  const trueKetu = norm360(trueRahu + 180);
+  // True (Osculating) Ascending Node of the Moon computed from instantaneous orbital angular momentum vector h = r x v
+  let trueRahuTrop;
+  try {
+    const deltaSec = 60;
+    const v0 = Astronomy.Ecliptic(Astronomy.GeoVector("Moon", new Date(dateObj.getTime() - deltaSec * 1000), true)).vec;
+    const v1 = Astronomy.Ecliptic(Astronomy.GeoVector("Moon", new Date(dateObj.getTime() + deltaSec * 1000), true)).vec;
+    const rx = (v0.x + v1.x) / 2, ry = (v0.y + v1.y) / 2, rz = (v0.z + v1.z) / 2;
+    const vx = (v1.x - v0.x) / (2 * deltaSec), vy = (v1.y - v0.y) / (2 * deltaSec), vz = (v1.z - v0.z) / (2 * deltaSec);
+    const hx = ry * vz - rz * vy, hy = rz * vx - rx * vz;
+    trueRahuTrop = norm360(Math.atan2(hx, -hy) * (180 / Math.PI));
+  } catch (err) {
+    // Fallback: Periodic perturbations to calculate True (Oscillating) Node (Jean Meeus Astronomical Algorithms Ch. 47)
+    const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) * DEG2RAD;
+    const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) * DEG2RAD;
+    const Mprime = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T) * DEG2RAD;
+    const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) * DEG2RAD;
+    const deltaNodeDeg = -1.4979 * Math.sin(2 * (D - F))
+      - 0.1500 * Math.sin(M)
+      - 0.1226 * Math.sin(2 * D)
+      + 0.1176 * Math.sin(2 * F)
+      - 0.0801 * Math.sin(2 * (D - Mprime));
+    trueRahuTrop = norm360(meanRahuTrop + deltaNodeDeg);
+  }
+  const trueKetuTrop = norm360(trueRahuTrop + 180);
 
   const selectedModel = (nodeModel || "mean").toLowerCase() === "true" ? "true" : "mean";
-  const rahuLong = selectedModel === "true" ? trueRahu : meanRahu;
-  const ketuLong = selectedModel === "true" ? trueKetu : meanKetu;
+  const rahuLong = selectedModel === "true" ? trueRahuTrop : meanRahuTrop;
+  const ketuLong = selectedModel === "true" ? trueKetuTrop : meanKetuTrop;
 
   // Mean node daily speed is always retrograde (~ -0.05295 deg/day)
   const nodeSpeed = -1934.136261 / 36525.0;
@@ -93,8 +102,8 @@ function calculateLunarNodes(T, dateObj, nodeModel = "mean") {
     rahu: {
       name: "Rahu",
       tropicalLongitude: rahuLong,
-      meanLongitude: meanRahu,
-      trueLongitude: trueRahu,
+      meanLongitude: meanRahuTrop,
+      trueLongitude: trueRahuTrop,
       nodeModel: selectedModel,
       latitude: 0,
       speed: nodeSpeed,
@@ -103,17 +112,17 @@ function calculateLunarNodes(T, dateObj, nodeModel = "mean") {
     ketu: {
       name: "Ketu",
       tropicalLongitude: ketuLong,
-      meanLongitude: meanKetu,
-      trueLongitude: trueKetu,
+      meanLongitude: meanKetuTrop,
+      trueLongitude: trueKetuTrop,
       nodeModel: selectedModel,
       latitude: 0,
       speed: nodeSpeed,
       isRetrograde: true
     },
-    meanRahu,
-    meanKetu,
-    trueRahu,
-    trueKetu,
+    meanRahu: meanRahuTrop,
+    meanKetu: meanKetuTrop,
+    trueRahu: trueRahuTrop,
+    trueKetu: trueKetuTrop,
     nodeModel: selectedModel
   };
 }
@@ -121,9 +130,10 @@ function calculateLunarNodes(T, dateObj, nodeModel = "mean") {
 /**
  * Main Ephemeris Retrieval with Caching
  */
-export function getAstronomicalObservations(birthData) {
+export function getAstronomicalObservations(birthData, options = {}) {
   const { jd, T, lat, lng, utcDate } = birthData;
-  const cacheKey = `${jd.toFixed(6)}_${lat.toFixed(4)}_${lng.toFixed(4)}`;
+  const nodeModel = (options?.nodeModel || birthData?.nodeModel || "mean").toLowerCase() === "true" ? "true" : "mean";
+  const cacheKey = `${jd.toFixed(6)}_${lat.toFixed(4)}_${lng.toFixed(4)}_${nodeModel}`;
 
   if (observationCache.has(cacheKey)) {
     return observationCache.get(cacheKey);
@@ -143,8 +153,8 @@ export function getAstronomicalObservations(birthData) {
     bodies[bName] = calculateTropicalBody(bName, utcDate);
   }
 
-  // Nodes
-  const nodes = calculateLunarNodes(T, utcDate);
+  // Authoritative Unified Nodes with selected model
+  const nodes = calculateLunarNodes(T, utcDate, nodeModel);
   bodies["Rahu"] = nodes.rahu;
   bodies["Ketu"] = nodes.ketu;
 
@@ -162,6 +172,8 @@ export function getAstronomicalObservations(birthData) {
     sidereal,
     tropicalAngles: angles,
     tropicalBodies: bodies,
+    nodes,
+    nodeModel,
     ayanamshas: {
       lahiri: lahiriAyanamsha,
       kp: kpAyanamsha,

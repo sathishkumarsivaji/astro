@@ -2,7 +2,7 @@
  * ASTROVERSE — B.V. Raman Sidereal Engine
  *
  * Implements genuine B.V. Raman sidereal recalculation:
- * - Ayanamsha calculated from 397 AD zero-year epoch: (Year - 397) * (50.2388475" / 3600)
+ * - Ayanamsha calculated from 397 AD zero-year epoch: (Year - 397) * (50⅓" / 3600) (≈50.333333"/year)
  * - Independent planetary longitudes and Lagna calculation
  * - Full Vedic suite (Vargas, Shadbala, Ashtakavarga, Jaimini, Dasha, Panchanga)
  *   evaluated under Raman coordinates without coordinate mixing

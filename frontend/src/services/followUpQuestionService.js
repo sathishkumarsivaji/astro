@@ -360,7 +360,8 @@ export function getSectionQuestions({
   }
 
   if (sectionId === "remedies" && context.report.remedies?.contraindicatedGemstones?.length > 0) {
-    const badStone = context.report.remedies.contraindicatedGemstones[0].gemstone || context.report.remedies.contraindicatedGemstones[0];
+    const rawStone = context.report.remedies.contraindicatedGemstones[0];
+    const badStone = typeof rawStone === "string" ? rawStone : (rawStone?.gemstone || rawStone?.name || "Diamond");
     const qText = isTamil
       ? `பரிகாரப் பிரிவில் ${badStone} ரத்தினம் எனக்கு தவிர்க்கப்பட வேண்டும் என கூறப்பட்டிருப்பது ஏன்?`
       : `Why is ${badStone} contraindicated for me in the remedies section?`;
@@ -568,7 +569,8 @@ export function getFullReportQuestions({
 
   // Dynamic Contraindicated Gemstone safety question
   if (sysId !== "tropical" && context.report.remedies?.contraindicatedGemstones?.length > 0) {
-    const badGem = context.report.remedies.contraindicatedGemstones[0];
+    const rawGem = context.report.remedies.contraindicatedGemstones[0];
+    const badGem = typeof rawGem === "string" ? rawGem : (rawGem?.gemstone || rawGem?.name || "Diamond");
     const dynText = isTamil
       ? `எனக்கு ஏன் ${badGem} ரத்தினம் தவிர்க்கப்பட வேண்டும் என்று அறிக்கை கூறுகிறது?`
       : `Why is ${badGem} contraindicated for me according to the remedies analysis?`;

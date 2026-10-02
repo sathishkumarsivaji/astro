@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Sparkles, AlertTriangle, CheckCircle2, Moon, Clock, ShieldCheck, Sun, Info } from "lucide-react";
 import { generatePersonalizedMonthCalendar } from "../../services/calendarEngine";
 import { TRANSLATIONS } from "../../services/localization";
+import { getMoonSignName, getMoonNakshatraName } from "../../types/chartAccessors";
 
 export default function PersonalizedCalendar({ chartData, lang = "en" }) {
   const isTamil = lang === "ta";
@@ -78,8 +79,8 @@ export default function PersonalizedCalendar({ chartData, lang = "en" }) {
           </h2>
           <p className="text-xs text-stone-600">
             {isTamil
-              ? `ஜென்ம நட்சத்திரம்: ${chartData.moonNakshatra?.name || "Ashwini"} • சந்திர ராசி: ${chartData.moonSign?.name || "Aries"}`
-              : `Janma Nakshatra: ${chartData.moonNakshatra?.name || "Ashwini"} • Janma Rasi: ${chartData.moonSign?.name || "Aries"}`}
+              ? `ஜென்ம நட்சத்திரம்: ${getMoonNakshatraName(chartData) || "கணக்கிடப்படவில்லை"} • சந்திர ராசி: ${getMoonSignName(chartData) || "கணக்கிடப்படவில்லை"}`
+              : `Janma Nakshatra: ${getMoonNakshatraName(chartData) || "Not available"} • Janma Rasi: ${getMoonSignName(chartData) || "Not available"}`}
           </p>
         </div>
 

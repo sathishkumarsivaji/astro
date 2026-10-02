@@ -1,0 +1,2597 @@
+{
+  "provenance": {
+    "source": "Swiss Ephemeris 2.10.03 (C-Library / pyswisseph)",
+    "compiler": "AstroVerse Independent Python Verification Generator (v2.10.03)",
+    "compiledAt": "2026-09-30T22:45:00Z",
+    "ephemerisSource": "Swiss Ephemeris via pyswisseph using the configured Moshier/Swiss fallback ephemeris source",
+    "ephemerisPath": "",
+    "ephemerisFlags": "SEFLG_SWIEPH | SEFLG_SPEED",
+    "nodeModel": "SE_TRUE_NODE (Osculating True Node) and SE_MEAN_NODE (Chapront Mean Node)",
+    "coordinateFrame": "Geocentric true ecliptic of date",
+    "timeScale": "UTC converted to TT/UT1 via Swiss Ephemeris Delta T",
+    "ayanamsha": "Lahiri (SE_SIDM_LAHIRI), KP (SE_SIDM_KRISHNAMURTI), Raman (SE_SIDM_RAMAN), Tropical",
+    "description": "Authentic, independently generated ground-truth astronomical reference dataset computed strictly outside AstroVerse JavaScript code using pure pyswisseph 2.10.03 C-bindings."
+  },
+  "benchmarks": [
+    {
+      "id": "epoch_1900_greenwich",
+      "name": "1900-01-01 12:00 UTC, Greenwich",
+      "birthDate": "1900-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2415021.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 24.774336,
+        "mcTropical": 279.816753,
+        "ascendantSystem": 24.774336,
+        "mcSystem": 279.816753
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 280.663288,
+            "latitude": 7.7e-05,
+            "speed": 1.019853
+          },
+          "systemSpecific": {
+            "longitude": 280.663288,
+            "latitude": 7.7e-05,
+            "speed": 1.019853
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 279.616408,
+            "latitude": 1.744435,
+            "speed": 14.473606
+          },
+          "systemSpecific": {
+            "longitude": 279.616408,
+            "latitude": 1.744435,
+            "speed": 14.473606
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 284.253034,
+            "latitude": -0.928238,
+            "speed": 0.770744
+          },
+          "systemSpecific": {
+            "longitude": 284.253034,
+            "latitude": -0.928238,
+            "speed": 0.770744
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 259.639355,
+            "latitude": 1.055914,
+            "speed": 1.289598
+          },
+          "systemSpecific": {
+            "longitude": 259.639355,
+            "latitude": 1.055914,
+            "speed": 1.289598
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 241.233576,
+            "latitude": 0.8144,
+            "speed": 0.195048
+          },
+          "systemSpecific": {
+            "longitude": 241.233576,
+            "latitude": 0.8144,
+            "speed": 0.195048
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 306.996164,
+            "latitude": -1.686435,
+            "speed": 1.243341
+          },
+          "systemSpecific": {
+            "longitude": 306.996164,
+            "latitude": -1.686435,
+            "speed": 1.243341
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 267.774957,
+            "latitude": 1.007305,
+            "speed": 0.116222
+          },
+          "systemSpecific": {
+            "longitude": 267.774957,
+            "latitude": 1.007305,
+            "speed": 0.116222
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 250.166829,
+            "latitude": 0.063335,
+            "speed": 0.055158
+          },
+          "systemSpecific": {
+            "longitude": 250.166829,
+            "latitude": 0.063335,
+            "speed": 0.055158
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 85.205173,
+            "latitude": -1.29946,
+            "speed": -0.02712
+          },
+          "systemSpecific": {
+            "longitude": 85.205173,
+            "latitude": -1.29946,
+            "speed": -0.02712
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 75.242755,
+            "latitude": -9.775814,
+            "speed": -0.017185
+          },
+          "systemSpecific": {
+            "longitude": 75.242755,
+            "latitude": -9.775814,
+            "speed": -0.017185
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 259.134854,
+            "latitude": 0.0,
+            "speed": -0.052908
+          },
+          "systemSpecific": {
+            "longitude": 259.134854,
+            "latitude": 0.0,
+            "speed": -0.052908
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 260.256932,
+            "latitude": 0.0,
+            "speed": -0.025773
+          },
+          "systemSpecific": {
+            "longitude": 260.256932,
+            "latitude": 0.0,
+            "speed": -0.025773
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_1925_greenwich",
+      "name": "1925-06-15 12:00 UTC, Greenwich",
+      "birthDate": "1925-06-15",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2424317.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 175.238396,
+        "mcTropical": 83.803568,
+        "ascendantSystem": 175.238396,
+        "mcSystem": 83.803568
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 83.841119,
+            "latitude": -6.7e-05,
+            "speed": 0.954958
+          },
+          "systemSpecific": {
+            "longitude": 83.841119,
+            "latitude": -6.7e-05,
+            "speed": 0.954958
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 18.082469,
+            "latitude": -4.931523,
+            "speed": 12.972572
+          },
+          "systemSpecific": {
+            "longitude": 18.082469,
+            "latitude": -4.931523,
+            "speed": 12.972572
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 113.135417,
+            "latitude": 1.228534,
+            "speed": 0.631047
+          },
+          "systemSpecific": {
+            "longitude": 113.135417,
+            "latitude": 1.228534,
+            "speed": 0.631047
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 78.053247,
+            "latitude": 0.328065,
+            "speed": 2.159906
+          },
+          "systemSpecific": {
+            "longitude": 78.053247,
+            "latitude": 0.328065,
+            "speed": 2.159906
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 290.591802,
+            "latitude": -0.16171,
+            "speed": -0.101077
+          },
+          "systemSpecific": {
+            "longitude": 290.591802,
+            "latitude": -0.16171,
+            "speed": -0.101077
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 97.850723,
+            "latitude": 0.980851,
+            "speed": 1.224957
+          },
+          "systemSpecific": {
+            "longitude": 97.850723,
+            "latitude": 0.980851,
+            "speed": 1.224957
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 218.178158,
+            "latitude": 2.537228,
+            "speed": -0.040963
+          },
+          "systemSpecific": {
+            "longitude": 218.178158,
+            "latitude": 2.537228,
+            "speed": -0.040963
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 355.379762,
+            "latitude": -0.762967,
+            "speed": 0.012356
+          },
+          "systemSpecific": {
+            "longitude": 355.379762,
+            "latitude": -0.762967,
+            "speed": 0.012356
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 140.339125,
+            "latitude": 0.332826,
+            "speed": 0.023119
+          },
+          "systemSpecific": {
+            "longitude": 140.339125,
+            "latitude": 0.332826,
+            "speed": 0.023119
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 102.561362,
+            "latitude": -1.89349,
+            "speed": 0.024289
+          },
+          "systemSpecific": {
+            "longitude": 102.561362,
+            "latitude": -1.89349,
+            "speed": 0.024289
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 126.866898,
+            "latitude": 0.0,
+            "speed": -0.052969
+          },
+          "systemSpecific": {
+            "longitude": 126.866898,
+            "latitude": 0.0,
+            "speed": -0.052969
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 125.534368,
+            "latitude": 0.0,
+            "speed": -0.060399
+          },
+          "systemSpecific": {
+            "longitude": 125.534368,
+            "latitude": 0.0,
+            "speed": -0.060399
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_1940_greenwich",
+      "name": "1940-01-01 12:00 UTC, Greenwich",
+      "birthDate": "1940-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2429630.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 23.274371,
+        "mcTropical": 279.189907,
+        "ascendantSystem": 23.274371,
+        "mcSystem": 279.189907
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 279.928483,
+            "latitude": -4.3e-05,
+            "speed": 1.019211
+          },
+          "systemSpecific": {
+            "longitude": 279.928483,
+            "latitude": -4.3e-05,
+            "speed": 1.019211
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 180.750391,
+            "latitude": -2.177592,
+            "speed": 14.106388
+          },
+          "systemSpecific": {
+            "longitude": 180.750391,
+            "latitude": -2.177592,
+            "speed": 14.106388
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 358.302551,
+            "latitude": -0.336846,
+            "speed": 0.67752
+          },
+          "systemSpecific": {
+            "longitude": 358.302551,
+            "latitude": -0.336846,
+            "speed": 0.67752
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 262.891582,
+            "latitude": 0.206998,
+            "speed": 1.44804
+          },
+          "systemSpecific": {
+            "longitude": 262.891582,
+            "latitude": 0.206998,
+            "speed": 1.44804
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 1.212715,
+            "latitude": -1.292927,
+            "speed": 0.119321
+          },
+          "systemSpecific": {
+            "longitude": 1.212715,
+            "latitude": -1.292927,
+            "speed": 0.119321
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 308.915875,
+            "latitude": -1.747916,
+            "speed": 1.238471
+          },
+          "systemSpecific": {
+            "longitude": 308.915875,
+            "latitude": -1.747916,
+            "speed": 1.238471
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 24.43399,
+            "latitude": -2.549171,
+            "speed": 0.008189
+          },
+          "systemSpecific": {
+            "longitude": 24.43399,
+            "latitude": -2.549171,
+            "speed": 0.008189
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 48.253751,
+            "latitude": -0.315368,
+            "speed": -0.021187
+          },
+          "systemSpecific": {
+            "longitude": 48.253751,
+            "latitude": -0.315368,
+            "speed": -0.021187
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 175.512886,
+            "latitude": 1.211791,
+            "speed": -0.002268
+          },
+          "systemSpecific": {
+            "longitude": 175.512886,
+            "latitude": 1.211791,
+            "speed": -0.002268
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 122.245993,
+            "latitude": 3.818959,
+            "speed": -0.020501
+          },
+          "systemSpecific": {
+            "longitude": 122.245993,
+            "latitude": 3.818959,
+            "speed": -0.020501
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 205.529306,
+            "latitude": 0.0,
+            "speed": -0.05297
+          },
+          "systemSpecific": {
+            "longitude": 205.529306,
+            "latitude": 0.0,
+            "speed": -0.05297
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 206.205643,
+            "latitude": 0.0,
+            "speed": -0.014959
+          },
+          "systemSpecific": {
+            "longitude": 206.205643,
+            "latitude": 0.0,
+            "speed": -0.014959
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_1947_delhi",
+      "name": "15 August 1947, 00:00 IST, New Delhi (Indian Independence)",
+      "birthDate": "1947-08-15",
+      "birthTime": "00:00",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "utcOffset": 5.5,
+      "timezoneId": "Asia/Kolkata",
+      "system": "lahiri",
+      "julianDayUT": 2432412.2708333335,
+      "ayanamsa": 23.125451,
+      "angles": {
+        "ascendantTropical": 60.854091,
+        "mcTropical": 314.575081,
+        "ascendantSystem": 37.72864,
+        "mcSystem": 291.44963
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 141.110843,
+            "latitude": 2.9e-05,
+            "speed": 0.960967
+          },
+          "systemSpecific": {
+            "longitude": 117.989021,
+            "latitude": 2.9e-05,
+            "speed": 0.960896
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 117.105359,
+            "latitude": 4.267389,
+            "speed": 15.086653
+          },
+          "systemSpecific": {
+            "longitude": 93.983538,
+            "latitude": 4.267389,
+            "speed": 15.086582
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 90.57805,
+            "latitude": 0.248158,
+            "speed": 0.657801
+          },
+          "systemSpecific": {
+            "longitude": 67.456229,
+            "latitude": 0.248158,
+            "speed": 0.657731
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 126.796099,
+            "latitude": 0.773371,
+            "speed": 1.804834
+          },
+          "systemSpecific": {
+            "longitude": 103.674277,
+            "latitude": 0.773371,
+            "speed": 1.804763
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 228.999524,
+            "latitude": 0.850935,
+            "speed": 0.085421
+          },
+          "systemSpecific": {
+            "longitude": 205.877703,
+            "latitude": 0.850935,
+            "speed": 0.08535
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 135.683027,
+            "latitude": 1.114563,
+            "speed": 1.235108
+          },
+          "systemSpecific": {
+            "longitude": 112.561206,
+            "latitude": 1.114563,
+            "speed": 1.235037
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 133.594836,
+            "latitude": 0.751371,
+            "speed": 0.127879
+          },
+          "systemSpecific": {
+            "longitude": 110.473015,
+            "latitude": 0.751371,
+            "speed": 0.127808
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 85.175154,
+            "latitude": 0.116168,
+            "speed": 0.038941
+          },
+          "systemSpecific": {
+            "longitude": 62.053332,
+            "latitude": 0.116168,
+            "speed": 0.03887
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 188.829081,
+            "latitude": 1.489114,
+            "speed": 0.027183
+          },
+          "systemSpecific": {
+            "longitude": 165.70726,
+            "latitude": 1.489114,
+            "speed": 0.027112
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 133.229899,
+            "latitude": 6.803633,
+            "speed": 0.029799
+          },
+          "systemSpecific": {
+            "longitude": 110.108077,
+            "latitude": 6.803633,
+            "speed": 0.029727
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 58.191546,
+            "latitude": 0.0,
+            "speed": -0.052921
+          },
+          "systemSpecific": {
+            "longitude": 35.069725,
+            "latitude": 0.0,
+            "speed": -0.052992
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 58.86445,
+            "latitude": 0.0,
+            "speed": -0.146037
+          },
+          "systemSpecific": {
+            "longitude": 35.742629,
+            "latitude": 0.0,
+            "speed": -0.146108
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_1950_greenwich",
+      "name": "1950-01-01 12:00 UTC, Greenwich",
+      "birthDate": "1950-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2433283.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 24.521878,
+        "mcTropical": 279.712399,
+        "ascendantSystem": 24.521878,
+        "mcSystem": 279.712399
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 280.514389,
+            "latitude": -1.3e-05,
+            "speed": 1.019057
+          },
+          "systemSpecific": {
+            "longitude": 280.514389,
+            "latitude": -1.3e-05,
+            "speed": 1.019057
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 67.544354,
+            "latitude": 4.111412,
+            "speed": 12.318609
+          },
+          "systemSpecific": {
+            "longitude": 67.544354,
+            "latitude": 4.111412,
+            "speed": 12.318609
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 182.394445,
+            "latitude": 2.521499,
+            "speed": 0.365127
+          },
+          "systemSpecific": {
+            "longitude": 182.394445,
+            "latitude": 2.521499,
+            "speed": 0.365127
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 299.972019,
+            "latitude": -1.136063,
+            "speed": 1.027172
+          },
+          "systemSpecific": {
+            "longitude": 299.972019,
+            "latitude": -1.136063,
+            "speed": 1.027172
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 306.618043,
+            "latitude": -0.584382,
+            "speed": 0.225586
+          },
+          "systemSpecific": {
+            "longitude": 306.618043,
+            "latitude": -0.584382,
+            "speed": 0.225586
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 317.152479,
+            "latitude": 0.728122,
+            "speed": 0.337851
+          },
+          "systemSpecific": {
+            "longitude": 317.152479,
+            "latitude": 0.728122,
+            "speed": 0.337851
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 169.43554,
+            "latitude": 2.008464,
+            "speed": -0.004252
+          },
+          "systemSpecific": {
+            "longitude": 169.43554,
+            "latitude": 2.008464,
+            "speed": -0.004252
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 92.661452,
+            "latitude": 0.268989,
+            "speed": -0.042511
+          },
+          "systemSpecific": {
+            "longitude": 92.661452,
+            "latitude": 0.268989,
+            "speed": -0.042511
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 197.271024,
+            "latitude": 1.59216,
+            "speed": 0.009896
+          },
+          "systemSpecific": {
+            "longitude": 197.271024,
+            "latitude": 1.59216,
+            "speed": 0.009896
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 137.789569,
+            "latitude": 8.203378,
+            "speed": -0.017996
+          },
+          "systemSpecific": {
+            "longitude": 137.789569,
+            "latitude": 8.203378,
+            "speed": -0.017996
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 12.085834,
+            "latitude": 0.0,
+            "speed": -0.052919
+          },
+          "systemSpecific": {
+            "longitude": 12.085834,
+            "latitude": 0.0,
+            "speed": -0.052919
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 12.476332,
+            "latitude": 0.0,
+            "speed": -0.172437
+          },
+          "systemSpecific": {
+            "longitude": 12.476332,
+            "latitude": 0.0,
+            "speed": -0.172437
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_1975_greenwich",
+      "name": "1975-06-15 12:00 UTC, Greenwich",
+      "birthDate": "1975-06-15",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2442579.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 175.167153,
+        "mcTropical": 83.710768,
+        "ascendantSystem": 175.167153,
+        "mcSystem": 83.710768
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 83.778592,
+            "latitude": -8.2e-05,
+            "speed": 0.955196
+          },
+          "systemSpecific": {
+            "longitude": 83.778592,
+            "latitude": -8.2e-05,
+            "speed": 0.955196
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 158.833451,
+            "latitude": -5.187291,
+            "speed": 14.290305
+          },
+          "systemSpecific": {
+            "longitude": 158.833451,
+            "latitude": -5.187291,
+            "speed": 14.290305
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 18.686822,
+            "latitude": -1.673291,
+            "speed": 0.731392
+          },
+          "systemSpecific": {
+            "longitude": 18.686822,
+            "latitude": -1.673291,
+            "speed": 0.731392
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 76.768002,
+            "latitude": -4.008167,
+            "speed": -0.452001
+          },
+          "systemSpecific": {
+            "longitude": 76.768002,
+            "latitude": -4.008167,
+            "speed": -0.452001
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 19.306436,
+            "latitude": -1.218389,
+            "speed": 0.16385
+          },
+          "systemSpecific": {
+            "longitude": 19.306436,
+            "latitude": -1.218389,
+            "speed": 0.16385
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 129.103059,
+            "latitude": 2.098801,
+            "speed": 0.978876
+          },
+          "systemSpecific": {
+            "longitude": 129.103059,
+            "latitude": 2.098801,
+            "speed": 0.978876
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 108.673188,
+            "latitude": -0.082319,
+            "speed": 0.12194
+          },
+          "systemSpecific": {
+            "longitude": 108.673188,
+            "latitude": -0.082319,
+            "speed": 0.12194
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 208.558709,
+            "latitude": 0.542314,
+            "speed": -0.018192
+          },
+          "systemSpecific": {
+            "longitude": 208.558709,
+            "latitude": 0.542314,
+            "speed": -0.018192
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 250.051221,
+            "latitude": 1.602642,
+            "speed": -0.026125
+          },
+          "systemSpecific": {
+            "longitude": 250.051221,
+            "latitude": 1.602642,
+            "speed": -0.026125
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 186.481965,
+            "latitude": 16.946572,
+            "speed": -0.000916
+          },
+          "systemSpecific": {
+            "longitude": 186.481965,
+            "latitude": 16.946572,
+            "speed": -0.000916
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 239.832267,
+            "latitude": 0.0,
+            "speed": -0.052968
+          },
+          "systemSpecific": {
+            "longitude": 239.832267,
+            "latitude": 0.0,
+            "speed": -0.052968
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 240.728936,
+            "latitude": 0.0,
+            "speed": -0.022557
+          },
+          "systemSpecific": {
+            "longitude": 240.728936,
+            "latitude": 0.0,
+            "speed": -0.022557
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_1994_chennai",
+      "name": "15 August 1994, 06:30 IST, Chennai",
+      "birthDate": "1994-08-15",
+      "birthTime": "06:30",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "utcOffset": 5.5,
+      "timezoneId": "Asia/Kolkata",
+      "system": "lahiri",
+      "julianDayUT": 2449579.5416666665,
+      "ayanamsa": 23.781925,
+      "angles": {
+        "ascendantTropical": 149.135538,
+        "mcTropical": 60.640353,
+        "ascendantSystem": 125.353613,
+        "mcSystem": 36.858428
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 141.994902,
+            "latitude": 4e-05,
+            "speed": 0.960643
+          },
+          "systemSpecific": {
+            "longitude": 118.209024,
+            "latitude": 4e-05,
+            "speed": 0.960588
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 242.414304,
+            "latitude": 1.161859,
+            "speed": 14.068313
+          },
+          "systemSpecific": {
+            "longitude": 218.628426,
+            "latitude": 1.161859,
+            "speed": 14.068258
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 88.845052,
+            "latitude": 0.161981,
+            "speed": 0.657336
+          },
+          "systemSpecific": {
+            "longitude": 65.059174,
+            "latitude": 0.161981,
+            "speed": 0.65728
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 144.113008,
+            "latitude": 1.760103,
+            "speed": 1.999519
+          },
+          "systemSpecific": {
+            "longitude": 120.32713,
+            "latitude": 1.760103,
+            "speed": 1.999464
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 217.499545,
+            "latitude": 1.004728,
+            "speed": 0.118401
+          },
+          "systemSpecific": {
+            "longitude": 193.713666,
+            "latitude": 1.004728,
+            "speed": 0.118346
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 187.711998,
+            "latitude": -0.938052,
+            "speed": 1.020019
+          },
+          "systemSpecific": {
+            "longitude": 163.92612,
+            "latitude": -0.938052,
+            "speed": 1.019964
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 340.319935,
+            "latitude": -1.947138,
+            "speed": -0.070099
+          },
+          "systemSpecific": {
+            "longitude": 316.534057,
+            "latitude": -1.947138,
+            "speed": -0.070154
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 293.267944,
+            "latitude": -0.527372,
+            "speed": -0.033445
+          },
+          "systemSpecific": {
+            "longitude": 269.482066,
+            "latitude": -0.527372,
+            "speed": -0.0335
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 291.164802,
+            "latitude": 0.611091,
+            "speed": -0.022194
+          },
+          "systemSpecific": {
+            "longitude": 267.378923,
+            "latitude": 0.611091,
+            "speed": -0.022249
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 235.302136,
+            "latitude": 13.859666,
+            "speed": 0.00529
+          },
+          "systemSpecific": {
+            "longitude": 211.516257,
+            "latitude": 13.859666,
+            "speed": 0.005235
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 229.126899,
+            "latitude": 0.0,
+            "speed": -0.052937
+          },
+          "systemSpecific": {
+            "longitude": 205.34102,
+            "latitude": 0.0,
+            "speed": -0.052992
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 229.132472,
+            "latitude": 0.0,
+            "speed": -0.008777
+          },
+          "systemSpecific": {
+            "longitude": 205.346594,
+            "latitude": 0.0,
+            "speed": -0.008832
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_2000_j2000",
+      "name": "J2000.0 Epoch (2000-01-01 12:00 UTC, Greenwich)",
+      "birthDate": "2000-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2451545.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 24.265235,
+        "mcTropical": 279.611088,
+        "ascendantSystem": 24.265235,
+        "mcSystem": 279.611088
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 280.36892,
+            "latitude": 0.000232,
+            "speed": 1.019432
+          },
+          "systemSpecific": {
+            "longitude": 280.36892,
+            "latitude": 0.000232,
+            "speed": 1.019432
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 223.323775,
+            "latitude": 5.170815,
+            "speed": 12.021183
+          },
+          "systemSpecific": {
+            "longitude": 223.323775,
+            "latitude": 5.170815,
+            "speed": 12.021183
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 327.963313,
+            "latitude": -1.067783,
+            "speed": 0.775673
+          },
+          "systemSpecific": {
+            "longitude": 327.963313,
+            "latitude": -1.067783,
+            "speed": 0.775673
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 271.889275,
+            "latitude": -0.994825,
+            "speed": 1.556254
+          },
+          "systemSpecific": {
+            "longitude": 271.889275,
+            "latitude": -0.994825,
+            "speed": 1.556254
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 25.25303,
+            "latitude": -1.262173,
+            "speed": 0.040761
+          },
+          "systemSpecific": {
+            "longitude": 25.25303,
+            "latitude": -1.262173,
+            "speed": 0.040761
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 241.565798,
+            "latitude": 2.066348,
+            "speed": 1.20904
+          },
+          "systemSpecific": {
+            "longitude": 241.565798,
+            "latitude": 2.066348,
+            "speed": 1.20904
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 40.395639,
+            "latitude": -2.444823,
+            "speed": -0.019945
+          },
+          "systemSpecific": {
+            "longitude": 40.395639,
+            "latitude": -2.444823,
+            "speed": -0.019945
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 314.809223,
+            "latitude": -0.658333,
+            "speed": 0.050344
+          },
+          "systemSpecific": {
+            "longitude": 314.809223,
+            "latitude": -0.658333,
+            "speed": 0.050344
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 303.192981,
+            "latitude": 0.234991,
+            "speed": 0.03557
+          },
+          "systemSpecific": {
+            "longitude": 303.192981,
+            "latitude": 0.234991,
+            "speed": 0.03557
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 251.454709,
+            "latitude": 10.855202,
+            "speed": 0.035153
+          },
+          "systemSpecific": {
+            "longitude": 251.454709,
+            "latitude": 10.855202,
+            "speed": 0.035153
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 125.040646,
+            "latitude": 0.0,
+            "speed": -0.052952
+          },
+          "systemSpecific": {
+            "longitude": 125.040646,
+            "latitude": 0.0,
+            "speed": -0.052952
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 123.952895,
+            "latitude": 0.0,
+            "speed": -0.054382
+          },
+          "systemSpecific": {
+            "longitude": 123.952895,
+            "latitude": 0.0,
+            "speed": -0.054382
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_2025_greenwich",
+      "name": "2025-01-01 12:00 UTC, Greenwich",
+      "birthDate": "2025-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2460677.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 26.294265,
+        "mcTropical": 280.474137,
+        "ascendantSystem": 26.294265,
+        "mcSystem": 280.474137
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 281.323433,
+            "latitude": -0.000174,
+            "speed": 1.01964
+          },
+          "systemSpecific": {
+            "longitude": 281.323433,
+            "latitude": -0.000174,
+            "speed": 1.01964
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 300.660895,
+            "latitude": -4.347958,
+            "speed": 13.544266
+          },
+          "systemSpecific": {
+            "longitude": 300.660895,
+            "latitude": -4.347958,
+            "speed": 13.544266
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 121.752631,
+            "latitude": 3.93235,
+            "speed": -0.332902
+          },
+          "systemSpecific": {
+            "longitude": 121.752631,
+            "latitude": 3.93235,
+            "speed": -0.332902
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 260.516388,
+            "latitude": 1.043271,
+            "speed": 1.299057
+          },
+          "systemSpecific": {
+            "longitude": 260.516388,
+            "latitude": 1.043271,
+            "speed": 1.299057
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 73.162615,
+            "latitude": -0.599881,
+            "speed": -0.105297
+          },
+          "systemSpecific": {
+            "longitude": 73.162615,
+            "latitude": -0.599881,
+            "speed": -0.105297
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 328.248297,
+            "latitude": -1.370432,
+            "speed": 1.071158
+          },
+          "systemSpecific": {
+            "longitude": 328.248297,
+            "latitude": -1.370432,
+            "speed": 1.071158
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 344.562084,
+            "latitude": -1.976452,
+            "speed": 0.07629
+          },
+          "systemSpecific": {
+            "longitude": 344.562084,
+            "latitude": -1.976452,
+            "speed": 0.07629
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 53.623735,
+            "latitude": -0.252557,
+            "speed": -0.024023
+          },
+          "systemSpecific": {
+            "longitude": 53.623735,
+            "latitude": -0.252557,
+            "speed": -0.024023
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 357.30469,
+            "latitude": -1.285088,
+            "speed": 0.014077
+          },
+          "systemSpecific": {
+            "longitude": 357.30469,
+            "latitude": -1.285088,
+            "speed": 0.014077
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 301.080091,
+            "latitude": -3.274643,
+            "speed": 0.030768
+          },
+          "systemSpecific": {
+            "longitude": 301.080091,
+            "latitude": -3.274643,
+            "speed": 0.030768
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 1.470922,
+            "latitude": 0.0,
+            "speed": -0.052918
+          },
+          "systemSpecific": {
+            "longitude": 1.470922,
+            "latitude": 0.0,
+            "speed": -0.052918
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 0.777795,
+            "latitude": 0.0,
+            "speed": -0.182638
+          },
+          "systemSpecific": {
+            "longitude": 0.777795,
+            "latitude": 0.0,
+            "speed": -0.182638
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_2026_new_york",
+      "name": "15 June 2026, 18:30 EDT, New York (High DST)",
+      "birthDate": "2026-06-15",
+      "birthTime": "18:30",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "utcOffset": -4.0,
+      "timezoneId": "America/New_York",
+      "system": "lahiri",
+      "julianDayUT": 2461207.4375,
+      "ayanamsa": 24.226651,
+      "angles": {
+        "ascendantTropical": 241.18319,
+        "mcTropical": 166.645658,
+        "ascendantSystem": 216.956539,
+        "mcSystem": 142.419007
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 84.830601,
+            "latitude": 0.000134,
+            "speed": 0.955623
+          },
+          "systemSpecific": {
+            "longitude": 60.601878,
+            "latitude": 0.000134,
+            "speed": 0.955523
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 96.519897,
+            "latitude": 4.166891,
+            "speed": 15.210833
+          },
+          "systemSpecific": {
+            "longitude": 72.291174,
+            "latitude": 4.166891,
+            "speed": 15.210733
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 50.727489,
+            "latitude": -0.471363,
+            "speed": 0.727069
+          },
+          "systemSpecific": {
+            "longitude": 26.498766,
+            "latitude": -0.471363,
+            "speed": 0.726969
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 109.32841,
+            "latitude": 0.990482,
+            "speed": 0.956037
+          },
+          "systemSpecific": {
+            "longitude": 85.099687,
+            "latitude": 0.990482,
+            "speed": 0.955937
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 117.006472,
+            "latitude": 0.42447,
+            "speed": 0.204014
+          },
+          "systemSpecific": {
+            "longitude": 92.777749,
+            "latitude": 0.42447,
+            "speed": 0.203914
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 122.894645,
+            "latitude": 2.03112,
+            "speed": 1.161474
+          },
+          "systemSpecific": {
+            "longitude": 98.665922,
+            "latitude": 2.03112,
+            "speed": 1.161373
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 13.367708,
+            "latitude": -2.317859,
+            "speed": 0.065391
+          },
+          "systemSpecific": {
+            "longitude": 349.138985,
+            "latitude": -2.317859,
+            "speed": 0.065291
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 62.912217,
+            "latitude": -0.157616,
+            "speed": 0.055264
+          },
+          "systemSpecific": {
+            "longitude": 38.683494,
+            "latitude": -0.157616,
+            "speed": 0.055164
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 4.291929,
+            "latitude": -1.353026,
+            "speed": 0.011698
+          },
+          "systemSpecific": {
+            "longitude": 340.063206,
+            "latitude": -1.353026,
+            "speed": 0.011598
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 305.156658,
+            "latitude": -4.186086,
+            "speed": -0.016453
+          },
+          "systemSpecific": {
+            "longitude": 280.927935,
+            "latitude": -4.186086,
+            "speed": -0.016553
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 333.384272,
+            "latitude": 0.0,
+            "speed": -0.052891
+          },
+          "systemSpecific": {
+            "longitude": 309.155549,
+            "latitude": 0.0,
+            "speed": -0.052992
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 332.156255,
+            "latitude": 0.0,
+            "speed": -0.141916
+          },
+          "systemSpecific": {
+            "longitude": 307.927532,
+            "latitude": -0.0,
+            "speed": -0.142017
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_2050_greenwich",
+      "name": "2050-01-01 12:00 UTC, Greenwich",
+      "birthDate": "2050-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2469808.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 26.17457,
+        "mcTropical": 280.427992,
+        "ascendantSystem": 26.17457,
+        "mcSystem": 280.427992
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 281.258003,
+            "latitude": 9.5e-05,
+            "speed": 1.019097
+          },
+          "systemSpecific": {
+            "longitude": 281.258003,
+            "latitude": 9.5e-05,
+            "speed": 1.019097
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 25.381854,
+            "latitude": 2.910593,
+            "speed": 13.328628
+          },
+          "systemSpecific": {
+            "longitude": 25.381854,
+            "latitude": 2.910593,
+            "speed": 13.328628
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 228.032439,
+            "latitude": 0.768959,
+            "speed": 0.635373
+          },
+          "systemSpecific": {
+            "longitude": 228.032439,
+            "latitude": 0.768959,
+            "speed": 0.635373
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 269.60068,
+            "latitude": 3.164847,
+            "speed": -0.877294
+          },
+          "systemSpecific": {
+            "longitude": 269.60068,
+            "latitude": 3.164847,
+            "speed": -0.877294
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 121.632153,
+            "latitude": 0.459481,
+            "speed": -0.11912
+          },
+          "systemSpecific": {
+            "longitude": 121.632153,
+            "latitude": 0.459481,
+            "speed": -0.11912
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 281.877298,
+            "latitude": -0.624158,
+            "speed": 1.258314
+          },
+          "systemSpecific": {
+            "longitude": 281.877298,
+            "latitude": -0.624158,
+            "speed": 1.258314
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 297.632173,
+            "latitude": -0.204155,
+            "speed": 0.115827
+          },
+          "systemSpecific": {
+            "longitude": 297.632173,
+            "latitude": -0.204155,
+            "speed": 0.115827
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 170.729566,
+            "latitude": 0.787075,
+            "speed": -0.006377
+          },
+          "systemSpecific": {
+            "longitude": 170.729566,
+            "latitude": 0.787075,
+            "speed": -0.006377
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 53.594576,
+            "latitude": -1.762328,
+            "speed": -0.016944
+          },
+          "systemSpecific": {
+            "longitude": 53.594576,
+            "latitude": -1.762328,
+            "speed": -0.016944
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 337.541637,
+            "latitude": -12.689585,
+            "speed": 0.017038
+          },
+          "systemSpecific": {
+            "longitude": 337.541637,
+            "latitude": -12.689585,
+            "speed": 0.017038
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 237.954605,
+            "latitude": 0.0,
+            "speed": -0.052956
+          },
+          "systemSpecific": {
+            "longitude": 237.954605,
+            "latitude": 0.0,
+            "speed": -0.052956
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 239.508953,
+            "latitude": 0.0,
+            "speed": 0.022775
+          },
+          "systemSpecific": {
+            "longitude": 239.508953,
+            "latitude": 0.0,
+            "speed": 0.022775
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    },
+    {
+      "id": "epoch_2100_greenwich",
+      "name": "2100-01-01 12:00 UTC, Greenwich",
+      "birthDate": "2100-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "timezoneId": "UTC",
+      "system": "tropical",
+      "julianDayUT": 2488070.0,
+      "ayanamsa": 0.0,
+      "angles": {
+        "ascendantTropical": 25.932444,
+        "mcTropical": 280.326148,
+        "ascendantSystem": 25.932444,
+        "mcSystem": 280.326148
+      },
+      "bodies": {
+        "Sun": {
+          "tropical": {
+            "longitude": 281.113888,
+            "latitude": 5.8e-05,
+            "speed": 1.018943
+          },
+          "systemSpecific": {
+            "longitude": 281.113888,
+            "latitude": 5.8e-05,
+            "speed": 1.018943
+          }
+        },
+        "Moon": {
+          "tropical": {
+            "longitude": 164.427957,
+            "latitude": 0.477934,
+            "speed": 14.035624
+          },
+          "systemSpecific": {
+            "longitude": 164.427957,
+            "latitude": 0.477934,
+            "speed": 14.035624
+          }
+        },
+        "Mars": {
+          "tropical": {
+            "longitude": 29.72942,
+            "latitude": 0.961389,
+            "speed": 0.409288
+          },
+          "systemSpecific": {
+            "longitude": 29.72942,
+            "latitude": 0.961389,
+            "speed": 0.409288
+          }
+        },
+        "Mercury": {
+          "tropical": {
+            "longitude": 288.818039,
+            "latitude": -2.123512,
+            "speed": 1.624586
+          },
+          "systemSpecific": {
+            "longitude": 288.818039,
+            "latitude": -2.123512,
+            "speed": 1.624586
+          }
+        },
+        "Jupiter": {
+          "tropical": {
+            "longitude": 201.25921,
+            "latitude": 1.278438,
+            "speed": 0.105075
+          },
+          "systemSpecific": {
+            "longitude": 201.25921,
+            "latitude": 1.278438,
+            "speed": 0.105075
+          }
+        },
+        "Venus": {
+          "tropical": {
+            "longitude": 320.671992,
+            "latitude": -1.841137,
+            "speed": 1.202126
+          },
+          "systemSpecific": {
+            "longitude": 320.671992,
+            "latitude": -1.841137,
+            "speed": 1.202126
+          }
+        },
+        "Saturn": {
+          "tropical": {
+            "longitude": 205.660427,
+            "latitude": 2.424271,
+            "speed": 0.057227
+          },
+          "systemSpecific": {
+            "longitude": 205.660427,
+            "latitude": 2.424271,
+            "speed": 0.057227
+          }
+        },
+        "Uranus": {
+          "tropical": {
+            "longitude": 17.743658,
+            "latitude": -0.629136,
+            "speed": 0.004972
+          },
+          "systemSpecific": {
+            "longitude": 17.743658,
+            "latitude": -0.629136,
+            "speed": 0.004972
+          }
+        },
+        "Neptune": {
+          "tropical": {
+            "longitude": 167.286304,
+            "latitude": 0.9642,
+            "speed": -0.007471
+          },
+          "systemSpecific": {
+            "longitude": 167.286304,
+            "latitude": 0.9642,
+            "speed": -0.007471
+          }
+        },
+        "Pluto": {
+          "tropical": {
+            "longitude": 32.400708,
+            "latitude": -16.918345,
+            "speed": -0.005252
+          },
+          "systemSpecific": {
+            "longitude": 32.400708,
+            "latitude": -16.918345,
+            "speed": -0.005252
+          }
+        },
+        "Rahu_Mean": {
+          "tropical": {
+            "longitude": 350.911165,
+            "latitude": 0.0,
+            "speed": -0.052966
+          },
+          "systemSpecific": {
+            "longitude": 350.911165,
+            "latitude": 0.0,
+            "speed": -0.052966
+          }
+        },
+        "Rahu_True": {
+          "tropical": {
+            "longitude": 349.827278,
+            "latitude": 0.0,
+            "speed": -0.008966
+          },
+          "systemSpecific": {
+            "longitude": 349.827278,
+            "latitude": 0.0,
+            "speed": -0.008966
+          }
+        }
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Moon": 75.0,
+        "Mars": 60.0,
+        "Mercury": 60.0,
+        "Jupiter": 60.0,
+        "Venus": 60.0,
+        "Saturn": 60.0,
+        "MeanNode": 20.0,
+        "TrueNode": 30.0,
+        "Ascendant": 60.0
+      },
+      "precisionTiersArcSec": {
+        "preferredTarget": {
+          "Sun": 5.0,
+          "Moon": 15.0,
+          "Mars": 10.0,
+          "Mercury": 10.0,
+          "Jupiter": 10.0,
+          "Venus": 10.0,
+          "Saturn": 10.0,
+          "MeanNode": 10.0,
+          "TrueNode": 15.0,
+          "Ascendant": 5.0
+        },
+        "warningThreshold": {
+          "Sun": 15.0,
+          "Moon": 30.0,
+          "Mars": 25.0,
+          "Mercury": 25.0,
+          "Jupiter": 25.0,
+          "Venus": 25.0,
+          "Saturn": 25.0,
+          "MeanNode": 15.0,
+          "TrueNode": 25.0,
+          "Ascendant": 15.0
+        },
+        "hardRegressionTolerance": {
+          "Sun": 60.0,
+          "Moon": 75.0,
+          "Mars": 60.0,
+          "Mercury": 60.0,
+          "Jupiter": 60.0,
+          "Venus": 60.0,
+          "Saturn": 60.0,
+          "MeanNode": 20.0,
+          "TrueNode": 30.0,
+          "Ascendant": 60.0
+        }
+      }
+    }
+  ]
+}

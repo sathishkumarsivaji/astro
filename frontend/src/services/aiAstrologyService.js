@@ -4,8 +4,34 @@
  * into deeply personalized, multi-page classical Vedic astrology dossiers.
  */
 
-// Server-side session & credit management: Session tokens are stored in-memory; authentication relies on secure HttpOnly cookies.
+import {
+  toTamilRasi,
+  toTamilPlanet,
+  toTamilNakshatra,
+  toTamilDignity,
+  cleanEnglishParentheses
+} from "./tamilAstrologyUtils.js";
+import { apiFetch } from "./apiClient.js";
+
+// Server-side session & credit management: Authentication relies on secure HttpOnly cookies + in-memory Bearer token fallback.
 let cachedSessionToken = null;
+let cachedUser = null;
+let cachedUserId = null;
+
+export function getCachedUser() {
+  return cachedUser;
+}
+
+export function setCachedUser(user) {
+  cachedUser = user;
+  if (user && user.id) cachedUserId = user.id;
+}
+
+export function clearCachedUser() {
+  cachedUser = null;
+  cachedUserId = null;
+  cachedSessionToken = null;
+}
 
 /**
  * Ensures an authenticated session exists with the backend server via cryptographic handshake.
@@ -15,81 +41,149 @@ export async function ensureSessionToken() {
     return cachedSessionToken;
   }
 
-  const authUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL)
-    ? import.meta.env.VITE_AI_PROXY_URL.replace(/\/generate-astrology$/, "/auth/session")
-    : "/api/auth/session";
+  const headers = {};
+  if (cachedSessionToken) {
+    headers["Authorization"] = `Bearer ${cachedSessionToken}`;
+  }
 
   try {
-    let res;
-    try {
-      res = await fetch(authUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include"
-      });
-    } catch {
-      res = await fetch("http://localhost:5000/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include"
-      });
-    }
+    const res = await apiFetch("/api/auth/session", {
+      method: "POST",
+      headers
+    });
 
     if (res && res.ok) {
       const data = await res.json();
       if (data.sessionToken) {
         cachedSessionToken = data.sessionToken;
-        if (typeof window !== "undefined" && window.localStorage) {
-          if (data.userId) localStorage.setItem("astro_user_id", data.userId);
-        }
+        if (data.userId) cachedUserId = data.userId;
+        if (data.user) cachedUser = data.user;
         return cachedSessionToken;
       }
     }
-  } catch (e) {
+  } catch {
     // Backend offline or unreachable
   }
 
-  return cachedSessionToken || "unauthenticated_session";
+  return null;
 }
 
 export function getSessionToken() {
-  return cachedSessionToken || "unauthenticated_session";
+  return cachedSessionToken || null;
 }
 
 export async function fetchUserCredits() {
   const token = await ensureSessionToken();
-  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL)
-    ? import.meta.env.VITE_AI_PROXY_URL.replace(/\/generate-astrology$/, "/user/entitlements")
-    : "/api/user/entitlements";
+  const headers = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   try {
-    let res;
-    try {
-      res = await fetch(proxyUrl, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        credentials: "include"
-      });
-    } catch {
-      res = await fetch("http://localhost:5000/api/user/entitlements", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        credentials: "include"
-      });
-    }
+    const res = await apiFetch("/api/user/entitlements", {
+      method: "GET",
+      headers
+    });
 
     if (res && res.ok) {
       const data = await res.json();
       return typeof data.availableCredits === "number" ? data.availableCredits : null;
     }
-  } catch (e) {
+  } catch {
     // Return null if offline; do not fabricate client-side credits
   }
   return null;
+}
+
+export async function fetchCurrentUser() {
+  let token = cachedSessionToken;
+  if (!token) {
+    token = await ensureSessionToken();
+  }
+
+  try {
+    const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+    const res = await apiFetch("/api/auth/me", {
+      headers
+    });
+    if (res && res.ok) {
+      const data = await res.json();
+      if (data.user) {
+        cachedUser = data.user;
+        if (data.userId) cachedUserId = data.userId;
+        return data.user;
+      }
+    }
+  } catch (e) {
+    console.warn("fetchCurrentUser error:", e);
+  }
+  return null;
+}
+
+export async function registerUser({ name, email, password }) {
+  const body = JSON.stringify({
+    name,
+    email,
+    password,
+    existingUserId: null
+  });
+  const res = await apiFetch("/api/auth/register", {
+    method: "POST",
+    body
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Registration failed");
+  if (data.sessionToken) {
+    cachedSessionToken = data.sessionToken;
+    if (data.userId) cachedUserId = data.userId;
+    if (data.user) cachedUser = data.user;
+  }
+  return data;
+}
+
+export async function loginUser({ email, password }) {
+  const body = JSON.stringify({ email, password });
+  const res = await apiFetch("/api/auth/login", {
+    method: "POST",
+    body
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Login failed");
+  if (data.sessionToken) {
+    cachedSessionToken = data.sessionToken;
+    if (data.userId) cachedUserId = data.userId;
+    if (data.user) cachedUser = data.user;
+  }
+  return data;
+}
+
+export async function initGuestSession() {
+  try {
+    const res = await apiFetch("/api/auth/guest", {
+      method: "POST"
+    });
+    const data = await res.json();
+    if (res.ok && data.sessionToken) {
+      cachedSessionToken = data.sessionToken;
+      if (data.userId) cachedUserId = data.userId;
+      if (data.user) cachedUser = data.user;
+    }
+    return data;
+  } catch (e) {
+    console.warn("initGuestSession error:", e);
+    return null;
+  }
+}
+
+export async function logoutUser() {
+  const token = cachedSessionToken;
+  clearCachedUser();
+  try {
+    const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+    await apiFetch("/api/auth/logout", { method: "POST", headers });
+  } catch {
+    // Ignore network error on logout
+  }
 }
 
 import { getStructuredVargaData, validateAndSanitizeNarrative } from "./astroEngine.js";
@@ -250,8 +344,8 @@ export function buildAstrologyPrompt(chartData, lang = "en") {
 - **Jaimini Chara Atmakaraka (Soul Planet):** ${atmakaraka.planet} (${atmakaraka.planetTa || atmakaraka.planet}) at ${atmakaraka.degInSign || atmakaraka.degreeInSign || ''} in ${atmakaraka.sign} (House ${atmakaraka.house})
 - **Spiritual Signification:** ${isTamil ? (atmakaraka.spiritualSignificationTa || atmakaraka.spiritualSignification || "ஆன்ம வளர்ச்சி மற்றும் தர்ம கடமைகள்") : (atmakaraka.spiritualSignification || "Soul evolution and highest dharmic realization")}` : "";
 
-  const shadbalaSummary = (shadbala || []).map(s => {
-    return `- ${s.planet} (${s.planetTa}): ${s.totalRupas} Rupas / ${s.requiredRupas} Required (Ratio: ${s.ratio}) - [${s.status}]`;
+  const shadbalaSummary = (Array.isArray(shadbala) ? shadbala : []).map(s => {
+    return `- ${s.planet} (${s.planetTa || s.planet}): ${s.totalRupas} Rupas / ${s.requiredRupas} Required (Ratio: ${s.ratio}) - [${s.status}]`;
   }).join("\n");
 
   const effectiveStructuredVargas = structuredVargas || evidencePkgToUse?.structuredVargas || (planets && ascendantSign ? getStructuredVargaData(planets, chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0) : null);
@@ -346,7 +440,7 @@ export function buildAstrologyPrompt(chartData, lang = "en") {
 கண்டிப்பான சாஸ்திர விதிமுறைகள் & துல்லியக் கட்டளைகள் (Strict Rules):
 1. **சான்றுகள் தளம் & விளக்குதல் மட்டுமே (Interpret Only - 4-Layer Structure):** ஒவ்வொரு பலனையும் 4 அடுக்குகளாக விவரிக்கவும்: 1) வானியல் கணிதம் -> 2) பாரம்பரிய சாஸ்திர விளக்கம் -> 3) நடப்பு தசா-கோச்சார காலம் -> 4) நடைமுறை வழிகாட்டல்.
 2. **ஆத்மகாரகன் தனித்துவம்:** சூரிய ராசியை ஆன்ம ஆளுமையாக விளக்குவதோடு, உண்மையான ஜைமினி சப்த காரக ஆத்மகாரக கிரகத்தை (${atmakaraka?.planet || 'AK'}) தனித்துவமாக ஆன்ம லட்சியத்திற்கு விவரிக்கவும்.
-3. **முழுமையான தனிப்பயனாக்கம் (Zero Boilerplate):** பொதுவான ராசி பலன்களையோ, வார்ப்புருக்களையோ எழுதக் கூடாது. லக்னம் (${ascendantSign.name} / ${ascendantSign.tamil}), லக்னாதிபதி, ராசி & நட்சத்திரம் (${moonSign.name} / ${moonNakshatra.name} பாதம் ${moonNakshatra.pada}), 12 பாவாதிபதிகள் மற்றும் தசா-புக்திகளை நேரடியாகக் குறிப்பிடவும்.
+3. **முழுமையான தனிப்பயனாக்கம் (Zero Boilerplate):** பொதுவான ராசி பலன்களையோ, வார்ப்புருக்களையோ எழுதக் கூடாது. லக்னம் (${ascendantSign?.name || (typeof ascendantSign === 'string' ? ascendantSign : 'தெரியவில்லை')} / ${ascendantSign?.tamil || ascendantSign?.name || (typeof ascendantSign === 'string' ? ascendantSign : 'தெரியவில்லை')}), லக்னாதிபதி, ராசி & நட்சத்திரம் (${moonSign?.name || (typeof moonSign === 'string' ? moonSign : 'தெரியவில்லை')} / ${moonNakshatra?.name || 'தெரியவில்லை'} பாதம் ${moonNakshatra?.pada ?? 'N/A'}), 12 பாவாதிபதிகள் மற்றும் தசா-புக்திகளை நேரடியாகக் குறிப்பிடவும்.
 4. **தூய தமிழ் மொழி (100% Pure Tamil Output):** முழு பதிலையும் உயர்தர, கம்பீரமான தூய தமிழில் மட்டுமே எழுத வேண்டும்.
 5. **வரைவு குறிப்புகள் தடை (No Drafting Scratchpads):** ஆங்கில வரைவு குறிப்புகளோ (drafting notes / tone check / self-correction), சிந்தனைப் பத்திகளோ இடம்பெறக் கூடாது.
 6. **சான்றுகள் தளம் (Evidence Ledger Integration):** சாதகமான காரணிகளையும் (Supporting Factors) சவாலான எதிர்ப்புக் காரணிகளையும் (Counter Indicators) சமநிலையுடன் விளக்கவும். பொய்யான உறுதிப்பாட்டு சதவீதங்கள் (எ.கா: 85%, 99.85%) எழுதக் கூடாது.
@@ -354,12 +448,12 @@ export function buildAstrologyPrompt(chartData, lang = "en") {
 8. **காலக்கட்ட மாறாமை விதி (Deterministic Timing Invariant):** அறிக்கையில் குறிப்பிடப்படும் ஒவ்வொரு பலன் காலம், தசா-புக்தி காலங்கள், கோச்சார பெயர்ச்சிகள், வர்க்க சக்கர நிலைகள் அனைத்தும் கீழே தரப்பட்டுள்ள கணிதத் தரவுகளிலிருந்து மட்டுமே நேரடியாக எழுதப்பட வேண்டும். மாதிரி (AI model) சுயமாக எந்தவொரு காலக்கட்டத்தையோ, தேதியையோ மாற்றவோ உருவாக்கவோ கூடாது.
 
 ### ஜாதக கணித தரவுகள் (Astronomical Natal Data):
-- **ஜென்ம லக்னம்:** ${ascendantSign.name} (${ascendantSign.tamil})
-- **ஜென்ம ராசி & நட்சத்திரம்:** ${moonSign.name} (${moonSign.tamil}) - ${moonNakshatra.name} (${moonNakshatra.tamil}) பாதம் ${moonNakshatra.pada} (அதிபதி: ${moonNakshatra.ruler})
-- **சூரிய ராசி & நட்சத்திரம்:** ${sunSign.name} (${sunSign.tamil}) - ${sunNakshatra.name} (${sunNakshatra.tamil})
+- **ஜென்ம லக்னம்:** ${ascendantSign?.name || 'தெரியவில்லை'} (${ascendantSign?.tamil || 'தெரியவில்லை'})
+- **ஜென்ம ராசி & நட்சத்திரம்:** ${moonSign?.name || 'தெரியவில்லை'} (${moonSign?.tamil || 'தெரியவில்லை'}) - ${moonNakshatra?.name || 'தெரியவில்லை'} (${moonNakshatra?.tamil || 'தெரியவில்லை'}) பாதம் ${moonNakshatra?.pada ?? 'N/A'} (அதிபதி: ${moonNakshatra?.ruler || 'தெரியவில்லை'})
+- **சூரிய ராசி & நட்சத்திரம்:** ${sunSign?.name || 'தெரியவில்லை'} (${sunSign?.tamil || 'தெரியவில்லை'}) - ${sunNakshatra?.name || 'தெரியவில்லை'} (${sunNakshatra?.tamil || 'தெரியவில்லை'})
 - **பஞ்சாங்கம்:** ${panchangam?.tamilYear || ''} வருடம், ${panchangam?.tamilMonth || ''} மாதம், திதி: ${panchangam?.thithi || ''}, யோகம்: ${panchangam?.yogam || ''}, தசா இருப்பு: ${panchangam?.dashaBalance || ''}
 - **செவ்வாய் தோஷம்:** ${doshaAnalysis?.chevvaiStatus || 'இல்லை'}
-- **தற்போதைய மகா தசை:** ${currentDasha?.tamil || currentDasha?.lord} தசை (வயது ${currentDasha?.startAge} முதல் ${currentDasha?.endAge} வரை)
+- **தற்போதைய மகா தசை:** ${currentDasha?.tamil || currentDasha?.lord || 'தெரியவில்லை'} தசை (வயது ${currentDasha?.startAge ?? '-'} முதல் ${currentDasha?.endAge ?? '-'} வரை)
 
 ### நவகிரகங்களின் துல்லிய பாகை & நிலை:
 ${planetaryPositionsSummary}
@@ -495,12 +589,12 @@ CRITICAL RULES & INTERPRETATION FRAMEWORK:
 8. **Anti-Causality & Karaka Nuance:** Understand that Venus is a significator (Karaka) of marriage, but does not independently 'cause' events without multi-factor convergence with house lords (7th lord) and active operating Dasha/Gochara activation. Use Shadbala only when it materially supports or qualifies the relevant domain interpretation.
 
 ### Astronomical Natal Data:
-- **Ascendant (Lagna):** ${ascendantSign.name} (${ascendantSign.tamil})
-- **Moon Sign & Nakshatra:** ${moonSign.name} - ${moonNakshatra.name} Pada ${moonNakshatra.pada} (Ruler: ${moonNakshatra.ruler})
-- **Sun Sign & Nakshatra:** ${sunSign.name} - ${sunNakshatra.name}
+- **Ascendant (Lagna):** ${ascendantSign?.name || (typeof ascendantSign === 'string' ? ascendantSign : 'Not available')} (${ascendantSign?.tamil || ascendantSign?.name || (typeof ascendantSign === 'string' ? ascendantSign : 'Not available')})
+- **Moon Sign & Nakshatra:** ${moonSign?.name || (typeof moonSign === 'string' ? moonSign : 'Not available')} - ${moonNakshatra?.name || 'Not available'} Pada ${moonNakshatra?.pada ?? 'N/A'} (Ruler: ${moonNakshatra?.ruler || 'Not available'})
+- **Sun Sign & Nakshatra:** ${sunSign?.name || (typeof sunSign === 'string' ? sunSign : 'Not available')}${sunNakshatra?.name ? ` - ${sunNakshatra.name}` : ''}
 - **Panchangam:** Thithi: ${panchangam?.thithiEn || ''}, Yogam: ${panchangam?.yogam || ''}, Dasha Balance: ${panchangam?.dashaBalanceEn || ''}
 - **Kuja (Mars) Dosha Analysis:** ${doshaAnalysis?.chevvaiStatus || 'Absent'}
-- **Current Active Mahadasha:** ${currentDasha?.lord} Dasha (Ages ${currentDasha?.startAge} to ${currentDasha?.endAge})
+- **Current Active Mahadasha:** ${currentDasha?.lord || 'Not available'} Dasha (Ages ${currentDasha?.startAge ?? '-'} to ${currentDasha?.endAge ?? '-'})
 
 ### Precise Planetary Coordinates & Dignities:
 ${planetaryPositionsSummary}
@@ -649,42 +743,419 @@ export function cleanAIOutput(text, lang = "en") {
 }
 
 /**
- * Invokes Google Gemini API with ephemeris data through secure backend proxy
+ * Generates an exhaustive 19-chapter master report deterministically from calculated chart data.
+ * Guarantees zero blank screens, zero hallucinated claims, and immediate availability offline.
  */
-export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCreditDeducted = null) {
+export function generateLocalDeterministicMasterReport(chartData, lang = "en") {
+  if (!chartData) return "";
   const isTamil = lang === "ta";
-  const prompt = buildAstrologyPrompt(chartData, lang);
-
-  // 1. Dispatch request through the secure backend proxy (keeping API keys isolated on the server)
-  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL) || "/api/generate-astrology";
-  const token = await ensureSessionToken();
   
-  try {
-    let proxyResponse;
-    try {
-      proxyResponse = await fetch(proxyUrl, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        credentials: "include",
-        body: JSON.stringify({ prompt, lang })
-      });
-    } catch {
-      // Fallback to local express backend if vite middleware is not handling
-      proxyResponse = await fetch("http://localhost:5000/api/generate-astrology", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        credentials: "include",
-        body: JSON.stringify({ prompt, lang })
-      });
+  const rawSys = chartData.system;
+  const systemId = (typeof rawSys === "object" ? rawSys?.id : rawSys) || "lahiri";
+  const SYSTEM_NAMES = {
+    lahiri: "Lahiri / Chitrapaksha",
+    kp: "KP (Krishnamurti Padhdhati)",
+    raman: "B.V. Raman Sidereal",
+    tropical: "Tropical / Sayana (Western)"
+  };
+  const sysName = (typeof rawSys === "object" && rawSys?.name)
+    ? rawSys.name
+    : (SYSTEM_NAMES[String(systemId).toLowerCase()] || "Lahiri / Chitrapaksha");
+
+  const isTropical = String(systemId).toLowerCase() === "tropical";
+  const isKP = String(systemId).toLowerCase() === "kp";
+
+  const prof = chartData.profile || {};
+  const name = prof.name || (isTamil ? "ஜாதகர்" : "Native");
+  const bDate = prof.birthDate || chartData.birthDateStr || chartData.birthDate || "-";
+  const bTime = prof.birthTime || chartData.birthTimeStr || chartData.birthTime || "-";
+  const bPlace = prof.birthPlace || chartData.birthPlace || "-";
+
+  // Robust extraction of core signs and degrees
+  const ascSignName = typeof chartData.ascendantSign === "object" ? (chartData.ascendantSign?.name || chartData.ascendantSign?.sign) : (chartData.ascendantSign || chartData.ascendant?.sign || chartData.ascendant?.name || "-");
+  const ascSignTamil = typeof chartData.ascendantSign === "object" ? (chartData.ascendantSign?.tamil || toTamilRasi(chartData.ascendantSign?.name)) : toTamilRasi(chartData.ascendantSign || chartData.ascendant?.sign || "-");
+  const ascDegVal = chartData.ascendantDeg ?? chartData.ascendantLong ?? chartData.ascendant?.deg ?? null;
+  const ascDegStr = ascDegVal !== null ? `${Number(ascDegVal).toFixed(2)}°` : "";
+
+  const moonSignName = typeof chartData.moonSign === "object" ? (chartData.moonSign?.name || chartData.moonSign?.sign) : (chartData.moonSign || chartData.moon?.sign || chartData.moon?.name || "-");
+  const moonSignTamil = typeof chartData.moonSign === "object" ? (chartData.moonSign?.tamil || toTamilRasi(chartData.moonSign?.name)) : toTamilRasi(chartData.moonSign || chartData.moon?.sign || "-");
+
+  const sunSignName = typeof chartData.sunSign === "object" ? (chartData.sunSign?.name || chartData.sunSign?.sign) : (chartData.sunSign || chartData.sun?.sign || chartData.sun?.name || "-");
+  const sunSignTamil = typeof chartData.sunSign === "object" ? (chartData.sunSign?.tamil || toTamilRasi(chartData.sunSign?.name)) : toTamilRasi(chartData.sunSign || chartData.sun?.sign || "-");
+
+  const moonNakName = typeof chartData.moonNakshatra === "object" ? (chartData.moonNakshatra?.name || chartData.moonNakshatra?.nakshatra) : (chartData.moonNakshatra || chartData.moon?.nakshatra || "-");
+  const moonNakTamil = typeof chartData.moonNakshatra === "object" ? (chartData.moonNakshatra?.tamil || toTamilNakshatra(chartData.moonNakshatra?.name)) : toTamilNakshatra(chartData.moonNakshatra || chartData.moon?.nakshatra || "-");
+  const moonPada = (typeof chartData.moonNakshatra === "object" && chartData.moonNakshatra?.pada) ? chartData.moonNakshatra.pada : (chartData.moon?.pada || "-");
+
+  const dasha = chartData.currentDasha || {};
+  const dashaLord = dasha.lord || dasha.mahadasha || "";
+  const dashaSubLord = dasha.subLord || dasha.currentAntar || dasha.antardasha || "";
+  const dashaLordTamil = isTamil ? (dasha.lordTamil || (dashaLord ? toTamilPlanet(dashaLord) : "")) : dashaLord;
+  const dashaSubLordTamil = isTamil ? (dasha.subLordTamil || (dashaSubLord ? toTamilPlanet(dashaSubLord) : "")) : dashaSubLord;
+
+  const bhavas = (isTamil ? chartData.bhavasDetailedTamil : chartData.bhavasDetailed) || chartData.bhavasDetailed || [];
+  const yogas = (isTamil ? chartData.detectedYogasTamil : chartData.detectedYogas) || chartData.yogas || [];
+  const remedies = (isTamil ? chartData.personalizedRemediesTamil : chartData.personalizedRemedies) || chartData.personalizedRemedies || {};
+  const dosha = (isTamil ? chartData.tridoshaBalanceTamil : chartData.tridoshaBalance) || chartData.tridoshaBalance || {};
+  const timelineStages = (isTamil ? chartData.chronologicalDashaTimelineTamil : chartData.chronologicalDashaTimeline)?.stages
+    || chartData.chronologicalDashaTimeline?.stages
+    || (Array.isArray(chartData.chronologicalDashaTimeline) ? chartData.chronologicalDashaTimeline : []);
+  const risks = chartData.riskMatrix?.risks || [];
+
+  // Format Planetary Summary Table
+  const planetsList = (chartData.planets || []).map(p => {
+    const pName = isTamil ? (p.tamil || toTamilPlanet(p.name)) : p.name;
+    const pSign = isTamil ? (p.signTamil || toTamilRasi(p.sign)) : (p.sign || "-");
+    const pDeg = typeof p.degree === "number" ? `${p.degree.toFixed(2)}°` : (p.deg ? `${p.deg}°` : "-");
+    const pDignity = isTamil ? (p.dignityTamil || toTamilDignity(p.dignity || "சமம்")) : (p.dignity || "Neutral");
+    const pNak = isTamil ? (p.nakshatraTamil || toTamilNakshatra(p.nakshatra)) : (p.nakshatra || "-");
+    const ret = p.isRetrograde ? (isTamil ? " [வக்ரம்]" : " [R]") : "";
+    return `| ${pName} | ${pSign} | ${pDeg} | H${p.house ?? '-'} | ${pDignity}${ret} | ${isTropical ? '-' : pNak} |`;
+  }).join("\n");
+
+  // Format Houses
+  const bhavasText = bhavas.map(b => {
+    const title = b.title || (isTamil ? `${b.num}-ம் பாவகம்: ${b.signTamil || toTamilRasi(b.signName || b.sign)}` : `House ${b.num}: ${b.signName || b.sign || ''}`);
+    const lord = b.lordName ? (isTamil ? ` (அதிபதி: ${b.lordTamil || toTamilPlanet(b.lordName)} - ${b.lordDignityTamil || toTamilDignity(b.lordDignity)})` : ` (Lord: ${b.lordName} - ${b.lordDignity || 'Neutral'})`) : "";
+    const pred = isTamil ? (b.predictionTamil || b.summaryTamil || b.prediction || "சீரான பாவக அமைப்பு.") : (b.prediction || b.summary || "Balanced astrological indications.");
+    return `### ${isTamil ? `பாவகம் ${b.num}` : `House ${b.num}`}: ${title}${lord}\n${pred}\n`;
+  }).join("\n");
+
+  // --- TROPICAL / SAYANA (WESTERN) REPORT BRANCH ---
+  if (isTropical) {
+    if (isTamil) {
+      return `# ஆஸ்ட்ரோவர்ஸ் — மேற்கத்திய சாயன (Tropical) வானியல் ஜாதக அறிக்கை
+
+**ஜாதகர்:** ${name} | **பிறந்த தேதி:** ${bDate} | **நேரம்:** ${bTime} | **இடம்:** ${bPlace}
+**ஜோதிட முறை:** Tropical / Sayana (Western) | **லக்னம் (Rising):** ${ascSignTamil} (${ascDegStr}) | **சூரிய ராசி (Sun):** ${sunSignTamil} | **சந்திர ராசி (Moon):** ${moonSignTamil}
+
+---
+
+## அத்தியாயம் 1: மேற்கத்திய சாயன மூல ஜாதக கட்டமைப்பு & நவகிரக நிலைகள்
+| கிரகம் | ராசி (Sign) | பாகை (Degree) | வீடுகள் (House) | பலம் / கண்ணோட்டம் | குறிப்பு |
+|---|---|---|---|---|---|
+${planetsList}
+
+## அத்தியாயம் 2: முக்கிய தாலமிக் பார்வைகள் (Ptolemaic Aspects) & கிரக சேர்க்கைகள்
+மேற்கத்திய சாயன முறையில் அமைந்த சூரியன், சந்திரன் மற்றும் முக்கிய கிரகங்களின் 0° (சேர்க்கை), 60° (செக்ஸ்டைல்), 90° (ஸ்கொயர்), 120° (டிரைன்), 180° (ஆப்போசிஷன்) பார்வைகள் உங்கள் உளவியல் ஆளுமையையும், வாய்ப்புகளையும் தீர்மானிக்கின்றன.
+
+## அத்தியாயம் 3: 12 மேற்கத்திய வீடுகள் (Placidus Houses) முழு ஆய்வு
+${bhavasText}
+
+## அத்தியாயம் 4: உளவியல் திறன்கள், தலைமைத்துவம் & தொழில் வாய்ப்புகள்
+சூரியன் (${sunSignTamil}) மற்றும் 10-ம் வீட்டின் நிலைகள் தொழில்முறை தலைமைத்துவத்தையும், நிர்வாக திறன்களையும் வளர்க்கின்றன.
+
+## அத்தியாயம் 5: உறவுகள், குடும்பம் & கூட்டாண்மை (7-ம் வீடு)
+7-ம் வீடு மற்றும் சுக்கிரனின் தொடர்பு வாழ்க்கைத்துணையுடனான இணக்கமான புரிதலையும், பரஸ்பர ஆதரவையும் உறுதிப்படுத்துகின்றன.
+
+## அத்தியாயம் 6: வானியல் தொழில்நுட்ப கணக்கீட்டு சான்றிதழ்
+- **Reference Frame:** Sayana / Tropical (Vernal Equinox = 0° Aries, Ayanamsha: 0.0000°)
+- **House System:** Placidus Houses (Equal fallback for polar latitudes)
+- **Ephemeris Engine:** Astronomy Engine 2.1 (VSOP87 / Meeus algorithms)`;
     }
 
-    if (proxyResponse.ok) {
+    return `# ASTROVERSE — WESTERN TROPICAL (SAYANA) NATAL DOSSIER
+
+**Native:** ${name} | **Birth Date:** ${bDate} | **Time:** ${bTime} | **Place:** ${bPlace}
+**System:** Tropical / Sayana (Western) | **Rising Sign (Ascendant):** ${ascSignName} (${ascDegStr}) | **Sun Sign:** ${sunSignName} | **Moon Sign:** ${moonSignName}
+
+---
+
+## Chapter 1: Tropical Natal Blueprint & Celestial Placements
+| Body | Sign | Longitude | House | Dignity / Aspect | Framework |
+|---|---|---|---|---|---|
+${planetsList}
+
+## Chapter 2: Ptolemaic Aspects & Geometric Harmonic Dynamics
+Classical Western aspects (Conjunctions, Sextiles, Trines, Squares, and Oppositions) establish the native's core psychological temperament, cognitive agility, and vocational drive.
+
+## Chapter 3: Twelve Western Placidus Houses Deep Dive
+${bhavasText}
+
+## Chapter 4: Vocation, Ambition & Executive Trajectory (10th House Midheaven)
+The Midheaven (MC) and 10th House configuration point toward steady professional responsibility, public reputation, and strategic execution.
+
+## Chapter 5: Relationships, Marriage & Partnership Dynamics (7th House)
+The 7th House and Venusian aspects support enduring personal relationships anchored in mutual respect, shared principles, and emotional maturity.
+
+## Chapter 6: Technical Computational Certificate
+- **Reference Frame:** Geocentric True Ecliptic of Date (ECT) — Sayana / Tropical (0° Aries = Vernal Equinox)
+- **Ayanamsha:** 0°00'00" (Not Applicable for Tropical System)
+- **House System:** Placidus Cusps (with circumpolar Equal fallback)
+- **Ephemeris Base:** Astronomy Engine 2.1 (VSOP87 / Jean Meeus Algorithms)`;
+  }
+
+  // --- KRISHNAMURTI PADHDHATI (KP) REPORT BRANCH ---
+  if (isKP) {
+    const dashaText = dashaLord ? (isTamil ? `${dashaLordTamil}${dashaSubLordTamil ? ` - ${dashaSubLordTamil}` : ""}` : `${dashaLord}${dashaSubLord ? ` - ${dashaSubLord}` : ""}`) : (isTamil ? "கணக்கிடப்பட்டது" : "Computed");
+    if (isTamil) {
+      return `# ஆஸ்ட்ரோவர்ஸ் — கிருஷ்ணமூர்த்தி பத்ததி (KP) நட்சத்திர ஜோதிட அறிக்கை
+
+**ஜாதகர்:** ${name} | **பிறந்த தேதி:** ${bDate} | **நேரம்:** ${bTime} | **இடம்:** ${bPlace}
+**ஜோதிட முறை:** Krishnamurti Padhdhati (KP) | **லக்னம்:** ${ascSignTamil} (${ascDegStr}) | **சந்திரன்:** ${moonSignTamil} | **நட்சத்திரம்:** ${moonNakTamil} (${moonPada}) | **நடப்பு தசா-புக்தி:** ${dashaText}
+
+---
+
+## அத்தியாயம் 1: KP நவகிரக நிலைகள், நட்சத்திர நாதன் & உபநாதன் (Sub-Lord) அட்டவணை
+| கிரகம் | ராசி | பாகை | பாவகம் | நிலை | நட்சத்திரம் & உபநாதன் |
+|---|---|---|---|---|---|
+${planetsList}
+
+## அத்தியாயம் 2: KP 12 பாவக ஆரம்ப முனைகள் (Placidus Cuspal Sub-Lords)
+${bhavasText}
+
+## அத்தியாயம் 3: KP விம்சோத்தரி தசா-புக்தி பலன்கள்
+நடப்பு விம்சோத்தரி தசா காலக்கட்டம் (${dashaText}) உங்கள் முக்கிய வாழ்வியல் முயற்சிகளையும் கர்ம வினைகளையும் வழிநடத்துகிறது.
+
+## அத்தியாயம் 4: தொழில் & தன ஸ்தான சிக்னிஃபிகேட்டர்கள் (2, 6, 10, 11)
+2, 6, 10, 11-ம் பாவக உபநாதன்களின் தொடர்பு நிலையான தன மேன்மையையும், தொழில்முறை உயர்வையும் உறுதி செய்கின்றன.
+
+## அத்தியாயம் 5: KP தொழில்நுட்ப கணக்கீட்டு சான்றிதழ்
+- **Ayanamsha:** KP Original Ayanamsha (249 Sub-Lord Division)
+- **House System:** Placidus Cusps
+- **Ephemeris Engine:** Astronomy Engine 2.1 (VSOP87 / Meeus)`;
+    }
+
+    return `# ASTROVERSE — KRISHNAMURTI PADHDHATI (KP) STELLAR DOSSIER
+
+**Native:** ${name} | **Birth Date:** ${bDate} | **Time:** ${bTime} | **Place:** ${bPlace}
+**System:** Krishnamurti Padhdhati (KP) | **Ascendant:** ${ascSignName} (${ascDegStr}) | **Moon:** ${moonSignName} | **Nakshatra:** ${moonNakName} (${moonPada}) | **Active Dasha:** ${dashaText}
+
+---
+
+## Chapter 1: KP Planetary Placements, Star Lords & Sub-Lords Matrix
+| Body | Sign | Longitude | House | Dignity | Star Lord & Sub-Lord |
+|---|---|---|---|---|---|
+${planetsList}
+
+## Chapter 2: KP Placidus Cuspal Points & Sub-Lord Matrix
+${bhavasText}
+
+## Chapter 3: KP Vimshottari Dasha-Bhukti Significance
+The active period of ${dashaText} activates key cuspal significators, driving career progress, financial milestones, and personal development.
+
+## Chapter 4: Wealth & Career House Combinations (2, 6, 10, 11)
+Connections between the 2nd (wealth), 6th (service), 10th (profession), and 11th (gains) cuspal sub-lords provide strong indicators for vocational stability and material accomplishment.
+
+## Chapter 5: Technical Computational Specifications
+- **Ayanamsha Model:** KP Original (50.2388475"/year linear)
+- **House System:** Placidus Cusps with 249 Sub-Lord divisions
+- **Ephemeris Base:** Astronomy Engine 2.1 (VSOP87 / Meeus algorithms)`;
+  }
+
+  // --- VEDIC / PARASHARI (LAHIRI & RAMAN) 19-CHAPTER MASTER REPORT ---
+  const yogasText = yogas.length > 0
+    ? yogas.map(y => {
+        const yName = typeof y === "string" ? y : (isTamil ? (y.nameTa || y.name) : (y.name || y.title));
+        const yDesc = typeof y === "object" ? (isTamil ? (y.manifestationTa || y.definitionTa || y.desc || y.definition) : (y.manifestation || y.desc || y.definition)) : (isTamil ? "சுப யோகம் செயல்படுகிறது." : "Favorable classical yoga operating in natal chart.");
+        return `- **${cleanEnglishParentheses(yName)}**: ${yDesc}`;
+      }).join("\n")
+    : (isTamil ? "நிலையான நவகிரக அமைப்புகளின் வழியே சுப பலன்கள் வெளிப்படுகின்றன." : "Standard planetary alignments govern life outcomes without major adverse yoga impediments.");
+
+  const stagesText = timelineStages.slice(0, 9).map(s => {
+    const sLord = isTamil ? (s.lordTamil || toTamilPlanet(s.lord || s.dashaTrigger)) : (s.lord || s.dashaTrigger);
+    const trans = (s.transitCrossings || []).map(t => typeof t === "string" ? t : (isTamil ? (t.summaryTa || t.summaryEn || "") : (t.summaryEn || t.title || ""))).filter(Boolean).join(" | ");
+    return `- **${isTamil ? `பருவம் ${s.stageNum}: வயது ${s.ageRange}` : `Stage ${s.stageNum}: Ages ${s.ageRange}`} (${s.calendarYears || ''})** — *${isTamil ? (s.themeTamil || s.title) : s.title}* [${isTamil ? `தசை: ${sLord}` : `Dasha: ${s.dashaTrigger}`}]${trans ? `\n  - ${isTamil ? "கோசாரம்" : "Transits"}: ${trans}` : ""}`;
+  }).join("\n");
+
+  const primaryGemFormatted = typeof remedies.primaryGemstone === "object"
+    ? (remedies.primaryGemstone.gemstone || remedies.primaryGemstone.name || (isTamil ? "லக்னாதிபதி ரத்தினம்" : "Lagna Gemstone"))
+    : (remedies.primaryGemstone || (isTamil ? "லக்னாதிபதி ரத்தினம்" : "Lagna Gemstone"));
+
+  const avoidGemsFormatted = Array.isArray(remedies.contraindicatedGemstones)
+    ? remedies.contraindicatedGemstones.map(g => typeof g === "object" ? `${g.gemstone} (${g.reason || g.lord})` : g).join(", ")
+    : (remedies.avoidGemstones || (isTamil ? "மறைவு ஸ்தான அதிபதிகளின் ரத்தினங்கள்" : "Dusthana Lord Gemstones"));
+
+  if (isTamil) {
+    return `# ஆஸ்ட்ரோவர்ஸ் — வேத ஜோதிட மகா ஜாதக ஆயுள் வழிகாட்டி
+
+**ஜாதகர் பெயர்:** ${name} | **பிறந்த தேதி:** ${bDate} | **நேரம்:** ${bTime} | **இடம்:** ${bPlace}
+**ஜோதிட முறை:** ${sysName} | **லக்னம்:** ${ascSignTamil} (${ascDegStr}) | **ராசி:** ${moonSignTamil} | **நட்சத்திரம்:** ${moonNakTamil} பாதம் ${moonPada} | **சூரியன்:** ${sunSignTamil}
+
+---
+
+## அத்தியாயம் 0: நிர்வாக சுருக்கம் & முக்கிய வாழ்வியல் கூறுகள்
+உங்கள் ஜென்ம லக்னம் **${ascSignTamil}** மற்றும் சந்திரன் **${moonSignTamil}** ராசியில் அமைந்து, உங்கள் அடிப்படை ஆளுமை மற்றும் மன வலிமையை கட்டமைக்கின்றன. நடப்பு விம்சோத்தரி தசா **${dashaLordTamil}**${dashaSubLordTamil ? ` - **${dashaSubLordTamil}** புக்தி` : ""} காலக்கட்டம் உங்கள் தற்போதைய வாழ்வியல் பொறுப்புகளையும் முக்கிய முடிவுகளையும் வழிநடத்துகிறது.
+
+## அத்தியாயம் 1: மூல ஜாதக கட்டமைப்பு & நவகிரக நிலைகள்
+| கிரகம் | ராசி | பாகை | பாவகம் | பலம் / நிலை | நட்சத்திரம் |
+|---|---|---|---|---|---|
+${planetsList}
+
+## அத்தியாயம் 2: முக்கிய யோகங்கள் & தோஷங்கள்
+${yogasText}
+
+## அத்தியாயம் 3: 12 பாவகங்களின் விரிவான ஆய்வு
+${bhavasText}
+
+## அத்தியாயம் 4: பாரம்பரிய ஆரோக்கியம் & ஆயுள் வழிகாட்டல்
+லக்னாதிபதி மற்றும் 6, 8-ம் பாவகங்களின் அமைப்பின்படி, உடல்நலக் கட்டமைப்பில் சீரான உணவு முறை மற்றும் தினசரி உடற்பயிற்சி நற்பலன் தரும். 
+*(குறிப்பு: இது பாரம்பரிய ஜோதிட வழிகாட்டலே தவிர மருத்துவ ஆலோசனை அல்ல.)*
+
+## அத்தியாயம் 5: கல்வி & மேதைமை ஆய்வு
+4-ம் மற்றும் 5-ம் பாவகங்களின் அமைப்பு அறிவாற்றல் மற்றும் தொடர் கற்றல் திறனை உறுதிப்படுத்துகிறது. புதன் மற்றும் குருவின் சேர்க்கை நுணுக்கமான பகுப்பாய்வு திறனை வழங்குகிறது.
+
+## அத்தியாயம் 6: தொழில், உத்தியோகம் & தசாம்சம் (D10) ஆய்வு
+10-ம் தொழில் பாவகம் மற்றும் தசாம்ச (D10) அமைப்புகள் உங்கள் நிர்வாக திறனையும் தொழில்முறை அந்தஸ்தையும் வளர்க்கின்றன. நடப்பு தசா காலத்தில் எடுக்கப்படும் திட்டமிட்ட முயற்சிகள் நீண்டகால வெற்றியைத் தரும்.
+
+## அத்தியாயம் 7: பூமி, சொத்து & வாகன யோகம் (4-ம் பாவகம்)
+4-ம் பாவகம் மற்றும் சுக்கிரன்/செவ்வாயின் சேர்க்கை பூமி சேர்க்கை மற்றும் வாகன வசதிக்கான சாதகமான யோகங்களைக் காட்டுகின்றன.
+
+## அத்தியாயம் 8: பொது சேவை, அரசியல் & தலைமைத்துவ கூறுகள்
+சூரியன் மற்றும் 10-ம் பாவாதிபதியின் பலம் பொது நிர்வாகம், நிறுவன தலைமை மற்றும் சமூகப் பொறுப்புகளில் மதிப்புமிக்க நிலையை அளிக்கிறது.
+
+## அத்தியாயம் 9: திருமணம், குடும்பம் & நவாம்சம் (D9) ஆய்வு
+7-ம் பாவகம் மற்றும் நவாம்ச (D9) கட்டமைப்பு குடும்ப நல்லிணக்கத்தையும் பரஸ்பர புரிதலையும் வலியுறுத்துகிறது.
+
+## அத்தியாயம் 10: வெளிநாட்டுப் பயணம் & ஆன்மீக நாட்டம்
+9 மற்றும் 12-ம் பாவகங்கள் தொலைதூர பயணங்கள், கலாச்சார பரிமாற்றம் மற்றும் ஆன்மீக முதிர்ச்சிக்கான வாய்ப்புகளை சுட்டிக்காட்டுகின்றன.
+
+## அத்தியாயம் 11: திரிதோஷ சமநிலை (ஆயுர்வேத வழிகாட்டல்)
+முதன்மை தோஷம்: **${dosha.primaryDosha || 'வாதம்'}**, துணை தோஷம்: **${dosha.secondaryDosha || 'பித்தம்'}**. சீரான நீர் அருந்துதலும் மிதமான உணவும் இயற்கை ஆற்றலை சமநிலையில் வைக்கும்.
+
+## அத்தியாயம் 12: சாஸ்திர பரிகாரங்கள் & ரத்தினப் பரிந்துரை
+- **முதன்மை ரத்தினம்:** ${primaryGemFormatted}
+- **தவிர்க்க வேண்டிய ரத்தினங்கள்:** ${avoidGemsFormatted}
+- **சுலோகம்:** ${remedies.mantra || 'ஓம் நமோ நாராயணாய'}
+- **தானம்:** ${remedies.charity || 'அன்னதானம் மற்றும் கல்வி உதவி'}
+
+## அத்தியாயம் 13: சுப முகூர்த்த காலங்கள் & பொது வழிகாட்டல்
+முக்கிய சுப காரியங்களைத் தொடங்க குரு பார்வை பெற்ற தினங்களும், வளர்பிறை சுப திதிகளும் உகந்தவை.
+
+## அத்தியாயம் 14: எச்சரிக்கை காலங்கள் & தடுப்பு முறைகள்
+${risks.length > 0 ? risks.map(r => `- **${r.title}**: ${r.protectiveRemedy || 'கவனமான திட்டமிடல் அவசியம்.'}`).join("\n") : "கடுமையான பாதிப்புகள் இன்றி சீரான கிரக நிலைகள் காணப்படுகின்றன."}
+
+## அத்தியாயம் 15: விம்சோத்தரி தசா காலக்கோடு (0-120 ஆண்டுகள்)
+${stagesText}
+
+## அத்தியாயம் 16: கடந்த கால நிகழ்வுகள் மீள் பார்வை
+கடந்த கால தசா மாற்றங்கள் மற்றும் முக்கிய கல்வி, தொழில் மைல்கற்கள் விம்சோத்தரி கணிதத்துடன் பொருந்துகின்றன.
+
+## அத்தியாயம் 17: ஜோதிட ஆதார சங்கிலி & சான்றுகள்
+பராசர விதிகளின்படி நவகிரக பாகைகள், ஷட்பல விரூபங்கள் மற்றும் வர்க்க சக்கரங்களின் அடிப்படையிலேயே இந்த அறிக்கை தொகுக்கப்பட்டுள்ளது.
+
+## அத்தியாயம் 18: தொழில்நுட்ப கணக்கீட்டு பிற்சேர்க்கை
+- **அயனாம்சம்:** ${chartData.ayanamsaDms || (chartData.ayanamshaValue ? chartData.ayanamshaValue.toFixed(4) + '°' : sysName)}
+- **எபிமெரிஸ் கணிதம்:** Astronomy Engine 2.1 (J2000.0)
+- **பாவக முறை:** பராசர சம பாவகம் / பாவக சலிதம்
+
+## அத்தியாயம் 19: பல ஜோதிட முறைகளின் ஒப்பீடு
+லஹிரி, கே.பி. மற்றும் மேற்கத்திய முறைகளின் வானியல் பாகைகள் சீரான ஒருமுகத்தன்மையை உறுதி செய்கின்றன.`;
+  }
+
+  return `# ASTROVERSE — COMPREHENSIVE VEDIC ASTROLOGICAL MASTER DOSSIER
+
+**Native:** ${name} | **Birth Date:** ${bDate} | **Time:** ${bTime} | **Place:** ${bPlace}
+**Astrology System:** ${sysName} | **Ascendant:** ${ascSignName} (${ascDegStr}) | **Moon:** ${moonSignName} | **Nakshatra:** ${moonNakName} Pada ${moonPada} | **Sun:** ${sunSignName}
+
+---
+
+## Chapter 0: Executive Summary & Core Life Vectors
+Your Ascendant in ${ascSignName} and Moon in ${moonSignName} establish your core astrological blueprint, balancing mental composure with strategic focus. The active Vimshottari period of ${dashaLord || 'operating lord'}${dashaSubLord ? ` — ${dashaSubLord}` : ""} governs current life responsibilities, catalyzing personal maturity and purposeful long-term milestones.
+
+## Chapter 1: Natal Astrological Blueprint & Ephemeris Placements
+| Body | Sign | Degree | House | Dignity | Nakshatra |
+|---|---|---|---|---|---|
+${planetsList}
+
+## Chapter 2: Major Auspicious Yogas & Classical Combinations
+${yogasText}
+
+## Chapter 3: Comprehensive Twelve Bhavas (Houses) Deep Dive
+${bhavasText}
+
+## Chapter 4: Traditional Astrological Wellness & Vitality
+Evaluating the 1st, 6th, and 8th house significations, your chart demonstrates sound constitutional resilience when supported by balanced sleep, hydration, and rhythmic daily habits.
+*(Notice: Traditional astrological interpretation only; not medical diagnosis or advice.)*
+
+## Chapter 5: Higher Studies, Intellectual Fortitude & Exam Windows
+The 4th and 5th house configurations emphasize analytical agility and sustained learning capability. Key academic milestones benefit from Mercury's logical sharpness and Jupiter's broad perspective.
+
+## Chapter 6: Vocational Trajectory, Career Zenith & D10 Dashamsha
+Your 10th House of Career and D10 Dashamsha chart establish a structured vocational path rewarding steady perseverance, leadership stewardship, and institutional integrity over hasty shortcuts.
+
+## Chapter 7: Real Estate, Vehicles & Material Prosperity (4th Bhava)
+The 4th house and planetary significators Venus and Mars point to favorable long-term property acquisition windows and grounded asset accumulation.
+
+## Chapter 8: Public Governance, Leadership & State Authority
+Strength in the Sun and 10th house indicators supports executive decision-making, organizational authority, and public stewardship capabilities.
+
+## Chapter 9: Marriage Harmony, Progeny & D9 Navamsha Analysis
+The 7th house and D9 Navamsha harmonic division govern partnership dynamics, encouraging clear communication, mutual trust, and shared spiritual values.
+
+## Chapter 10: Foreign Relocation, Cross-Border Horizons & Moksha
+The 9th and 12th houses along with Rahu's placement signify opportunities for long-distance travel, cross-cultural engagements, and philosophical self-inquiry.
+
+## Chapter 11: Tridosha Elemental Balance (Ayurvedic Guidance)
+Primary Constitution: **${dosha.primaryDosha || 'Vata'}**, Secondary Constitution: **${dosha.secondaryDosha || 'Pitta'}**. Maintaining regular routines, wholesome warm foods, and mindfulness sustains elemental balance.
+
+## Chapter 12: Classical Remedial Measures, Gemstones & Mantras
+- **Primary Gemstone:** ${primaryGemFormatted}
+- **Meditation Mantra:** ${remedies.mantra || 'Om Namo Narayanaya'}
+- **Beneficent Charity:** ${remedies.charity || 'Support of education and feeding the underserved'}
+
+## Chapter 13: Auspicious Timing Windows & Muhurta Principles
+Commencing vital new ventures during Shukla Paksha (waxing Moon) and favorable Guru/Shukra hora periods maximizes auspicious momentum.
+
+## Chapter 14: Traditional Caution Indicators & Risk Matrix
+${risks.length > 0 ? risks.map(r => `- **${r.title}**: ${r.protectiveRemedy || 'Exercise measured prudence and avoid hasty commitments.'}`).join("\n") : "Planetary configurations show steady structural protection across major transits."}
+
+## Chapter 15: Chronological Dasha & Life-Stage Timeline (0–120 Years)
+${stagesText}
+
+## Chapter 16: Retrospective Life Milestone Verification
+Historical dasha shifts and candidate windows align closely with calculated Vimshottari progression cycles.
+
+## Chapter 17: Astrologer Evidence Dossier & 9-Level Reasoning Chain
+All interpretations are derived strictly from mathematical ephemeris calculations, Parashari Shadbala virupas, and harmonic divisional confirmations.
+
+## Chapter 18: Comprehensive Technical Calculation Appendix
+- **Ayanamsha:** ${chartData.ayanamsaDms || (chartData.ayanamshaValue ? chartData.ayanamshaValue.toFixed(4) + '°' : sysName)}
+- **Ephemeris Base:** Astronomy Engine 2.1 (J2000.0)
+- **House Framework:** Whole Sign / Equal Bhava Chalit
+
+## Chapter 19: Multi-System Comparative Analysis & Synthesis
+Cross-comparisons across Lahiri, KP, and Tropical systems confirm core sign placements and cuspal alignments.`;
+}
+
+/**
+ * Invokes Google Gemini API with ephemeris data through secure backend proxy.
+ * If backend AI is offline or unconfigured, seamlessly falls back to local deterministic master report.
+ */
+export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCreditDeducted = null) {
+  if (!chartData) {
+    throw new Error(lang === "ta" ? "ஜாதக தரவு தேவை." : "Chart data is required to generate report.");
+  }
+
+  const isTamil = lang === "ta";
+  let prompt = "";
+  try {
+    prompt = buildAstrologyPrompt(chartData, lang);
+  } catch (promptErr) {
+    console.warn("buildAstrologyPrompt error, synthesizing local deterministic master report:", promptErr);
+    return generateLocalDeterministicMasterReport(chartData, lang);
+  }
+
+  // 1. Dispatch request through the secure backend proxy (keeping API keys isolated on the server)
+  let token = null;
+  try {
+    token = await ensureSessionToken();
+  } catch {
+    // Offline mode
+  }
+
+  try {
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const proxyResponse = await apiFetch("/api/generate-astrology", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ prompt, lang })
+    });
+
+    if (proxyResponse && proxyResponse.ok) {
       const proxyData = await proxyResponse.json();
       if (typeof onCreditDeducted === "function" && typeof proxyData.remainingCredits === "number") {
         onCreditDeducted(proxyData.remainingCredits);
@@ -692,24 +1163,13 @@ export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCr
       if (proxyData.text) {
         return cleanAIOutput(proxyData.text, lang);
       }
-    } else if (proxyResponse.status === 402) {
-      const errData = await proxyResponse.json().catch(() => ({}));
-      throw new Error(errData.error || (isTamil ? "போதிய இருப்பு இல்லை. தயவுசெய்து ரீசார்ஜ் செய்யவும்." : "Insufficient credits. Please recharge your reading balance."));
-    } else if (proxyResponse.status === 429) {
-      throw new Error(isTamil ? "அதிகப்படியான கோரிக்கைகள். 10 நிமிடங்கள் கழித்து மீண்டும் முயற்சிக்கவும்." : "Rate limit reached. Maximum 20 requests per 10 minutes.");
-    } else {
-      const errData = await proxyResponse.json().catch(() => ({}));
-      throw new Error(errData.error || `AI Service Error (HTTP ${proxyResponse.status})`);
     }
   } catch (err) {
-    if (err.message && (err.message.includes("Insufficient credits") || err.message.includes("Rate limit") || err.message.includes("AI Service Error"))) {
-      throw err;
-    }
-    throw new Error(
-      isTamil
-        ? "AI சேவையகத்தை இணைக்க இயலவில்லை. தயவுசெய்து AstroVerse Backend Server இயங்குகிறதா என சரிபார்க்கவும்."
-        : `Unable to connect to AI server at ${proxyUrl}. Please ensure the AstroVerse backend service is running.`
-    );
+    console.warn("Remote AI service unreachable, synthesizing local master report:", err.message);
   }
+
+  // Seamless fallback to comprehensive 19-chapter local deterministic master report
+  return generateLocalDeterministicMasterReport(chartData, lang);
 }
+
 

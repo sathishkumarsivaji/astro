@@ -1,27 +1,61 @@
 /**
- * ASTROVERSE — Independent Swiss Ephemeris & Astronomical Benchmark Suite
+ * ASTROVERSE — Independent Swiss Ephemeris 2.10.03 Astronomical Benchmark Suite
  *
  * Validates planetary longitudes, Ascendant, Midheaven (MC), and Lunar Nodes
- * against authoritative Swiss Ephemeris (VSOP87 / ELP2000-82 / JPL DE406)
- * reference coordinates across diverse epochs (1947, 1994, 2000, 2024, 2026, 2050).
+ * against authoritative Swiss Ephemeris 2.10.03 / JPL DE431 reference coordinates
+ * locked in the canonical dataset (`test_fixtures/swiss_ephemeris_2_10_03_reference.json`).
  *
- * Computes exact Mean Absolute Error (MAE) and Maximum Arcsecond Residual.
+ * Computes exact Mean Absolute Error (MAE), Median, and Maximum Arcsecond Residual.
  */
 
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { calculatePlanetaryPositions } from "./src/services/astroEngine.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const FIXTURE_PATH = path.resolve(__dirname, "test_fixtures/swiss_ephemeris_2_10_03_reference.json");
+
+export const PINNED_SWISS_FIXTURE_SHA256 = "4dd3b7156aeeba6243e6d4eefa11be3bbf448e72b7cbbf2d71c7c8084146f70b";
+
+if (!fs.existsSync(FIXTURE_PATH)) {
+  console.error(`❌ Reference fixture file missing at: ${FIXTURE_PATH}`);
+  process.exit(1);
+}
+
+const fixtureRaw = fs.readFileSync(FIXTURE_PATH, "utf8");
+const sha256 = crypto.createHash("sha256").update(fixtureRaw).digest("hex");
+
+if (sha256 !== PINNED_SWISS_FIXTURE_SHA256) {
+  console.error(`❌ TAMPER / INTEGRITY ERROR: Fixture SHA-256 ${sha256} does not match expected ${PINNED_SWISS_FIXTURE_SHA256}`);
+  process.exit(1);
+}
+
+const canonicalData = JSON.parse(fixtureRaw);
+
+console.log("\n" + "=".repeat(70));
+console.log(" ASTROVERSE INDEPENDENT SWISS EPHEMERIS 2.10.03 BENCHMARK SUITE");
+console.log("=".repeat(70));
+console.log(`Provenance:      ${canonicalData.provenance.source}`);
+console.log(`Ephemeris Model: ${canonicalData.provenance.ephemerisSource}`);
+console.log(`Generator:       ${canonicalData.provenance.compiler}`);
+console.log(`SHA-256:         ${sha256} (Verified against pinned constant)`);
+console.log(`Benchmarks:      ${canonicalData.benchmarks.length} epochs loaded\n`);
 
 let passed = 0;
 let failed = 0;
-const planetErrors = {};
+const bodyErrors = {};
 
 function assertMaxError(actualDeg, expectedDeg, maxToleranceArcSec, label) {
   let diffDeg = Math.abs(actualDeg - expectedDeg);
   if (diffDeg > 180) diffDeg = 360 - diffDeg;
   const diffArcSec = diffDeg * 3600;
 
-  const planetName = label.split(" ")[0];
-  if (!planetErrors[planetName]) planetErrors[planetName] = [];
-  planetErrors[planetName].push(diffArcSec);
+  const key = label.split(" ")[0];
+  if (!bodyErrors[key]) bodyErrors[key] = [];
+  bodyErrors[key].push(diffArcSec);
 
   if (diffArcSec <= maxToleranceArcSec) {
     console.log(`✓ ${label} — residual: ${diffArcSec.toFixed(2)}" (tolerance: ${maxToleranceArcSec}")`);
@@ -32,123 +66,87 @@ function assertMaxError(actualDeg, expectedDeg, maxToleranceArcSec, label) {
   }
 }
 
-console.log("\n=================================================================");
-console.log(" ASTROVERSE INDEPENDENT SWISS EPHEMERIS BENCHMARK SUITE");
-console.log("=================================================================");
+canonicalData.benchmarks.forEach((bm, idx) => {
+  console.log(`\n${idx + 1}. Benchmark Epoch #${idx + 1}: ${bm.name}`);
+  const opts = bm.timezoneId ? { timezoneId: bm.timezoneId } : {};
 
-// ---------------------------------------------------------------------------
-// Epoch 1: 15 August 1994, 06:30 IST (Chennai, India)
-// Swiss Ephemeris Reference (Lahiri Chitrapaksha Sidereal)
-// ---------------------------------------------------------------------------
-console.log("\n1. Benchmark Chart #1: 15 August 1994, 06:30 IST, Chennai (13.0827° N, 80.2707° E)");
-const chart1994 = calculatePlanetaryPositions("1994-08-15", "06:30", 13.0827, 80.2707, "lahiri", 5.5);
+  // 1. Mean Node Model Run
+  const chartMean = calculatePlanetaryPositions(
+    bm.birthDate,
+    bm.birthTime,
+    bm.latitude,
+    bm.longitude,
+    bm.system,
+    bm.utcOffset,
+    { ...opts, nodeModel: "mean" }
+  );
 
-const ref1994 = {
-  Sun: 118.212605,
-  Moon: 218.631909,
-  Mars: 65.063132,
-  Mercury: 120.330796,
-  Jupiter: 193.717470,
-  Venus: 163.928907,
-  Saturn: 316.537199,
-  Rahu: 205.341020,
-  Ascendant: 125.353605
-};
-
-for (const [body, expDeg] of Object.entries(ref1994)) {
-  let actualDeg;
-  if (body === "Ascendant") {
-    actualDeg = chart1994.ascendantLong ?? chart1994.ascendantDeg;
-  } else {
-    const pl = chart1994.planets.find(p => p.name === body);
-    actualDeg = pl.longitude;
+  const majorBodies = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+  for (const bodyName of majorBodies) {
+    const pl = chartMean.planets.find(p => p.name === bodyName);
+    if (!pl) continue;
+    const expData = bm.bodies[bodyName];
+    const expDeg = expData.systemSpecific.longitude;
+    const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec[bodyName]) || 60.0;
+    assertMaxError(pl.longitude, expDeg, tol, `${bodyName} [${bm.name}]`);
   }
-  // Max tolerance: 60 arcseconds (±1 arcminute)
-  assertMaxError(actualDeg, expDeg, 65.0, `${body} [1994 Chennai]`);
-}
 
-// ---------------------------------------------------------------------------
-// Epoch 2: 15 August 1947, 00:00 IST (Indian Independence, New Delhi)
-// ---------------------------------------------------------------------------
-console.log("\n2. Benchmark Chart #2: 15 August 1947, 00:00 IST, New Delhi (28.6139° N, 77.2090° E)");
-const chart1947 = calculatePlanetaryPositions("1947-08-15", "00:00", 28.6139, 77.2090, "lahiri", 5.5);
+  // Mean Rahu
+  const meanRahuPl = chartMean.planets.find(p => p.name === "Rahu");
+  if (meanRahuPl && bm.bodies.Rahu_Mean) {
+    const expMeanRahu = bm.bodies.Rahu_Mean.systemSpecific.longitude;
+    const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec.MeanNode) || 15.0;
+    assertMaxError(meanRahuPl.longitude, expMeanRahu, tol, `Mean Rahu [${bm.name}]`);
+  }
 
-const ref1947 = {
-  Sun: 117.985085,
-  Moon: 93.993886,
-  Mars: 67.452457,
-  Mercury: 103.669588,
-  Jupiter: 205.891000,
-  Venus: 112.557299,
-  Saturn: 110.469348,
-  Rahu: 35.069725
-};
+  // 2. True Node Model Run
+  const chartTrue = calculatePlanetaryPositions(
+    bm.birthDate,
+    bm.birthTime,
+    bm.latitude,
+    bm.longitude,
+    bm.system,
+    bm.utcOffset,
+    { ...opts, nodeModel: "true" }
+  );
 
-for (const [body, expDeg] of Object.entries(ref1947)) {
-  const pl = chart1947.planets.find(p => p.name === body);
-  assertMaxError(pl.longitude, expDeg, 75.0, `${body} [1947 Independence]`);
-}
+  const trueRahuPl = chartTrue.planets.find(p => p.name === "Rahu");
+  if (trueRahuPl && bm.bodies.Rahu_True) {
+    const expTrueRahu = bm.bodies.Rahu_True.systemSpecific.longitude;
+    const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec.TrueNode) || 30.0;
+    assertMaxError(trueRahuPl.longitude, expTrueRahu, tol, `True Rahu [${bm.name} True Node]`);
+  }
 
-// ---------------------------------------------------------------------------
-// Epoch 3: J2000.0 (2000-01-01 12:00 UTC, Greenwich)
-// ---------------------------------------------------------------------------
-console.log("\n3. Benchmark Chart #3: J2000.0 Epoch (2000-01-01 12:00 UTC, 51.4769° N, 0.0000° E)");
-const chart2000 = calculatePlanetaryPositions("2000-01-01", "12:00", 51.4769, 0.0, "tropical", 0.0);
-
-const ref2000Trop = {
-  Sun: 280.368739,
-  Mars: 327.963899,
-  Jupiter: 25.254200,
-  Saturn: 40.396124
-};
-
-for (const [body, expDeg] of Object.entries(ref2000Trop)) {
-  const pl = chart2000.planets.find(p => p.name === body);
-  assertMaxError(pl.longitude, expDeg, 60.0, `${body} [J2000 Tropical]`);
-}
-
-// ---------------------------------------------------------------------------
-// Epoch 4: 15 June 2026, 18:30 EDT (New York DST, America/New_York)
-// ---------------------------------------------------------------------------
-console.log("\n4. Benchmark Chart #4: 15 June 2026, 18:30 EDT, New York (40.7128° N, -74.0060° W, UTC-4)");
-const chart2026 = calculatePlanetaryPositions("2026-06-15", "18:30", 40.7128, -74.0060, "lahiri", -4.0, { timezoneId: "America/New_York" });
-
-const ref2026 = {
-  Sun: 60.603481,
-  Mars: 26.500583,
-  Jupiter: 92.779172,
-  Saturn: 349.138571,
-  Rahu: 309.155549
-};
-
-for (const [body, expDeg] of Object.entries(ref2026)) {
-  const pl = chart2026.planets.find(p => p.name === body);
-  assertMaxError(pl.longitude, expDeg, 90.0, `${body} [2026 New York DST]`);
-}
-
-// 4B. True (Osculating) Node Model Verification vs Swiss Ephemeris 2.10.03 (307.9296°)
-const chart2026True = calculatePlanetaryPositions("2026-06-15", "18:30", 40.7128, -74.0060, "lahiri", -4.0, { timezoneId: "America/New_York", nodeModel: "true" });
-const trueRahu = chart2026True.planets.find(p => p.name === "Rahu").longitude;
-// True node tolerance: 60 arcseconds (1 arcminute) vs Swiss Ephemeris
-assertMaxError(trueRahu, 307.9296, 60.0, "True Rahu [2026 New York DST True Node]");
+  // Ascendant check
+  if (bm.angles && bm.angles.ascendantSystem) {
+    const actualAsc = chartMean.ascendantLong ?? chartMean.ascendantDeg;
+    const expAsc = bm.angles.ascendantSystem;
+    const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec.Ascendant) || 60.0;
+    assertMaxError(actualAsc, expAsc, tol, `Ascendant [${bm.name}]`);
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Benchmark Summary & MAE Computation
 // ---------------------------------------------------------------------------
-console.log("\n" + "=".repeat(65));
-console.log(" SWISS EPHEMERIS ACCURACY RESIDUAL SUMMARY");
-console.log("=".repeat(65));
+console.log("\n" + "=".repeat(70));
+console.log(" SWISS EPHEMERIS 2.10.03 ACCURACY RESIDUAL SUMMARY");
+console.log("=".repeat(70));
 
-for (const [planet, errors] of Object.entries(planetErrors)) {
+for (const [body, errors] of Object.entries(bodyErrors)) {
+  const sorted = [...errors].sort((a, b) => a - b);
   const mae = errors.reduce((sum, e) => sum + e, 0) / errors.length;
+  const median = sorted.length % 2 === 0
+    ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+    : sorted[Math.floor(sorted.length / 2)];
   const maxErr = Math.max(...errors);
-  console.log(`• ${planet.padEnd(12)} — MAE: ${mae.toFixed(2)}" | Max: ${maxErr.toFixed(2)}"`);
+  console.log(`• ${body.padEnd(12)} — MAE: ${mae.toFixed(2)}" | Median: ${median.toFixed(2)}" | Max: ${maxErr.toFixed(2)}"`);
 }
 
-console.log("\n" + "=".repeat(65));
+console.log("\n" + "=".repeat(70));
 if (failed === 0) {
-  console.log(` ALL ${passed} SWISS EPHEMERIS EXTERNAL BENCHMARK CHECKS PASSED!`);
-  console.log(" Planetary accuracy verified within ±1 arcminute standard across all epochs.");
+  console.log(` ALL ${passed} INDEPENDENT SWISS EPHEMERIS 2.10.03 BENCHMARK CHECKS PASSED!`);
+  console.log(" AstroVerse output matched independently generated Swiss Ephemeris reference values.");
 } else {
   console.error(` FAILED: ${failed} benchmark checks exceeded tolerance.`);
   process.exit(1);

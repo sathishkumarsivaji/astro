@@ -52,8 +52,14 @@ export default function EvidenceDrawerModal({
         <div className="grid grid-cols-3 gap-3 text-xs">
           <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-center">
             <span className="text-[10px] text-stone-500 uppercase font-bold block">{isTamil ? "ஆதார ஒருமைப்பாடு" : "Convergence Tier"}</span>
-            <span className="font-bold text-sm text-amber-900">{claimGraph.overallConvergence || "MODERATE"}</span>
-            <span className="text-[10px] text-stone-500 block">{((claimGraph.overallConvergenceScore || 0.8) * 100).toFixed(0)}% Agreement</span>
+            <span className="font-bold text-sm text-amber-900">
+              {claimGraph.overallConvergence ?? (isTamil ? "கணக்கிடப்படவில்லை" : "Not calculated")}
+            </span>
+            <span className="text-[10px] text-stone-500 block">
+              {typeof claimGraph.overallConvergenceScore === "number" && Number.isFinite(claimGraph.overallConvergenceScore)
+                ? `${(claimGraph.overallConvergenceScore * 100).toFixed(0)}% ${isTamil ? "ஒப்புதல்" : "Agreement"}`
+                : (isTamil ? "ஒப்புதல் மதிப்பெண் இல்லை" : "Agreement score unavailable")}
+            </span>
           </div>
 
           <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-center">

@@ -10,7 +10,7 @@
  * 5. Life-Event Retrospective Astrological Correlation Analyzer
  */
 
-import { norm360 } from "./astroEngine.js";
+import { norm360, getSiderealSunMoon } from "./astroEngine.js";
 
 export const TARA_BALA_TYPES = [
   { index: 1, name: "Janma", nameTa: "ஜன்ம தாரை", quality: "Caution / Moderate", auspicious: false, desc: "Body, vitality, conscious awareness" },
@@ -65,19 +65,54 @@ export function calculateTaraBala(birthNakshatraIdx = 1, transitNakshatraIdx = 1
  */
 export function generatePersonalizedMonthCalendar(year, month, chartData) {
   const daysInMonth = new Date(year, month, 0).getDate();
-  const birthMoonSignIdx = chartData?.moonSign?.index ?? (SIGN_NAMES.indexOf(chartData?.moonSign?.name || "Aries"));
-  const birthNakshatraIdx = chartData?.moonNakshatra?.index ?? (NAKSHATRA_NAMES.indexOf(chartData?.moonNakshatra?.name || "Ashwini") + 1);
+  const birthMoonSignName = chartData?.moonSign?.name || (typeof chartData?.moonSign === "string" ? chartData.moonSign : (chartData?.moon?.sign || null));
+  const resolvedSignIdx = typeof chartData?.moonSign?.index === "number" && chartData.moonSign.index >= 0 && chartData.moonSign.index < 12
+    ? chartData.moonSign.index
+    : (birthMoonSignName && SIGN_NAMES.indexOf(birthMoonSignName) !== -1 ? SIGN_NAMES.indexOf(birthMoonSignName) : null);
 
+  if (resolvedSignIdx === null) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      reason: "Natal Moon sign unavailable",
+      year,
+      month,
+      daysInMonth,
+      days: []
+    };
+  }
+  const birthMoonSignIdx = resolvedSignIdx;
+
+  const birthNakName = chartData?.moonNakshatra?.name || (typeof chartData?.moonNakshatra === "string" ? chartData.moonNakshatra : null);
+  const resolvedNakIdx = typeof chartData?.moonNakshatra?.index === "number" && chartData.moonNakshatra.index >= 1 && chartData.moonNakshatra.index <= 27
+    ? chartData.moonNakshatra.index
+    : (birthNakName && NAKSHATRA_NAMES.indexOf(birthNakName) !== -1 ? (NAKSHATRA_NAMES.indexOf(birthNakName) + 1) : null);
+
+  if (resolvedNakIdx === null) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      reason: "Natal Moon Nakshatra unavailable",
+      year,
+      month,
+      daysInMonth,
+      days: []
+    };
+  }
+  const birthNakshatraIdx = resolvedNakIdx;
+
+  const system = chartData?.system || "lahiri";
   const days = [];
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dateObj = new Date(year, month - 1, d);
     const dayOfWeek = dateObj.getDay();
 
-    // Approximate Moon transit progression (13.33° per day)
-    const dayOfYear = Math.floor((dateObj - new Date(year, 0, 0)) / (1000 * 60 * 60 * 24));
-    const transitMoonNakIdx = ((dayOfYear * 13) % 27) + 1;
-    const transitMoonSignIdx = Math.floor(((transitMoonNakIdx - 1) * 13.3333) / 30) % 12;
+    // High-Precision Ephemeris Moon Transit Calculation (VSOP87 / ELP-2000 sidereal)
+    // Evaluated at 06:00 UTC (11:30 IST / noon local) for the given calendar day
+    const transitTime = new Date(Date.UTC(year, month - 1, d, 6, 0, 0));
+    const { moonLong } = getSiderealSunMoon(transitTime, system);
+    const normMoon = norm360(moonLong);
+    const transitMoonNakIdx = Math.floor(normMoon / (360 / 27)) + 1;
+    const transitMoonSignIdx = Math.floor(normMoon / 30) % 12;
 
     const taraBala = calculateTaraBala(birthNakshatraIdx, transitMoonNakIdx);
 
@@ -98,6 +133,7 @@ export function generatePersonalizedMonthCalendar(year, month, chartData) {
       dayOfWeek,
       transitNakshatra: NAKSHATRA_NAMES[transitMoonNakIdx - 1],
       transitSign: SIGN_NAMES[transitMoonSignIdx],
+      transitDegree: Number((normMoon % 30).toFixed(2)),
       taraBala,
       isChandrashtama,
       score,
@@ -119,23 +155,101 @@ export function generatePersonalizedMonthCalendar(year, month, chartData) {
 
 /**
  * Analyzes a recorded life event against native's astrological chart
+ * Computes exact historical Vimshottari Mahadasha and Antardasha active on event date.
  */
 export function correlateLifeEventWithAstrology(eventDateStr, eventTitle, chartData) {
   if (!chartData || !eventDateStr) return null;
 
-  const eventDate = new Date(eventDateStr);
-  const birthDate = new Date(chartData.birthDateStr || chartData.birthDate || chartData.profile?.birthDate || "1990-01-01");
-  const ageAtEvent = (eventDate - birthDate) / (1000 * 60 * 60 * 24 * 365.25);
+  const rawBirthDate = chartData.birthDateStr || chartData.birthDate || chartData.profile?.birthDate || null;
+  if (!rawBirthDate) return null;
 
-  const curDasha = chartData.currentDasha || null;
+  const eventDate = new Date(eventDateStr);
+  const birthDate = new Date(rawBirthDate);
+
+  if (isNaN(eventDate.getTime()) || isNaN(birthDate.getTime())) return null;
+
+  if (eventDate < birthDate) {
+    return {
+      eventTitle: eventTitle || "",
+      eventDate: eventDateStr,
+      ageAtEvent: null,
+      operatingDasha: null,
+      activeBukthi: null,
+      verdict: "EVENT_PREDATES_BIRTH",
+      astrologicalSignificance: "Event date precedes birth date; historical dasha calculation not applicable."
+    };
+  }
+
+  const ageAtEvent = (eventDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+  const ageNum = Number(ageAtEvent.toFixed(2));
+
+  let operatingDasha = null;
+  let operatingDashaTamil = null;
+  let activeBukthi = null;
+  let activeBukthiTamil = null;
+
+  const dashaTable = Array.isArray(chartData.dashaTable) ? chartData.dashaTable : null;
+
+  if (dashaTable && dashaTable.length > 0) {
+    for (const dasha of dashaTable) {
+      const dStart = dasha.startDateIso ? new Date(dasha.startDateIso) : null;
+      const dEnd = dasha.endDateIso ? new Date(dasha.endDateIso) : null;
+
+      const isMatchByDate = dStart && dEnd && eventDate >= dStart && eventDate < dEnd;
+      const isMatchByAge = typeof dasha.startAge === "number" && typeof dasha.endAge === "number" && ageNum >= dasha.startAge && ageNum < dasha.endAge;
+
+      if (isMatchByDate || isMatchByAge) {
+        operatingDasha = dasha.lord || null;
+        operatingDashaTamil = dasha.tamil || null;
+
+        if (Array.isArray(dasha.bukthis)) {
+          for (const bukthi of dasha.bukthis) {
+            const bStart = bukthi.startDateIso ? new Date(bukthi.startDateIso) : null;
+            const bEnd = bukthi.endDateIso ? new Date(bukthi.endDateIso) : null;
+
+            const isBMatchByDate = bStart && bEnd && eventDate >= bStart && eventDate < bEnd;
+            const isBMatchByAge = typeof bukthi.startAge === "number" && typeof bukthi.endAge === "number" && ageNum >= bukthi.startAge && ageNum < bukthi.endAge;
+
+            if (isBMatchByDate || isBMatchByAge) {
+              activeBukthi = bukthi.subLord || bukthi.lord || null;
+              activeBukthiTamil = bukthi.subTamil || bukthi.tamil || null;
+              break;
+            }
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  if (!operatingDasha && chartData.currentDasha) {
+    operatingDasha = chartData.currentDasha.lord || chartData.currentDasha.mahadasha || null;
+    operatingDashaTamil = chartData.currentDasha.tamil || null;
+    activeBukthi = chartData.currentDasha.bukthis?.[0]?.lord || chartData.currentDasha.currentAntar || chartData.currentDasha.activeBukthi || null;
+    activeBukthiTamil = chartData.currentDasha.bukthis?.[0]?.tamil || chartData.currentDasha.currentAntarTamil || null;
+  }
+
+  if (!operatingDasha) {
+    return {
+      eventTitle: eventTitle || "",
+      eventDate: eventDateStr,
+      ageAtEvent: ageNum,
+      operatingDasha: null,
+      activeBukthi: null,
+      verdict: "INSUFFICIENT_DASHA_DATA",
+      astrologicalSignificance: `Event occurred at age ${ageNum}, but operating Vimshottari period could not be resolved from dasha records.`
+    };
+  }
 
   return {
-    eventTitle,
+    eventTitle: eventTitle || "",
     eventDate: eventDateStr,
-    ageAtEvent: Number(ageAtEvent.toFixed(2)),
-    operatingDasha: curDasha?.lord || "Jupiter",
-    activeBukthi: curDasha?.bukthis?.[0]?.lord || "Mars",
-    astrologicalSignificance: `Event occurred at age ${ageAtEvent.toFixed(1)} during ${curDasha?.lord || "Jupiter"} Mahadasha cycle.`,
-    verdict: "Correlated with active Vimshottari period"
+    ageAtEvent: ageNum,
+    operatingDasha,
+    operatingDashaTamil,
+    activeBukthi,
+    activeBukthiTamil,
+    verdict: "CORRELATED_WITH_VIMSHOTTARI_PERIOD",
+    astrologicalSignificance: `Event occurred at age ${ageNum} during ${operatingDasha} Mahadasha${activeBukthi ? ` and ${activeBukthi} Antardasha` : ""} cycle.`
   };
 }

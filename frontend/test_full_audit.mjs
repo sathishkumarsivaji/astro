@@ -213,7 +213,8 @@ const uncalibrated = reverseCalculateBirthTimeAndDOB({
   palmProfile: dualPalm,
   answers: {},
   lat: 13.0827,
-  lng: 80.2707
+  lng: 80.2707,
+  tz: 5.5
 });
 assert.strictEqual(uncalibrated.provenance, "system_assumption");
 assert.strictEqual(uncalibrated.verificationProofs.length, 0, "No synthetic verified proofs when 0 answers");
@@ -227,7 +228,8 @@ const userCalibrated = reverseCalculateBirthTimeAndDOB({
     q3_month: "4"
   },
   lat: 13.0827,
-  lng: 80.2707
+  lng: 80.2707,
+  tz: 5.5
 });
 assert.strictEqual(userCalibrated.provenance, "user_confirmed");
 assert(userCalibrated.verificationProofs.length > 0);
@@ -1041,6 +1043,7 @@ const reconstructed = reverseCalculateBirthTimeAndDOB({
   answeredEvents: [{ id: "q2_10th_board", month: 5, year: 2010, fractionalDate: 2010.375, category: "10th Board", bhava: "4th House", lineCorrelated: "Upper branch", isAnchor: true }],
   lat: 13.0827,
   lng: 80.2707,
+  tz: 5.5,
   lang: "en"
 });
 assert.strictEqual(reconstructed.reconstructionMode, "experimental_heuristic_reconstruction");

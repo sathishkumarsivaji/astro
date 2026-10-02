@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MessageSquareQuote, HelpCircle, Sparkles, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import FollowUpQuestionInput from "./FollowUpQuestionInput.jsx";
 import FollowUpConversation from "./FollowUpConversation.jsx";
@@ -13,19 +13,18 @@ export default function FollowUpQuestions({
   multiSystemBundle = null,
   lang = "en",
   onSelectChapter = null,
-  onCreditDeducted = null
+  onCreditDeducted = null,
+  initialQuestion = null
 }) {
   const isTamil = lang === "ta";
   const isFullReport = activeSection === "all" || activeSection === "fullReport";
 
   const chartId = chartData?.reportId || `chart_${(chartData?.birthDate || chartData?.date || "").toString()}_${chartData?.ascendantLong || chartData?.ascendant?.longitude || 0}`;
-  const effectiveSystemId = (
-    systemId ||
-    chartData?.system?.id ||
-    chartData?.system ||
-    chartData?.profile?.system ||
-    "lahiri"
-  ).toLowerCase();
+  const rawSys = systemId ||
+    (typeof chartData?.system === "object"
+      ? (chartData.system?.id || chartData.system?.name || "lahiri")
+      : (chartData?.system || chartData?.profile?.system || "lahiri"));
+  const effectiveSystemId = String(rawSys || "lahiri").toLowerCase();
 
   const storageKey = `astro_followup_${chartId}_${effectiveSystemId}_${activeSection}`;
 
@@ -147,6 +146,20 @@ export default function FollowUpQuestions({
       setIsLoading(false);
     }
   };
+
+  const lastAskedRef = useRef(null);
+
+  useEffect(() => {
+    if (
+      initialQuestion &&
+      typeof initialQuestion === "string" &&
+      initialQuestion.trim().length > 0 &&
+      lastAskedRef.current !== initialQuestion.trim()
+    ) {
+      lastAskedRef.current = initialQuestion.trim();
+      handleAskQuestion(initialQuestion.trim());
+    }
+  }, [initialQuestion]);
 
   if (!isApplicable) {
     return null;

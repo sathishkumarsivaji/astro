@@ -32,7 +32,8 @@ import {
   ShieldAlert,
   Calendar,
   Sun,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import {
   generateAIDeepAstrologyReport
@@ -40,13 +41,16 @@ import {
 import {
   calculateExecutiveSummary,
   calculatePredictionReasoningChain,
-  reconcileEvidenceContradictions,
-  calculateMultiSystemBundle,
-  CALCULATION_CONVENTIONS
+  calculateMultiSystemBundle
 } from "../../services/astroEngine";
+import { generateAstrologyReportPDF } from "../../services/reportPdfService";
 import { getChaptersForSystem } from "../../config/reportChapters";
+import {
+  toTamilPlanet,
+  toTamilRasi
+} from "../../services/tamilAstrologyUtils";
 import FollowUpQuestions from "./FollowUpQuestions";
-import { jsPDF } from "jspdf";
+import ExpertPredictionReportView from "./ExpertPredictionReportView";
 
 function CertaintyBadge({ type = "calculated", isTamil = false }) {
   if (type === "calculated") {
@@ -101,7 +105,39 @@ function AstrologicalGlossaryTooltip({ term, explanation, isTamil = false }) {
   );
 }
 
-export default function DetailedReportModal({ isOpen, onClose, chartData, lang = "en", onCreditDeducted = null, isExpertMode = false }) {
+// Safe Accessors for Core Astronomical Identifiers
+const getSignName = (s, fallback = "N/A") => {
+  if (!s) return fallback;
+  if (typeof s === "string") return s;
+  return s.name || s.sign || fallback;
+};
+const getSignTamil = (s, fallback = "N/A") => {
+  if (!s) return fallback;
+  if (typeof s === "string") return s;
+  return s.tamil || s.name || fallback;
+};
+const getNakName = (n, fallback = "N/A") => {
+  if (!n) return fallback;
+  if (typeof n === "string") return n;
+  return n.name || fallback;
+};
+const getNakTamil = (n, fallback = "N/A") => {
+  if (!n) return fallback;
+  if (typeof n === "string") return n;
+  return n.tamil || n.name || fallback;
+};
+const getNakPada = (n) => {
+  if (!n) return "-";
+  if (typeof n === "object" && n.pada !== undefined && n.pada !== null) return n.pada;
+  return "-";
+};
+const getNakRuler = (n) => {
+  if (!n) return "-";
+  if (typeof n === "object" && n.ruler) return n.ruler;
+  return "-";
+};
+
+export default function DetailedReportModal({ isOpen, onClose, chartData, lang = "en", onCreditDeducted = null, isExpertMode = false, onLoadDemoChart = null }) {
   const [reportTier, setReportTier] = useState("detailed"); // "short" or "detailed"
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("algorithmic"); // "algorithmic" or "ai"
@@ -112,12 +148,12 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     setAudienceMode(isExpertMode ? "astrologer" : "client");
   }, [isExpertMode]);
 
-  const chartId = chartData?.reportId || `chart_${(chartData?.birthDate || chartData?.date || "").toString()}_${chartData?.ascendantLong || chartData?.ascendant?.longitude || 0}`;
+  const chartId = chartData?.reportId || (chartData?.birthDate || chartData?.date ? `chart_${String(chartData.birthDate || chartData.date)}_${chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? "na"}` : "chart_generic");
   const milestoneStorageKey = `astro_milestones_${chartId}`;
 
   const [confirmedMilestones, setConfirmedMilestones] = useState(() => {
     try {
-      const saved = typeof window !== "undefined" && window.localStorage ? localStorage.getItem(milestoneStorageKey) : null;
+      const saved = typeof window !== "undefined" && window.sessionStorage ? sessionStorage.getItem(milestoneStorageKey) : null;
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
@@ -128,11 +164,11 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     setConfirmedMilestones(prev => {
       const updated = { ...prev, [mId]: !prev[mId] };
       try {
-        if (typeof window !== "undefined" && window.localStorage) {
-          localStorage.setItem(milestoneStorageKey, JSON.stringify(updated));
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          sessionStorage.setItem(milestoneStorageKey, JSON.stringify(updated));
         }
       } catch (err) {
-        console.warn("Failed to persist milestone confirmation to localStorage", err);
+        console.warn("Failed to persist milestone confirmation to sessionStorage", err);
       }
       return updated;
     });
@@ -143,6 +179,52 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const [aiReportText, setAiReportText] = useState("");
   const [aiError, setAiError] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // PDF Generation State
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfProgressText, setPdfProgressText] = useState("");
+
+  const isTamil = lang === "ta";
+
+  const ascName = getSignName(chartData?.ascendantSign, chartData?.ascendant?.sign || "N/A");
+  const ascTamil = getSignTamil(chartData?.ascendantSign, chartData?.ascendant?.signTamil || "N/A");
+  const moonName = getSignName(chartData?.moonSign, chartData?.moon?.sign || "N/A");
+  const moonTamil = getSignTamil(chartData?.moonSign, chartData?.moon?.signTamil || "N/A");
+  const sunName = getSignName(chartData?.sunSign, chartData?.sun?.sign || "N/A");
+  const sunTamil = getSignTamil(chartData?.sunSign, chartData?.sun?.signTamil || "N/A");
+  const nakName = getNakName(chartData?.moonNakshatra, chartData?.moon?.nakshatra || "N/A");
+  const nakTamil = getNakTamil(chartData?.moonNakshatra, chartData?.moon?.nakshatraTamil || "N/A");
+  const nakPada = getNakPada(chartData?.moonNakshatra);
+  const nakRuler = getNakRuler(chartData?.moonNakshatra);
+
+  const atmakaraka = chartData?.atmakaraka || (chartData?.jaiminiKarakas && chartData?.jaiminiKarakas[0]) || null;
+  const execSummary = React.useMemo(() => {
+    const rawExecSummary = chartData ? (chartData.executiveSummary || calculateExecutiveSummary(chartData, lang) || {}) : {};
+    return {
+      coreProfile: rawExecSummary.coreProfile || {
+        lagna: isTamil ? ascTamil : ascName,
+        moonSign: isTamil ? moonTamil : moonName,
+        sunSign: isTamil ? sunTamil : sunName,
+        nakshatra: isTamil ? `${nakTamil} பாதம் ${nakPada}` : `${nakName} Pada ${nakPada}`,
+        atmakaraka: atmakaraka ? `${atmakaraka.planet} (${isTamil ? (atmakaraka.signTamil || atmakaraka.sign) : atmakaraka.sign})` : "N/A"
+      },
+      strongestThemes: rawExecSummary.strongestThemes || [],
+      currentLifePhase: rawExecSummary.currentLifePhase || {
+        activeMahadasha: isTamil ? "செயலில் உள்ள தசை" : "Active Mahadasha",
+        activeAntardasha: isTamil ? "செயலில் உள்ள புக்தி" : "Active Antardasha",
+        ageRange: "N/A",
+        theme: isTamil ? "காலக்கட்ட கடமைகள்" : "Karmic Maturation & Key Life-Stage Responsibilities"
+      },
+      birthTimeReliability: rawExecSummary.birthTimeReliability || rawExecSummary.birthTimeSensitivity || {
+        status: isTamil ? "குறைந்த எல்லை உணர்திறன்" : "Low Boundary Sensitivity",
+        lagnaDegree: "N/A",
+        d60Sensitivity: "Shashtiamsha (D60) shifts sign every ~2 minutes.",
+        d9Sensitivity: "Navamsha (D9) shifts sign every ~13.3 minutes."
+      },
+      nextImportantWindows: rawExecSummary.nextImportantWindows || [],
+      keyCautions: rawExecSummary.keyCautions || []
+    };
+  }, [chartData, lang, isTamil, ascTamil, ascName, moonTamil, moonName, sunTamil, sunName, nakTamil, nakName, nakPada, atmakaraka]);
 
   const multiSystemBundle = React.useMemo(() => {
     if (!isOpen || !chartData) return null;
@@ -172,53 +254,114 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     }
   }, [isOpen, chartData]);
 
-  if (!isOpen || !chartData) return null;
+  const dynamicOverview = React.useMemo(() => {
+    if (!chartData) return null;
+    // 1. Core Nature: Lagna, Lagna Lord, Moon Sign & Nakshatra
+    const lagnaLord = chartData.ascendantLord ?? chartData.ascendant?.lord ?? chartData.ascendantSign?.ruler ?? null;
+    const lagnaSign = ascName;
+    const moonSg = moonName;
+    const moonNak = nakName;
+
+    // Find strongest planet by Shadbala Virupas
+    let topPlanet = null;
+    let topVirupas = null;
+    if (Array.isArray(chartData.shadbala) && chartData.shadbala.length > 0) {
+      const sorted = [...chartData.shadbala].filter(Boolean).sort((a,b) => (b.virupas ?? b.totalRupas ?? -Infinity) - (a.virupas ?? a.totalRupas ?? -Infinity));
+      if (sorted[0] && (sorted[0].planet || sorted[0].name)) {
+        topPlanet = sorted[0].planet ?? sorted[0].name;
+        topVirupas = sorted[0].virupas ?? sorted[0].totalRupas ?? null;
+        if (typeof topVirupas === "number") topVirupas = Math.round(topVirupas);
+      }
+    }
+
+    // Find key yogas
+    const prominentYogas = (Array.isArray(chartData.yogas) ? chartData.yogas : (Array.isArray(chartData.detectedYogas) ? chartData.detectedYogas : []))
+      .slice(0, 2)
+      .map(y => (typeof y === "string" ? y : (y.name || y.nameTa || y.title)))
+      .filter(Boolean);
+    const yogaText = prominentYogas.length > 0 ? prominentYogas.join(" & ") : null;
+
+    // Active Mahadasha & Antardasha
+    const activeMaha = execSummary?.currentLifePhase?.activeMahadasha ?? chartData.currentDasha?.mahadasha ?? chartData.currentDasha?.lord ?? null;
+    const activeAntar = execSummary?.currentLifePhase?.activeAntardasha ?? chartData.currentDasha?.antardasha ?? chartData.currentDasha?.currentAntar ?? null;
+
+    return {
+      core: {
+        fact: isTamil 
+          ? `கணக்கீடு: லக்னம் ${ascTamil || "கணக்கிடப்படவில்லை"}${lagnaLord ? ` (அதிபதி: ${lagnaLord})` : ""}, சந்திரன் ${moonTamil || "கணக்கிடப்படவில்லை"}${nakTamil ? ` (${nakTamil} நட்சத்திரம்)` : ""}.${topPlanet ? ` அதிக ஷட்பலம்: ${topPlanet}${topVirupas !== null ? ` (${topVirupas} விரூபங்கள்)` : ""}.` : ""}`
+          : `Calculated Fact: ${lagnaSign || "N/A"} Ascendant${lagnaLord ? ` ruled by ${lagnaLord}` : ""}, with Moon in ${moonSg || "N/A"}${moonNak ? ` (${moonNak} nakshatra)` : ""}.${topPlanet ? ` Highest Shadbala planet: ${topPlanet}${topVirupas !== null ? ` (${topVirupas} virupas)` : ""}.` : ""}`,
+        tradition: isTamil
+          ? "சாஸ்திர விளக்கம்: லக்னாதிபதியும் உச்ச பலம் பெற்ற கிரகமும் உங்கள் ஆன்ம உறுதி, தலைமைப் பண்பு மற்றும் ஒழுங்கை வழிநடத்துகின்றன."
+          : "Traditional View: The Ascendant lord in harmony with peak Shadbala planet grants structural fortitude, self-determination, and purposeful drive.",
+        plain: isTamil
+          ? "எளிய பொருள்: நீங்கள் இயல்பாகவே விடாமுயற்சியும், தெளிவான தொலைநோக்குப் பார்வையும் கொண்டவர். சவால்களை நிதானமாக எதிர்கொள்ளும் ஆற்றல் உண்டு."
+          : "Plain English: You are a determined builder with innate strategic clarity. You naturally lead with calm resilience and principled focus."
+      },
+      phase: {
+        fact: isTamil
+          ? (activeMaha && activeAntar ? `கணக்கீடு: நடப்பு காலக்கட்டம் ${activeMaha} மகா தசை - ${activeAntar} அந்தர்தசை.` : "கணக்கீடு: நடப்பு விம்சோத்தரி தசா விவரங்கள் கணக்கிடப்படவில்லை.")
+          : (activeMaha && activeAntar ? `Calculated Fact: Currently traversing ${activeMaha} Mahadasha — ${activeAntar} Antardasha.` : "Calculated Fact: Current Vimshottari Dasha period not available."),
+        tradition: isTamil
+          ? (activeMaha ? `சாஸ்திர விளக்கம்: விம்சோத்தரி தசா விதிகளின்படி ${activeMaha} தசை தொழில் நிலையை உறுதிப்படுத்தவும், நீண்ட கால இலக்குகளை கட்டமைக்கவும் வழிவகுக்கும்.` : "சாஸ்திர விளக்கம்: விம்சோத்தரி தசா விதிகள் வாழ்க்கை காலக்கட்ட கடமைகளை வரையறுக்கின்றன.")
+          : (activeMaha ? `Traditional View: Classical Vimshottari principles dictate this phase catalyzes foundational career consolidation, stewardship, and personal maturity under ${activeMaha} lordship.` : "Traditional View: Classical Vimshottari principles dictate life seasons catalyze foundational development."),
+        plain: isTamil
+          ? "எளிய பொருள்: இந்த காலம் உங்கள் வாழ்க்கை லட்சியங்களை உறுதியாக அமைத்துக் கொள்ளவும், தேவையில்லாத அலைச்சல்களைக் குறைத்து இலக்கில் கவனம் செலுத்தவும் உகந்தது."
+          : "Plain English: This life season rewards steady perseverance and disciplined foundations over short-term shortcuts. Focus on master skills and stability."
+      },
+      advice: {
+        fact: isTamil
+          ? (yogaText ? `கணக்கீடு: முக்கிய சுப யோகம்: ${yogaText}.` : "கணக்கீடு: சுப யோக விவரங்கள் முழு அறிக்கையில் பகுப்பாய்வு செய்யப்பட்டுள்ளன.")
+          : (yogaText ? `Calculated Fact: Prominent Chart Yoga: ${yogaText}.` : "Calculated Fact: Chart yoga combinations are analyzed in the full dossier."),
+        tradition: isTamil
+          ? "சாஸ்திர விளக்கம்: சுப யோகங்களின் முழு ஆற்றல் வெளிப்பட மன அமைதியும், நேர்மையான செயல்முறையும் அவசியம்."
+          : "Traditional View: Classical texts advise that yogas flourish when supported by disciplined daily sadhana, mental serenity, and ethical conduct.",
+        plain: isTamil
+          ? "எளிய பொருள்: அவசர முடிவுகளைத் தவிர்த்து, உங்கள் உள்ளுணர்வை நம்பி நிதானமாக முடிவெடுங்கள். தினசரி தியானமும் சீரான ஓய்வும் உங்கள் ஆற்றலை பெருக்கும்."
+          : "Plain English: Prioritize mental stillness and avoid impulsive overextension. Consistent sleep, reflection, and focused daily rituals will multiply your success."
+      }
+    };
+  }, [chartData, ascName, ascTamil, moonName, moonTamil, nakName, nakTamil, isTamil, execSummary]);
+
+  if (!isOpen) return null;
+
+  if (!chartData) {
+    return (
+      <div className="detailed-report-modal-overlay fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-6 md:p-8 rounded-3xl bg-[#FFFDF9] border border-amber-300 shadow-2xl text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 mx-auto flex items-center justify-center">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-serif font-bold text-stone-900">
+            {lang === "ta" ? "ஜாதகத் தரவு காணப்படவில்லை" : "No Birth Chart Loaded"}
+          </h3>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            {lang === "ta"
+              ? "முழுமையான அறிக்கையைக் காண மாதிரி ஜாதகத்தை உடனே ஏற்றவும் அல்லது பிறந்த விவரங்களை உள்ளிடவும்."
+              : "To view the comprehensive astrological report, please calculate your birth chart or load the sample chart."}
+          </p>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            {onLoadDemoChart && (
+              <button
+                onClick={() => onLoadDemoChart()}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{lang === "ta" ? "மாதிரி ஜாதகத்தை ஏற்று & அறிக்கை காண்க" : "Load Sample Chart & View Full Report"}</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs shadow-sm transition-all cursor-pointer"
+            >
+              {lang === "ta" ? "மூடு" : "Close"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const { sunSign, moonSign, ascendantSign, moonNakshatra } = chartData;
-  const isTamil = lang === "ta";
-
-  // Safe Accessors for Core Astronomical Identifiers
-  const getSignName = (s, fallback = "N/A") => {
-    if (!s) return fallback;
-    if (typeof s === "string") return s;
-    return s.name || s.sign || fallback;
-  };
-  const getSignTamil = (s, fallback = "N/A") => {
-    if (!s) return fallback;
-    if (typeof s === "string") return s;
-    return s.tamil || s.name || fallback;
-  };
-  const getNakName = (n, fallback = "N/A") => {
-    if (!n) return fallback;
-    if (typeof n === "string") return n;
-    return n.name || fallback;
-  };
-  const getNakTamil = (n, fallback = "N/A") => {
-    if (!n) return fallback;
-    if (typeof n === "string") return n;
-    return n.tamil || n.name || fallback;
-  };
-  const getNakPada = (n) => {
-    if (!n) return "-";
-    if (typeof n === "object" && n.pada !== undefined && n.pada !== null) return n.pada;
-    return "-";
-  };
-  const getNakRuler = (n) => {
-    if (!n) return "-";
-    if (typeof n === "object" && n.ruler) return n.ruler;
-    return "-";
-  };
-
-  const ascName = getSignName(ascendantSign, chartData.ascendant?.sign || "N/A");
-  const ascTamil = getSignTamil(ascendantSign, chartData.ascendant?.signTamil || "N/A");
-  const moonName = getSignName(moonSign, chartData.moon?.sign || "N/A");
-  const moonTamil = getSignTamil(moonSign, chartData.moon?.signTamil || "N/A");
-  const sunName = getSignName(sunSign, chartData.sun?.sign || "N/A");
-  const sunTamil = getSignTamil(sunSign, chartData.sun?.signTamil || "N/A");
-  const nakName = getNakName(moonNakshatra, chartData.moon?.nakshatra || "N/A");
-  const nakTamil = getNakTamil(moonNakshatra, chartData.moon?.nakshatraTamil || "N/A");
-  const nakPada = getNakPada(moonNakshatra);
-  const nakRuler = getNakRuler(moonNakshatra);
 
   const domain = (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions) || {};
   const yogas = (isTamil ? chartData.detectedYogasTamil : chartData.detectedYogas) || [];
@@ -233,105 +376,18 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const marriagePathway = (isTamil ? chartData.marriagePathwayTamil : chartData.marriagePathway) || {};
   const retroRaw = (isTamil ? (chartData.retrospectiveLifeAuditTamil || chartData.retrospectiveMilestonesTamil) : (chartData.retrospectiveLifeAudit || chartData.retrospectiveMilestones)) || [];
   const retrospectiveAudit = Array.isArray(retroRaw) ? retroRaw : (retroRaw?.milestones || []);
-  const atmakaraka = chartData.atmakaraka || (chartData.jaiminiKarakas && chartData.jaiminiKarakas[0]) || null;
-  const rawExecSummary = chartData.executiveSummary || calculateExecutiveSummary(chartData, lang) || {};
-  const execSummary = {
-    coreProfile: rawExecSummary.coreProfile || {
-      lagna: isTamil ? ascTamil : ascName,
-      moonSign: isTamil ? moonTamil : moonName,
-      sunSign: isTamil ? sunTamil : sunName,
-      nakshatra: isTamil ? `${nakTamil} பாதம் ${nakPada}` : `${nakName} Pada ${nakPada}`,
-      atmakaraka: atmakaraka ? `${atmakaraka.planet} (${isTamil ? (atmakaraka.signTamil || atmakaraka.sign) : atmakaraka.sign})` : "N/A"
-    },
-    strongestThemes: rawExecSummary.strongestThemes || [],
-    currentLifePhase: rawExecSummary.currentLifePhase || {
-      activeMahadasha: isTamil ? "செயலில் உள்ள தசை" : "Active Mahadasha",
-      activeAntardasha: isTamil ? "செயலில் உள்ள புக்தி" : "Active Antardasha",
-      ageRange: "N/A",
-      theme: isTamil ? "காலக்கட்ட கடமைகள்" : "Karmic Maturation & Key Life-Stage Responsibilities"
-    },
-    birthTimeReliability: rawExecSummary.birthTimeReliability || rawExecSummary.birthTimeSensitivity || {
-      status: isTamil ? "குறைந்த எல்லை உணர்திறன்" : "Low Boundary Sensitivity",
-      lagnaDegree: "N/A",
-      d60Sensitivity: "Shashtiamsha (D60) shifts sign every ~2 minutes.",
-      d9Sensitivity: "Navamsha (D9) shifts sign every ~13.3 minutes."
-    },
-    nextImportantWindows: rawExecSummary.nextImportantWindows || [],
-    keyCautions: rawExecSummary.keyCautions || []
-  };
+  const rawAscLong = chartData.ascendant?.longitude ?? chartData.ascendantLong;
+  const hasAscLong = rawAscLong !== null && rawAscLong !== undefined && !isNaN(Number(rawAscLong));
+  const ascLong = hasAscLong ? Number(rawAscLong) : null;
   const birthDataConfidence = chartData.reportEvidencePackage?.birthDataConfidence || {
-    lagnaDegreeInSign: parseFloat(((chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0) % 30).toFixed(2)),
-    boundaryProximityAlert: ((chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0) % 30) < 1.0 || ((chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0) % 30) > 29.0,
-    boundaryNotes: isTamil ? "லக்ன பாகை நிலையாக உள்ளது." : "Ascendant comfortably placed within sign boundary.",
+    lagnaDegreeInSign: ascLong !== null ? parseFloat((ascLong % 30).toFixed(2)) : null,
+    boundaryProximityAlert: ascLong !== null ? ((ascLong % 30) < 1.0 || (ascLong % 30) > 29.0) : null,
+    boundaryNotes: ascLong !== null
+      ? (isTamil ? "லக்ன பாகை நிலையாக உள்ளது." : "Ascendant comfortably placed within sign boundary.")
+      : (isTamil ? "கணக்கிடப்படவில்லை" : "not computed"),
     d60Sensitivity: "Shashtiamsha (D60) shifts sign every ~2 minutes of birth time.",
     d9Sensitivity: "Navamsha (D9) shifts sign every ~13.3 minutes of birth time."
   };
-
-  const dynamicOverview = React.useMemo(() => {
-    // 1. Core Nature: Lagna, Lagna Lord, Moon Sign & Nakshatra
-    const lagnaLord = chartData.ascendantLord || chartData.ascendant?.lord || chartData.ascendantSign?.ruler || "Mars";
-    const lagnaSign = ascName;
-    const moonSg = moonName;
-    const moonNak = nakName;
-
-    // Find strongest planet by Shadbala Virupas
-    let topPlanet = "Jupiter";
-    let topVirupas = 0;
-    if (Array.isArray(chartData.shadbala)) {
-      const sorted = [...chartData.shadbala].sort((a,b) => (b.virupas || b.totalRupas || 0) - (a.virupas || a.totalRupas || 0));
-      if (sorted[0]) {
-        topPlanet = sorted[0].planet || sorted[0].name || "Jupiter";
-        topVirupas = Math.round(sorted[0].virupas || sorted[0].totalRupas || 0);
-      }
-    }
-
-    // Find key yogas
-    const prominentYogas = (Array.isArray(chartData.yogas) ? chartData.yogas : (Array.isArray(chartData.detectedYogas) ? chartData.detectedYogas : []))
-      .slice(0, 2)
-      .map(y => (typeof y === "string" ? y : (y.name || y.nameTa || y.title)))
-      .filter(Boolean);
-    const yogaText = prominentYogas.length > 0 ? prominentYogas.join(" & ") : (isTamil ? "தர்ம கர்மாதிபதி யோகம்" : "Dharma-Karmadhipati Yoga");
-
-    // Active Mahadasha & Antardasha
-    const activeMaha = execSummary?.currentLifePhase?.activeMahadasha || chartData.currentDasha?.mahadasha || "Saturn";
-    const activeAntar = execSummary?.currentLifePhase?.activeAntardasha || chartData.currentDasha?.antardasha || "Mercury";
-
-    return {
-      core: {
-        fact: isTamil 
-          ? `கணக்கீடு: லக்னம் ${ascTamil} (அதிபதி: ${lagnaLord}), சந்திரன் ${moonTamil} (${nakTamil} நட்சத்திரம்). அதிக ஷட்பலம்: ${topPlanet} (${topVirupas} விரூபங்கள்).`
-          : `Calculated Fact: ${lagnaSign} Ascendant ruled by ${lagnaLord}, with Moon in ${moonSg} (${moonNak} nakshatra). Highest Shadbala planet: ${topPlanet} (${topVirupas} virupas).`,
-        tradition: isTamil
-          ? `சாஸ்திர விளக்கம்: லக்னாதிபதியும் உச்ச பலம் பெற்ற கிரகமும் உங்கள் ஆன்ம உறுதி, தலைமைப் பண்பு மற்றும் ஒழுங்கை வழிநடத்துகின்றன.`
-          : `Traditional View: The Ascendant lord in harmony with peak Shadbala planet grants structural fortitude, self-determination, and purposeful drive.`,
-        plain: isTamil
-          ? `எளிய பொருள்: நீங்கள் இயல்பாகவே விடாமுயற்சியும், தெளிவான தொலைநோக்குப் பார்வையும் கொண்டவர். சவால்களை நிதானமாக எதிர்கொள்ளும் ஆற்றல் உண்டு.`
-          : `Plain English: You are a determined builder with innate strategic clarity. You naturally lead with calm resilience and principled focus.`
-      },
-      phase: {
-        fact: isTamil
-          ? `கணக்கீடு: நடப்பு காலக்கட்டம் ${activeMaha} மகா தசை - ${activeAntar} அந்தர்தசை.`
-          : `Calculated Fact: Currently traversing ${activeMaha} Mahadasha — ${activeAntar} Antardasha.`,
-        tradition: isTamil
-          ? `சாஸ்திர விளக்கம்: விம்சோத்தரி தசா விதிகளின்படி ${activeMaha} தசை தொழில் நிலையை உறுதிப்படுத்தவும், நீண்ட கால இலக்குகளை கட்டமைக்கவும் வழிவகுக்கும்.`
-          : `Traditional View: Classical Vimshottari principles dictate this phase catalyzes foundational career consolidation, stewardship, and personal maturity.`,
-        plain: isTamil
-          ? `எளிய பொருள்: இந்த காலம் உங்கள் வாழ்க்கை லட்சியங்களை உறுதியாக அமைத்துக் கொள்ளவும், தேவையில்லாத அலைச்சல்களைக் குறைத்து இலக்கில் கவனம் செலுத்தவும் உகந்தது.`
-          : `Plain English: This life season rewards steady perseverance and disciplined foundations over short-term shortcuts. Focus on master skills and stability.`
-      },
-      advice: {
-        fact: isTamil
-          ? `கணக்கீடு: முக்கிய சுப யோகம்: ${yogaText}.`
-          : `Calculated Fact: Prominent Chart Yoga: ${yogaText}.`,
-        tradition: isTamil
-          ? `சாஸ்திர விளக்கம்: சுப யோகங்களின் முழு ஆற்றல் வெளிப்பட மன அமைதியும், நேர்மையான செயல்முறையும் அவசியம்.`
-          : `Traditional View: Classical texts advise that yogas flourish when supported by disciplined daily sadhana, mental serenity, and ethical conduct.`,
-        plain: isTamil
-          ? `எளிய பொருள்: அவசர முடிவுகளைத் தவிர்த்து, உங்கள் உள்ளுணர்வை நம்பி நிதானமாக முடிவெடுங்கள். தினசரி தியானமும் சீரான ஓய்வும் உங்கள் ஆற்றலை பெருக்கும்.`
-          : `Plain English: Prioritize mental stillness and avoid impulsive overextension. Consistent sleep, reflection, and focused daily rituals will multiply your success.`
-      }
-    };
-  }, [chartData, ascName, ascTamil, moonName, moonTamil, nakName, nakTamil, isTamil, execSummary]);
 
   const handleGenerateAIReport = async () => {
     setAiLoading(true);
@@ -356,191 +412,25 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     }
   };
 
-  const handleDownloadPDF = (tier = "detailed") => {
+  const handleDownloadPDF = async (tier = "detailed") => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    setPdfProgressText(isTamil ? "PDF தயாராகிறது..." : "Preparing PDF...");
+
     try {
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "pt",
-        format: "a4"
+      await generateAstrologyReportPDF(chartData, lang, tier, (msg) => {
+        setPdfProgressText(msg);
+      }, {
+        audienceMode,
+        viewMode,
+        aiReportText: viewMode === "ai" ? aiReportText : null
       });
-
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 40;
-      let y = 50;
-
-      // Header Banner
-      doc.setFillColor(30, 27, 75);
-      doc.rect(0, 0, pageWidth, 75, "F");
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("ASTROVERSE REPRODUCIBLE CALCULATION DOSSIER", margin, 38);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(220, 215, 254);
-      doc.text("Astronomical Ephemeris & Predictive Astrological Synthesis", margin, 56);
-
-      y = 95;
-      doc.setTextColor(30, 41, 59);
-
-      // Metadata Box
-      doc.setFillColor(248, 250, 252);
-      doc.setDrawColor(203, 213, 225);
-      doc.roundedRect(margin, y, pageWidth - margin * 2, 70, 6, 6, "FD");
-
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "bold");
-      doc.text("Report ID:", margin + 12, y + 20);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(chartData?.reportId || chartId), margin + 70, y + 20);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Birth Instant:", margin + 12, y + 36);
-      doc.setFont("helvetica", "normal");
-      doc.text(`${chartData.birthDateStr || chartData.birthDate || "N/A"} at ${chartData.birthTimeStr || chartData.time || "N/A"}`, margin + 75, y + 36);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Coordinates:", margin + 12, y + 52);
-      doc.setFont("helvetica", "normal");
-      doc.text(`${Number(chartData.latitude ?? chartData.lat ?? 0).toFixed(4)}° N, ${Number(chartData.longitude ?? chartData.lng ?? 0).toFixed(4)}° E (TZ: UTC${(chartData.utcOffset ?? 0) >= 0 ? "+" : ""}${chartData.utcOffset ?? 0})`, margin + 75, y + 52);
-
-      // Certificate specs on right side of metadata box
-      const col2X = margin + 260;
-      doc.setFont("helvetica", "bold");
-      doc.text("System / Ayanamsa:", col2X, y + 20);
-      doc.setFont("helvetica", "normal");
-      doc.text(`${chartData.system?.name || "Lahiri"} (${(chartData.ayanamsa ?? 0).toFixed(4)}°)`, col2X + 105, y + 20);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Frame / Epoch:", col2X, y + 36);
-      doc.setFont("helvetica", "normal");
-      doc.text("Geocentric Ecliptic of Date / J2000.0", col2X + 80, y + 36);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Calculation Engine:", col2X, y + 52);
-      doc.setFont("helvetica", "normal");
-      doc.text("AstroVerse Core 4.2.0 (VSOP87/Meeus)", col2X + 98, y + 52);
-
-      y += 90;
-
-      // Section: Core Planetary Triad & Active Dasha
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(180, 83, 9);
-      doc.text("1. Core Natal Profile & Dasha State", margin, y);
-      y += 18;
-
-      doc.setFontSize(9);
-      doc.setTextColor(15, 23, 42);
-      const triad = [
-        `Ascendant (Lagna): ${ascName} (${Number(chartData.ascendant?.deg || chartData.ascendantLong || 0).toFixed(2)}°)`,
-        `Moon Sign (Janma Rasi): ${moonName} — Nakshatra: ${nakName} (Pada ${nakPada})`,
-        `Sun Sign (Surya Rasi): ${sunName} — Nakshatra: ${chartData.sunNakshatra?.name || "N/A"}`,
-        `Current Dasha: ${execSummary?.currentLifePhase?.activeMahadasha || "N/A"} Mahadasha (${execSummary?.currentLifePhase?.activeAntardasha || "N/A"} Antardasha)`
-      ];
-      triad.forEach(line => {
-        doc.text(`•  ${line}`, margin + 10, y);
-        y += 14;
-      });
-
-      y += 10;
-
-      // Section: Planetary Ephemeris Table
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(180, 83, 9);
-      doc.text("2. Certified Planetary Ephemeris", margin, y);
-      y += 16;
-
-      // Table Header
-      doc.setFillColor(241, 245, 249);
-      doc.rect(margin, y, pageWidth - margin * 2, 18, "F");
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(71, 85, 105);
-      doc.text("BODY", margin + 8, y + 12);
-      doc.text("SIGN", margin + 70, y + 12);
-      doc.text("LONGITUDE", margin + 140, y + 12);
-      doc.text("NAKSHATRA & PADA", margin + 225, y + 12);
-      doc.text("SPEED / STATUS", margin + 345, y + 12);
-      doc.text("DIGNITY", margin + 440, y + 12);
-      y += 22;
-
-      // Rows
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(15, 23, 42);
-      const planetList = Array.isArray(chartData.planets) ? chartData.planets : [];
-      planetList.forEach((p, idx) => {
-        if (y > pageHeight - 60) {
-          doc.addPage();
-          y = 50;
-        }
-        if (idx % 2 === 1) {
-          doc.setFillColor(248, 250, 252);
-          doc.rect(margin, y - 10, pageWidth - margin * 2, 16, "F");
-        }
-        doc.setFont("helvetica", "bold");
-        doc.text(String(p.name), margin + 8, y + 2);
-        doc.setFont("helvetica", "normal");
-        doc.text(String(p.sign || "-"), margin + 70, y + 2);
-        doc.text(`${(p.deg !== undefined ? p.deg : p.longitude || 0).toFixed(2)}°`, margin + 140, y + 2);
-        doc.text(`${p.nakshatra || "-"} (${p.pada ? "Pada " + p.pada : "1"})`, margin + 225, y + 2);
-        doc.text(p.isRetrograde ? "Retrograde (R)" : "Direct (D)", margin + 345, y + 2);
-        doc.text(String(p.dignity || p.functionalNature || "Neutral"), margin + 440, y + 2);
-        y += 15;
-      });
-
-      y += 15;
-      if (y > pageHeight - 120) {
-        doc.addPage();
-        y = 50;
-      }
-
-      // Section: 12 Bhavas Snapshot
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(180, 83, 9);
-      doc.text("3. Twelve Bhavas (Houses) Snapshot", margin, y);
-      y += 18;
-
-      bhavas.forEach((b) => {
-        if (y > pageHeight - 50) {
-          doc.addPage();
-          y = 50;
-        }
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 41, 59);
-        doc.text(`House ${b.num}: ${b.title ? b.title.split(":")[0] : `Bhava ${b.num}`} (${b.signName || b.sign || ""})`, margin + 8, y);
-        y += 12;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(71, 85, 105);
-        const splitText = doc.splitTextToSize(String(b.prediction || b.summary || "Balanced astrological influence."), pageWidth - margin * 2 - 16);
-        doc.text(splitText, margin + 12, y);
-        y += (splitText.length * 10) + 6;
-      });
-
-      // Footer
-      const totalPages = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(7.5);
-        doc.setTextColor(148, 163, 184);
-        doc.text(
-          `AstroVerse Reproducible Calculation Dossier • Page ${i} of ${totalPages} • Coordinates: Ecliptic of Date / J2000.0`,
-          margin,
-          pageHeight - 20
-        );
-      }
-
-      doc.save(`AstroVerse_Report_${chartData.reportId || "Natal"}.pdf`);
     } catch (err) {
-      console.error("PDF generation failed, falling back to print:", err);
-      window.print();
+      console.error("PDF generation failed:", err);
+      alert(isTamil ? "PDF உருவாக்குவதில் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்." : "Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGeneratingPdf(false);
+      setPdfProgressText("");
     }
   };
 
@@ -576,7 +466,10 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     { id: "multiSystemComparison", label: isTamil ? "19. பல ஜோதிட முறைகளின் ஒப்பீடு" : "19. Multi-System Comparative Analysis", icon: Compass }
   ];
 
-  const chartSys = (chartData.system?.id || chartData.system || chartData.profile?.system || "lahiri").toLowerCase();
+  const rawSys = typeof chartData?.system === "object"
+    ? (chartData.system?.id || chartData.system?.name || "lahiri")
+    : (chartData?.system || chartData?.profile?.system || "lahiri");
+  const chartSys = String(rawSys || "lahiri").toLowerCase();
   const isTropical = chartSys === "tropical" || chartSys === "sayana" || chartSys === "western";
   const isKP = chartSys === "kp";
 
@@ -621,19 +514,21 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             </button>
             <button
               onClick={handlePrintMinimal}
+              disabled={isGeneratingPdf}
               title={isTamil ? "சுருக்க அறிக்கை PDF ஆக சேமிக்க" : "Save Minimal Snapshot PDF"}
-              className="px-3 py-2 rounded-xl bg-white border border-amber-300 hover:bg-amber-50 text-stone-800 font-bold text-xs shadow-xs flex items-center gap-1.5 hover:border-amber-400 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-white border border-amber-300 hover:bg-amber-50 text-stone-800 font-bold text-xs shadow-xs flex items-center gap-1.5 hover:border-amber-400 disabled:opacity-50 transition-all cursor-pointer"
             >
-              <FileText className="w-3.5 h-3.5 text-amber-700" />
-              <span>{isTamil ? "சுருக்க PDF" : "Minimal PDF"}</span>
+              {isGeneratingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" /> : <FileText className="w-3.5 h-3.5 text-amber-700" />}
+              <span>{isGeneratingPdf ? (pdfProgressText || (isTamil ? "PDF உருவாகிறது..." : "Generating...")) : (isTamil ? "சுருக்க PDF" : "Minimal PDF")}</span>
             </button>
             <button
               onClick={handlePrintDetailed}
+              disabled={isGeneratingPdf}
               title={isTamil ? "முழு விரிவான அறிக்கை PDF ஆக சேமிக்க" : "Save Full Detailed Master PDF"}
-              className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1.5 hover:brightness-110 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1.5 hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>{isTamil ? "முழு PDF / அச்சிடு" : "Full PDF / Print"}</span>
+              {isGeneratingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Printer className="w-3.5 h-3.5" />}
+              <span>{isGeneratingPdf ? (pdfProgressText || (isTamil ? "PDF உருவாகிறது..." : "Generating...")) : (isTamil ? "முழு PDF / அச்சிடு" : "Full PDF / Print")}</span>
             </button>
             <button
               onClick={onClose}
@@ -653,7 +548,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             <span><strong>Engine:</strong> AstroVerse Engine 4.2.0</span>
           </div>
           <span className="text-[10px] text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded font-sans font-medium">
-            Report ID: {chartData?.reportId || `AV-${(chartData?.profile?.name || "NATAL").slice(0, 3).toUpperCase()}-${(chartData?.profile?.year || 2026)}`}
+            Report ID: {chartData?.reportId || `AV-${(chartData?.profile?.name || "NATAL").slice(0, 3).toUpperCase()}-${(chartData?.profile?.year ?? chartData?.year ?? "GEN")}`}
           </span>
         </div>
 
@@ -775,7 +670,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
 
         {/* 2-Tier Version Switcher & Pricing Banner (Only in algorithmic mode) */}
         {viewMode === "algorithmic" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-1.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 no-print print:hidden">
+          <div className={`grid grid-cols-1 ${isExpertMode ? "md:grid-cols-3" : "md:grid-cols-2"} gap-3 p-1.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 no-print print:hidden`}>
             {/* Tier 1: Short Essential Summary */}
             <button
               onClick={() => setReportTier("short")}
@@ -821,6 +716,33 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 {isTamil ? "12 பாவகங்கள், ஆரோக்கியம், கல்வி, தொழில், பூமி/வாகனம், அரசியல் தகுதி & ரத்தின பரிந்துரை." : "Deep 12-Bhava breakdown, Health, Studies, Career, Property, Politics & Gemstones."}
               </p>
             </button>
+
+            {/* Tier 3: Expert Mode — Deep Prediction Timeline (only shown when isExpertMode) */}
+            {isExpertMode && (
+              <button
+                onClick={() => setReportTier("expert")}
+                className={`p-3.5 rounded-xl text-left transition-all relative flex flex-col justify-between ${
+                  reportTier === "expert"
+                    ? "bg-violet-50/90 border-2 border-violet-500 shadow-md shadow-violet-500/10"
+                    : "bg-white/60 hover:bg-white border border-violet-200/60 opacity-80 hover:opacity-100"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-violet-900 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-violet-500" />
+                    {isTamil ? "நிபுணர் பயன்முறை (Expert Prediction)" : "Expert Mode — Deep Prediction Timeline"}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-gradient-to-r from-violet-600 to-purple-600 text-white font-extrabold shadow-sm">
+                    {isTamil ? "நிபுணர்" : "EXPERT"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-violet-700 mt-1">
+                  {isTamil
+                    ? "17 வாழ்க்கை களங்களுக்கான விரிவான நேர சாளரங்கள், ஆதார சங்கிலி, ஏன் & ஏன் இல்லை பகுப்பாய்வு."
+                    : "17-domain evidence-linked timelines with WHY & WHY NOT, sub-phases, and resolution declarations."}
+                </p>
+              </button>
+            )}
           </div>
         )}
 
@@ -854,13 +776,50 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                   <span>{isTamil ? "AI ஆய்வு உருவாக்குவதில் பிழை" : "AI Generation Error"}</span>
                 </div>
                 <p className="text-xs text-rose-700 leading-relaxed">{aiError}</p>
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
                   <button
                     onClick={() => handleGenerateAIReport()}
                     className="px-3.5 py-1.5 rounded-xl bg-rose-100 text-rose-800 hover:bg-rose-200 text-xs font-bold flex items-center gap-1.5"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>{isTamil ? "மீண்டும் முயற்சி செய்" : "Retry"}</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("algorithmic")}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>{isTamil ? "கணித சாஸ்திர அறிக்கையைக் காண்க" : "View Classical Astrological Report"}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!aiLoading && !aiError && !aiReportText && (
+              <div className="p-8 text-center space-y-4 rounded-3xl bg-white border border-amber-300 shadow-sm">
+                <Sparkles className="w-10 h-10 text-amber-500 mx-auto" />
+                <h3 className="text-lg font-serif font-bold text-stone-900">
+                  {isTamil ? "AI மகா ஜாதக ஆய்வு தயார் நிலையில் உள்ளது" : "AI Master Synthesis Ready"}
+                </h3>
+                <p className="text-xs text-stone-600 max-w-md mx-auto leading-relaxed">
+                  {isTamil
+                    ? "உங்கள் நவகிரக பாகைகள் மற்றும் தசா காலங்களை அடிப்படையாகக் கொண்டு 19 அத்தியாயங்கள் கொண்ட விரிவான அறிக்கை பெற 'உருவாக்கு' பொத்தானை அழுத்தவும்."
+                    : "Synthesize your calculated ephemeris and Vimshottari cycles into an unrepeatable 19-chapter master life dossier."}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => handleGenerateAIReport()}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 fill-purple-300" />
+                    <span>{isTamil ? "AI அறிக்கையை உருவாக்கு" : "Generate AI Master Reading"}</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("algorithmic")}
+                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>{isTamil ? "கணித சாஸ்திர அறிக்கை" : "View Classical Report"}</span>
                   </button>
                 </div>
               </div>
@@ -886,15 +845,22 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
 
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setViewMode("algorithmic")}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 hover:bg-amber-50 text-amber-900 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                    >
+                      <Compass className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{isTamil ? "கணித அறிக்கை" : "Classical Matrix"}</span>
+                    </button>
+                    <button
                       onClick={handleCopyAI}
-                      className="px-3 py-1.5 rounded-xl bg-white border border-amber-200 hover:bg-amber-50 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                      className="px-3 py-1.5 rounded-xl bg-white border border-amber-200 hover:bg-amber-50 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                     >
                       {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copied ? (isTamil ? "நகலெடுக்கப்பட்டது!" : "Copied!") : (isTamil ? "நகலெடு" : "Copy")}</span>
                     </button>
                     <button
                       onClick={() => handleGenerateAIReport()}
-                      className="p-1.5 rounded-xl bg-white border border-amber-200 hover:bg-amber-50 text-stone-700 transition-all shadow-sm"
+                      className="p-1.5 rounded-xl bg-white border border-amber-200 hover:bg-amber-50 text-stone-700 transition-all shadow-sm cursor-pointer"
                       title="Regenerate"
                     >
                       <RefreshCw className="w-4 h-4" />
@@ -1025,33 +991,35 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={handlePrintMinimal}
-                  className="p-3.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group"
+                  disabled={isGeneratingPdf}
+                  className="p-3.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group disabled:opacity-50 cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-stone-900 flex items-center gap-1.5 group-hover:text-amber-700">
-                      <FileText className="w-3.5 h-3.5 text-amber-600" />
+                      {isGeneratingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" /> : <FileText className="w-3.5 h-3.5 text-amber-600" />}
                       {isTamil ? "1. சுருக்க அறிக்கை PDF (Minimal PDF)" : "1. Save Minimal Snapshot PDF"}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold">1-2 Pages</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold">1 Page</span>
                   </div>
                   <p className="text-[10px] text-stone-600">
-                    {isTamil ? "அடிப்படை லக்னம், ராசி, முக்கிய யோகங்கள் மற்றும் 12 பாவக சுருக்கம் மட்டும் சேமிக்க." : "Saves core birth chart, prominent yogas, 12 Bhavas snapshot, and current operating period."}
+                    {isTamil ? "அடிப்படை லக்னம், ராசி, நவகிரக அட்டவணை, முக்கிய யோகங்கள் & அத்தியாவசிய பரிகாரங்கள் மட்டும் சேமிக்க." : "Saves core birth chart, planetary table, prominent yogas, and essential remedies snapshot."}
                   </p>
                 </button>
 
                 <button
                   onClick={handlePrintDetailed}
-                  className="p-3.5 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:bg-amber-100 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group"
+                  disabled={isGeneratingPdf}
+                  className="p-3.5 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:bg-amber-100 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group disabled:opacity-50 cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5 group-hover:text-amber-800">
-                      <Crown className="w-3.5 h-3.5 text-amber-600" />
+                      {isGeneratingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" /> : <Crown className="w-3.5 h-3.5 text-amber-600" />}
                       {isTamil ? "2. முழு மகா அறிக்கை PDF (Detailed Master)" : "2. Save Complete Master PDF"}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">All 19 Chapters</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">4 Pages Dossier</span>
                   </div>
                   <p className="text-[10px] text-stone-600">
-                    {isTamil ? "19 அத்தியாயங்கள், 16 வர்க்க சக்கரங்கள், ஷட்பலம், அஷ்டகவர்க்கம், பல முறை ஒப்பீடு மற்றும் முழு காலக்கோடுடன் சேமிக்க." : "Saves full multi-domain life dossier, 16 harmonic vargas, Shadbala, Ashtakavarga, multi-system comparison, and technical calculations."}
+                    {isTamil ? "12 பாவக முழு ஆய்வு, அனைத்து யோகங்கள், தொழில்/திருமணம்/ஆரோக்கிய பலன்கள், விரிவான பரிகாரங்கள் & தசா காலக்கோடுடன் சேமிக்க." : "Saves complete 12 Bhavas analysis, all yogas, life domain predictions, detailed gemstone prescriptions, and full Dasha timeline."}
                   </p>
                 </button>
               </div>
@@ -1092,6 +1060,15 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               }}
               onCreditDeducted={onCreditDeducted}
             />
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* EXPERT PREDICTION TIMELINE VIEW (17-DOMAIN FULL LIFETIME TIMELINE) */}
+        {/* ========================================================================= */}
+        {viewMode === "algorithmic" && reportTier === "expert" && (
+          <div className="space-y-6">
+            <ExpertPredictionReportView chartData={chartData} lang={lang} />
           </div>
         )}
 
@@ -2231,7 +2208,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 </div>
 
                 {/* Day-to-Day Muhurtha & Everyday Activity Optimization */}
-                {auspicious.dayToDayMuhurthaGuide && (
+                {auspicious?.dayToDayMuhurthaGuide && (
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50/70 border border-amber-300 space-y-4 shadow-sm">
                     <div className="flex items-center gap-2">
                       <Sun className="w-4 h-4 text-amber-600" />
@@ -2245,13 +2222,13 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-bold text-amber-900">
                             {isTamil 
-                              ? `பிரம்ம முகூர்த்தம் (${auspicious.dayToDayMuhurthaGuide.brahmaMuhurtham?.time || "சூரிய உதயத்திற்கு 96 - 48 நிமிடங்கள் முன்"})`
-                              : `Brahma Muhurtham (${auspicious.dayToDayMuhurthaGuide.brahmaMuhurtham?.time || "96 - 48 mins prior to local sunrise"})`}
+                              ? `பிரம்ம முகூர்த்தம் (${auspicious.dayToDayMuhurthaGuide?.brahmaMuhurtham?.time || "சூரிய உதயத்திற்கு 96 - 48 நிமிடங்கள் முன்"})`
+                              : `Brahma Muhurtham (${auspicious.dayToDayMuhurthaGuide?.brahmaMuhurtham?.time || "96 - 48 mins prior to local sunrise"})`}
                           </span>
                           <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-bold">Dawn Window</span>
                         </div>
                         <p className="text-[11px] text-stone-700 leading-relaxed">
-                          {auspicious.dayToDayMuhurthaGuide.brahmaMuhurtham?.purpose}
+                          {auspicious.dayToDayMuhurthaGuide?.brahmaMuhurtham?.purpose}
                         </p>
                       </div>
 
@@ -2259,19 +2236,19 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-bold text-emerald-900">
                             {isTamil 
-                              ? `அபிஜித் முகூர்த்தம் (${auspicious.dayToDayMuhurthaGuide.abhijitMuhurtham?.time || "உச்ச சூரிய மதிய நேரத்திற்கு ±24 நிமிடங்கள்"})`
-                              : `Abhijit Muhurtham (${auspicious.dayToDayMuhurthaGuide.abhijitMuhurtham?.time || "±24 mins centered on local solar noon"})`}
+                              ? `அபிஜித் முகூர்த்தம் (${auspicious.dayToDayMuhurthaGuide?.abhijitMuhurtham?.time || "உச்ச சூரிய மதிய நேரத்திற்கு ±24 நிமிடங்கள்"})`
+                              : `Abhijit Muhurtham (${auspicious.dayToDayMuhurthaGuide?.abhijitMuhurtham?.time || "±24 mins centered on local solar noon"})`}
                           </span>
                           <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-mono font-bold">Solar Midday</span>
                         </div>
                         <p className="text-[11px] text-stone-700 leading-relaxed">
-                          {auspicious.dayToDayMuhurthaGuide.abhijitMuhurtham?.purpose}
+                          {auspicious.dayToDayMuhurthaGuide?.abhijitMuhurtham?.purpose}
                         </p>
                       </div>
                     </div>
 
                     {/* Planetary Hora Activity Matrix */}
-                    {auspicious.dayToDayMuhurthaGuide.planetaryHoraGuide && (
+                    {auspicious.dayToDayMuhurthaGuide?.planetaryHoraGuide && (
                       <div className="space-y-2 pt-2 border-t border-amber-200">
                         <span className="text-xs font-bold text-purple-900 block">
                           {isTamil ? "காரிய சித்தி தரும் நவகிரக ஹோரை அட்டவணை (Planetary Horas for Daily Tasks)" : "Planetary Hora Alignment for Everyday Tasks"}
@@ -2288,7 +2265,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     )}
 
                     {/* Rahu Kalam Weekly Avoidance Guide */}
-                    {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance && (
+                    {auspicious.dayToDayMuhurthaGuide?.rahuKalamAvoidance && (
                       <div className="space-y-2 pt-2 border-t border-amber-200">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
@@ -2297,7 +2274,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                           </span>
                         </div>
                         <p className="text-[11px] text-stone-600 leading-relaxed">
-                          {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance.rule}
+                          {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance?.rule}
                         </p>
                         <div className="overflow-x-auto bg-white rounded-xl border border-amber-200 p-2 shadow-sm">
                           <table className="w-full text-[10px] text-left border-collapse">
@@ -2310,7 +2287,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                               </tr>
                             </thead>
                             <tbody>
-                              {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance.weeklyTable?.map((row, idx) => (
+                              {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance?.weeklyTable?.map((row, idx) => (
                                 <tr key={idx} className="border-b border-amber-100 last:border-0 font-mono">
                                   <td className="py-1.5 px-2 font-bold text-stone-800">{row.day}</td>
                                   <td className="py-1.5 px-2 text-rose-700 font-medium">{row.rahu}</td>
@@ -2718,7 +2695,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-100 pb-2">
                           <div className="flex items-center gap-2">
                             <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-mono font-bold text-xs uppercase">
-                              {domKey} Domain Ledger ({chain.layerCount || 9} Levels)
+                              {domKey} Domain Ledger ({chain.layerCount ?? (Array.isArray(chain.layers) ? chain.layers.length : "—")} Levels)
                             </span>
                             <span className="font-bold text-sm text-stone-900">
                               {chain.classification}
@@ -2986,15 +2963,18 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         {["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].map((pName) => {
                           const vObj = chartData.structuredVargas || chartData.vargas || {};
                           const getVargaSign = (dKey) => {
-                            if (vObj[dKey]?.planets?.[pName]) return vObj[dKey].planets[pName].sign?.slice(0, 3) || vObj[dKey].planets[pName].signName?.slice(0, 3) || "-";
-                            if (vObj[dKey]?.[pName]) return vObj[dKey][pName].sign?.slice(0, 3) || vObj[dKey][pName]?.slice(0, 3) || "-";
-                            return "-";
+                            let sign = "-";
+                            if (vObj[dKey]?.planets?.[pName]) sign = vObj[dKey].planets[pName].sign || vObj[dKey].planets[pName].signName || "-";
+                            else if (vObj[dKey]?.[pName]) sign = vObj[dKey][pName].sign || vObj[dKey][pName] || "-";
+                            if (sign === "-") return "-";
+                            return isTamil ? toTamilRasi(sign) : (sign.slice(0, 3));
                           };
                           const d60Obj = vObj.D60?.planets?.[pName] || vObj.D60?.[pName];
-                          const d60Str = d60Obj ? (d60Obj.sign?.slice(0, 3) || d60Obj.signName?.slice(0, 3) || "-") : "-";
+                          const d60Sign = d60Obj ? (d60Obj.sign || d60Obj.signName || "-") : "-";
+                          const d60Str = d60Sign === "-" ? "-" : (isTamil ? toTamilRasi(d60Sign) : d60Sign.slice(0, 3));
                           return (
                             <tr key={pName} className="hover:bg-amber-50/50">
-                              <td className="p-1.5 font-bold text-left text-stone-900">{pName}</td>
+                              <td className="p-1.5 font-bold text-left text-stone-900">{isTamil ? toTamilPlanet(pName) : pName}</td>
                               <td className="p-1.5">{getVargaSign("D1")}</td>
                               <td className="p-1.5">{getVargaSign("D2")}</td>
                               <td className="p-1.5">{getVargaSign("D3")}</td>
@@ -3029,17 +3009,17 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     <table className="w-full text-[11px] text-left border-collapse">
                       <thead>
                         <tr className="bg-amber-100/70 border-b border-amber-200 text-stone-800 font-mono text-[10px] uppercase">
-                          <th className="p-2">Graha</th>
-                          <th className="p-2">Sthana Bala</th>
-                          <th className="p-2">Dig Bala</th>
-                          <th className="p-2">Kala Bala</th>
-                          <th className="p-2">Cheshta Bala</th>
-                          <th className="p-2">Naisargika</th>
-                          <th className="p-2">Drik Bala</th>
-                          <th className="p-2 font-bold text-purple-900">Total Virupas</th>
-                          <th className="p-2">Req. Virupas</th>
-                          <th className="p-2">Ratio</th>
-                          <th className="p-2">Qualification</th>
+                          <th className="p-2">{isTamil ? "கிரகம்" : "Graha"}</th>
+                          <th className="p-2">{isTamil ? "ஸ்தான பலம்" : "Sthana Bala"}</th>
+                          <th className="p-2">{isTamil ? "திக் பலம்" : "Dig Bala"}</th>
+                          <th className="p-2">{isTamil ? "கால பலம்" : "Kala Bala"}</th>
+                          <th className="p-2">{isTamil ? "சேஷ்டா பலம்" : "Cheshta Bala"}</th>
+                          <th className="p-2">{isTamil ? "நைசர்கிகம்" : "Naisargika"}</th>
+                          <th className="p-2">{isTamil ? "திருக் பலம்" : "Drik Bala"}</th>
+                          <th className="p-2 font-bold text-purple-900">{isTamil ? "மொத்த விருபைகள்" : "Total Virupas"}</th>
+                          <th className="p-2">{isTamil ? "தேவை" : "Req. Virupas"}</th>
+                          <th className="p-2">{isTamil ? "விகிதம்" : "Ratio"}</th>
+                          <th className="p-2">{isTamil ? "தகுதி" : "Qualification"}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-amber-100 font-mono text-[11px]">
@@ -3053,9 +3033,10 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                           const reqV = typeof sb.requiredRupas === "number" ? (sb.requiredRupas * 60) : (typeof sb.requiredBala === "number" ? sb.requiredBala : null);
                           const ratio = typeof sb.ratio === "number" ? sb.ratio : (typeof sb.strengthRatio === "number" ? sb.strengthRatio : (totalV !== null && reqV ? totalV / reqV : null));
                           const isStrong = typeof sb.isSufficient === "boolean" ? sb.isSufficient : (ratio !== null ? ratio >= 1.0 : false);
+                          const pDisplayName = isTamil ? toTamilPlanet(sb.name || sb.planet) : (sb.name || sb.planet);
                           return (
                             <tr key={sb.name || sb.planet} className="hover:bg-amber-50/50">
-                              <td className="p-2 font-bold text-stone-900">{sb.name || sb.planet}</td>
+                              <td className="p-2 font-bold text-stone-900">{pDisplayName}</td>
                               <td className="p-2">{typeof sb.sthanaBala === "number" ? sb.sthanaBala.toFixed(1) : "-"}</td>
                               <td className="p-2">{typeof sb.digBala === "number" ? sb.digBala.toFixed(1) : "-"}</td>
                               <td className="p-2">{typeof sb.kalaBala === "number" ? sb.kalaBala.toFixed(1) : "-"}</td>
@@ -3067,7 +3048,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                               <td className="p-2 font-bold">{ratio !== null ? ratio.toFixed(2) : "-"}</td>
                               <td className="p-2">
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isStrong ? "bg-emerald-100 text-emerald-900" : "bg-rose-100 text-rose-900"}`}>
-                                  {isStrong ? "Sufficient / Strong" : "Low Virupas"}
+                                  {isStrong ? (isTamil ? "போதுமானது / பலம்" : "Sufficient / Strong") : (isTamil ? "குறைந்த விரூபைகள்" : "Low Virupas")}
                                 </span>
                               </td>
                             </tr>
@@ -3088,16 +3069,16 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     <table className="w-full text-[11px] text-center border-collapse">
                       <thead>
                         <tr className="bg-amber-100/70 border-b border-amber-200 text-stone-800 font-mono text-[10px] uppercase">
-                          <th className="p-2 text-left">Sign (Rāśi)</th>
-                          <th className="p-2">Sun</th>
-                          <th className="p-2">Moon</th>
-                          <th className="p-2">Mars</th>
-                          <th className="p-2">Mercury</th>
-                          <th className="p-2">Jupiter</th>
-                          <th className="p-2">Venus</th>
-                          <th className="p-2">Saturn</th>
-                          <th className="p-2 font-bold text-purple-900">SAV Total (337)</th>
-                          <th className="p-2">Evaluation</th>
+                          <th className="p-2 text-left">{isTamil ? "ராசி" : "Sign (Rāśi)"}</th>
+                          <th className="p-2">{isTamil ? "சூரியன்" : "Sun"}</th>
+                          <th className="p-2">{isTamil ? "சந்திரன்" : "Moon"}</th>
+                          <th className="p-2">{isTamil ? "செவ்வாய்" : "Mars"}</th>
+                          <th className="p-2">{isTamil ? "புதன்" : "Mercury"}</th>
+                          <th className="p-2">{isTamil ? "குரு" : "Jupiter"}</th>
+                          <th className="p-2">{isTamil ? "சுக்கிரன்" : "Venus"}</th>
+                          <th className="p-2">{isTamil ? "சனி" : "Saturn"}</th>
+                          <th className="p-2 font-bold text-purple-900">{isTamil ? "மொத்த SAV (337)" : "SAV Total (337)"}</th>
+                          <th className="p-2">{isTamil ? "மதிப்பீடு" : "Evaluation"}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-amber-100 font-mono text-[11px]">
@@ -3106,9 +3087,10 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                           const sav = chartData.ashtakavarga?.savBySign || chartData.ashtakavarga?.sav || chartData.ashtakavargaPoints || [];
                           const savVal = Array.isArray(sav) && sav[sIdx] !== undefined ? sav[sIdx] : "-";
                           const isHigh = typeof savVal === "number" ? savVal >= 28 : false;
+                          const signDisplay = isTamil ? `${sIdx + 1}. ${toTamilRasi(sName)}` : `${sIdx + 1}. ${sName}`;
                           return (
                             <tr key={sName} className={isHigh ? "bg-emerald-50/20 hover:bg-emerald-50/40" : "bg-amber-50/20 hover:bg-amber-50/40"}>
-                              <td className="p-2 text-left font-bold text-stone-900">{sIdx + 1}. {sName}</td>
+                              <td className="p-2 text-left font-bold text-stone-900">{signDisplay}</td>
                               <td className="p-2">{bav.Sun?.[sIdx] ?? bav.sun?.[sIdx] ?? "-"}</td>
                               <td className="p-2">{bav.Moon?.[sIdx] ?? bav.moon?.[sIdx] ?? "-"}</td>
                               <td className="p-2">{bav.Mars?.[sIdx] ?? bav.mars?.[sIdx] ?? "-"}</td>
@@ -3120,7 +3102,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                               <td className="p-2">
                                 {typeof savVal === "number" ? (
                                   <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${isHigh ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"}`}>
-                                    {isHigh ? "Benefic (≥28)" : "Caution (<28)"}
+                                    {isHigh ? (isTamil ? "சுபம் (≥28)" : "Benefic (≥28)") : (isTamil ? "எச்சரிக்கை (<28)" : "Caution (<28)")}
                                   </span>
                                 ) : (
                                   <span className="text-stone-400 text-[10px]">N/A</span>
@@ -3143,49 +3125,74 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Karakas Table */}
                     <div className="p-3 rounded-2xl bg-amber-50/40 border border-amber-200">
-                      <span className="text-[10px] font-bold text-amber-900 uppercase block mb-1">7 Chara Karakas (Sun to Saturn)</span>
+                      <span className="text-[10px] font-bold text-amber-900 uppercase block mb-1">
+                        {isTamil ? "7 சர காரகங்கள் (சூரியன் முதல் சனி வரை)" : "7 Chara Karakas (Sun to Saturn)"}
+                      </span>
                       <table className="w-full text-[11px] text-left font-mono">
                         <thead>
                           <tr className="border-b border-amber-200 text-stone-500 text-[10px]">
-                            <th className="py-1">Karaka</th>
-                            <th className="py-1">Planet</th>
-                            <th className="py-1">Deg in Sign</th>
-                            <th className="py-1">Karakamsha</th>
+                            <th className="py-1">{isTamil ? "காரகன்" : "Karaka"}</th>
+                            <th className="py-1">{isTamil ? "கிரகம்" : "Planet"}</th>
+                            <th className="py-1">{isTamil ? "பாகை" : "Deg in Sign"}</th>
+                            <th className="py-1">{isTamil ? "ராசி" : "Karakamsha"}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-amber-100">
-                          {(chartData.jaiminiSystem?.charaKarakas || (Array.isArray(chartData.jaiminiKarakas) ? chartData.jaiminiKarakas : [])).map((k, i) => (
-                            <tr key={i}>
-                              <td className="py-1 font-bold text-purple-900">{k.role || k.karaka || "-"}</td>
-                              <td className="py-1 text-stone-900">{k.planet || k.name || "-"}</td>
-                              <td className="py-1">{typeof k.degreeInSign === "number" ? `${k.degreeInSign.toFixed(2)}°` : "-"}</td>
-                              <td className="py-1 text-stone-700">{k.karakamsha || k.sign || "-"}</td>
-                            </tr>
-                          ))}
+                          {(chartData.jaiminiSystem?.charaKarakas || (Array.isArray(chartData.jaiminiKarakas) ? chartData.jaiminiKarakas : [])).map((k, i) => {
+                            const kCode = k.code || "AK";
+                            const roleDisplay = isTamil ? (k.roleTa || k.role) : (k.role || k.karaka || kCode);
+                            const pDisplay = isTamil ? (k.planetTa || toTamilPlanet(k.planet)) : (k.planet || k.name || "-");
+                            const degDisplay = k.degInSign || (typeof k.degreeInSign === "number" ? `${k.degreeInSign.toFixed(2)}°` : "-");
+                            const signDisplay = isTamil ? toTamilRasi(k.karakamsha || k.sign) : (k.karakamsha || k.sign || "-");
+                            return (
+                              <tr key={i}>
+                                <td className="py-1 font-bold text-purple-900">{kCode} — {roleDisplay}</td>
+                                <td className="py-1 text-stone-900">{pDisplay}</td>
+                                <td className="py-1">{degDisplay}</td>
+                                <td className="py-1 text-stone-700">{signDisplay}</td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Arudha Padas Table */}
                     <div className="p-3 rounded-2xl bg-purple-50/40 border border-purple-200">
-                      <span className="text-[10px] font-bold text-purple-900 uppercase block mb-1">Arudha Padas (AL, UL, A1–A12)</span>
+                      <span className="text-[10px] font-bold text-purple-900 uppercase block mb-1">
+                        {isTamil ? "ஆரூட பாதங்கள் (AL, UL, A1-A12)" : "Arudha Padas (AL, UL, A1–A12)"}
+                      </span>
                       <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
                         <div className="p-2 rounded-xl bg-white border border-purple-100">
-                          <span className="text-[10px] text-stone-500 block">Arudha Lagna (AL)</span>
-                          <strong className="text-purple-950">{chartData.jaiminiSystem?.arudhaLagna?.sign || chartData.jaiminiSystem?.AL?.sign || (typeof chartData.jaiminiSystem?.AL === "string" ? chartData.jaiminiSystem.AL : "N/A")}</strong>
+                          <span className="text-[10px] text-stone-500 block">{isTamil ? "ஆரூட லக்னம் (AL)" : "Arudha Lagna (AL)"}</span>
+                          <strong className="text-purple-950">
+                            {(() => {
+                              const alSign = chartData.jaiminiSystem?.arudhaLagna?.sign || chartData.jaiminiSystem?.AL?.sign || (typeof chartData.jaiminiSystem?.AL === "string" ? chartData.jaiminiSystem.AL : "N/A");
+                              return isTamil && alSign !== "N/A" ? toTamilRasi(alSign) : alSign;
+                            })()}
+                          </strong>
                         </div>
                         <div className="p-2 rounded-xl bg-white border border-purple-100">
-                          <span className="text-[10px] text-stone-500 block">Upapada Lagna (UL)</span>
-                          <strong className="text-purple-950">{chartData.jaiminiSystem?.upapadaLagna?.sign || chartData.jaiminiSystem?.UL?.sign || (typeof chartData.jaiminiSystem?.UL === "string" ? chartData.jaiminiSystem.UL : "N/A")}</strong>
+                          <span className="text-[10px] text-stone-500 block">{isTamil ? "உபபத லக்னம் (UL)" : "Upapada Lagna (UL)"}</span>
+                          <strong className="text-purple-950">
+                            {(() => {
+                              const ulSign = chartData.jaiminiSystem?.upapadaLagna?.sign || chartData.jaiminiSystem?.UL?.sign || (typeof chartData.jaiminiSystem?.UL === "string" ? chartData.jaiminiSystem.UL : "N/A");
+                              return isTamil && ulSign !== "N/A" ? toTamilRasi(ulSign) : ulSign;
+                            })()}
+                          </strong>
                         </div>
                         <div className="p-2 rounded-xl bg-white border border-purple-100 col-span-2">
-                          <span className="text-[10px] text-stone-500 block mb-1">Bhava Arudhas (A1 - A12)</span>
+                          <span className="text-[10px] text-stone-500 block mb-1">{isTamil ? "பாவக ஆரூடங்கள் (A1 - A12)" : "Bhava Arudhas (A1 - A12)"}</span>
                           <div className="flex flex-wrap gap-1">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(b => (
-                              <span key={b} className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 text-[10px] font-bold">
-                                A{b}: {chartData.jaiminiSystem?.bhavaPadas?.[b - 1]?.sign || chartData.jaiminiSystem?.bhavaArudhas?.[b - 1]?.sign || "N/A"}
-                              </span>
-                            ))}
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(b => {
+                              const bSign = chartData.jaiminiSystem?.bhavaPadas?.[b - 1]?.sign || chartData.jaiminiSystem?.bhavaArudhas?.[b - 1]?.sign || "N/A";
+                              const bSignDisp = isTamil && bSign !== "N/A" ? toTamilRasi(bSign) : bSign;
+                              return (
+                                <span key={b} className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 text-[10px] font-bold">
+                                  A{b}: {bSignDisp}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -3481,7 +3488,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             )}
 
             {/* 19. Multi-System Comparative Analysis (Lahiri vs KP vs Raman vs Tropical) */}
-            {isChapterApplicable("multiSystemComparison") && (activeTab === "multiSystemComparison" || (activeTab === "all" && audienceMode === "astrologer")) && multiSystemBundle && (
+            {isChapterApplicable("multiSystemComparison") && (activeTab === "multiSystemComparison" || (activeTab === "all" && audienceMode === "astrologer")) && multiSystemBundle?.comparison && (
               <div className="p-5 md:p-6 rounded-3xl bg-white border-2 border-indigo-400 shadow-md space-y-6">
                 {/* Chapter Header */}
                 <div className="border-b border-indigo-200 pb-4">
@@ -3558,7 +3565,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-indigo-100 font-mono text-stone-700">
-                        {multiSystemBundle.comparison.comparisons.map((row, idx) => {
+                        {Array.isArray(multiSystemBundle?.comparison?.comparisons) && multiSystemBundle.comparison.comparisons.map((row, idx) => {
                           const badgeColor = row.classification === "AGREEMENT" 
                             ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                             : row.classification === "PARTIAL AGREEMENT"
@@ -3623,7 +3630,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-indigo-100 text-stone-700 text-[11px]">
-                        {multiSystemBundle.comparison.techniqueMatrix.map((tRow, tIdx) => (
+                        {Array.isArray(multiSystemBundle?.comparison?.techniqueMatrix) && multiSystemBundle.comparison.techniqueMatrix.map((tRow, tIdx) => (
                           <tr key={tIdx} className={tIdx % 2 === 0 ? "bg-white" : "bg-indigo-50/20"}>
                             <td className="py-2 px-3 font-semibold text-stone-900">{tRow.technique}</td>
                             <td className="py-2 px-3">{tRow.lahiri}</td>
@@ -3755,33 +3762,35 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={handlePrintMinimal}
-                  className="p-3.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group cursor-pointer"
+                  disabled={isGeneratingPdf}
+                  className="p-3.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group disabled:opacity-50 cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-stone-900 flex items-center gap-1.5 group-hover:text-amber-700">
-                      <FileText className="w-3.5 h-3.5 text-amber-600" />
+                      {isGeneratingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" /> : <FileText className="w-3.5 h-3.5 text-amber-600" />}
                       {isTamil ? "1. சுருக்க அறிக்கை PDF (Minimal PDF)" : "1. Save Minimal Snapshot PDF"}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold">1-2 Pages</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold">1 Page</span>
                   </div>
                   <p className="text-[10px] text-stone-600">
-                    {isTamil ? "அடிப்படை லக்னம், ராசி, முக்கிய யோகங்கள் மற்றும் 12 பாவக சுருக்கம் மட்டும் சேமிக்க." : "Saves core birth chart, prominent yogas, 12 Bhavas snapshot, and current operating period."}
+                    {isTamil ? "அடிப்படை லக்னம், ராசி, நவகிரக அட்டவணை, முக்கிய யோகங்கள் & அத்தியாவசிய பரிகாரங்கள் மட்டும் சேமிக்க." : "Saves core birth chart, planetary table, prominent yogas, and essential remedies snapshot."}
                   </p>
                 </button>
 
                 <button
                   onClick={handlePrintDetailed}
-                  className="p-3.5 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:bg-amber-100 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group cursor-pointer"
+                  disabled={isGeneratingPdf}
+                  className="p-3.5 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:bg-amber-100 text-left transition-all shadow-xs flex flex-col justify-between space-y-1 group disabled:opacity-50 cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5 group-hover:text-amber-800">
-                      <Crown className="w-3.5 h-3.5 text-amber-600" />
+                      {isGeneratingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" /> : <Crown className="w-3.5 h-3.5 text-amber-600" />}
                       {isTamil ? "2. முழு மகா அறிக்கை PDF (Detailed Master)" : "2. Save Complete Master PDF"}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">All 19 Chapters</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 font-bold">4 Pages Dossier</span>
                   </div>
                   <p className="text-[10px] text-stone-600">
-                    {isTamil ? "19 அத்தியாயங்கள், 16 வர்க்க சக்கரங்கள், ஷட்பலம், அஷ்டகவர்க்கம், பல முறை ஒப்பீடு மற்றும் முழு காலக்கோடுடன் சேமிக்க." : "Saves full multi-domain life dossier, 16 harmonic vargas, Shadbala, Ashtakavarga, multi-system comparison, and technical calculations."}
+                    {isTamil ? "12 பாவக முழு ஆய்வு, அனைத்து யோகங்கள், தொழில்/திருமணம்/ஆரோக்கிய பலன்கள், விரிவான பரிகாரங்கள் & தசா காலக்கோடுடன் சேமிக்க." : "Saves complete 12 Bhavas analysis, all yogas, life domain predictions, detailed gemstone prescriptions, and full Dasha timeline."}
                   </p>
                 </button>
               </div>

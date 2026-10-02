@@ -39,8 +39,9 @@ export default function BirthTimeConfidenceCard({
   ];
 
   // Calculate sensitivity parameters if chartData is present
-  const ascDegree = chartData?.ascendant?.degree || chartData?.ascendantSign?.degree || 15.0;
-  const isNearAscBoundary = (ascDegree < 1.5 || ascDegree > 28.5);
+  const rawAscDegree = chartData?.ascendant?.degree ?? chartData?.ascendantSign?.degree ?? null;
+  const ascDegree = typeof rawAscDegree === "number" && Number.isFinite(rawAscDegree) ? rawAscDegree : null;
+  const isNearAscBoundary = ascDegree !== null ? (ascDegree < 1.5 || ascDegree > 28.5) : null;
 
   return (
     <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-amber-200/80 shadow-xs space-y-4">
@@ -92,8 +93,18 @@ export default function BirthTimeConfidenceCard({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div className="p-2 rounded-lg bg-white border border-amber-200/60 text-center">
             <span className="text-[10px] text-stone-500 block">{isTamil ? "லக்ன ராசி (D1)" : "Lagna (D1)"}</span>
-            <span className={`font-bold text-xs ${isNearAscBoundary ? "text-amber-700" : "text-emerald-700"}`}>
-              {isNearAscBoundary ? (isTamil ? "அதிக உணர்திறன் (High)" : "High Sensitivity") : (isTamil ? "நிலையானது (Low)" : "Low / Stable")}
+            <span className={`font-bold text-xs ${
+              isNearAscBoundary === null 
+                ? "text-stone-400" 
+                : isNearAscBoundary 
+                  ? "text-amber-700" 
+                  : "text-emerald-700"
+            }`}>
+              {isNearAscBoundary === null
+                ? (isTamil ? "கணக்கீடு இல்லை" : "Unavailable")
+                : isNearAscBoundary
+                  ? (isTamil ? "அதிக உணர்திறன் (High)" : "High Sensitivity")
+                  : (isTamil ? "நிலையானது (Low)" : "Low / Stable")}
             </span>
           </div>
 

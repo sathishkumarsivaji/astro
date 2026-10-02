@@ -949,3 +949,48 @@ function formatPlaceResult(p, isTamil) {
     displayString
   };
 }
+
+/**
+ * Computes authoritative historical UTC offset in hours for an IANA timezone ID,
+ * taking into account historical Daylight Saving Time (DST) and timezone transitions.
+ */
+export function getHistoricalUtcOffset(timezoneId, dateStr, timeStr = "12:00") {
+  if (!timezoneId || timezoneId === "UTC" || timezoneId === "GMT") return 0;
+  try {
+    const [y, m, d] = (dateStr || "2000-01-01").split("-").map(Number);
+    const [hh, mm] = (timeStr || "12:00").split(":").map(Number);
+
+    const utcDate = new Date(Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0));
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezoneId,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: false
+    });
+
+    const parts = formatter.formatToParts(utcDate);
+    const p = {};
+    for (const part of parts) {
+      p[part.type] = part.value;
+    }
+
+    const tzYear = parseInt(p.year, 10);
+    const tzMonth = parseInt(p.month, 10);
+    const tzDay = parseInt(p.day, 10);
+    let tzHour = parseInt(p.hour, 10);
+    if (tzHour === 24) tzHour = 0;
+    const tzMinute = parseInt(p.minute, 10);
+
+    const tzAsUtc = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute, 0);
+    const diffMs = tzAsUtc - utcDate.getTime();
+    const offsetHours = diffMs / (1000 * 60 * 60);
+
+    return Number(offsetHours.toFixed(2));
+  } catch (err) {
+    return 0;
+  }
+}

@@ -17,10 +17,11 @@ import { computeDetailedVimshottari, DASHA_LORDS } from "../../services/astroEng
 
 const DAY_LORDS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
 
-export function calculateKPChart(observations, birthData) {
+export function calculateKPChart(observations, birthData, options = {}) {
   const kpAyanamsha = observations.ayanamshas.kp;
   const { jd, T, lat, lng, utcDate } = observations;
   const lmst = observations.sidereal.lmstDegrees;
+  const nodeModel = (options?.nodeModel || birthData?.nodeModel || observations?.nodeModel || "mean").toLowerCase() === "true" ? "true" : "mean";
 
   // 1. Placidus Cusps in Sidereal KP
   const placidusRaw = calculatePlacidusCusps(lmst, lat, T);
@@ -217,8 +218,7 @@ export function calculateKPChart(observations, birthData) {
   const curMd = dashaTable.find(d => d.isCurrent) || null;
   const curBk = curMd?.bukthis?.find(b => b.isCurrent) || null;
 
-  const isPolar = Math.abs(lat) >= 66.0;
-  const houseSystemName = isPolar ? "Equal (Placidus Polar Fallback)" : "Placidus Cusps";
+  const houseSystemName = placidusRaw.isFallbackSubstituted ? "Equal (Placidus Polar Fallback)" : "Placidus Cusps";
 
   return {
     system: {
@@ -226,8 +226,22 @@ export function calculateKPChart(observations, birthData) {
       name: "KP (Krishnamurti Padhdhati)",
       ayanamshaName: "KP Original",
       ayanamshaValue: kpAyanamsha,
-      houseSystem: houseSystemName
+      houseSystem: houseSystemName,
+      houseSystemRequested: "Placidus",
+      houseSystemEffective: placidusRaw.isFallbackSubstituted ? "Equal" : "Placidus",
+      isHouseSystemFallback: Boolean(placidusRaw.isFallbackSubstituted),
+      houseSystemFallbackReason: placidusRaw.divergenceReason || null,
+      houseSystemDisclosure: placidusRaw.disclosure || null,
+      nodeModel,
+      lunarNodeConvention: nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node"
     },
+    houseSystemRequested: "Placidus",
+    houseSystemEffective: placidusRaw.isFallbackSubstituted ? "Equal" : "Placidus",
+    isHouseSystemFallback: Boolean(placidusRaw.isFallbackSubstituted),
+    houseSystemFallbackReason: placidusRaw.divergenceReason || null,
+    houseSystemDisclosure: placidusRaw.disclosure || null,
+    nodeModel,
+    lunarNodeConvention: nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node",
     ascendant: ascCusp,
     ascendantSign: { name: ascCusp.signName },
     sunSign: sun ? { name: sun.signName } : null,

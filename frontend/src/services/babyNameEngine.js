@@ -1,9 +1,9 @@
-/* Comprehensive Baby Name & Newborn Astrological Namakarana Engine */
-
 import { NAKSHATRAS, ZODIAC_SIGNS, NAKSHATRA_PADA_SYLLABLES } from "./astroEngine.js";
 import { calculateChartBySystem } from "../astrology/index.js";
 import { calculateNumerology } from "./numerologyEngine.js";
 import { getSessionToken, ensureSessionToken } from "./aiAstrologyService.js";
+import { apiFetch } from "./apiClient.js";
+import { toTamilRasi } from "./tamilAstrologyUtils.js";
 
 export { NAKSHATRA_PADA_SYLLABLES };
 
@@ -726,14 +726,19 @@ export function generatePhoneticNamesForPada(nakName, pada, syllableEn, syllable
  * Calculate accurate newborn horoscope, pada syllables, and name alignment
  */
 export function calculateNewbornAstroProfile(input = {}) {
-  const dateStr = input.dob || input.dateStr;
-  const timeStr = input.time || input.timeStr;
+  const dateStr = input.dob || input.dateStr || input.birthDate;
+  const timeStr = input.time || input.timeStr || input.birthTime;
   const lat = input.lat !== undefined ? Number(input.lat) : (input.latitude !== undefined ? Number(input.latitude) : null);
   const lon = input.lon !== undefined ? Number(input.lon) : (input.lng !== undefined ? Number(input.lng) : (input.longitude !== undefined ? Number(input.longitude) : null));
   const tz = input.tz !== undefined ? (typeof input.tz === "string" ? input.tz : Number(input.tz)) : (input.timezoneOffsetHours !== undefined ? Number(input.timezoneOffsetHours) : (input.timezoneId || null));
 
   if (!dateStr || !timeStr || lat === null || isNaN(lat) || lon === null || isNaN(lon) || tz === null || (typeof tz === "number" && isNaN(tz))) {
     throw new Error("calculateNewbornAstroProfile requires complete birth data: dob (YYYY-MM-DD), time (HH:MM), lat, lon, and tz.");
+  }
+
+  const [y, m, d] = dateStr.split("-").map(part => parseInt(part, 10));
+  if (!d || !m || !y || isNaN(d) || isNaN(m) || isNaN(y)) {
+    throw new Error("Invalid birth date format. Expected YYYY-MM-DD.");
   }
 
   const gender = input.gender || "boy";
@@ -772,7 +777,7 @@ export function calculateNewbornAstroProfile(input = {}) {
   const reduceDigits = (num) => {
     let n = num;
     while (n > 9) {
-      n = n.toString().split("").reduce((sum, d) => sum + parseInt(d, 10), 0);
+      n = n.toString().split("").reduce((sum, digit) => sum + parseInt(digit, 10), 0);
     }
     return n;
   };
@@ -996,12 +1001,12 @@ export function calculateNewbornAstroProfile(input = {}) {
 
   return {
     chart,
-    lagna: ascendantSign?.name || "Scorpio",
-    lagnaTa: ascendantSign?.tamil || "விருச்சிகம்",
+    lagna: ascendantSign?.name || null,
+    lagnaTa: ascendantSign?.tamil || (ascendantSign?.name ? toTamilRasi(ascendantSign.name) : null),
     lagnaLord,
     lagnaLordTa,
-    moonSign: moonSign?.name || "Sagittarius",
-    moonSignTa: moonSign?.tamil || "தனுசு",
+    moonSign: moonSign?.name || null,
+    moonSignTa: moonSign?.tamil || (moonSign?.name ? toTamilRasi(moonSign.name) : null),
     rasiLord,
     rasiLordTa,
     nakshatraName: nakName,
@@ -1040,36 +1045,19 @@ export async function generateAINewbornNames({
     : `Nakshatra: ${nakshatraName} (Pada ${pada}), Auspicious Syllable: ${syllable} (${syllableTa}), Gender: ${gender}, Lagna Lord: ${lagnaLord}, Destiny Number: ${destinyNumber}. Generate 10 elegant, meaningful newborn baby names adhering strictly to these parameters in JSON format: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]. Return valid JSON array only.`;
 
   const token = await ensureSessionToken();
-  const proxyUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_PROXY_URL) || "/api/generate-astrology";
 
-  let response;
-  try {
-    response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        prompt,
-        lang
-      })
-    });
-  } catch {
-    response = await fetch("http://localhost:5000/api/generate-astrology", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        prompt,
-        lang
-      })
-    });
-  }
+  const response = await apiFetch("/api/generate-astrology", {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      prompt,
+      lang
+    })
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

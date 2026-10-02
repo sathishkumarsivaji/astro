@@ -1,0 +1,19 @@
+{
+  "short_name": "AstroVerse",
+  "name": "AstroVerse — Vedic Sidereal Ephemeris & Kundli Platform",
+  "description": "High-Precision Vedic Sidereal Ephemeris, Kundli, Navamsa, Ashtakoota Matching, and Classical Jyotish Engine",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0c0a09",
+  "theme_color": "#d97706",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/"
+}

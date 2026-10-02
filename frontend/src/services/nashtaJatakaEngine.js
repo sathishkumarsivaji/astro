@@ -436,17 +436,32 @@ export function generateVerificationQuestions(palmAnalysis, lang = "en") {
 export function reverseCalculateBirthTimeAndDOB({
   palmProfile,
   answers = {}, // { q1_year, q1_month, q2_year, q2_month, ... , birthCity, lat, lng, tz }
-  birthCity = "Chennai, India",
-  lat = 13.0827,
-  lng = 80.2707,
-  tz = 5.5,
-  lang = "en"
+  birthCity = null,
+  lat = null,
+  lng = null,
+  tz = null,
+  lang = "en",
+  answeredEvents: inputAnsweredEvents = null
 }) {
+  const effectiveLat = lat ?? answers.lat ?? answers.latitude ?? null;
+  const effectiveLng = lng ?? answers.lng ?? answers.longitude ?? null;
+  const effectiveTz = tz ?? answers.tz ?? answers.utcOffset ?? null;
+
+  if (effectiveLat === null || effectiveLng === null || effectiveTz === null) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      reason: "Verified latitude, longitude, and timezone offset required",
+      estimatedBirthDate: null,
+      confidenceScore: 0,
+      candidates: []
+    };
+  }
+
   const isTamil = lang === "ta";
   const questions = generateVerificationQuestions(palmProfile, lang);
 
   // 1. Ingest all valid answered events (with fractional date: Year + (Month - 0.5) / 12)
-  const answeredEvents = [];
+  const answeredEvents = inputAnsweredEvents ? [...inputAnsweredEvents] : [];
 
   questions.forEach((q, idx) => {
     const yearKey = `q${idx + 1}_year`;

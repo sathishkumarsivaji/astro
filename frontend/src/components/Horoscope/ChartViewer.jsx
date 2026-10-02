@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   HelpCircle,
   Eye,
-  Info
+  Info,
+  Lock
 } from "lucide-react";
 import {
   calculateD60StabilityTest,
@@ -31,7 +32,16 @@ import PlanetDetailModal from "./PlanetDetailModal";
 import CalculationCertificateModal from "./CalculationCertificateModal";
 import BirthTimeConfidenceCard from "./BirthTimeConfidenceCard";
 
-export default function ChartViewer({ chartData, lang = "en", onOpenDetailedReport = null, isExpertMode = false, onAskAboutPlanet = null }) {
+export default function ChartViewer({
+  chartData,
+  lang = "en",
+  onOpenDetailedReport = null,
+  isExpertMode = false,
+  onAskAboutPlanet = null,
+  currentUser = null,
+  onOpenAuth = null,
+  onOpenPricing = null
+}) {
   const [chartStyle, setChartStyle] = useState("south"); // "south", "north", "east"
   const [chartViewMode, setChartViewMode] = useState(() => (isExpertMode ? "expert_sheet" : "d1_d9")); // "expert_sheet", "d1_d9", "all_vargas", "bhava_chalit", "planets_deep", "bhavas_deep", "d60_stability"
   const [selectedVarga, setSelectedVarga] = useState("D1");
@@ -58,6 +68,16 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
   } = chartData;
 
   const isTamil = lang === "ta";
+
+  const isRegistered = Boolean(currentUser?.isRegistered);
+
+  const handleSelectMode = (mode) => {
+    if (!isRegistered && mode !== "d1_d9") {
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+    setChartViewMode(mode);
+  };
 
   const SIGN_NAMES_TAMIL = {
     Aries: "மேஷம்", Taurus: "ரிஷபம்", Gemini: "மிதுனம்", Cancer: "கடகம்",
@@ -175,9 +195,9 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
   // Generic Varga Renderer
   const renderVargaSvg = (vargaCode, titleLabel) => {
     const vData = getVargaChartData(vargaCode);
-    const ascSignName = vData.ascendantSign || "Aries";
+    const ascSignName = vData?.ascendantSign ?? null;
 
-    const getVPlanetsInSign = (signName) => (vData.planets || []).filter(p => {
+    const getVPlanetsInSign = (signName) => (vData?.planets || []).filter(p => {
       const s = p.signName || p.sign;
       return s && signName && s.toLowerCase() === signName.toLowerCase();
     });
@@ -290,11 +310,11 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
             { h: 11, cx: 350, cy: 105, numX: 320, numY: 140 },
             { h: 12, cx: 295, cy: 50, numX: 260, numY: 80 }
           ].map(cell => {
-            const ascIdx = SOUTH_BOXES.findIndex(b => b.sign.toLowerCase() === (ascSignName || "Aries").toLowerCase());
-            const signIdx = (ascIdx + (cell.h - 1)) % 12;
-            const signName = SOUTH_BOXES[signIdx]?.sign || "Aries";
-            const boxPlanets = getVPlanetsInSign(signName);
-            const signNum = signIdx + 1;
+            const ascIdx = ascSignName ? SOUTH_BOXES.findIndex(b => b.sign.toLowerCase() === ascSignName.toLowerCase()) : -1;
+            const signIdx = ascIdx !== -1 ? (ascIdx + (cell.h - 1)) % 12 : -1;
+            const signName = signIdx !== -1 ? SOUTH_BOXES[signIdx]?.sign : null;
+            const boxPlanets = signName ? getVPlanetsInSign(signName) : [];
+            const signNum = signIdx !== -1 ? signIdx + 1 : "-";
 
             return (
               <g key={cell.h}>
@@ -572,7 +592,9 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
           </h3>
           {sunNakshatra ? (
             <p className="text-xs text-stone-600 mt-1">
-              {isTamil ? `நட்சத்திரம்: ${sunNakshatra.tamil || sunNakshatra.name} (பாதம் ${sunNakshatra.pada || 1})` : `Nakshatra: ${sunNakshatra.name} (Pada ${sunNakshatra.pada || 1})`}
+              {isTamil 
+                ? `நட்சத்திரம்: ${sunNakshatra.tamil || sunNakshatra.name}${sunNakshatra.pada ? ` (பாதம் ${sunNakshatra.pada})` : ""}` 
+                : `Nakshatra: ${sunNakshatra.name}${sunNakshatra.pada ? ` (Pada ${sunNakshatra.pada})` : ""}`}
             </p>
           ) : (
             <p className="text-xs text-stone-500 mt-1 italic">
@@ -597,7 +619,7 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
           {moonNakshatra ? (
             <>
               <p className="text-xs text-stone-600 mt-1">
-                {t.nakshatraLabel} <span className="text-purple-800 font-semibold">{isTamil ? (moonNakshatra.tamil || moonNakshatra.name) : moonNakshatra.name} (பாதம் {moonNakshatra.pada || 1})</span>
+                {t.nakshatraLabel} <span className="text-purple-800 font-semibold">{isTamil ? (moonNakshatra.tamil || moonNakshatra.name) : moonNakshatra.name}{moonNakshatra.pada ? ` (${isTamil ? "பாதம்" : "Pada"} ${moonNakshatra.pada})` : ""}</span>
               </p>
               <div className="mt-3 pt-3 border-t border-purple-200/80 flex items-center justify-between text-[11px] text-stone-600">
                 <span>{t.lordLabel} <strong className="text-purple-800 font-bold">{moonNakshatra.ruler || "—"}</strong></span>
@@ -657,17 +679,18 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
             <div className="flex flex-wrap items-center bg-amber-50 p-1 rounded-xl border border-amber-200/80 text-xs shadow-inner gap-1">
               {isExpertMode && (
                 <button
-                  onClick={() => setChartViewMode("expert_sheet")}
+                  onClick={() => handleSelectMode("expert_sheet")}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
                     chartViewMode === "expert_sheet" ? "bg-purple-700 text-white shadow-xs" : "text-purple-700 bg-purple-100/70 hover:bg-purple-200/70"
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
-                  {isTamil ? "தொழில்நுட்ப ஏடு" : "Expert Sheet"}
+                  <span>{isTamil ? "தொழில்நுட்ப ஏடு" : "Expert Sheet"}</span>
+                  {!isRegistered && <span className="text-[9px]">🔒</span>}
                 </button>
               )}
               <button
-                onClick={() => setChartViewMode("d1_d9")}
+                onClick={() => handleSelectMode("d1_d9")}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                   chartViewMode === "d1_d9" ? "bg-amber-600 text-white shadow-xs" : "text-stone-600 hover:text-stone-900"
                 }`}
@@ -675,44 +698,49 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                 {isTamil ? "ராசி & நவாம்சம் (D1+D9)" : "D1 & D9 Charts"}
               </button>
               <button
-                onClick={() => setChartViewMode("all_vargas")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                onClick={() => handleSelectMode("all_vargas")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
                   chartViewMode === "all_vargas" ? "bg-amber-600 text-white shadow-xs" : "text-stone-600 hover:text-stone-900"
                 }`}
               >
-                {isTamil ? "16 வர்க்க சக்கரங்கள் (D1-D60)" : "All 16 Vargas"}
+                <span>{isTamil ? "16 வர்க்க சக்கரங்கள் (D1-D60)" : "All 16 Vargas"}</span>
+                {!isRegistered && <span className="text-[9px]">🔒</span>}
               </button>
               <button
-                onClick={() => setChartViewMode("bhava_chalit")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                onClick={() => handleSelectMode("bhava_chalit")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
                   chartViewMode === "bhava_chalit" ? "bg-cyan-700 text-white shadow-xs" : "text-stone-600 hover:text-stone-900"
                 }`}
               >
-                {isTamil ? "பாவ சலித சக்கரம் (Bhava Chalit)" : "Bhava Chalit"}
+                <span>{isTamil ? "பாவ சலித சக்கரம் (Bhava Chalit)" : "Bhava Chalit"}</span>
+                {!isRegistered && <span className="text-[9px]">🔒</span>}
               </button>
               <button
-                onClick={() => setChartViewMode("planets_deep")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                onClick={() => handleSelectMode("planets_deep")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
                   chartViewMode === "planets_deep" ? "bg-purple-600 text-white shadow-xs" : "text-stone-600 hover:text-stone-900"
                 }`}
               >
-                {isTamil ? "நவகிரக அவஸ்தைகள் (Avasthas)" : "9-Graha Avasthas"}
+                <span>{isTamil ? "நவகிரக அவஸ்தைகள் (Avasthas)" : "9-Graha Avasthas"}</span>
+                {!isRegistered && <span className="text-[9px]">🔒</span>}
               </button>
               <button
-                onClick={() => setChartViewMode("bhavas_deep")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                onClick={() => handleSelectMode("bhavas_deep")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
                   chartViewMode === "bhavas_deep" ? "bg-emerald-700 text-white shadow-xs" : "text-stone-600 hover:text-stone-900"
                 }`}
               >
-                {isTamil ? "12 பாவ ஆரூடம் (Arudha Padas)" : "12-Bhava & Arudha"}
+                <span>{isTamil ? "12 பாவ ஆரூடம் (Arudha Padas)" : "12-Bhava & Arudha"}</span>
+                {!isRegistered && <span className="text-[9px]">🔒</span>}
               </button>
               <button
-                onClick={() => setChartViewMode("d60_stability")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                onClick={() => handleSelectMode("d60_stability")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
                   chartViewMode === "d60_stability" ? "bg-rose-600 text-white shadow-xs" : "text-stone-600 hover:text-stone-900"
                 }`}
               >
-                {isTamil ? "D60 ±2 நிமி நிலைத்தன்மை" : "D60 Stability Test"}
+                <span>{isTamil ? "D60 ±2 நிமி நிலைத்தன்மை" : "D60 Stability Test"}</span>
+                {!isRegistered && <span className="text-[9px]">🔒</span>}
               </button>
             </div>
 
@@ -796,9 +824,9 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                       <tr className="bg-amber-50/60 font-semibold">
                         <td className="py-1 text-amber-900">Asc (Lagna)</td>
                         <td className="py-1">{ascName}</td>
-                        <td className="py-1">{(chartData.ascendant?.deg || chartData.ascendantLong || 0).toFixed(2)}°</td>
+                        <td className="py-1">{typeof (chartData.ascendant?.deg ?? chartData.ascendantLong) === "number" && Number.isFinite(chartData.ascendant?.deg ?? chartData.ascendantLong) ? `${(chartData.ascendant?.deg ?? chartData.ascendantLong).toFixed(2)}°` : "—"}</td>
                         <td className="py-1">{chartData.ascendant?.nakshatra || "—"}</td>
-                        <td className="py-1">{chartData.ascendant?.pada || "1"}</td>
+                        <td className="py-1">{chartData.ascendant?.pada ?? "—"}</td>
                         <td className="py-1 text-stone-500">—</td>
                         <td className="py-1 text-amber-800">Lagna</td>
                       </tr>
@@ -807,9 +835,9 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                         <tr key={p.name} className="hover:bg-purple-50/40">
                           <td className="py-1 font-sans font-bold text-stone-900">{isTamil ? (PLANET_NAMES_TAMIL[p.name] || p.name) : p.name}</td>
                           <td className="py-1 text-stone-700">{p.sign}</td>
-                          <td className="py-1">{(p.deg !== undefined ? p.deg : p.longitude || 0).toFixed(2)}°</td>
+                          <td className="py-1">{typeof (p.deg ?? p.longitude) === "number" && Number.isFinite(p.deg ?? p.longitude) ? `${(p.deg ?? p.longitude).toFixed(2)}°` : "—"}</td>
                           <td className="py-1 font-sans text-stone-700">{p.nakshatra || "—"}</td>
-                          <td className="py-1">{p.pada || "1"}</td>
+                          <td className="py-1">{p.pada ?? "—"}</td>
                           <td className="py-1">{p.isRetrograde ? <span className="text-rose-700 font-bold">R</span> : <span className="text-emerald-700">D</span>}</td>
                           <td className="py-1 font-sans text-[10px] text-purple-900 font-medium">{p.dignity || p.functionalNature || "Neutral"}</td>
                         </tr>
@@ -897,22 +925,22 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                     <span className="text-[10px] font-bold uppercase text-stone-500 block">SAV Bindu Strengths</span>
                     <div className="grid grid-cols-3 gap-1 text-center font-mono text-[10px]">
                       {[
-                        { s: "Ari", b: ashtakavargaPoints?.[0] ?? 28 },
-                        { s: "Tau", b: ashtakavargaPoints?.[1] ?? 31 },
-                        { s: "Gem", b: ashtakavargaPoints?.[2] ?? 29 },
-                        { s: "Can", b: ashtakavargaPoints?.[3] ?? 26 },
-                        { s: "Leo", b: ashtakavargaPoints?.[4] ?? 24 },
-                        { s: "Vir", b: ashtakavargaPoints?.[5] ?? 33 },
-                        { s: "Lib", b: ashtakavargaPoints?.[6] ?? 27 },
-                        { s: "Sco", b: ashtakavargaPoints?.[7] ?? 30 },
-                        { s: "Sag", b: ashtakavargaPoints?.[8] ?? 29 },
-                        { s: "Cap", b: ashtakavargaPoints?.[9] ?? 25 },
-                        { s: "Aqu", b: ashtakavargaPoints?.[10] ?? 28 },
-                        { s: "Pis", b: ashtakavargaPoints?.[11] ?? 27 }
+                        { s: "Ari", b: ashtakavargaPoints?.[0] ?? null },
+                        { s: "Tau", b: ashtakavargaPoints?.[1] ?? null },
+                        { s: "Gem", b: ashtakavargaPoints?.[2] ?? null },
+                        { s: "Can", b: ashtakavargaPoints?.[3] ?? null },
+                        { s: "Leo", b: ashtakavargaPoints?.[4] ?? null },
+                        { s: "Vir", b: ashtakavargaPoints?.[5] ?? null },
+                        { s: "Lib", b: ashtakavargaPoints?.[6] ?? null },
+                        { s: "Sco", b: ashtakavargaPoints?.[7] ?? null },
+                        { s: "Sag", b: ashtakavargaPoints?.[8] ?? null },
+                        { s: "Cap", b: ashtakavargaPoints?.[9] ?? null },
+                        { s: "Aqu", b: ashtakavargaPoints?.[10] ?? null },
+                        { s: "Pis", b: ashtakavargaPoints?.[11] ?? null }
                       ].map(item => (
-                        <div key={item.s} className={`p-1 rounded ${item.b >= 28 ? "bg-emerald-100 text-emerald-950 font-bold" : item.b < 25 ? "bg-rose-100 text-rose-950 font-bold" : "bg-stone-100 text-stone-800"}`}>
+                        <div key={item.s} className={`p-1 rounded ${item.b !== null && item.b >= 28 ? "bg-emerald-100 text-emerald-950 font-bold" : item.b !== null && item.b < 25 ? "bg-rose-100 text-rose-950 font-bold" : "bg-stone-100 text-stone-800"}`}>
                           <div>{item.s}</div>
-                          <div>{item.b}</div>
+                          <div>{item.b !== null ? item.b : "—"}</div>
                         </div>
                       ))}
                     </div>
@@ -934,7 +962,13 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                   <div className="p-2.5 rounded-xl bg-white border border-stone-200 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-stone-500 uppercase font-bold block">Active Dasha Triad</span>
-                      <strong className="text-stone-900">{currentDasha?.mahadasha || "Saturn"} MD → {currentDasha?.antardasha || "Mercury"} AD → {pratyantardasha || "Venus"} PD</strong>
+                      <strong className="text-stone-900">
+                        {currentDasha?.mahadasha || currentDasha?.lord ? `${currentDasha.mahadasha || currentDasha.lord} MD` : "Mahadasha unavailable"}
+                        {" → "}
+                        {currentDasha?.antardasha || currentDasha?.currentAntar ? `${currentDasha.antardasha || currentDasha.currentAntar} AD` : "Antardasha unavailable"}
+                        {" → "}
+                        {pratyantardasha ? `${pratyantardasha} PD` : "Pratyantardasha unavailable"}
+                      </strong>
                     </div>
                     <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">Active</span>
                   </div>
@@ -1851,7 +1885,7 @@ export default function ChartViewer({ chartData, lang = "en", onOpenDetailedRepo
                 {isTamil ? "மொத்த பரல்கள்" : "Total Bindus"}
               </span>
               <span className="text-xs font-bold text-emerald-900 font-mono">
-                {ashtakavarga?.totalBindus || 337} / 337 (Parashari Benchmark)
+                {ashtakavarga?.totalBindus ?? "—"} / 337 (Parashari Benchmark)
               </span>
             </div>
           </div>

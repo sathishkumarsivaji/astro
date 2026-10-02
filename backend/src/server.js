@@ -12,8 +12,10 @@
 
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import webpush from 'web-push';
 
 import { PRICING_PLANS, EXCHANGE_RATES, CURRENCY_SYMBOLS, getLiveExchangeRates, refreshExchangeRates } from './config/pricing.js';
 import { geocodePlace } from './services/geocodeService.js';
@@ -32,55 +34,133 @@ import { db } from './db/database.js';
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 5000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+
+// Production Configuration Validator
+export function validateProductionConfig(env = process.env) {
+  if (env.NODE_ENV === 'production') {
+    if (!env.DATABASE_URL) {
+      throw new Error('FATAL: DATABASE_URL environment variable is required in production.');
+    }
+    if (!env.ADMIN_METRICS_KEY) {
+      throw new Error('FATAL: ADMIN_METRICS_KEY environment variable is required in production.');
+    }
+    if (!env.WEBHOOK_SECRET) {
+      throw new Error('FATAL: WEBHOOK_SECRET environment variable is required in production.');
+    }
+    if (!env.SESSION_SECRET) {
+      throw new Error('FATAL: SESSION_SECRET environment variable is required in production.');
+    }
+    const custom = env.ALLOWED_ORIGINS 
+      ? env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean) 
+      : [];
+    if (!env.ALLOWED_ORIGINS || custom.length === 0) {
+      throw new Error('FATAL: ALLOWED_ORIGINS environment variable is required in production.');
+    }
+  }
+}
+
+// Run validation for current environment
+validateProductionConfig(process.env);
 
 // Strict Production Secrets Enforcement
 let ADMIN_METRICS_KEY = process.env.ADMIN_METRICS_KEY;
 if (!ADMIN_METRICS_KEY) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('FATAL: ADMIN_METRICS_KEY environment variable is required in production.');
-  }
   ADMIN_METRICS_KEY = crypto.randomBytes(32).toString('hex');
   console.warn('[SECURITY] Using ephemeral random secrets — set env vars for persistent dev sessions.');
 }
 
 let WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 if (!WEBHOOK_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('FATAL: WEBHOOK_SECRET environment variable is required in production.');
-  }
   WEBHOOK_SECRET = crypto.randomBytes(32).toString('hex');
   console.warn('[SECURITY] Using ephemeral random secrets — set env vars for persistent dev sessions.');
 }
 
 let SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('FATAL: SESSION_SECRET environment variable is required in production.');
-  }
   SESSION_SECRET = crypto.randomBytes(32).toString('hex');
   console.warn('[SECURITY] Using ephemeral random secrets — set env vars for persistent dev sessions.');
 }
 
 // Environment-conditional CORS Policy Configuration
-const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
-  ? ['https://astroverse.app', 'https://www.astroverse.app', ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])]
-  : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://astroverse.app', 'https://www.astroverse.app'];
+export const customOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean) 
+  : [];
+
+export const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
+  ? customOrigins
+  : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://astroverse.app', 'https://www.astroverse.app', ...customOrigins];
+
+app.use(helmet());
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      callback(null, false);
     }
   },
   credentials: true
 }));
 
-app.use(express.json({ limit: '512kb' }));
+export function getCookieValue(cookieHeader, name) {
+  if (!cookieHeader || typeof cookieHeader !== 'string') return null;
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// CSRF & Cross-Site Request Forgery Protection on state-changing methods
+app.use((req, res, next) => {
+  const method = req.method.toUpperCase();
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    return next();
+  }
+
+  // Exempt HMAC-authenticated payment webhooks
+  if (req.path === '/api/payment/webhook' || req.path === '/api/payments/webhook' || req.path.startsWith('/api/webhooks/')) {
+    return next();
+  }
+
+  const origin = req.headers.origin;
+  const secFetchSite = req.headers['sec-fetch-site'];
+
+  // Block cross-site browser requests
+  if (secFetchSite === 'cross-site') {
+    return res.status(403).json({ error: 'Cross-origin state-changing requests are forbidden.', code: 'FORBIDDEN_CROSS_SITE' });
+  }
+
+  // If origin header is present, ensure it is in ALLOWED_ORIGINS
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return res.status(403).json({ error: `Origin '${origin}' is not authorized for state-changing requests.`, code: 'FORBIDDEN_ORIGIN' });
+  }
+
+  // For cookie-authenticated POST/PUT/PATCH/DELETE, require either an allowed Origin or Sec-Fetch-Site=same-origin; reject requests with neither
+  const cookieHeader = req.headers.cookie;
+  const hasAuthCookie = cookieHeader && getCookieValue(cookieHeader, 'astro_session_token');
+  if (hasAuthCookie) {
+    const isAllowedOrigin = Boolean(origin && ALLOWED_ORIGINS.includes(origin));
+    const isSameOrigin = secFetchSite === 'same-origin';
+    if (!isAllowedOrigin && !isSameOrigin) {
+      return res.status(403).json({
+        error: 'Cookie-authenticated state-changing requests require an authorized Origin or Sec-Fetch-Site=same-origin.',
+        code: 'FORBIDDEN_CSRF'
+      });
+    }
+  }
+
+  next();
+});
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
 
 // ---------------------------------------------------------------------------
 // Observability & Telemetry Metrics
@@ -165,23 +245,19 @@ const activeSessions = new Map();
 console.info('[SESSION] In-memory session cache active. Stateless HMAC fallback ensures continuity across restarts. For multi-instance deployments, migrate to Redis or DB-backed sessions.');
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30-day session token
 
-function getCookieValue(cookieHeader, name) {
-  if (!cookieHeader || typeof cookieHeader !== 'string') return null;
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-export function createSignedSessionToken(userId = null, accountSecret = null) {
+export function createSignedSessionToken(userId = null, accountSecret = null, isTrustedAuth = false) {
   let effectiveUserId = userId;
   let effectiveSecret = accountSecret;
 
   if (effectiveUserId) {
     if (db.getAccountSecret(effectiveUserId)) {
-      if (!effectiveSecret) {
-        throw new Error("Account secret required to revive existing session.");
-      }
-      if (!db.verifyAccountSecret(effectiveUserId, effectiveSecret)) {
-        throw new Error("Invalid account credentials for user.");
+      if (!isTrustedAuth) {
+        if (!effectiveSecret) {
+          throw new Error("Account secret required to revive existing session.");
+        }
+        if (!db.verifyAccountSecret(effectiveUserId, effectiveSecret)) {
+          throw new Error("Invalid account credentials for user.");
+        }
       }
     } else {
       if (!effectiveSecret) {
@@ -275,14 +351,45 @@ function authenticateSession(req, res, next) {
   next();
 }
 
+export function requireDatabaseReady(req, res, next) {
+  if (process.env.NODE_ENV === 'production' && !db.isHealthy()) {
+    return res.status(503).json({
+      error: 'Service temporarily unavailable: PostgreSQL persistence store is offline in production mode.',
+      code: 'DB_UNAVAILABLE'
+    });
+  }
+  next();
+}
+
 // ---------------------------------------------------------------------------
 // 1. Session Handshake & Token Issue (Audit Point 20)
 // ---------------------------------------------------------------------------
 app.post('/api/auth/session', authRateLimiter, (req, res) => {
   try {
-    const { existingUserId, accountSecret } = req.body || {};
-    const secret = accountSecret || req.headers['x-account-secret'] || null;
-    const session = createSignedSessionToken(existingUserId, secret);
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const headerToken = req.headers['x-session-token'];
+    const cookieToken = getCookieValue(req.headers.cookie, 'astro_session_token');
+    const existingToken = bearerToken || headerToken || cookieToken;
+
+    let session = null;
+    if (existingToken && existingToken !== 'unauthenticated_session') {
+      session = verifySignedSessionToken(existingToken);
+    }
+
+    if (!session) {
+      const { existingUserId, accountSecret } = req.body || {};
+      const secret = accountSecret || req.headers['x-account-secret'] || null;
+      if (existingUserId && secret) {
+        try {
+          session = createSignedSessionToken(existingUserId, secret);
+        } catch {
+          session = createSignedSessionToken();
+        }
+      } else {
+        session = createSignedSessionToken();
+      }
+    }
     const entitlements = getOrCreateEntitlements(session.userId);
 
     // Set HttpOnly Secure Cookie
@@ -292,9 +399,9 @@ app.post('/api/auth/session', authRateLimiter, (req, res) => {
 
     res.json({
       success: true,
-      sessionToken: session.sessionToken,
       userId: session.userId,
-      entitlements
+      entitlements,
+      user: entitlements
     });
   } catch (err) {
     res.status(403).json({
@@ -302,6 +409,132 @@ app.post('/api/auth/session', authRateLimiter, (req, res) => {
       code: 'AUTH_FORBIDDEN'
     });
   }
+});
+
+// Logout Endpoint — Invalidates server cache and clears HttpOnly cookie
+app.post('/api/auth/logout', (req, res) => {
+  const cookieToken = getCookieValue(req.headers.cookie, 'astro_session_token');
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = bearerToken || cookieToken;
+  if (token && activeSessions.has(token)) {
+    activeSessions.delete(token);
+  }
+  const isProd = process.env.NODE_ENV === 'production';
+  const secureFlag = isProd ? '; Secure' : '';
+  res.setHeader('Set-Cookie', `astro_session_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secureFlag}`);
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Guest Session Initialization (Unregistered / Minimal Access)
+app.post('/api/auth/guest', authRateLimiter, requireDatabaseReady, (req, res) => {
+  try {
+    const session = createSignedSessionToken();
+    const user = getOrCreateEntitlements(session.userId);
+    user.isRegistered = false;
+    user.subscriptionTier = 'unregistered';
+    db.saveUser(session.userId, user);
+
+    const isProd = process.env.NODE_ENV === 'production';
+    const secureFlag = isProd ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `astro_session_token=${session.sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secureFlag}`);
+
+    res.json({
+      success: true,
+      userId: session.userId,
+      user
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to initialize guest session' });
+  }
+});
+
+// User Registration Endpoint (Converts guest or creates registered account)
+app.post('/api/auth/register', authRateLimiter, requireDatabaseReady, (req, res) => {
+  try {
+    const { name, email, password, existingUserId } = req.body || {};
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email address is required.' });
+    }
+    if (!password || typeof password !== 'string' || password.length < 4) {
+      return res.status(400).json({ error: 'Password must be at least 4 characters.' });
+    }
+
+    const normEmail = email.trim().toLowerCase();
+    const existing = db.getUserByEmail(normEmail);
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email already exists. Please log in.' });
+    }
+
+    // Reuse existingUserId if provided and valid, otherwise generate new
+    const targetUserId = existingUserId || `usr_${crypto.randomBytes(8).toString('hex')}`;
+    const user = getOrCreateEntitlements(targetUserId);
+    user.email = normEmail;
+    user.name = name?.trim() || 'Astrology Seeker';
+    user.passwordHash = db.hashPassword(password);
+    user.isRegistered = true;
+    user.subscriptionTier = (user.subscriptionTier === 'unregistered' || !user.subscriptionTier) ? 'registered_free' : user.subscriptionTier;
+    user.monthlyCredits = Math.max(user.monthlyCredits || 0, 5);
+    user.availableCredits = Math.max(user.availableCredits || 0, 5);
+    db.saveUser(targetUserId, user);
+
+    const session = createSignedSessionToken(targetUserId, null, true);
+    const isProd = process.env.NODE_ENV === 'production';
+    const secureFlag = isProd ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `astro_session_token=${session.sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secureFlag}`);
+
+    res.json({
+      success: true,
+      userId: targetUserId,
+      user
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Registration failed' });
+  }
+});
+
+// User Login Endpoint
+app.post('/api/auth/login', authRateLimiter, requireDatabaseReady, (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    const normEmail = email.trim().toLowerCase();
+    const user = db.getUserByEmail(normEmail);
+    if (!user || !user.passwordHash) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const valid = db.verifyPassword(password, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const session = createSignedSessionToken(user.userId, null, true);
+    const isProd = process.env.NODE_ENV === 'production';
+    const secureFlag = isProd ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `astro_session_token=${session.sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secureFlag}`);
+
+    res.json({
+      success: true,
+      userId: user.userId,
+      user
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Login failed' });
+  }
+});
+
+// Current User Profile / Auth State
+app.get('/api/auth/me', authenticateSession, (req, res) => {
+  const user = getOrCreateEntitlements(req.user.userId);
+  res.json({
+    success: true,
+    userId: req.user.userId,
+    user
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -338,7 +571,7 @@ app.get('/api/pricing', (_req, res) => {
 // ---------------------------------------------------------------------------
 // 4. Saved Horoscopes Storage (Audit Point 22)
 // ---------------------------------------------------------------------------
-app.post('/api/horoscope/save', authenticateSession, (req, res) => {
+app.post('/api/horoscope/save', authenticateSession, requireDatabaseReady, (req, res) => {
   const { chartProfile } = req.body;
   if (!chartProfile || typeof chartProfile !== 'object') {
     return res.status(400).json({ error: 'Valid chartProfile object is required.' });
@@ -381,7 +614,7 @@ app.get('/api/geocode', rateLimiter, async (req, res) => {
 // ---------------------------------------------------------------------------
 // 6. Payment Orders & Verified Webhooks with Replay Protection (Audit Point 21)
 // ---------------------------------------------------------------------------
-app.post('/api/payment/create-order', authenticateSession, (req, res) => {
+app.post('/api/payment/create-order', authenticateSession, requireDatabaseReady, (req, res) => {
   const { planId = 'premium', billingPeriod = 'yearly', currency = 'INR' } = req.body;
   const order = createPaymentOrder(req.user.userId, planId, billingPeriod, currency);
   res.json({
@@ -390,7 +623,7 @@ app.post('/api/payment/create-order', authenticateSession, (req, res) => {
   });
 });
 
-app.post('/api/payment/verify-order', authenticateSession, (req, res) => {
+app.post('/api/payment/verify-order', authenticateSession, requireDatabaseReady, (req, res) => {
   const { orderId, paymentId, signature } = req.body || {};
   if (!orderId || !paymentId) {
     return res.status(400).json({ error: 'Missing orderId or paymentId parameter.' });
@@ -423,7 +656,7 @@ app.post('/api/payment/verify-order', authenticateSession, (req, res) => {
   }
 });
 
-app.post('/api/payment/webhook', (req, res) => {
+app.post('/api/payment/webhook', requireDatabaseReady, (req, res) => {
   const { orderId, paymentId, signature, timestamp } = req.body;
   
   if (!orderId || !paymentId) {
@@ -581,8 +814,8 @@ async function handleGenerateAstrology(req, res) {
   }
 }
 
-app.post('/api/generate-astrology', rateLimiter, authenticateSession, handleGenerateAstrology);
-app.post('/api/astrology-report', rateLimiter, authenticateSession, handleGenerateAstrology);
+app.post('/api/generate-astrology', rateLimiter, authenticateSession, requireDatabaseReady, handleGenerateAstrology);
+app.post('/api/astrology-report', rateLimiter, authenticateSession, requireDatabaseReady, handleGenerateAstrology);
 
 // ---------------------------------------------------------------------------
 // 8. Privacy & Data Governance (Audit Point 23)
@@ -593,7 +826,7 @@ app.get('/api/user/export', authenticateSession, (req, res) => {
   res.json(userDossier);
 });
 
-app.delete('/api/user/delete', authenticateSession, (req, res) => {
+app.delete('/api/user/delete', authenticateSession, requireDatabaseReady, (req, res) => {
   const result = eraseUserData(req.user.userId, activeSessions);
   res.json(result);
 });
@@ -633,9 +866,134 @@ app.get('/api/system/metrics', (req, res) => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// 10. Web Push Notification Infrastructure (Durable DB Storage & VAPID Delivery)
+// ---------------------------------------------------------------------------
+let VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+let VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are required in production.');
+  }
+  const ephemeralKeys = webpush.generateVAPIDKeys();
+  VAPID_PUBLIC_KEY = VAPID_PUBLIC_KEY || ephemeralKeys.publicKey;
+  VAPID_PRIVATE_KEY = VAPID_PRIVATE_KEY || ephemeralKeys.privateKey;
+  console.warn('[SECURITY] Generated dynamic ephemeral VAPID keypair for development/test mode. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars in production.');
+}
+
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@astroverse.app';
+
+try {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+} catch (vapidErr) {
+  console.warn('[PUSH] VAPID configuration initialization notice:', vapidErr.message);
+}
+
+app.get('/api/notifications/vapid-public-key', (req, res) => {
+  res.json({
+    publicKey: VAPID_PUBLIC_KEY
+  });
+});
+
+app.post('/api/notifications/subscribe', authenticateSession, (req, res) => {
+  const userId = req.user.userId;
+  const { subscription } = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: 'Valid push subscription object with endpoint required.' });
+  }
+
+  const record = db.savePushSubscription(userId, subscription);
+
+  res.json({
+    success: true,
+    message: 'Push subscription successfully registered and persisted.',
+    endpoint: record.endpoint,
+    registeredAt: record.createdAt
+  });
+});
+
+app.post('/api/notifications/unsubscribe', authenticateSession, (req, res) => {
+  const userId = req.user.userId;
+  const { endpoint } = req.body || {};
+  const result = db.deletePushSubscription(userId, endpoint);
+  res.json({
+    success: true,
+    message: 'Push subscription removed.',
+    removedCount: result.count
+  });
+});
+
+app.get('/api/notifications/status', authenticateSession, (req, res) => {
+  const userId = req.user.userId;
+  const userSubs = db.getUserPushSubscriptions(userId);
+  const allActive = db.getAllActivePushSubscriptions();
+  res.json({
+    active: userSubs.length > 0,
+    subscriptionCount: userSubs.length,
+    totalActiveSubscribers: allActive.length
+  });
+});
+
+app.post('/api/notifications/send-test', authenticateSession, async (req, res) => {
+  const userId = req.user.userId;
+  const { title = 'AstroVerse Planetary Transit Alert', body = 'Benefic Jupiter-Venus alignment active.', url = '/' } = req.body;
+  const subData = db.getPushSubscription(userId);
+  if (!subData) {
+    return res.status(404).json({ error: 'No active push subscription found for user.' });
+  }
+
+  const payloadString = JSON.stringify({
+    title,
+    body,
+    icon: '/favicon.svg',
+    badge: '/favicon.svg',
+    data: { url, timestamp: new Date().toISOString() }
+  });
+
+  try {
+    const pushResult = await webpush.sendNotification(subData.subscription, payloadString);
+    db.recordPushDelivery(subData.endpoint, true);
+    res.json({
+      success: true,
+      delivered: true,
+      statusCode: pushResult.statusCode || 201,
+      message: 'Push notification dispatched and delivered via Web Push service.',
+      subscriber: userId,
+      payload: { title, body, url }
+    });
+  } catch (err) {
+    // If subscription is expired/invalid (410 Gone / 404 Not Found), deactivate it
+    if (err.statusCode === 410 || err.statusCode === 404) {
+      db.recordPushDelivery(subData.endpoint, false, err.message, true);
+      return res.status(410).json({
+        success: false,
+        delivered: false,
+        expired: true,
+        message: 'Push subscription is expired or inactive on push service. Deactivated in registry.',
+        error: err.message
+      });
+    }
+
+    db.recordPushDelivery(subData.endpoint, false, err.message, false);
+    console.warn('[PUSH] Web Push delivery attempt failed:', err.message);
+    return res.status(502).json({
+      success: false,
+      delivered: false,
+      dispatched: false,
+      errorCode: "PUSH_DELIVERY_FAILED",
+      message: `Push notification delivery failed: ${err.message}`,
+      subscriber: userId,
+      payload: { title, body, url }
+    });
+  }
+});
+
 export let server = null;
 if (process.env.NODE_ENV !== 'test' && !process.argv[1]?.endsWith('test_backend.mjs')) {
-  server = app.listen(PORT, () => {
-    console.log(`[AstroVerse Production Backend] Running on http://localhost:${PORT}`);
+  Promise.resolve(db.readyPromise).catch(() => {}).then(() => {
+    server = app.listen(PORT, () => {
+      console.log(`[AstroVerse Production Backend] Running on http://localhost:${PORT}`);
+    });
   });
 }

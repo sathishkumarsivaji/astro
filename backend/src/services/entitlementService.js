@@ -2,11 +2,11 @@
  * ASTROVERSE — Production Entitlement & Payment Webhook Service
  *
  * Implements:
- * 1. Granular entitlement records backed by durable ACID database storage
+ * 1. Granular entitlement records backed by PostgreSQL & dual-layer database storage
  * 2. Mandatory cryptographic signature verification (HMAC-SHA256)
  * 3. Idempotent webhook processing & strict replay attack prevention
- * 4. Order parameter validation (order existence, payment ID uniqueness, plan match)
- * 5. Real multi-gateway checkout payload construction (Razorpay, Stripe)
+ * 4. Pricing tiers (₹20 Basic, ₹50 Moderate, ₹100 Full, ₹200 Complete / All Access)
+ * 5. Real multi-gateway checkout payload construction (Razorpay, UPI, Cards, Stripe)
  */
 
 import crypto from "crypto";
@@ -21,13 +21,14 @@ export function getOrCreateEntitlements(userId) {
   if (!user) {
     user = {
       userId,
-      subscriptionTier: "free", // "free", "basic", "premium", "family"
+      isRegistered: false,
+      subscriptionTier: "unregistered", // "unregistered", "registered_free", "basic_20", "moderate_50", "full_100", "complete_200"
       validUntil: null,
-      monthlyCredits: 5, // Free tier baseline
-      bonusCredits: 10,
-      availableCredits: 15,
+      monthlyCredits: 0,
+      bonusCredits: 2,
+      availableCredits: 2,
       lockedCredits: 0,
-      pdfExport: true,
+      pdfExport: false,
       profilesAllowance: 1,
       createdAt: new Date().toISOString(),
       transactionHistory: []
@@ -40,19 +41,26 @@ export function getOrCreateEntitlements(userId) {
 /**
  * Creates an authorized payment intent/order on the backend with gateway specifics
  */
-export function createPaymentOrder(userId, planId, billingPeriod = "yearly", currency = "INR") {
+export function createPaymentOrder(userId, planId, billingPeriod = "one_time", currency = "INR") {
   if (!planId || typeof planId !== "string") {
     throw new Error("Valid planId is required to create payment order.");
   }
-  const plan = PRICING_PLANS.find(p => p.id === planId);
+  // Lookup in PRICING_PLANS or fallback legacy aliases
+  let plan = PRICING_PLANS.find(p => p.id === planId);
+  if (!plan) {
+    if (planId === "basic") plan = PRICING_PLANS.find(p => p.id === "basic_20");
+    else if (planId === "premium") plan = PRICING_PLANS.find(p => p.id === "full_100");
+    else if (planId === "family") plan = PRICING_PLANS.find(p => p.id === "complete_200");
+  }
+
   if (!plan) {
     throw new Error(`Unrecognized planId: "${planId}". Valid plans are: ${PRICING_PLANS.map(p => p.id).join(", ")}`);
   }
+
   const orderId = `ord_${Date.now()}_${crypto.randomBytes(6).toString("hex")}`;
-  
-  const amountUSD = billingPeriod === "yearly" ? plan.yearlyPriceUSD : plan.monthlyPriceUSD;
-  const creditsToAdd = billingPeriod === "yearly" ? plan.yearlyCredits : plan.monthlyCredits;
-  const inrRate = EXCHANGE_RATES.INR || 83.5;
+  const amountINR = plan.priceINR || Math.round(plan.priceUSD * 83.5);
+  const amountUSD = plan.priceUSD || parseFloat((amountINR / 83.5).toFixed(2));
+  const creditsToAdd = plan.monthlyCredits || 5;
 
   const order = {
     orderId,
@@ -60,7 +68,8 @@ export function createPaymentOrder(userId, planId, billingPeriod = "yearly", cur
     planId: plan.id,
     planName: plan.name,
     billingPeriod,
-    currency,
+    currency: currency.toUpperCase(),
+    amountINR,
     amountUSD,
     creditsToAdd,
     status: "created",
@@ -68,8 +77,12 @@ export function createPaymentOrder(userId, planId, billingPeriod = "yearly", cur
     // Gateway metadata
     gatewayMetadata: {
       gateway: "razorpay_stripe_unified",
-      amountPaise: Math.round(amountUSD * inrRate * 100),
-      amountCents: Math.round(amountUSD * 100)
+      amountPaise: Math.round(amountINR * 100),
+      amountCents: Math.round(amountUSD * 100),
+      notes: {
+        planId: plan.id,
+        userId
+      }
     }
   };
 
@@ -130,15 +143,16 @@ export function processPaymentWebhook({ orderId, paymentId, signature, secretKey
   // 5. Atomic Entitlement Mutation & Ledger Commit
   const user = getOrCreateEntitlements(order.userId);
   const now = new Date();
-  const validDurationDays = order.billingPeriod === "yearly" ? 365 : 30;
+  const validDurationDays = order.billingPeriod === "yearly" ? 365 : 60;
   const expiresAt = new Date(now.getTime() + validDurationDays * 24 * 60 * 60 * 1000).toISOString();
 
   user.subscriptionTier = order.planId;
+  user.isRegistered = true; // Purchasing automatically grants registered status
   user.validUntil = expiresAt;
-  user.monthlyCredits += order.creditsToAdd;
-  user.availableCredits += order.creditsToAdd;
+  user.monthlyCredits = (user.monthlyCredits || 0) + (order.creditsToAdd || 0);
+  user.availableCredits = (user.availableCredits || 0) + (order.creditsToAdd || 0);
   user.pdfExport = true;
-  if (order.planId === "family") {
+  if (order.planId === "complete_200" || order.planId === "full_100") {
     user.profilesAllowance = 6;
   }
 
@@ -146,9 +160,10 @@ export function processPaymentWebhook({ orderId, paymentId, signature, secretKey
     orderId,
     paymentId,
     userId: order.userId,
-    type: "subscription_payment",
+    type: "report_access_payment",
+    amountINR: order.amountINR,
     amountUSD: order.amountUSD,
-    currency: order.currency,
+    currency: order.currency || "INR",
     creditsAdded: order.creditsToAdd,
     planId: order.planId,
     billingPeriod: order.billingPeriod,

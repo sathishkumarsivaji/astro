@@ -534,8 +534,8 @@ export const KARANAMS = [
   "நாகவம் (Naga)", "கிமிஸ்துக்கினம் (Kimstughna)"
 ];
 
-// Julian day calculations (with UTC conversion)
-export function getJulianDate(year, month, day, hour, min, timezoneOffsetHours) {
+// Julian day calculations (with UTC conversion & historical Julian/Gregorian calendar support)
+export function getJulianDate(year, month, day, hour, min, timezoneOffsetHours, calendar = "auto") {
   if (timezoneOffsetHours === null || timezoneOffsetHours === undefined || !Number.isFinite(timezoneOffsetHours)) {
     throw new Error("Explicit timezoneOffsetHours is required for astronomical Julian Date calculation.");
   }
@@ -546,13 +546,31 @@ export function getJulianDate(year, month, day, hour, min, timezoneOffsetHours) 
     y -= 1;
     m += 12;
   }
-  const A = Math.floor(y / 100);
-  const B = 2 - A + Math.floor(A / 4);
+
+  // Historical calendar boundary: Gregorian adopted on 1582-10-15 (JD 2299160.5)
+  let isGregorian = true;
+  if (calendar === "julian") {
+    isGregorian = false;
+  } else if (calendar === "gregorian") {
+    isGregorian = true;
+  } else {
+    // Auto: Dates prior to 1582-10-15 use Julian calendar
+    if (year < 1582 || (year === 1582 && (month < 10 || (month === 10 && day < 15)))) {
+      isGregorian = false;
+    }
+  }
+
+  let B = 0;
+  if (isGregorian) {
+    const A = Math.floor(y / 100);
+    B = 2 - A + Math.floor(A / 4);
+  }
+
   return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524.5 + decimalHours / 24.0;
 }
 
 // Exact conversion from UTC Date instant to astronomical Julian Day
-export function getJulianDateFromUtc(utcDate) {
+export function getJulianDateFromUtc(utcDate, calendar = "auto") {
   if (!(utcDate instanceof Date) || isNaN(utcDate.getTime())) {
     throw new Error("Valid Date object is required to calculate Julian Date from UTC instant.");
   }
@@ -562,7 +580,7 @@ export function getJulianDateFromUtc(utcDate) {
   const h = utcDate.getUTCHours();
   const min = utcDate.getUTCMinutes();
   const s = utcDate.getUTCSeconds() + utcDate.getUTCMilliseconds() / 1000.0;
-  return getJulianDate(y, m, d, h, min + s / 60.0, 0);
+  return getJulianDate(y, m, d, h, min + s / 60.0, 0, calendar);
 }
 
 // Exact inverse calculation: Julian Day number to UTC Date object (Meeus algorithm)
@@ -957,14 +975,18 @@ import {
   getLahiriAyanamsha,
   getKPAyanamsha,
   getRamanAyanamsha,
-  getAyanamshaForSystem
+  getAyanamshaForSystem,
+  getAyanamshaMetadata,
+  AYANAMSHA_MODELS
 } from "../astrology/astronomy/ayanamsha.js";
 
 export {
   getLahiriAyanamsha,
   getKPAyanamsha,
   getRamanAyanamsha,
-  getAyanamshaForSystem
+  getAyanamshaForSystem,
+  getAyanamshaMetadata,
+  AYANAMSHA_MODELS
 };
 
 
@@ -1254,7 +1276,7 @@ export function calculateD60(longDeg, ascendantSpeedDegPerMin = null) {
     isOddSign,
     isSignReversed: false, // Sign progression is always forward from natal sign in this convention
     alternativeSignIdx,
-    alternativeSignName: ZODIAC_SIGNS[alternativeSignIdx]?.name || "Aries",
+    alternativeSignName: ZODIAC_SIGNS[((alternativeSignIdx % 12) + 12) % 12]?.name || null,
     nearestBoundaryDistanceDeg: parseFloat(nearestBoundaryDistanceDeg.toFixed(5)),
     nearestBoundaryDistanceArcmin: parseFloat(nearestBoundaryDistanceArcmin.toFixed(3)),
     nearestBoundaryDistanceArcsec: parseFloat(nearestBoundaryDistanceArcsec.toFixed(1)),
@@ -1984,34 +2006,31 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   const saturnData = getEphemerisBody("Saturn");
 
   // Mean and True Lunar Nodes (Rahu / Ketu)
-  // Authoritative IAU / Meeus Mean Ascending Node polynomial (matches authoritative astronomical SIDM_LAHIRI reference to < 0.02" across 1900-2050)
-  const meanRahuTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
+  // Chapront (2002) / IAU Standard Mean Ascending Node polynomial with J2000 anchor 125.04455°
+  const meanRahuTrop = norm360(125.04455 - 1934.136261 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0);
   const meanKetuTrop = norm360(meanRahuTrop + 180);
 
-  // Periodic perturbations to calculate True (Oscillating) Node (Jean Meeus Astronomical Algorithms)
-  const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) * DEG2RAD;
-  const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) * DEG2RAD;
-  const Mprime = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T) * DEG2RAD;
-  const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) * DEG2RAD;
-
-  const deltaNodeDeg = -1.4979 * Math.sin(2 * (D - F))
-    - 0.1500 * Math.sin(M)
-    - 0.1226 * Math.sin(2 * D)
-    + 0.1176 * Math.sin(2 * F)
-    - 0.0801 * Math.sin(2 * (D - Mprime));
-
-  // High-precision True (Oscillating) Node via instantaneous lunar orbital state vector cross-product
+  // True (Osculating) Ascending Node of the Moon computed from instantaneous orbital angular momentum vector h = r x v
   let trueRahuTrop;
   try {
-    const astroTime = new Astronomy.AstroTime(utcDate);
-    const s = Astronomy.GeoMoonState(astroTime);
-    const rot = Astronomy.Rotation_EQJ_ECT(astroTime);
-    const r_ect = Astronomy.RotateVector(rot, new Astronomy.Vector(s.x, s.y, s.z, astroTime));
-    const v_ect = Astronomy.RotateVector(rot, new Astronomy.Vector(s.vx, s.vy, s.vz, astroTime));
-    const hx = r_ect.y * v_ect.z - r_ect.z * v_ect.y;
-    const hy = r_ect.z * v_ect.x - r_ect.x * v_ect.z;
+    const deltaSec = 60;
+    const v0 = Astronomy.Ecliptic(Astronomy.GeoVector("Moon", new Date(utcDate.getTime() - deltaSec * 1000), true)).vec;
+    const v1 = Astronomy.Ecliptic(Astronomy.GeoVector("Moon", new Date(utcDate.getTime() + deltaSec * 1000), true)).vec;
+    const rx = (v0.x + v1.x) / 2, ry = (v0.y + v1.y) / 2, rz = (v0.z + v1.z) / 2;
+    const vx = (v1.x - v0.x) / (2 * deltaSec), vy = (v1.y - v0.y) / (2 * deltaSec), vz = (v1.z - v0.z) / (2 * deltaSec);
+    const hx = ry * vz - rz * vy, hy = rz * vx - rx * vz;
     trueRahuTrop = norm360(Math.atan2(hx, -hy) * (180 / Math.PI));
-  } catch (_e) {
+  } catch (err) {
+    // Fallback: Periodic perturbations to calculate True (Oscillating) Node (Jean Meeus Astronomical Algorithms Ch. 47)
+    const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) * DEG2RAD;
+    const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) * DEG2RAD;
+    const Mprime = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T) * DEG2RAD;
+    const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) * DEG2RAD;
+    const deltaNodeDeg = -1.4979 * Math.sin(2 * (D - F))
+      - 0.1500 * Math.sin(M)
+      - 0.1226 * Math.sin(2 * D)
+      + 0.1176 * Math.sin(2 * F)
+      - 0.0801 * Math.sin(2 * (D - Mprime));
     trueRahuTrop = norm360(meanRahuTrop + deltaNodeDeg);
   }
   const trueKetuTrop = norm360(trueRahuTrop + 180);
@@ -2459,6 +2478,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     ayanamshaValue: ayanamsha,
     system: sysNorm,
     ayanamshaName: sysNorm === "kp" ? "KP Original" : (sysNorm === "raman" ? "B.V. Raman (397 AD)" : (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana" ? "None (Sayana)" : "Lahiri (Chitrapaksha)")),
+    ayanamshaModelLocked: getAyanamshaMetadata(sysNorm),
     ascendantLong,
     ascendantDeg: norm360(ascendantLong),
     ascendantSpeedDegPerMin,
@@ -2476,6 +2496,14 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
       trueKetuTropical: trueKetuTrop
     },
     nodeModel,
+    lunarNodeConvention: {
+      model: nodeModel === "true" ? "TRUE_OSCULATING" : "MEAN_ASTRONOMICAL",
+      definition: nodeModel === "true"
+        ? "Instantaneous osculating node with Jean Meeus Ch. 47 periodic perturbations"
+        : "Chapront 2002 / IAU Standard Polynomial (125.04455° anchor)",
+      referenceFrame: "Geocentric True Ecliptic of Date"
+    },
+    calendarSystem: (typeof options?.calendar === "string") ? options.calendar : ((year < 1582 || (year === 1582 && (month < 10 || (month === 10 && day < 15)))) ? "Julian" : "Gregorian"),
     sunSign,
     moonSign,
     ascendantSign,
@@ -2649,7 +2677,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     jaiminiSystem: calculateJaiminiSystem(planets, ascendantLong),
     bhavaChalit: calculateBhavaChalit(ascendantLong, planets, lat, lng),
     planetaryAvasthas: calculatePlanetaryAvasthas(planets, ascendantLong),
-    functionalLordships: getFunctionalLordshipMatrix(ascendantSign?.name || "Aries"),
+    functionalLordships: ascendantSign?.name ? getFunctionalLordshipMatrix(ascendantSign.name) : null,
     nakshatraDispositors: planets.map(p => calculateNakshatraDispositorProfile(p, planets, ascendantLong)),
     gocharDashboard: calculateDedicatedGocharDashboard({ planets, ascendantLong, moonLong, ascendant: { longitude: ascendantLong }, moon: { longitude: moonLong }, timezoneId, tz: tzOffsetHours }, new Date()),
     dailyPanchang: calculateDailyPanchang(utcDate, lat, lng, tzOffsetHours, timezoneId),
@@ -3647,10 +3675,10 @@ export function calculatePersonalizedRemedies(ascendantSign, planets = [], lang 
       primaryGemTa: "மாணிக்கம் (Ruby)",
       primaryLordEn: "Sun (1st Lord)",
       primaryLordTa: "சூரியன் (லக்னாதிபதி)",
-      secondaryGemEn: "Yellow Sapphire / Red Coral (Jupiter / Mars)",
-      secondaryGemTa: "மஞ்சள் புஷ்பராகம் / பவளம்",
-      secondaryLordEn: "Mars (Yogakaraka 4th & 9th Lord)",
-      secondaryLordTa: "செவ்வாய் (4 & 9-ம் யோககாரகன்)",
+      secondaryGemEn: "Red Coral (Mars) / Yellow Sapphire (Jupiter)",
+      secondaryGemTa: "பவளம் (செவ்வாய்) / மஞ்சள் புஷ்பராகம் (குரு)",
+      secondaryLordEn: "Mars (Yogakaraka 4th & 9th Lord) & Jupiter (5th Lord)",
+      secondaryLordTa: "செவ்வாய் (4 & 9-ம் யோககாரகன்) & குரு (5-ம் திரிகோணாதிபதி)",
       contraindicatedEn: [
         { gemstone: "Blue Sapphire (Neelam)", lord: "Saturn", reason: "Saturn rules 6th & 7th houses (Shatru & Marakadhipati)", contraindicated: true },
         { gemstone: "Diamond (Heera)", lord: "Venus", reason: "Venus rules 3rd & 10th houses", contraindicated: true }
@@ -3725,10 +3753,10 @@ export function calculatePersonalizedRemedies(ascendantSign, planets = [], lang 
       primaryGemTa: "செம்பவளம் (Red Coral)",
       primaryLordEn: "Mars (1st & 6th Lord)",
       primaryLordTa: "செவ்வாய் (லக்னாதிபதி)",
-      secondaryGemEn: "Yellow Sapphire / Natural Pearl (Jupiter / Moon)",
-      secondaryGemTa: "மஞ்சள் புஷ்பராகம் / முத்து",
-      secondaryLordEn: "Jupiter (2nd & 5th Lord)",
-      secondaryLordTa: "குரு (2 & 5-ம் தன/பஞ்சமாதிபதி)",
+      secondaryGemEn: "Yellow Sapphire (Jupiter) / Natural Pearl (Moon)",
+      secondaryGemTa: "மஞ்சள் புஷ்பராகம் (குரு) / முத்து (சந்திரன்)",
+      secondaryLordEn: "Jupiter (2nd & 5th Lord) & Moon (9th Lord)",
+      secondaryLordTa: "குரு (2 & 5-ம் அதிபதி) & சந்திரன் (9-ம் பாக்கியாதிபதி)",
       contraindicatedEn: [
         { gemstone: "Emerald (Panna)", lord: "Mercury", reason: "Mercury rules 8th & 11th Dusthana houses", contraindicated: true },
         { gemstone: "Diamond (Heera)", lord: "Venus", reason: "Venus rules 7th & 12th Maraka and Vyaya houses", contraindicated: true }
@@ -4824,10 +4852,10 @@ export function calculateComprehensiveDomainPredictions(planets, ascendantLong, 
     ? (isTamil ? "அபரிமிதமான பூமி யோகம் & சொகுசு வாகன யோகம்" : "High Real Estate Alignment & Multiple Vehicle Signatures")
     : (isTamil ? "நிலையான சொந்த வீடு & வாகன யோகம்" : "Stable Real Estate Acquisition & Dependable Vehicles");
   
-  const h4OccupantsNames = h4.occupants.map(p => isTamil ? (p.tamil || p.name) : p.name).join(", ");
+  const h4OccupantsNames = h4.occupants.map(p => isTamil ? (p.tamil || toTamilPlanet(p.name)) : p.name).join(", ");
   const h4HasAffliction = h4.occupants.some(p => ["Saturn", "Rahu", "Ketu"].includes(p.name));
   const propertySummary = isTamil
-    ? `${mars ? `பூமிகாரகன் செவ்வாய் ${mars.house}-ம் வீட்டிலும் (${mars.tamil || "செவ்வாய்"}), ` : ''}${venus ? `வாகனகாரகன் சுக்கிரன் ${venus.house}-ம் வீட்டிலும் (${venus.tamil || "சுக்கிரன்"}), ` : ''}4-ம் அதிபதி ${h4.lordPlanet?.tamil || h4.lordName}${h4.lordPlanet ? ` ${h4.lordPlanet.house}-ம் இடத்தில் உள்ளார்.` : '.'} ${h4HasAffliction ? `4-ம் பாவகத்தில் ${h4OccupantsNames} இருப்பு நில ஆவணங்களை கவனமாக சரிபார்த்து சொத்து மற்றும் வாகனங்களை வாங்குவதை அறிவுறுத்துகிறது.` : 'சொந்த மனை, வீடு மற்றும் வாகன வசதிகள் சுப யோகமாக அமையும்.'}`
+    ? `${mars ? `பூமிகாரகன் செவ்வாய் ${mars.house}-ம் வீட்டிலும் (${mars.tamil || toTamilPlanet(mars.name)}), ` : ''}${venus ? `வாகனகாரகன் சுக்கிரன் ${venus.house}-ம் வீட்டிலும் (${venus.tamil || toTamilPlanet(venus.name)}), ` : ''}4-ம் அதிபதி ${h4.lordPlanet?.tamil || (h4.lordName ? toTamilPlanet(h4.lordName) : "")}${h4.lordPlanet ? ` ${h4.lordPlanet.house}-ம் இடத்தில் உள்ளார்.` : '.'} ${h4HasAffliction ? `4-ம் பாவகத்தில் ${h4OccupantsNames} இருப்பு நில ஆவணங்களை கவனமாக சரிபார்த்து சொத்து மற்றும் வாகனங்களை வாங்குவதை அறிவுறுத்துகிறது.` : 'சொந்த மனை, வீடு மற்றும் வாகன வசதிகள் சுப யோகமாக அமையும்.'}`
     : `${mars ? `Mars (Bhoomi Karaka) positioned in House ${mars.house} ` : ''}${venus ? `and Venus (Vahana Karaka) in House ${venus.house} ` : ''}align with real estate and conveyance assets. 4th house lord ${h4.lordName}${h4.lordPlanet ? ` is situated in House ${h4.lordPlanet.house}.` : '.'} ${h4HasAffliction ? `Presence of ${h4OccupantsNames} in 4th house advises diligent title deed verification and prudent capital budgeting for properties.` : 'Classical alignments support steady acquisition of residential premises and dependable vehicles.'}`;
 
   // 5. LEADERSHIP, PUBLIC STEWARDSHIP & CIVIC THEMES
@@ -6301,22 +6329,26 @@ export function calculateKarmicPatternAnalysis(
 
   // 5th House & Lord (Purva Punya)
   const house5SignIdx = (ascSignIdx + 4) % 12;
-  const house5Sign = ZODIAC_SIGNS[house5SignIdx]?.name || "Leo";
-  const house5LordName = ZODIAC_SIGNS[house5SignIdx]?.ruler || "Sun";
+  const house5SignObj = ZODIAC_SIGNS[house5SignIdx];
+  if (!house5SignObj) {
+    throw new Error(`Invalid 5th-house sign index: ${house5SignIdx}`);
+  }
+  const house5Sign = house5SignObj.name;
+  const house5LordName = house5SignObj.ruler;
   const house5Lord = getPlanet(house5LordName);
   const house5LordHouse = getPlanetHouse(house5Lord);
 
   // 9th House & Lord (Dharma & Spiritual Inheritance)
   const house9SignIdx = (ascSignIdx + 8) % 12;
-  const house9Sign = ZODIAC_SIGNS[house9SignIdx]?.name || "Sagittarius";
-  const house9LordName = ZODIAC_SIGNS[house9SignIdx]?.ruler || "Jupiter";
+  const house9Sign = ZODIAC_SIGNS[house9SignIdx].name;
+  const house9LordName = ZODIAC_SIGNS[house9SignIdx].ruler;
   const house9Lord = getPlanet(house9LordName);
   const house9LordHouse = getPlanetHouse(house9Lord);
 
   // 12th House & Lord (Moksha & Dissolution)
   const house12SignIdx = (ascSignIdx + 11) % 12;
-  const house12Sign = ZODIAC_SIGNS[house12SignIdx]?.name || "Pisces";
-  const house12LordName = ZODIAC_SIGNS[house12SignIdx]?.ruler || "Jupiter";
+  const house12Sign = ZODIAC_SIGNS[house12SignIdx].name;
+  const house12LordName = ZODIAC_SIGNS[house12SignIdx].ruler;
   const house12Lord = getPlanet(house12LordName);
   const house12LordHouse = getPlanetHouse(house12Lord);
 
@@ -6511,8 +6543,8 @@ export function calculateTraditionalLongevityIndicators(
 
   // 2. 8th House & Lord (Ayur Bhava - Lifespan Endurance)
   const house8SignIdx = (ascSignIdx + 7) % 12;
-  const house8Sign = ZODIAC_SIGNS[house8SignIdx]?.name || "Scorpio";
-  const house8LordName = ZODIAC_SIGNS[house8SignIdx]?.ruler || "Mars";
+  const house8Sign = ZODIAC_SIGNS[house8SignIdx].name;
+  const house8LordName = ZODIAC_SIGNS[house8SignIdx].ruler;
   const house8Lord = getPlanet(house8LordName);
   const house8LordHouse = getPlanetHouse(house8Lord);
 
@@ -6522,16 +6554,16 @@ export function calculateTraditionalLongevityIndicators(
 
   // 4. 3rd House & Lord (Bhavat Bhavam of 8th - Secondary Vitality)
   const house3SignIdx = (ascSignIdx + 2) % 12;
-  const house3Sign = ZODIAC_SIGNS[house3SignIdx]?.name || "Gemini";
-  const house3LordName = ZODIAC_SIGNS[house3SignIdx]?.ruler || "Mercury";
+  const house3Sign = ZODIAC_SIGNS[house3SignIdx].name;
+  const house3LordName = ZODIAC_SIGNS[house3SignIdx].ruler;
   const house3Lord = getPlanet(house3LordName);
   const house3LordHouse = getPlanetHouse(house3Lord);
 
   // 5. Maraka Lords (2nd and 7th Lords)
   const house2SignIdx = (ascSignIdx + 1) % 12;
-  const house2LordName = ZODIAC_SIGNS[house2SignIdx]?.ruler || "Venus";
+  const house2LordName = ZODIAC_SIGNS[house2SignIdx].ruler;
   const house7SignIdx = (ascSignIdx + 6) % 12;
-  const house7LordName = ZODIAC_SIGNS[house7SignIdx]?.ruler || "Venus";
+  const house7LordName = ZODIAC_SIGNS[house7SignIdx].ruler;
 
   const evaluateStrength = (planet, preferredHouses) => {
     if (!planet) return "Moderate";
@@ -6725,11 +6757,11 @@ export function calculateDedicatedGocharDashboard(chartData = {}, targetDate = n
       const sm = getSiderealSunMoon(tDate, chartSystem);
       siderealLong = sm.moonLong;
     } else if (gName === "Rahu") {
-      const rahuTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
+      const rahuTrop = norm360(125.04455 - 1934.136261 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0);
       siderealLong = norm360(rahuTrop - ayanamsa);
       isRetrograde = true; // Nodes are classically retrograde
     } else if (gName === "Ketu") {
-      const rahuTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
+      const rahuTrop = norm360(125.04455 - 1934.136261 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0);
       siderealLong = norm360(rahuTrop + 180 - ayanamsa);
       isRetrograde = true;
     } else {
@@ -7198,7 +7230,19 @@ export function calculateDailyPanchang(date = new Date(), lat = null, lng = null
   };
 }
 
-export function calculateEventMuhurta(eventType = "Marriage", startDate = new Date(), endDate = null, lat = 13.0827, lng = 80.2707, tz = 5.5, timezoneId = null) {
+export function calculateEventMuhurta(eventType = "Marriage", startDate = new Date(), endDate = null, lat = null, lng = null, tz = null, timezoneId = null) {
+  if (lat === null || lat === undefined || lng === null || lng === undefined || tz === null || tz === undefined) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      reason: "Verified latitude, longitude, and timezone offset required",
+      eventType,
+      totalDatesEvaluated: 0,
+      topScreenedDates: [],
+      bestWindows: [],
+      allCandidates: []
+    };
+  }
+
   const startYmd = (typeof startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(startDate))
     ? startDate
     : (formatDateInTimezone(startDate instanceof Date ? startDate : new Date(startDate), tz, timezoneId) || new Date().toISOString().split("T")[0]);
@@ -7305,7 +7349,20 @@ export function calculateEventMuhurta(eventType = "Marriage", startDate = new Da
 // ---------------------------------------------------------------------------
 // 7.11 SHASHTIAMSHA (D60) STABILITY & SENSITIVITY ENGINE (+/- 2 MINS)
 // ---------------------------------------------------------------------------
-export function calculateD60StabilityTest(birthDate = new Date(), lat = 13.0827, lng = 80.2707, tz = 5.5, options = {}) {
+export function calculateD60StabilityTest(birthDate = new Date(), lat = null, lng = null, tz = null, options = {}) {
+  if (lat === null || lat === undefined || lng === null || lng === undefined || tz === null || tz === undefined) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      reason: "Coordinates and timezone required",
+      d60SignChanged: null,
+      d60DeityChanged: null,
+      stabilityScore: null,
+      isUltraSensitive: null,
+      transitionMinutesBefore: null,
+      transitionMinutesAfter: null
+    };
+  }
+
   const bDate = birthDate instanceof Date ? birthDate : new Date(birthDate);
   const sys = options?.system || "lahiri";
 
@@ -7622,9 +7679,9 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
     ? chartData.ascendantLong
     : (typeof chartData.ascendant?.longitude === "number" ? chartData.ascendant.longitude : 0);
   const ascSignIdx = Math.floor(norm360(ascendantLong) / 30);
-  const ascSign = ZODIAC_SIGNS[ascSignIdx] || ZODIAC_SIGNS[0];
+  const ascSign = ZODIAC_SIGNS[ascSignIdx];
 
-  const functionalMatrix = getFunctionalLordshipMatrix(ascSign?.name || "Aries");
+  const functionalMatrix = ascSign?.name ? getFunctionalLordshipMatrix(ascSign.name) : null;
   const dashaTable = chartData.dashaTable || [];
   const activeDasha = chartData.currentDasha || dashaTable.find(d => d.isCurrent) || null;
 
@@ -9406,7 +9463,7 @@ export function calculateAuspiciousMilestoneTimelines(planets = [], ascendantLon
   return {
     summary: isTamil
       ? "உங்கள் ஜென்ம லக்னம், நவாம்சம் மற்றும் தசா புக்தி சுழற்சிகளை அடிப்படையாகக் கொண்டு துல்லியமாக கணக்கிடப்பட்ட மகா சுப முகூர்த்த கால அட்டவணை."
-      : "Astrological timeline of auspicious milestone windows calibrated across your natal chart and Vimshottari Dasha cycles.",
+      : "Astrological timeline of auspicious milestone windows computed using your natal chart and Vimshottari Dasha cycles.",
     milestones,
     dayToDayMuhurthaGuide
   };
@@ -9419,7 +9476,7 @@ export function getSiderealLongitudeForBody(bodyName, jd, system = "lahiri") {
   const ayanamsha = getAyanamshaForSystem(jd, system);
   if (bodyName === "Rahu" || bodyName === "Ketu") {
     const T = (jd - 2451545.0) / 36525.0;
-    const rahuMeanTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
+    const rahuMeanTrop = norm360(125.04455 - 1934.136261 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0);
     const rahuLong = norm360(rahuMeanTrop - ayanamsha);
     return bodyName === "Rahu" ? rahuLong : norm360(rahuLong + 180);
   }
@@ -10549,7 +10606,7 @@ export function calculateMarriageTimingEvents(chartOrPlanets, maybeAscLong, mayb
     domain: "marriage",
     summary: isTamil
       ? `7-ம் பாவக அதிபதி ${h7LordName}, சுக்கிரன், நவாம்சம் (D9) மற்றும் தசா-கோசார convergences அடிப்படையிலான திருமண சுப காலக்கோடு.`
-      : `Classical matrimonial timing engine calibrated across 7th lord (${h7LordName}), Venus, D9 Navamsha convergence, and Dasha cycles.`,
+      : `Classical matrimonial timing engine computed using classical astrological factors: 7th lord (${h7LordName}), Venus, D9 Navamsha convergence, and Dasha cycles.`,
     natalPromise,
     candidateWindows,
     totalWindows: candidateWindows.length
@@ -10772,7 +10829,7 @@ export function calculateCareerTimingEvents(chartOrPlanets, maybeAscLong, maybeM
     domain: "career",
     summary: isTamil
       ? `10-ம் கர்ம பாவக அதிபதி ${h10LordName}, சூரியன், சனி மற்றும் தசாம்சம் (D10) அடிப்படையிலான தொழில் முன்னேற்ற காலக்கோடு.`
-      : `Classical career timing engine calibrated across 10th lord (${h10LordName}), Sun, Saturn, D10 Dashamsha, and Dasha cycles.`,
+      : `Classical career timing engine computed using classical astrological factors: 10th lord (${h10LordName}), Sun, Saturn, D10 Dashamsha, and Dasha cycles.`,
     natalPromise,
     candidateWindows,
     totalWindows: candidateWindows.length
@@ -10983,7 +11040,7 @@ export function calculatePropertyTimingEvents(chartOrPlanets, maybeAscLong, mayb
     domain: "property",
     summary: isTamil
       ? `4-ம் சுக பாவக அதிபதி ${h4LordName}, செவ்வாய், சுக்கிரன் மற்றும் சதுர்த்தாம்சம் (D4) அடிப்படையிலான சொத்து யோக காலக்கோடு.`
-      : `Classical property and real estate timing engine calibrated across 4th lord (${h4LordName}), Mars, Venus, D4 Chaturthamsha, and Dasha cycles.`,
+      : `Classical property and real estate timing engine computed using classical astrological factors: 4th lord (${h4LordName}), Mars, Venus, D4 Chaturthamsha, and Dasha cycles.`,
     natalPromise,
     candidateWindows,
     totalWindows: candidateWindows.length
@@ -11195,7 +11252,7 @@ export function calculateEducationTimingEvents(chartOrPlanets, maybeAscLong, may
     domain: "education",
     summary: isTamil
       ? `4, 5, 9-ம் பாவக அதிபதிகள், புதன், குரு மற்றும் சதுர்விம்சாம்சம் (D24) அடிப்படையிலான கல்வி சாதனை காலக்கோடு.`
-      : `Classical education timing engine calibrated across 4th/5th/9th lords, Mercury, Jupiter, D24 Chaturvimshamsha, and Dasha cycles.`,
+      : `Classical education timing engine computed using classical astrological factors: 4th/5th/9th lords, Mercury, Jupiter, D24 Chaturvimshamsha, and Dasha cycles.`,
     natalPromise,
     candidateWindows,
     totalWindows: candidateWindows.length
@@ -11405,7 +11462,7 @@ export function calculateProgenyTimingEvents(chartOrPlanets, maybeAscLong, maybe
     domain: "progeny",
     summary: isTamil
       ? `5-ம் பாவக அதிபதி ${h5LordName}, குரு மற்றும் சப்தாம்சம் (D7) அடிப்படையிலான சந்தான சுப காலக்கோடு.`
-      : `Classical progeny timing engine calibrated across 5th lord (${h5LordName}), Jupiter, D7 Saptamsha, and Dasha cycles.`,
+      : `Classical progeny timing engine computed using classical astrological factors: 5th lord (${h5LordName}), Jupiter, D7 Saptamsha, and Dasha cycles.`,
     natalPromise,
     candidateWindows,
     totalWindows: candidateWindows.length
@@ -11582,7 +11639,7 @@ export function calculateHealthVulnerabilityEvents(chartOrPlanets, maybeAscLong,
     domain: "health",
     summary: isTamil
       ? `6, 8, 12-ம் பாவகங்கள் மற்றும் காரகங்களை அடிப்படையாகக் கொண்ட பாரம்பரிய தற்காப்பு நல்வாழ்வு காலக்கோடு.`
-      : `Classical wellness and somatic timing engine calibrated across 6th/8th/12th lords, D3 Drekkana, D30 Trimsamsha, and Dasha cycles.`,
+      : `Classical wellness and somatic timing engine computed using classical astrological factors: 6th/8th/12th lords, D3 Drekkana, D30 Trimsamsha, and Dasha cycles.`,
     natalPromise,
     candidateWindows,
     totalWindows: candidateWindows.length
@@ -11650,7 +11707,7 @@ export function calculateTransitEphemeris(targetDate = new Date(), natalAscendan
 
   // Mean Rahu/Ketu:
   const T = (jd - 2451545.0) / 36525.0;
-  const rahuMeanTrop = norm360(125.04452 - 1934.136261 * T + 0.0020708 * T * T + 0.0000022 * T * T * T);
+  const rahuMeanTrop = norm360(125.04455 - 1934.136261 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0);
   const rahuLong = norm360(rahuMeanTrop - ayanamsha);
   const ketuLong = norm360(rahuLong + 180);
 
@@ -12773,7 +12830,7 @@ export function calculateReportEvidencePackage(chartData, lang = "en") {
   const atmakaraka = chartData.atmakaraka || karakas[0] || null;
 
   // 5. Qualitative Tridosha Elemental Distribution
-  const ascSignObj = ZODIAC_SIGNS[Math.floor(norm360(ascendantLong) / 30)]?.name || "Aries";
+  const ascSignObj = ZODIAC_SIGNS[Math.floor(norm360(ascendantLong) / 30)].name;
   const tridosha = calculateAyurvedicTridosha(planets, ascSignObj, lang);
 
   // 6. Master Predictions (Unified Domain Convergence Engine)
@@ -12849,7 +12906,7 @@ export function calculateReportEvidencePackage(chartData, lang = "en") {
 
   return {
     meta: {
-      reportId: `AV-${(chartData.birthDateStr || (birthDate?.toISOString ? birthDate.toISOString().slice(0, 10) : "19900101")).replace(/[^0-9]/g, "")}-${Math.abs(Math.round((lat * 1000 + lng * 10 + tz) % 1000000)).toString(36).toUpperCase().padStart(4, "0")}`,
+      reportId: `AV-${(chartData.birthDateStr || (birthDate?.toISOString ? birthDate.toISOString().slice(0, 10) : "UNKNOWNDATE")).replace(/[^0-9]/g, "") || "UNKNOWNDATE"}-${Math.abs(Math.round((lat * 1000 + lng * 10 + tz) % 1000000)).toString(36).toUpperCase().padStart(4, "0")}`,
       reportSchema: "2.0",
       engineVersion: "4.2.0",
       astronomyProvider: "Astronomy Engine (VSOP87/NOVAS-derived planetary model) — Coordinate frame: Geocentric true ecliptic of date; Reference epoch: J2000.0; Sidereal conversion: Selected ayanamsha",
@@ -13205,4 +13262,34 @@ export const MATCHING_CONVENTION = {
 export { calculateChartBySystem, calculateMultiSystemBundle } from "../astrology/index.js";
 export { ASTROLOGY_SYSTEMS, getSystemConfig } from "../config/astrologySystems.js";
 export { REPORT_CHAPTERS, getChaptersForSystem } from "../config/reportChapters.js";
+
+// Deterministic Chart Fingerprint Engine (SHA/64-bit Hex Hash)
+export function generateChartFingerprint(chartData) {
+  if (!chartData) return "AV-0000000000000000";
+  const bInstant = chartData.birthInstantUtc || `${chartData.birthDateStr || chartData.birthDate || ""}_${chartData.birthTimeStr || chartData.birthTime || ""}`;
+  const lat = (typeof chartData.latitude === "number" ? chartData.latitude : (typeof chartData.lat === "number" ? chartData.lat : 0)).toFixed(4);
+  const lng = (typeof chartData.longitude === "number" ? chartData.longitude : (typeof chartData.lng === "number" ? chartData.lng : 0)).toFixed(4);
+  const tz = (typeof chartData.utcOffset === "number" ? chartData.utcOffset : (typeof chartData.tz === "number" ? chartData.tz : 0)).toFixed(2);
+  const sys = chartData.system?.id || chartData.system?.name || "lahiri";
+  const ayan = (typeof chartData.ayanamsa === "number" ? chartData.ayanamsa : (typeof chartData.ayanamsha === "number" ? chartData.ayanamsha : (typeof chartData.ayanamsaValue === "number" ? chartData.ayanamsaValue : 0))).toFixed(4);
+  const node = chartData.nodeModel || "mean";
+
+  const rawStr = `ASTROVERSE_V4.2.0|${bInstant}|${lat}|${lng}|${tz}|${sys}|${ayan}|${node}`;
+  
+  let h1 = 0xdeadbeef ^ rawStr.length;
+  let h2 = 0x41c6ce57 ^ rawStr.length;
+  for (let i = 0; i < rawStr.length; i++) {
+    const ch = rawStr.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  
+  const hex1 = (h1 >>> 0).toString(16).padStart(8, '0');
+  const hex2 = (h2 >>> 0).toString(16).padStart(8, '0');
+  return `AV-${hex1.toUpperCase()}${hex2.toUpperCase()}`;
+}
+
+
 

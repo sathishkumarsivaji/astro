@@ -11,21 +11,26 @@ export default function AstrologyJournal({ chartData, lang = "en" }) {
 
   const [journalEntries, setJournalEntries] = useState(() => {
     try {
-      const saved = typeof window !== "undefined" && window.localStorage ? localStorage.getItem(storageKey) : null;
-      return saved ? JSON.parse(saved) : [
-        {
-          id: "evt_1",
-          title: isTamil ? "முதல் வேலை / தொழில் தொடக்கம்" : "First Major Career Role",
-          date: "2015-06-15",
-          notes: isTamil ? "புதிய நகரத்திற்கு இடமாற்றம் மற்றும் தொழில் வளர்ச்சி." : "Relocated to new city and started engineering career.",
-          correlation: {
-            operatingDasha: "Jupiter",
-            activeBukthi: "Saturn",
-            ageAtEvent: 25.14
+      const saved = typeof window !== "undefined" && window.sessionStorage ? sessionStorage.getItem(storageKey) : null;
+      if (saved) return JSON.parse(saved);
+      if (chartData?.isDemoMode) {
+        return [
+          {
+            id: "evt_demo_1",
+            title: isTamil ? "முதல் வேலை / தொழில் தொடக்கம்" : "First Major Career Role",
+            date: "2015-06-15",
+            notes: isTamil ? "புதிய நகரத்திற்கு இடமாற்றம் மற்றும் தொழில் வளர்ச்சி." : "Relocated to new city and started engineering career.",
+            correlation: {
+              operatingDasha: "Jupiter",
+              activeBukthi: "Saturn",
+              ageAtEvent: 25.14
+            }
           }
-        }
-      ];
-    } catch {
+        ];
+      }
+      return [];
+    } catch (err) {
+      console.warn("[JOURNAL] Failed to load journal entries from storage:", err);
       return [];
     }
   });
@@ -52,10 +57,12 @@ export default function AstrologyJournal({ chartData, lang = "en" }) {
     const updated = [newEntry, ...journalEntries];
     setJournalEntries(updated);
     try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        localStorage.setItem(storageKey, JSON.stringify(updated));
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        sessionStorage.setItem(storageKey, JSON.stringify(updated));
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn("[JOURNAL] Failed to persist journal entry:", err);
+    }
 
     setNewTitle("");
     setNewDate("");
@@ -67,10 +74,12 @@ export default function AstrologyJournal({ chartData, lang = "en" }) {
     const updated = journalEntries.filter(e => e.id !== id);
     setJournalEntries(updated);
     try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        localStorage.setItem(storageKey, JSON.stringify(updated));
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        sessionStorage.setItem(storageKey, JSON.stringify(updated));
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn("[JOURNAL] Failed to persist deleted state:", err);
+    }
   };
 
   return (

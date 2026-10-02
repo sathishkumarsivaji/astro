@@ -31,9 +31,11 @@ const ESSENTIAL_DIGNITIES = {
   Saturn: { rulership: ["Capricorn", "Aquarius"], exaltation: "Libra", detriment: ["Cancer", "Leo"], fall: "Aries" }
 };
 
-export function calculateTropicalChart(observations, birthData) {
+export function calculateTropicalChart(observations, birthData, options = {}) {
   const { jd, T, lat, lng } = observations;
   const lmst = observations.sidereal.lmstDegrees;
+  const nodeModel = (options?.nodeModel || birthData?.nodeModel || observations?.nodeModel || "mean").toLowerCase() === "true" ? "true" : "mean";
+  const nodePrefix = nodeModel === "true" ? "True" : "Mean";
 
   // 1. Tropical Placidus Cusps
   const placidusRaw = calculatePlacidusCusps(lmst, lat, T);
@@ -92,8 +94,15 @@ export function calculateTropicalChart(observations, birthData) {
       else if (digRules.fall === signName) dignity = "Fall";
     }
 
+    const displayName = name === "Rahu"
+      ? `${nodePrefix} North Node (Rahu)`
+      : name === "Ketu"
+      ? `${nodePrefix} South Node (Ketu)`
+      : name;
+
     planets.push({
-      name, displayName: name === "Rahu" ? "Mean North Node (Rahu)" : name === "Ketu" ? "Mean South Node (Ketu)" : name,
+      name,
+      displayName,
       longitude: long,
       speed: raw.speed,
       isRetrograde: raw.isRetrograde,
@@ -102,7 +111,8 @@ export function calculateTropicalChart(observations, birthData) {
       sign: signName,
       signName,
       degreeInSign: long % 30,
-      dignity
+      dignity,
+      nodeModel: (name === "Rahu" || name === "Ketu") ? nodeModel : undefined
     });
   }
 
@@ -157,8 +167,12 @@ export function calculateTropicalChart(observations, birthData) {
       name: "Tropical / Sayana (Western)",
       ayanamshaName: "None (Sayana)",
       ayanamshaValue: 0.0,
-      houseSystem: "Placidus"
+      houseSystem: "Placidus",
+      nodeModel,
+      lunarNodeConvention: nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node"
     },
+    nodeModel,
+    lunarNodeConvention: nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node",
     ascendant: ascCusp,
     ascendantSign: { name: ascCusp.signName, index: ascCusp.signIndex },
     midheaven: mcCusp,

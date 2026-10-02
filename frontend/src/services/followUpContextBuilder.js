@@ -337,13 +337,21 @@ export function buildFollowUpContext({
   activeSection = "fullReport",
   systemId = null,
   multiSystemBundle = null,
-  lang = "en"
+  lang = null
 }) {
   if (!chartData) {
     throw new Error("chartData is required to build follow-up context.");
   }
 
-  const isTamil = lang === "ta";
+  const effectiveLang = (
+    lang === "ta" ||
+    chartData.lang === "ta" ||
+    chartData.userLanguage === "ta" ||
+    chartData.profile?.lang === "ta" ||
+    Boolean(chartData.domainPredictionsTamil)
+  ) ? "ta" : (lang || "en");
+
+  const isTamil = effectiveLang === "ta";
   const effectiveSystemId = (
     systemId ||
     chartData.system?.id ||
@@ -592,6 +600,7 @@ export function buildFollowUpContext({
   }
 
   return {
+    lang,
     profile,
     system,
     chart: {
@@ -610,14 +619,17 @@ export function buildFollowUpContext({
       ashtakavarga,
       vargas,
       allVargas: (!isTropical && (chartData.structuredVargas || chartData.divisionalCharts)) || null,
-      panchanga: chartData.panchanga || chartData.panchang || null,
+      panchanga: (isTamil ? (chartData.panchangaTamil || chartData.panchanga) : chartData.panchanga) || chartData.panchang || null,
       jaimini: (!isTropical && (chartData.jaiminiKarakas || chartData.jaimini)) || null,
       avasthas: (!isTropical && (chartData.planetaryAvasthas || chartData.avasthas)) || null,
       dispositors: (!isTropical && chartData.nakshatraDispositors) || null,
       transits: chartData.transits || chartData.upcomingTransits || chartData.transitCrossings || null,
-      timeline: chartData.chronologicalDashaTimeline || chartData.vimshottariCycleTimeline || chartData.timeline || null,
-      milestones: chartData.retrospectiveLifeAudit || chartData.retrospectiveMilestones || null,
-      palmistry: chartData.palmistryAnalysis || chartData.palmistry || null,
+      timeline: (isTamil ? (chartData.chronologicalDashaTimelineTamil || chartData.vimshottariCycleTimelineTamil || chartData.timelineTamil) : (chartData.chronologicalDashaTimeline || chartData.vimshottariCycleTimeline || chartData.timeline)) || null,
+      dashaTable: chartData.dashaTable || [],
+      birthYear: chartData.birthYear ?? (chartData.birthDateStr ? parseInt(chartData.birthDateStr.slice(0, 4), 10) : null) ?? (chartData.birthDate ? parseInt(String(chartData.birthDate).slice(0, 4), 10) : null) ?? null,
+      bhavasDetailed: (isTamil ? chartData.bhavasDetailedTamil : chartData.bhavasDetailed) || chartData.bhavasDetailed || [],
+      milestones: (isTamil ? (chartData.retrospectiveLifeAuditTamil || chartData.retrospectiveMilestonesTamil) : (chartData.retrospectiveLifeAudit || chartData.retrospectiveMilestones)) || null,
+      palmistry: (isTamil ? (chartData.palmistryAnalysisTamil || chartData.palmistryTamil) : (chartData.palmistryAnalysis || chartData.palmistry)) || chartData.palmistryAnalysis || chartData.palmistry || null,
       ayanamshaValue: chartData.ayanamshaValue ?? chartData.ayanamsa ?? null,
       atmakaraka: atmakaraka ? {
         planet: atmakaraka.planet || atmakaraka.name,
@@ -646,6 +658,18 @@ export function buildFollowUpContext({
       wellness: {
         summary: domain.health?.summary || domain.wellness?.summary || null,
         risks: riskMatrix.risks || []
+      },
+      studies: {
+        academicThemes: (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions)?.studies ||
+                        (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions)?.education || null,
+        windows: masterPreds.education?.windows || []
+      },
+      politics: {
+        summary: (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions)?.politics || null
+      },
+      foreign: {
+        summary: (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions)?.foreignMoksha ||
+                 (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions)?.travel || null
       },
       remedies: {
         primaryGemstone: remedies.primaryGemstone || null,

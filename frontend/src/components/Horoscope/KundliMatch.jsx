@@ -26,7 +26,7 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
   const [p1Lng, setP1Lng] = useState(() => profile?.longitude ?? null);
   const [p1Tz, setP1Tz] = useState(() => profile?.utcOffset ?? null);
   const [p1TimezoneId, setP1TimezoneId] = useState(() => profile?.timezoneId || null);
-  const [p1Nak, setP1Nak] = useState(() => chartData?.moonNakshatra?.name || "Ashwini");
+  const [p1Nak, setP1Nak] = useState(() => chartData?.moonNakshatra?.name || "");
   const [p1Pada, setP1Pada] = useState(() => chartData?.moonNakshatra?.pada ?? null);
   const [p1ChartData, setP1ChartData] = useState(() => chartData || null);
 

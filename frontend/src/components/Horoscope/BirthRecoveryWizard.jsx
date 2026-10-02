@@ -43,10 +43,15 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
       }
       if (videoRef.current && stream) {
         videoRef.current.srcObject = stream;
-        setStreamActive(true);
-        try { await videoRef.current.play(); } catch (err) {}
+        try { 
+          await videoRef.current.play(); 
+        } catch (playErr) {
+          console.warn("[CAMERA] Video auto-play failed or was blocked:", playErr);
+          setCameraError(isTamil ? "வீடியோ காட்சியை துவக்குவதில் பிழை ஏற்பட்டது." : "Video playback was blocked by the browser. Please interact with the page to allow playback.");
+        }
       }
     } catch (err) {
+      console.warn("[CAMERA] Camera initialization failed:", err);
       setCameraError(isTamil ? "கேமரா துவங்கவில்லை. அனுமதியை சரிபார்க்கவும்." : "Camera could not be started. Please check permissions.");
     }
   };

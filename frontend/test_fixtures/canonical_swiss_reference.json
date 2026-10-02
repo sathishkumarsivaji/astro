@@ -1,0 +1,136 @@
+{
+  "provenance": {
+    "status": "LEGACY_REFERENCE_NOT_USED_FOR_VALIDATION",
+    "authoritativeReference": "swiss_ephemeris_2_10_03_reference.json",
+    "source": "Swiss Ephemeris 2.10.03 (Legacy 4-Epoch Test Fixture)",
+    "compiler": "AstroVerse Verification Archive",
+    "version": "2.10.03-legacy",
+    "description": "LEGACY_REFERENCE_NOT_USED_FOR_VALIDATION. Retained solely for historical regression compatibility. The authoritative independent Swiss reference fixture is test_fixtures/swiss_ephemeris_2_10_03_reference.json."
+  },
+  "benchmarks": [
+    {
+      "id": "epoch_1994_chennai",
+      "name": "15 August 1994, 06:30 IST, Chennai",
+      "birthDate": "1994-08-15",
+      "birthTime": "06:30",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "utcOffset": 5.5,
+      "system": "lahiri",
+      "positions": {
+        "Sun": 118.212605,
+        "Moon": 218.631909,
+        "Mars": 65.063132,
+        "Mercury": 120.330796,
+        "Jupiter": 193.717470,
+        "Venus": 163.928907,
+        "Saturn": 316.537199,
+        "Rahu": 205.340974,
+        "Ketu": 25.340974,
+        "Ascendant": 125.353605
+      },
+      "tolerancesArcSec": {
+        "Sun": 65.0,
+        "Moon": 65.0,
+        "Mars": 65.0,
+        "Mercury": 65.0,
+        "Jupiter": 65.0,
+        "Venus": 65.0,
+        "Saturn": 65.0,
+        "Rahu": 65.0,
+        "Ketu": 65.0,
+        "Ascendant": 65.0
+      }
+    },
+    {
+      "id": "epoch_1947_delhi",
+      "name": "15 August 1947, 00:00 IST, New Delhi",
+      "birthDate": "1947-08-15",
+      "birthTime": "00:00",
+      "latitude": 28.6139,
+      "longitude": 77.2090,
+      "utcOffset": 5.5,
+      "system": "lahiri",
+      "positions": {
+        "Sun": 117.985085,
+        "Moon": 93.993886,
+        "Mars": 67.452457,
+        "Mercury": 103.669588,
+        "Jupiter": 205.891000,
+        "Venus": 112.557299,
+        "Saturn": 110.469348,
+        "Rahu": 35.069722,
+        "Ketu": 215.069722
+      },
+      "tolerancesArcSec": {
+        "Sun": 75.0,
+        "Moon": 75.0,
+        "Mars": 75.0,
+        "Mercury": 75.0,
+        "Jupiter": 75.0,
+        "Venus": 75.0,
+        "Saturn": 75.0,
+        "Rahu": 75.0,
+        "Ketu": 75.0
+      }
+    },
+    {
+      "id": "epoch_2000_greenwich",
+      "name": "J2000.0 Epoch (2000-01-01 12:00 UTC, Greenwich)",
+      "birthDate": "2000-01-01",
+      "birthTime": "12:00",
+      "latitude": 51.4769,
+      "longitude": 0.0,
+      "utcOffset": 0.0,
+      "system": "tropical",
+      "positions": {
+        "Sun": 280.368739,
+        "Mars": 327.963899,
+        "Jupiter": 25.254200,
+        "Saturn": 40.396124,
+        "Rahu": 125.044550
+      },
+      "tolerancesArcSec": {
+        "Sun": 60.0,
+        "Mars": 60.0,
+        "Jupiter": 60.0,
+        "Saturn": 60.0,
+        "Rahu": 60.0
+      }
+    },
+    {
+      "id": "epoch_2026_new_york",
+      "name": "15 June 2026, 18:30 EDT, New York DST",
+      "birthDate": "2026-06-15",
+      "birthTime": "18:30",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "utcOffset": -4.0,
+      "system": "lahiri",
+      "options": {
+        "timezoneId": "America/New_York"
+      },
+      "positions": {
+        "Sun": 60.603481,
+        "Mars": 26.500583,
+        "Jupiter": 92.779172,
+        "Saturn": 349.138571,
+        "Rahu": 309.155549,
+        "Ketu": 129.155549
+      },
+      "trueNodePositions": {
+        "Rahu": 307.922241,
+        "Ketu": 127.922241
+      },
+      "tolerancesArcSec": {
+        "Sun": 90.0,
+        "Mars": 90.0,
+        "Jupiter": 90.0,
+        "Saturn": 90.0,
+        "Rahu": 90.0,
+        "Ketu": 90.0,
+        "TrueRahu": 10.0
+      }
+    }
+  ]
+}

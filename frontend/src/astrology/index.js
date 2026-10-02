@@ -25,21 +25,24 @@ import { REPORT_CHAPTERS, getChaptersForSystem } from "../config/reportChapters.
  */
 export function calculateChartBySystem(systemId = "lahiri", birthData, options = {}) {
   const normData = normalizeBirthData(birthData);
-  const observations = getAstronomicalObservations(normData);
+  const nodeModel = options.nodeModel || birthData.nodeModel || normData.nodeModel || "mean";
+  normData.nodeModel = nodeModel;
+  const mergedOptions = { ...options, nodeModel };
+  const observations = getAstronomicalObservations(normData, mergedOptions);
   const sys = (systemId || "lahiri").toLowerCase();
 
   switch (sys) {
     case "kp":
-      return calculateKPChart(observations, normData);
+      return calculateKPChart(observations, normData, mergedOptions);
     case "tropical":
     case "sayana":
     case "western":
-      return calculateTropicalChart(observations, normData);
+      return calculateTropicalChart(observations, normData, mergedOptions);
     case "raman":
-      return calculateRamanChart(observations, normData, options);
+      return calculateRamanChart(observations, normData, mergedOptions);
     case "lahiri":
     case "vedic":
-      return calculateLahiriChart(observations, normData, options);
+      return calculateLahiriChart(observations, normData, mergedOptions);
     default:
       throw new Error(`Unknown astrological system: "${systemId}". Valid systems are lahiri, kp, raman, tropical.`);
   }
@@ -50,12 +53,15 @@ export function calculateChartBySystem(systemId = "lahiri", birthData, options =
  */
 export function calculateMultiSystemBundle(birthData, options = {}) {
   const normData = normalizeBirthData(birthData);
-  const observations = getAstronomicalObservations(normData);
+  const nodeModel = options.nodeModel || birthData.nodeModel || normData.nodeModel || "mean";
+  normData.nodeModel = nodeModel;
+  const mergedOptions = { ...options, nodeModel };
+  const observations = getAstronomicalObservations(normData, mergedOptions);
 
-  const lahiri = calculateLahiriChart(observations, normData, options);
-  const kp = calculateKPChart(observations, normData);
-  const raman = calculateRamanChart(observations, normData, options);
-  const tropical = calculateTropicalChart(observations, normData);
+  const lahiri = calculateLahiriChart(observations, normData, mergedOptions);
+  const kp = calculateKPChart(observations, normData, mergedOptions);
+  const raman = calculateRamanChart(observations, normData, mergedOptions);
+  const tropical = calculateTropicalChart(observations, normData, mergedOptions);
 
   const comparison = compareSystems({
     lahiriChart: lahiri,

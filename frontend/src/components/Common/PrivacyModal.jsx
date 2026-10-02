@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shield, Download, Trash2, CheckCircle2, AlertTriangle, Loader2, X, Lock, FileText, Database } from "lucide-react";
 import { ensureSessionToken } from "../../services/aiAstrologyService";
+import { apiFetch } from "../../services/apiClient";
 
 export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErased = null }) {
   const isTamil = lang === "ta";
@@ -18,24 +19,13 @@ export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErase
     setErrorMessage(null);
     try {
       const token = await ensureSessionToken();
-      let res;
-      try {
-        res = await fetch("/api/user/export", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          credentials: "include"
-        });
-      } catch {
-        res = await fetch("http://localhost:5000/api/user/export", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          credentials: "include"
-        });
-      }
+      const res = await apiFetch("/api/user/export", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        credentials: "include"
+      });
 
       if (res && res.ok) {
         const dossier = await res.json();
@@ -64,30 +54,20 @@ export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErase
     setErrorMessage(null);
     try {
       const token = await ensureSessionToken();
-      let res;
-      try {
-        res = await fetch("/api/user/delete", {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          credentials: "include"
-        });
-      } catch {
-        res = await fetch("http://localhost:5000/api/user/delete", {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          credentials: "include"
-        });
-      }
+      const res = await apiFetch("/api/user/delete", {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        credentials: "include"
+      });
 
       if (res && res.ok) {
         // Purge local storage
         if (typeof window !== "undefined" && window.localStorage) {
           localStorage.removeItem("astro_session_token");
           localStorage.removeItem("astro_user_id");
+          localStorage.removeItem("astro_current_user");
           localStorage.removeItem("astro_account_secret");
           localStorage.removeItem("astro_saved_charts");
           localStorage.removeItem("astro_journal_entries");

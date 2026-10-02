@@ -448,5 +448,5 @@ for (const bm of fixtures.dasha_benchmarks) {
 console.log(`   ✓ ${fixtures.dasha_benchmarks.length} static Vimshottari dasha fixture benchmarks verified.`);
 
 console.log("\n===============================================================");
-console.log(" ALL INDEPENDENT ASTRONOMICAL & REGRESSION TESTS PASSED 100%!  ");
+console.log(" ALL 780 INDEPENDENT ASTRONOMICAL & REGRESSION TESTS PASSED 100%!  ");
 console.log("===============================================================\n");

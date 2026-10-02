@@ -11,6 +11,15 @@
  */
 
 import { REPORT_CHAPTERS } from "../config/reportChapters.js";
+import { classifyConsultationIntent } from "./consultationEngine.js";
+import {
+  toTamilRasi,
+  toTamilPlanet,
+  toTamilNakshatra,
+  toTamilDignity,
+  formatTamilDegree,
+  cleanEnglishParentheses
+} from "./tamilAstrologyUtils.js";
 
 /**
  * Resolves conversational pronouns or short follow-ups like "What about 2027?"
@@ -35,26 +44,61 @@ export function resolveConversationalReferences(questionText, conversationHistor
     if (lastUserQ && lastAssistantA) break;
   }
 
-  // Check for short follow-ups
+  const qLower = text.toLowerCase();
+
+  // Check if current question matches an established consultation domain or explicit topic
+  const consultationClass = classifyConsultationIntent(text, conversationHistory);
+  const hasConsultationIntent = consultationClass && consultationClass.confidence >= 0.85;
+
+  const hasExplicitTopic =
+    hasConsultationIntent ||
+    /career|job|profession|work|business|vocation|promotion|employment|salary|office|interview|startup|venture|trade|commerce|industry|தொழில்|வேலை|உத்தியோகம்|வியாபாரம்|சுயதொழில்|பதவி|ஊதியம்|d10|dashamsha|dasamsha/i.test(qLower) ||
+    /marri|spouse|relationship|partner|wedding|wife|husband|match|progeny|family|love|divorce|remarri|compatibility|bride|groom|in-laws|parents|joint\s*family|separate\s*(?:house|household|home)|live\s+with\s+(?:my\s+)?parents|allow\s+to\s+live|திருமண|களத்திர|மனைவி|கணவர்|கல்யாணம்|குடும்பம்|தாம்பத்|பெற்றோர்|தனிக்குடித்தனம்|கூட்டுக்\s*குடும்பம்|d9|navamsha|navamsa/i.test(qLower) ||
+    /health|wellness|vitality|body|diet|constitution|illness|disease|fitness|mental\s*health|stress|cure|hospital|energy|stamina|ஆரோக்கியம்|உடல்நலம்|நோய்|சுகாதாரம்|மருத்துவம்|உடற்பயிற்சி|dosha|vata|pitta|kapha|ayurved/i.test(qLower) ||
+    /wealth|money|financ|property|vehicle|car|bike|real\s*estate|house|home|land|flat|apartment|bhoomi|vahana|asset|loan|debt|bank|dhana|சொத்து|வீடு|மனை|வாகனம்|பணம்|நிதி|வங்கி|கடன்/i.test(qLower) ||
+    /education|study|studies|studying|exam|degree|college|school|university|academic|upsc|neet|competitive|higher\s+ed|course|marks|grade|கல்வி|படிப்பு|தேர்வு|கல்லூரி|பள்ளி/i.test(qLower) ||
+    /politics|political|minister|government|leadership|power|authority|status|governance|public\s+service|அரசியல்|தலைமை|அரசு|அதிகாரம்|ஆட்சி/i.test(qLower) ||
+    /foreign|overseas|travel|relocation|abroad|moksha|visa|settlement|pr\b|immigrat|passport|வெளிநாடு|பயணம்|குடியேற|விசா/i.test(qLower) ||
+    /remedy|remedies|gemstone|mantra|charity|rudraksha|பரிகாரம்|ரத்தினம்|மந்திரம்|stone|ruby|pearl|coral|emerald|yellow\s*sapphire|diamond|blue\s*sapphire|gomed|cat'?s\s*eye/i.test(qLower) ||
+    /bhava|chalit|kendra|trikona|dusthana|house\s+breakdown|பாவகம்|\b(1st|2nd|3rd|4th|5th|6th|7th|8th|9th|10th|11th|12th)\s*(house|bhava)\b/i.test(qLower) ||
+    /yoga|raja\s+yoga|dhana\s+yoga|gajakesari|pancha\s+mahapurusha|யோகம்/i.test(qLower) ||
+    /shadbala|virupa|planetary\s+strength|ashtakavarga|bindu|sav|sarvashtakavarga/i.test(qLower) ||
+    /compare|difference\s+between|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(qLower);
+
+  // If question has its own explicit topic, it is an independent query — DO NOT inherit previous dialogue domain!
+  if (hasExplicitTopic) {
+    return { resolvedText: text, resolvedDomain: consultationClass?.domain?.toLowerCase() || activeSectionId, isFollowUp: false };
+  }
+
+  // Check for short follow-ups (elliptical questions without explicit domain)
+  const isStandaloneYear = /^(what\s+about\s+|in\s+|how\s+about\s+|and\s+)?(20\d\d)\??$/i.test(text);
   const yearMatch = text.match(/\b(20\d\d)\b/);
-  const isWhyFollowUp = /^(why|why\s+is\s+that|why\s+so|how\s+come)\b/i.test(text);
-  const isPlanetFollowUp = /^(why|is\s+that\s+because\s+of|what\s+about)\s+(saturn|jupiter|mars|venus|mercury|sun|moon|rahu|ketu)\b/i.test(text);
-  const isContinuation = /^(does\s+this\s+continue|will\s+this\s+continue|what\s+happens\s+next|and\s+then)\b/i.test(text);
+  const isWhyFollowUp = /^(why|why\s+is\s+that|why\s+so|how\s+come|explain|tell\s+me\s+more)\b/i.test(text);
+  const isPlanetFollowUp = /^(why|is\s+that\s+because\s+of|what\s+about|how\s+about)\s+(saturn|jupiter|mars|venus|mercury|sun|moon|rahu|ketu|shani|guru|mangal|shukra|budha|surya|chandra)\b/i.test(text);
+  const isContinuation = /^(does\s+this\s+continue|will\s+this\s+continue|what\s+happens\s+next|and\s+then|what\s+else)\b/i.test(text);
+
+  if (!isStandaloneYear && !isWhyFollowUp && !isPlanetFollowUp && !isContinuation && !yearMatch) {
+    return { resolvedText: text, resolvedDomain: activeSectionId, isFollowUp: false };
+  }
 
   let resolvedDomain = activeSectionId;
   let resolvedText = text;
-  let isFollowUp = false;
+  let isFollowUp = true;
 
-  // Determine domain from recent dialogue if active section is general
+  // Determine domain from recent dialogue only for true follow-ups when active section is general
   if (activeSectionId === "fullReport" || activeSectionId === "all" || activeSectionId === "execSummary") {
-    if (/career|job|profession|work|promotion/i.test(lastUserQ) || /career|profession/i.test(lastAssistantA)) {
+    if (/career|job|profession|work|promotion|business/i.test(lastUserQ) || /career|profession|10th\s+house/i.test(lastAssistantA)) {
       resolvedDomain = "career";
-    } else if (/marriage|spouse|relationship|partner/i.test(lastUserQ) || /marriage|partnership/i.test(lastAssistantA)) {
+    } else if (/marriage|spouse|relationship|partner|wedding/i.test(lastUserQ) || /marriage|partnership|7th\s+house/i.test(lastAssistantA)) {
       resolvedDomain = "relationships";
-    } else if (/health|wellness|vitality|disease/i.test(lastUserQ) || /health|wellness/i.test(lastAssistantA)) {
+    } else if (/health|wellness|vitality|disease|dosha/i.test(lastUserQ) || /health|wellness|vitality/i.test(lastAssistantA)) {
       resolvedDomain = "health";
-    } else if (/wealth|money|finance|property/i.test(lastUserQ) || /wealth|finance/i.test(lastAssistantA)) {
+    } else if (/wealth|money|finance|property|vehicle|house/i.test(lastUserQ) || /wealth|finance|property/i.test(lastAssistantA)) {
       resolvedDomain = "property";
+    } else if (/remedy|remedies|gemstone|mantra/i.test(lastUserQ) || /gemstone|remedy|mantra/i.test(lastAssistantA)) {
+      resolvedDomain = "remedies";
+    } else if (/education|study|studies|exam/i.test(lastUserQ) || /education|academic/i.test(lastAssistantA)) {
+      resolvedDomain = "studies";
     } else if (/dasha|period|transit/i.test(lastUserQ) || /dasha|mahadasha/i.test(lastAssistantA)) {
       resolvedDomain = "timeline";
     }
@@ -62,10 +106,8 @@ export function resolveConversationalReferences(questionText, conversationHistor
 
   if (yearMatch) {
     const yr = yearMatch[1];
-    isFollowUp = true;
     resolvedText = `${text} (Context: User is asking about the year ${yr} regarding ${resolvedDomain} from previous discussion: "${lastUserQ.slice(0, 60)}...")`;
   } else if (isWhyFollowUp || isPlanetFollowUp || isContinuation) {
-    isFollowUp = true;
     resolvedText = `${text} (Context: Follow-up to previous discussion: "${lastUserQ.slice(0, 60)}...")`;
   }
 
@@ -79,7 +121,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   const rawQ = typeof question === "string" ? question : (question?.text || "");
   const qLower = rawQ.toLowerCase().trim();
   const sysId = context.system?.id || "lahiri";
-  const isTamil = context.lang === "ta";
+  const isTamil = context.lang === "ta" || /[\u0B80-\u0BFF]/.test(rawQ) || context.chart?.userLanguage === "ta";
 
   // 1. Resolve conversational references
   const { resolvedText, resolvedDomain, isFollowUp } = resolveConversationalReferences(rawQ, conversationHistory, context.report?.activeSectionId);
@@ -128,7 +170,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
 
   // 3. Deterministic Factual Router
   // A. Ascendant / Lagna
-  if (/(what|which)\s+(is|are)?\s*(my|the)?\s*(ascendant|lagna|rising\s+sign)\b/i.test(qLower) || /என்\s+(லக்னம்|உதய\s+ராசி)/i.test(qLower)) {
+  if (/(what|which|tell|explain|how|about|describe|show)\s+(me\s+about\s+)?(is|are)?\s*(my|the)?\s*(ascendant|lagna|rising\s+sign)\b/i.test(qLower) || /(என்|எனது)\s*(லக்னம்|உதய\s+ராசி)/i.test(qLower)) {
     const asc = context.chart?.ascendant;
     if (asc?.sign) {
       const degStr = typeof asc.degree === "number" ? ` at ${asc.degree}°` : "";
@@ -141,7 +183,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["Ascendant sign & degree"],
         answer: isTamil
-          ? `உங்கள் ஜென்ம லக்னம் ${asc.sign}${degStr}${nakStr} ஆகும். இது உங்கள் மூல ஜாதகத்தின் முதல் பாவகமாகவும் அடிப்படை ஜோதிட அடையாளமாகவும் அமைகிறது.`
+          ? `உங்கள் ஜென்ம லக்னம் ${toTamilRasi(asc.sign)}${formatTamilDegree(asc.degree)}${asc.nakshatra ? ` (${toTamilNakshatra(asc.nakshatra)} நட்சத்திரம்)` : ""} ஆகும். இது உங்கள் மூல ஜாதகத்தின் முதல் பாவகமாகவும் அடிப்படை ஜோதிட அடையாளமாகவும் அமைகிறது.`
           : `According to your calculated report, your Ascendant (Lagna) is ${asc.sign}${degStr}${nakStr}. This defines the 1st house cusp of your natal chart under the ${context.system.name} system.`,
         limitations: []
       };
@@ -149,7 +191,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   }
 
   // B. Moon Sign / Rashi
-  if (/(what|which)\s+(is|are)?\s*(my|the)?\s*(moon\s+sign|rashi|rasi|janma\s+rashi)\b/i.test(qLower) || /என்\s+(ராசி|சந்திர\s+ராசி)/i.test(qLower)) {
+  if (/(what|which|tell|explain|how|about|describe|show)\s+(me\s+about\s+)?(is|are)?\s*(my|the)?\s*(moon\s+sign|rashi|rasi|janma\s+rashi)\b/i.test(qLower) || /(என்|எனது)\s*(ராசி|சந்திர\s+ராசி)/i.test(qLower)) {
     const moon = context.chart?.moon;
     if (moon?.sign) {
       return {
@@ -160,7 +202,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["Moon sign"],
         answer: isTamil
-          ? `உங்கள் ஜென்ம ராசி ${moon.sign} ஆகும்.`
+          ? `உங்கள் ஜென்ம ராசி ${toTamilRasi(moon.sign)} ஆகும்.`
           : `According to your calculated chart, your Moon sign (Janma Rashi) is ${moon.sign} under the ${context.system.name} system.`,
         limitations: []
       };
@@ -168,7 +210,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   }
 
   // C. Nakshatra & Pada
-  if (/(what|which)\s+(is|are)?\s*(my|the)?\s*(nakshatra|janma\s+nakshatra|birth\s+star)\b/i.test(qLower) || /என்\s+நட்சத்திரம்/i.test(qLower)) {
+  if (/(what|which|tell|explain|how|about|describe|show)\s+(me\s+about\s+)?(is|are)?\s*(my|the)?\s*(nakshatra|janma\s+nakshatra|birth\s+star)\b/i.test(qLower) || /(என்|எனது)\s*நட்சத்திரம்/i.test(qLower)) {
     const moon = context.chart?.moon;
     if (moon?.nakshatra && sysId !== "tropical") {
       const padaStr = moon.pada ? ` Pada ${moon.pada}` : "";
@@ -180,7 +222,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["Moon Nakshatra & Pada"],
         answer: isTamil
-          ? `உங்கள் ஜென்ம நட்சத்திரம் ${moon.nakshatra}${moon.pada ? ` பாதம் ${moon.pada}` : ""} ஆகும்.`
+          ? `உங்கள் ஜென்ம நட்சத்திரம் ${toTamilNakshatra(moon.nakshatra)}${moon.pada ? ` பாதம் ${moon.pada}` : ""} (${toTamilRasi(moon.sign)} ராசி) ஆகும்.`
           : `According to your calculated report, your Janma Nakshatra is ${moon.nakshatra}${padaStr} (Moon in ${moon.sign}).`,
         limitations: []
       };
@@ -188,7 +230,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   }
 
   // D. Sun Sign
-  if (/(what|which)\s+(is|are)?\s*(my|the)?\s*(sun\s+sign|surya\s+rashi)\b/i.test(qLower) || /என்\s+சூரிய\s+ராசி/i.test(qLower)) {
+  if (/(what|which|tell|explain|how|about|describe|show)\s+(me\s+about\s+)?(is|are)?\s*(my|the)?\s*(sun\s+sign|surya\s+rashi)\b/i.test(qLower) || /(என்|எனது)\s*சூரிய\s+ராசி/i.test(qLower)) {
     const sun = context.chart?.sun;
     if (sun?.sign) {
       return {
@@ -199,7 +241,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["Sun sign"],
         answer: isTamil
-          ? `உங்கள் சூரிய ராசி ${sun.sign} ஆகும்.`
+          ? `உங்கள் சூரிய ராசி ${toTamilRasi(sun.sign)} ஆகும்.`
           : `Your Sun sign is ${sun.sign} under the ${context.system.name} calculation.`,
         limitations: []
       };
@@ -207,11 +249,12 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   }
 
   // E. Current Mahadasha & Antardasha
-  if (/(what|which)\s+(is|are)?\s*(my|the)?\s*(current\s+mahadasha|current\s+dasha|active\s+dasha|current\s+period)\b/i.test(qLower) || /நடப்பு\s+தசை/i.test(qLower)) {
+  if (/(what|which|tell|explain|how|about|describe|show)\s+(me\s+about\s+)?(is|are)?\s*(my|the)?\s*(current\s+mahadasha|current\s+dasha|active\s+dasha|current\s+period)\b/i.test(qLower) || /(நடப்பு|தற்போதைய)\s+தசை/i.test(qLower)) {
     const dasha = context.chart?.currentDasha;
     if (dasha && dasha.lord) {
       const subStr = dasha.subLord ? ` and active Antardasha is ${dasha.subLord}` : "";
       const ageStr = dasha.startAge && dasha.endAge ? ` (Ages ${dasha.startAge} to ${dasha.endAge})` : "";
+      const ageStrTa = dasha.startAge && dasha.endAge ? ` (வயது ${dasha.startAge} முதல் ${dasha.endAge} வரை)` : "";
       return {
         type: "FACTUAL",
         status: "DETERMINISTIC_FACT",
@@ -220,7 +263,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["Vimshottari Dasha table"],
         answer: isTamil
-          ? `உங்கள் தற்போதைய மகா தசை ${dasha.lord} தசை${dasha.subLord ? ` (புக்தி: ${dasha.subLord})` : ""}${ageStr} ஆகும்.`
+          ? `உங்கள் தற்போதைய விம்சோத்தரி தசா இயக்கம் ${toTamilPlanet(dasha.lord)} மகா தசை${dasha.subLord ? ` - ${toTamilPlanet(dasha.subLord)} புக்தி` : ""}${ageStrTa} ஆகும்.`
           : `According to your calculated Vimshottari timeline, your active Mahadasha is ${dasha.lord}${subStr}${ageStr}.`,
         limitations: []
       };
@@ -237,7 +280,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
       evidenceIds: [],
       dataUsed: ["System metadata"],
       answer: isTamil
-        ? `இந்த அறிக்கை "${context.system.tamilName || context.system.name}" முறையைக் கொண்டு கணக்கிடப்பட்டுள்ளது.`
+        ? `இந்த அறிக்கை "${context.system.tamilName || context.system.name}" முறையைக் கொண்டு துல்லியமாக கணக்கிடப்பட்டுள்ளது.`
         : `This report is calculated under the ${context.system.name} system (Zodiac: ${context.system.zodiacType}, Ayanamsha: ${context.system.ayanamshaType}, House System: ${context.system.defaultHouseSystem}).`,
       limitations: []
     };
@@ -255,7 +298,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["KP 10th cusp sub-lord calculation"],
         answer: isTamil
-          ? `கே.பி. கணிதத்தின்படி உங்கள் 10-ம் பாவ உப அதிபதி (10th Cusp Sub Lord) ${sub10} ஆவார்.`
+          ? `கே.பி. கணிதத்தின்படி உங்கள் 10-ம் பாவ உப அதிபதி (Sub Lord) ${toTamilPlanet(sub10)} பகவான் ஆவார். இது உங்கள் தொழில் மற்றும் அதிகார நிலையை நிர்ணயிக்கும் முக்கிய காரகமாகும்.`
           : `Under the KP system calculation, your 10th cusp sub lord is ${sub10}. In KP methodology, the 10th sub lord is the primary arbiter of career status and vocational trajectory.`,
         limitations: []
       };
@@ -274,7 +317,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
         evidenceIds: [],
         dataUsed: ["KP 7th cusp sub-lord calculation"],
         answer: isTamil
-          ? `கே.பி. கணிதத்தின்படி உங்கள் 7-ம் பாவ உப அதிபதி (7th Cusp Sub Lord) ${sub7} ஆவார்.`
+          ? `கே.பி. கணிதத்தின்படி உங்கள் 7-ம் பாவ உப அதிபதி (Sub Lord) ${toTamilPlanet(sub7)} பகவான் ஆவார். இது களத்திரம், திருமணம் மற்றும் கூட்டு தொழில் விவகாரங்களை வழிநடத்துகிறது.`
           : `Under the KP system calculation, your 7th cusp sub lord is ${sub7}. In KP astrology, the 7th cusp sub lord governs partnership promise and relationship matters.`,
         limitations: []
       };
@@ -291,7 +334,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
       evidenceIds: [],
       dataUsed: ["Ayanamsha convention"],
       answer: isTamil
-        ? `இந்த அறிக்கையில் பயன்படுத்தப்படும் அயனாம்சம்: ${context.system.ayanamshaType} (${context.system.name}).`
+        ? `இந்த அறிக்கையில் பயன்படுத்தப்படும் அயனாம்சம்: ${context.system.tamilName || context.system.name} (${context.system.ayanamshaType || 'சித்திரபக்ஷ அயனாம்சம்'}).`
         : `The ayanamsha convention applied in this report is ${context.system.ayanamshaType} under the ${context.system.name} system.`,
       limitations: []
     };
@@ -312,19 +355,82 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
 
   // 5. Cross-Section or Single-Domain Analytical Questions
   let relevantSections = [];
-  if (resolvedDomain && resolvedDomain !== "fullReport" && resolvedDomain !== "all") {
+  if (isFollowUp && resolvedDomain && resolvedDomain !== "fullReport" && resolvedDomain !== "all") {
     relevantSections.push(resolvedDomain);
+  } else if (!isFollowUp && context.report?.activeSectionId && context.report.activeSectionId !== "fullReport" && context.report.activeSectionId !== "all" && context.report.activeSectionId !== "execSummary") {
+    relevantSections.push(context.report.activeSectionId);
   }
 
+  // Planet-specific detection (Saturn, Jupiter, Mars, Venus, Mercury, Sun, Moon, Rahu, Ketu)
+  let targetPlanet = null;
+  if (/saturn|shani|manda|சனி/i.test(qLower)) {
+    targetPlanet = "Saturn";
+  } else if (/jupiter|guru|brihaspati|வியாழன்|குரு/i.test(qLower)) {
+    targetPlanet = "Jupiter";
+  } else if (/mars|mangal|kuja|angarak|செவ்வாய்/i.test(qLower)) {
+    targetPlanet = "Mars";
+  } else if (/venus|shukra|சுக்கிரன்|வெள்ளி/i.test(qLower)) {
+    targetPlanet = "Venus";
+  } else if (/mercury|budha|புதன்/i.test(qLower)) {
+    targetPlanet = "Mercury";
+  } else if (/sun|surya|ravi|சூரியன்|ஞாயிறு/i.test(qLower) && !/sun\s+sign/i.test(qLower)) {
+    targetPlanet = "Sun";
+  } else if (/moon|chandra|soma|சந்திரன்|திங்கள்/i.test(qLower) && !/moon\s+sign/i.test(qLower)) {
+    targetPlanet = "Moon";
+  } else if (/rahu|ராகு/i.test(qLower)) {
+    targetPlanet = "Rahu";
+  } else if (/ketu|கேது/i.test(qLower)) {
+    targetPlanet = "Ketu";
+  }
+
+  // Year detection (e.g. 2027)
+  const yrMatch = qLower.match(/\b(20\d\d)\b/);
+  const targetYear = yrMatch ? parseInt(yrMatch[1], 10) : null;
+
+  // Specific House detection (1st to 12th house)
+  let targetHouse = null;
+  const hMatch = qLower.match(/\b(1st|2nd|3rd|4th|5th|6th|7th|8th|9th|10th|11th|12th|[1-9]|1[0-2])\s*(st|nd|rd|th)?\s*(house|bhava|cusp)\b/i)
+    || qLower.match(/\b([1-9]|1[0-2])\s*[-ஆம்|ம்]*\s*(வீடு|பாவகம்|பாவம்)/);
+  if (hMatch) {
+    const rawNum = parseInt(hMatch[1].replace(/\D/g, ""), 10);
+    if (rawNum >= 1 && rawNum <= 12) {
+      targetHouse = rawNum;
+    }
+  }
+
+  const isSaturnDelay = Boolean(targetPlanet === "Saturn" && /delay|slow|obstacle|timing|influence|why|தாக்கம்|தாமத|ஏன்|செல்வாக்கு|காரணம்|10-ம்|தொழில்/i.test(qLower));
+  const isDashaQuery = /dasha|mahadasha|antardasha|bhukti|pratyantar|cycle|operating\s+period|தசை|புக்தி/i.test(qLower);
+
   // Topic-specific keyword mappings
-  if (/career|job|profession|work|business|vocation/i.test(qLower)) {
+  if (targetPlanet) {
+    relevantSections.push("blueprint");
+    if (targetPlanet === "Saturn" || /career|job|profession|work|business|vocation/i.test(qLower)) {
+      relevantSections.push("career");
+    }
+    relevantSections.push("technicalAppendix");
+  }
+
+  if (targetYear) {
+    relevantSections.push("timeline");
+  }
+
+  if (targetHouse) {
+    relevantSections.push("bhavas");
+    if (targetHouse === 10 || targetHouse === 6) relevantSections.push("career");
+    if (targetHouse === 7) relevantSections.push("relationships");
+    if (targetHouse === 4) relevantSections.push("property");
+    if (targetHouse === 5 || targetHouse === 4) relevantSections.push("studies");
+    if (targetHouse === 9 || targetHouse === 12) relevantSections.push("foreign");
+  }
+
+  if (/career|job|profession|work|business|vocation|promotion|employment|salary|office|interview|startup|venture|trade|commerce|industry|தொழில்|வேலை|உத்தியோகம்|வியாபாரம்|சுயதொழில்|பதவி|ஊதியம்/i.test(qLower)) {
     relevantSections.push("career");
     if (!relevantSections.includes("timeline")) relevantSections.push("timeline");
   }
   if (/d10|dashamsha|dasamsha|career\s+varga/i.test(qLower) && sysId !== "tropical") {
     relevantSections.push("career");
   }
-  if (/marriage|spouse|relationship|partner|wedding/i.test(qLower)) {
+  if (/marri|spouse|relationship|partner|wedding|wife|husband|match|progeny|family|love|divorce|remarri|compatibility|திருமண|களத்திர|மனைவி|கணவர்|கல்யாணம்|குடும்பம்|தாம்பத்/i.test(qLower)) {
     relevantSections.push("relationships");
     if (!relevantSections.includes("timeline")) relevantSections.push("timeline");
   }
@@ -332,35 +438,35 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
     relevantSections.push("relationships");
     if (!relevantSections.includes("blueprint")) relevantSections.push("blueprint");
   }
-  if (/health|wellness|vitality|body|diet|constitution/i.test(qLower)) {
+  if (/health|wellness|vitality|body|diet|constitution|illness|disease|fitness|mental\s*health|stress|cure|hospital|energy|stamina|ஆரோக்கியம்|உடல்நலம்|நோய்|சுகாதாரம்|மருத்துவம்|உடற்பயிற்சி/i.test(qLower)) {
     relevantSections.push("health");
     if (sysId !== "tropical" && !relevantSections.includes("dosha")) relevantSections.push("dosha");
   }
   if (/dosha|vata|pitta|kapha|ayurved/i.test(qLower) && sysId !== "tropical") {
     relevantSections.push("dosha");
   }
-  if (/wealth|money|finance|property|vehicle|real\s+estate/i.test(qLower)) {
+  if (/wealth|money|financ|property|vehicle|car|bike|real\s*estate|house|home|land|flat|apartment|bhoomi|vahana|asset|loan|debt|bank|dhana|சொத்து|வீடு|மனை|வாகனம்|பணம்|நிதி|வங்கி|கடன்/i.test(qLower)) {
     relevantSections.push("property");
   }
-  if (/education|study|studies|exam|degree/i.test(qLower)) {
+  if (/education|study|studies|studying|exam|degree|college|school|university|academic|upsc|neet|competitive|higher\s+ed|course|marks|grade|கல்வி|படிப்பு|தேர்வு|கல்லூரி|பள்ளி/i.test(qLower)) {
     relevantSections.push("studies");
   }
-  if (/politics|leadership|power|authority|status/i.test(qLower)) {
+  if (/politics|political|minister|government|leadership|power|authority|status|governance|public\s+service|அரசியல்|தலைமை|அரசு|அதிகாரம்|ஆட்சி/i.test(qLower)) {
     relevantSections.push("politics");
   }
-  if (/foreign|overseas|travel|relocation|abroad|moksha/i.test(qLower)) {
+  if (/foreign|overseas|travel|relocation|abroad|moksha|visa|settlement|pr\b|immigrat|passport|வெளிநாடு|பயணம்|குடியேற|விசா/i.test(qLower)) {
     relevantSections.push("foreign");
   }
-  if (/remedy|remedies|gemstone|mantra|charity|rudraksha/i.test(qLower) && sysId !== "tropical") {
+  if (/remedy|remedies|gemstone|mantra|charity|rudraksha|stone|ruby|pearl|coral|emerald|yellow\s*sapphire|diamond|blue\s*sapphire|gomed|cat'?s\s*eye|பரிகாரம்|ரத்தினம்|மந்திரம்/i.test(qLower) && sysId !== "tropical") {
     relevantSections.push("remedies");
   }
-  if (/dasha|period|transit|timing|window/i.test(qLower)) {
+  if (/dasha|period|transit|timing|window|cycle|தசை|புக்தி|கோச்சாரம்|காலம்/i.test(qLower)) {
     if (!relevantSections.includes("timeline")) relevantSections.push("timeline");
   }
-  if (/bhava|chalit|kendra|trikona|dusthana|house\s+breakdown/i.test(qLower)) {
+  if (/bhava|chalit|kendra|trikona|dusthana|house\s+breakdown|பாவகம்/i.test(qLower)) {
     relevantSections.push("bhavas");
   }
-  if (/yoga|raja\s+yoga|dhana\s+yoga|gajakesari|pancha\s+mahapurusha/i.test(qLower) && sysId !== "tropical") {
+  if (/yoga|raja\s+yoga|dhana\s+yoga|gajakesari|pancha\s+mahapurusha|strength|potential|talent|blessing|யோகம்|பலம்/i.test(qLower) && sysId !== "tropical") {
     relevantSections.push("yogas");
   }
   if (/shadbala|virupa|planetary\s+strength/i.test(qLower) && sysId !== "tropical" && sysId !== "kp") {
@@ -378,6 +484,27 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   }
   if (/evidence|reasoning|why\s+this\s+prediction|dossier|how\s+calculated/i.test(qLower)) {
     relevantSections.push("reasoningDossier");
+  }
+
+  // Universal 18-Domain Semantic Consultation Intent Classification
+  const consultationIntent = classifyConsultationIntent(resolvedText || rawQ, conversationHistory);
+  if (consultationIntent && consultationIntent.domain) {
+    const dom = (consultationIntent.domain || "").toUpperCase();
+    if (dom === "MARRIAGE" || dom === "RELATIONSHIP" || dom === "PROGENY") {
+      if (!relevantSections.includes("relationships")) relevantSections.push("relationships");
+      if (!relevantSections.includes("timeline")) relevantSections.push("timeline");
+    } else if (dom === "CAREER" || dom === "VOCATION" || dom === "BUSINESS" || dom === "POLITICS") {
+      if (!relevantSections.includes("career")) relevantSections.push("career");
+      if (!relevantSections.includes("timeline")) relevantSections.push("timeline");
+    } else if (dom === "WEALTH" || dom === "PROPERTY" || dom === "VEHICLE") {
+      if (!relevantSections.includes("property")) relevantSections.push("property");
+    } else if (dom === "HEALTH" || dom === "LONGEVITY") {
+      if (!relevantSections.includes("health")) relevantSections.push("health");
+    } else if (dom === "RELOCATION") {
+      if (!relevantSections.includes("foreign")) relevantSections.push("foreign");
+    } else if (dom === "EDUCATION") {
+      if (!relevantSections.includes("studies")) relevantSections.push("studies");
+    }
   }
 
   // Deduplicate section names
@@ -408,6 +535,12 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
     relevantSections,
     evidenceIds: validEvidenceIds,
     requiresEvidence,
+    targetPlanet,
+    targetYear,
+    targetHouse,
+    isSaturnDelay,
+    isDashaQuery,
+    consultationIntent,
     dataUsed: relevantSections.map(s => `Chapter: ${s}`)
   };
 }

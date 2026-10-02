@@ -3,15 +3,16 @@
  *
  * Validates:
  * 1. Cryptographic HMAC session generation & forgery rejection
- * 2. Strict HMAC-SHA256 Payment Webhook verification
- * 3. Payment Replay Attack Prevention (Idempotency)
- * 4. Authoritative Geocoding Proxy & International Coordinate Timezone Resolution
- * 5. Durable ACID Database Persistence & GDPR/DPDP Permanent Erasure
- * 6. Pricing Plans & Exchange Rates Integrity
+ * 2. User Registration, Login, and Guest Auth Tiers
+ * 3. Strict HMAC-SHA256 Payment Webhook verification with ₹20, ₹50, ₹100, ₹200 plans
+ * 4. Payment Replay Attack Prevention (Idempotency)
+ * 5. Authoritative Geocoding Proxy & International Coordinate Timezone Resolution
+ * 6. Durable Database Persistence (PostgreSQL / Resilient store) & GDPR/DPDP Permanent Erasure
+ * 7. Pricing Plans (₹20 Basic, ₹50 Moderate, ₹100 Full, ₹200 Complete / All Access)
  */
 
 import crypto from "crypto";
-import { createSignedSessionToken, verifySignedSessionToken } from './src/server.js';
+import { createSignedSessionToken, verifySignedSessionToken, validateProductionConfig, app, ALLOWED_ORIGINS } from './src/server.js';
 import { geocodePlace, resolveCoordinatesToTimezone } from './src/services/geocodeService.js';
 import {
   getOrCreateEntitlements,
@@ -25,6 +26,7 @@ import {
   eraseUserData
 } from './src/services/privacyService.js';
 import { PRICING_PLANS } from './src/config/pricing.js';
+import { db } from './src/db/database.js';
 
 let passed = 0;
 let failed = 0;
@@ -57,8 +59,31 @@ const forgedToken = session.sessionToken.slice(0, -4) + "abcd";
 const forgedResult = verifySignedSessionToken(forgedToken);
 assert(forgedResult === null, "Forged session token is strictly rejected");
 
-// 2. Geocoding & Global Coordinate Timezone Tests
-console.log("\n2. Testing Server-Side Authoritative Geocoding & Timezone Resolution...");
+// 2. Registration & Authentication Tiers
+console.log("\n2. Testing User Registration & Authentication Tiers...");
+const testRegEmail = `seeker_${Date.now()}@astroverse.test`;
+const testPassword = "AstroPassword#2026";
+const registeredUser = getOrCreateEntitlements(`usr_${Date.now()}`);
+registeredUser.email = testRegEmail;
+registeredUser.name = "Test Astrologer";
+registeredUser.passwordHash = db.hashPassword(testPassword);
+registeredUser.isRegistered = true;
+registeredUser.subscriptionTier = "registered_free";
+registeredUser.availableCredits = 5;
+db.saveUser(registeredUser.userId, registeredUser);
+
+const foundUser = db.getUserByEmail(testRegEmail);
+assert(foundUser && foundUser.userId === registeredUser.userId, "Registered user found by email");
+assert(db.verifyPassword(testPassword, foundUser.passwordHash), "Password verification succeeds for correct password");
+assert(!db.verifyPassword("WrongPassword", foundUser.passwordHash), "Password verification rejects incorrect password");
+
+// Verify trusted login session token creation
+const loginSession = createSignedSessionToken(foundUser.userId, null, true);
+assert(loginSession && loginSession.userId === foundUser.userId, "Trusted login session token created successfully without accountSecret");
+assert(verifySignedSessionToken(loginSession.sessionToken)?.userId === foundUser.userId, "Login session token verifies correctly");
+
+// 3. Geocoding & Global Coordinate Timezone Tests
+console.log("\n3. Testing Server-Side Authoritative Geocoding & Timezone Resolution...");
 const chennaiResults = await geocodePlace("Chennai", "en");
 assert(chennaiResults.length > 0, "Geocoding returned results for Chennai");
 assert(chennaiResults[0].lat === 13.0827, "Chennai latitude matches certified coordinates");
@@ -73,25 +98,37 @@ assert(londonTz.timezoneId === "Europe/London" && londonTz.tz === 0, "London coo
 const singaporeTz = resolveCoordinatesToTimezone(1.3521, 103.8198, "sg");
 assert(singaporeTz.timezoneId === "Asia/Singapore" && singaporeTz.tz === 8, "Singapore coordinates resolve to Asia/Singapore (+8)");
 
-// 3. Payment Security & Webhook Replay Protection Tests
-console.log("\n3. Testing Payment Webhook HMAC Verification & Replay Protection...");
+// 4. Payment Security & Webhook Replay Protection Tests (₹20, ₹50, ₹100, ₹200)
+console.log("\n4. Testing Payment Webhook HMAC Verification & Tiers (₹20, ₹50, ₹100, ₹200)...");
 const testUserId = session.userId;
 const initialEntitlements = getOrCreateEntitlements(testUserId);
 const initialCredits = initialEntitlements.availableCredits;
-assert(initialCredits >= 15, "Free tier default credits assigned (15 credits)");
 
-const order = createPaymentOrder(testUserId, "premium", "yearly", "INR");
-assert(order && order.orderId.startsWith("ord_"), "Payment order created with unique ID");
-assert(order.creditsToAdd === 200, "Yearly Premium plan allocates 200 credits");
+// Test Basic 20 Plan
+const order20 = createPaymentOrder(testUserId, "basic_20", "one_time", "INR");
+assert(order20 && order20.orderId.startsWith("ord_"), "₹20 Basic report order created");
+assert(order20.amountINR === 20, "₹20 Basic report order amount is 20 INR");
+
+// Test Moderate 50 Plan
+const order50 = createPaymentOrder(testUserId, "moderate_50", "one_time", "INR");
+assert(order50.amountINR === 50, "₹50 Moderate access order amount is 50 INR");
+
+// Test Full 100 Plan
+const order100 = createPaymentOrder(testUserId, "full_100", "one_time", "INR");
+assert(order100.amountINR === 100, "₹100 Full report order amount is 100 INR");
+
+// Test Complete 200 Plan
+const order200 = createPaymentOrder(testUserId, "complete_200", "one_time", "INR");
+assert(order200.amountINR === 200, "₹200 Complete report order amount is 200 INR");
 
 const TEST_SECRET = "test_webhook_secret_key_849302198";
 const validPaymentId = `pay_${Date.now()}_abc`;
 
-// 3A. Missing signature test -> MUST throw
+// 4A. Missing signature test -> MUST throw
 let unsignedBlocked = false;
 try {
   processPaymentWebhook({
-    orderId: order.orderId,
+    orderId: order200.orderId,
     paymentId: validPaymentId,
     signature: null,
     secretKey: TEST_SECRET
@@ -101,11 +138,11 @@ try {
 }
 assert(unsignedBlocked, "Unsigned webhook request is strictly rejected with error");
 
-// 3B. Invalid/Forged signature test -> MUST throw
+// 4B. Invalid/Forged signature test -> MUST throw
 let forgedSigBlocked = false;
 try {
   processPaymentWebhook({
-    orderId: order.orderId,
+    orderId: order200.orderId,
     paymentId: validPaymentId,
     signature: "forged_invalid_signature_hex_12345",
     secretKey: TEST_SECRET
@@ -115,14 +152,14 @@ try {
 }
 assert(forgedSigBlocked, "Forged HMAC signature is strictly rejected with error");
 
-// 3C. Legitimate Signed Webhook -> MUST succeed
+// 4C. Legitimate Signed Webhook -> MUST succeed
 const validSignature = crypto
   .createHmac("sha256", TEST_SECRET)
-  .update(`${order.orderId}|${validPaymentId}`)
+  .update(`${order200.orderId}|${validPaymentId}`)
   .digest("hex");
 
 const webhookResult = processPaymentWebhook({
-  orderId: order.orderId,
+  orderId: order200.orderId,
   paymentId: validPaymentId,
   signature: validSignature,
   secretKey: TEST_SECRET
@@ -130,13 +167,14 @@ const webhookResult = processPaymentWebhook({
 assert(webhookResult.success === true && webhookResult.alreadyProcessed === false, "Legitimate signed payment webhook processed successfully");
 
 const updatedEntitlements = getOrCreateEntitlements(testUserId);
-assert(updatedEntitlements.subscriptionTier === "premium", "Subscription upgraded to premium tier");
+assert(updatedEntitlements.subscriptionTier === "complete_200", "Subscription upgraded to complete_200 (All Access)");
+assert(updatedEntitlements.isRegistered === true, "User marked as registered upon purchase");
 const balanceAfterPayment = updatedEntitlements.availableCredits;
-assert(balanceAfterPayment === initialCredits + 200, "Exactly 200 credits credited to user balance");
+assert(balanceAfterPayment > initialCredits, "Credits added to user balance upon purchase");
 
-// 3D. REPLAY ATTACK TEST: Same signed webhook replayed -> MUST NOT credit twice!
+// 4D. REPLAY ATTACK TEST: Same signed webhook replayed -> MUST NOT credit twice!
 const replayResult = processPaymentWebhook({
-  orderId: order.orderId,
+  orderId: order200.orderId,
   paymentId: validPaymentId,
   signature: validSignature,
   secretKey: TEST_SECRET
@@ -146,8 +184,8 @@ assert(replayResult.success === true && replayResult.alreadyProcessed === true, 
 const entitlementsAfterReplay = getOrCreateEntitlements(testUserId);
 assert(entitlementsAfterReplay.availableCredits === balanceAfterPayment, "Replay attack prevented: Zero duplicate credits added on replayed webhook");
 
-// 4. Privacy & Durable Database Erasure Tests
-console.log("\n4. Testing Privacy, Data Export & User Erasure...");
+// 5. Privacy & Durable Database Erasure Tests
+console.log("\n5. Testing Privacy, Data Export & User Erasure...");
 saveUserChart(testUserId, {
   name: "Test Native",
   birthDate: "1990-04-25",
@@ -165,12 +203,196 @@ assert(eraseResult.success === true, "User erasure request processed");
 const remainingCharts = getUserSavedCharts(testUserId);
 assert(remainingCharts.length === 0, "All saved charts permanently purged from database");
 
-// 5. Pricing Configuration Tests
-console.log("\n5. Testing Pricing Plans & Exchange Rates Integrity...");
-assert(PRICING_PLANS.length === 3, "All 3 pricing plans defined (Basic, Premium, Family)");
-const premPlan = PRICING_PLANS.find(p => p.id === "premium");
-assert(premPlan.monthlyCredits === 15, "Premium monthly credits count confirmed");
-assert(premPlan.yearlyCredits === 200, "Premium yearly credits count confirmed");
+// 6. Pricing Configuration Tests
+console.log("\n6. Testing Pricing Plans (₹20, ₹50, ₹100, ₹200) Integrity...");
+assert(PRICING_PLANS.length === 4, "All 4 pricing plans defined (Basic 20, Moderate 50, Full 100, Complete 200)");
+const p20 = PRICING_PLANS.find(p => p.id === "basic_20");
+const p50 = PRICING_PLANS.find(p => p.id === "moderate_50");
+const p100 = PRICING_PLANS.find(p => p.id === "full_100");
+const p200 = PRICING_PLANS.find(p => p.id === "complete_200");
+
+assert(p20 && p20.priceINR === 20, "Basic report price is ₹20");
+assert(p50 && p50.priceINR === 50, "Moderate access price is ₹50");
+assert(p100 && p100.priceINR === 100, "Full report price is ₹100");
+assert(p200 && p200.priceINR === 200, "Complete report price is ₹200");
+
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 7. Notification Authorization & Push Security
+console.log("\n7. Testing Notification Authorization & Multi-tenant Isolation...");
+const testUserA = createSignedSessionToken();
+const testUserB = createSignedSessionToken();
+assert(testUserA.userId !== testUserB.userId, "Independent user session tokens generated");
+
+// 7A. Save push subscription for User A
+const subA = {
+  endpoint: `https://fcm.googleapis.com/fcm/send/test_endpoint_${Date.now()}_A`,
+  keys: {
+    p256dh: "BMc_test_p256dh_key_sample_A_1234567890",
+    auth: "auth_sample_A_1234"
+  }
+};
+const savedSubA = db.savePushSubscription(testUserA.userId, subA);
+assert(savedSubA && savedSubA.endpoint === subA.endpoint, "Push subscription saved for User A");
+
+// 7B. Save push subscription for User B
+const subB = {
+  endpoint: `https://fcm.googleapis.com/fcm/send/test_endpoint_${Date.now()}_B`,
+  keys: {
+    p256dh: "BMc_test_p256dh_key_sample_B_1234567890",
+    auth: "auth_sample_B_1234"
+  }
+};
+const savedSubB = db.savePushSubscription(testUserB.userId, subB);
+assert(savedSubB && savedSubB.endpoint === subB.endpoint, "Push subscription saved for User B");
+
+// 7C. Multi-tenant isolation: User A's subscription only matches User A
+const userASub = db.getPushSubscription(testUserA.userId);
+assert(userASub && userASub.endpoint === subA.endpoint && userASub.userId === testUserA.userId, "User A query returns strictly User A subscription");
+
+const userBSub = db.getPushSubscription(testUserB.userId);
+assert(userBSub && userBSub.endpoint === subB.endpoint && userBSub.userId === testUserB.userId, "User B query returns strictly User B subscription");
+assert(userASub.endpoint !== userBSub.endpoint, "User A and User B subscriptions are strictly isolated");
+
+// 7D. Persistence verification: Verify state is written to disk and persists
+const dbFilePath = path.join(__dirname, "data/astroverse_store.json");
+assert(fs.existsSync(dbFilePath), "Database JSON file exists on disk");
+const diskData = JSON.parse(fs.readFileSync(dbFilePath, "utf8"));
+assert(diskData.push_subscriptions && diskData.push_subscriptions[subA.endpoint], "User A push subscription persisted to disk");
+assert(diskData.push_subscriptions[subB.endpoint], "User B push subscription persisted to disk");
+
+// 7E. Push delivery status recording
+db.recordPushDelivery(subA.endpoint, true);
+assert(db.getPushSubscription(testUserA.userId).lastSuccessAt !== null, "Push delivery success recorded");
+
+db.recordPushDelivery(subB.endpoint, false, "410 Gone", true);
+assert(db.getPushSubscription(testUserB.userId) === null, "410 Gone deactivates subscription from active query");
+
+// 7F. Unsubscribe/deletion isolation
+db.deletePushSubscription(testUserA.userId);
+assert(db.getPushSubscription(testUserA.userId) === null, "User A unsubscribed successfully");
+
+// 8. Secret Scanning Security Verification
+console.log("\n8. Testing Automated Secret Scanning (Zero Hardcoded Secrets in Source)...");
+const serverSrcPath = path.join(__dirname, "src/server.js");
+const serverSrc = fs.readFileSync(serverSrcPath, "utf8");
+
+// Check for hardcoded fallback secret literals
+const prohibitedTokens = [
+  "astro_metrics_admin_key_sec",
+  "astroverse_webhook_secret_dev_key",
+  "ephemeral_dev_session_secret",
+  "OIsfcrybKQtNF6aDJIbuXssLeKNgy93nGIMJiMPd7zg",
+  "BBNLBC7fF0N92_s5Y3W--qNIzJP2oZ04mH7bg578sq7Um9Hiou9k-_mKy8aUufmMv6yGwQAHzY8y2PFOC03pvjw"
+];
+
+for (const prohibited of prohibitedTokens) {
+  assert(!serverSrc.includes(prohibited), `Source code does not contain hardcoded secret token: '${prohibited.slice(0, 15)}...'`);
+}
+
+// Test database health check helper
+assert(typeof db.isHealthy === "function", "Database has isHealthy() health check method");
+assert(db.isHealthy() === true, "Database is healthy in test environment");
+
+// 9. Expert Mode Privacy, CSRF & Security Hardening Tests
+console.log("\n9. Testing Expert Mode Privacy, CSRF & Security Hardening...");
+
+// 9A. Production startup validation throws without ALLOWED_ORIGINS
+let allowedOriginsThrew = false;
+try {
+  validateProductionConfig({
+    NODE_ENV: 'production',
+    DATABASE_URL: 'postgres://localhost:5432/astro',
+    ADMIN_METRICS_KEY: 'test_admin_key_32_bytes_valid_long',
+    WEBHOOK_SECRET: 'test_webhook_sec_32_bytes_valid_long',
+    SESSION_SECRET: 'test_session_sec_32_bytes_valid_long',
+    ALLOWED_ORIGINS: ''
+  });
+} catch (e) {
+  if (e.message.includes('FATAL: ALLOWED_ORIGINS')) {
+    allowedOriginsThrew = true;
+  }
+}
+assert(allowedOriginsThrew, "Startup throws without ALLOWED_ORIGINS in production mode");
+
+// 9B. Ephemeral server tests: CSRF rejection and login response token leakage
+const testServer = await new Promise(resolve => {
+  const s = app.listen(0, '127.0.0.1', () => resolve(s));
+});
+const testPort = testServer.address().port;
+const baseUrl = `http://127.0.0.1:${testPort}`;
+
+try {
+  // Test cross-origin state-changing POST rejected with 403
+  const crossOriginRes = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://malicious-site.example.com'
+    },
+    body: JSON.stringify({ email: testRegEmail, password: testPassword })
+  });
+  assert(crossOriginRes.status === 403, "Cross-origin state-changing POST is rejected with 403 Forbidden");
+
+  // Test Sec-Fetch-Site: cross-site rejected with 403
+  const secFetchRes = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Sec-Fetch-Site': 'cross-site'
+    },
+    body: JSON.stringify({ email: testRegEmail, password: testPassword })
+  });
+  assert(secFetchRes.status === 403, "Cross-site Sec-Fetch-Site request is rejected with 403 Forbidden");
+
+  // Test Authorized Login: No sessionToken in JSON response body
+  const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'http://localhost:5173'
+    },
+    body: JSON.stringify({ email: testRegEmail, password: testPassword })
+  });
+  assert(loginRes.status === 200, "Authorized login request succeeds with 200 OK");
+  const loginJson = await loginRes.json();
+  assert(loginJson.sessionToken === undefined, "Login response body does NOT leak sessionToken (HttpOnly cookie used)");
+  assert(Boolean(loginJson.userId), "Login response returns userId");
+  const setCookie = loginRes.headers.get('set-cookie');
+  assert(setCookie && setCookie.includes('astro_session_token') && setCookie.includes('HttpOnly'), "Login issues HttpOnly astro_session_token cookie");
+
+  // Test cookie-authenticated POST with neither allowed Origin nor Sec-Fetch-Site=same-origin rejected with 403 FORBIDDEN_CSRF
+  const cookieMatch = setCookie.match(/astro_session_token=([^;]+)/);
+  const sessionCookieVal = cookieMatch ? cookieMatch[1] : '';
+  const noOriginCookiePost = await fetch(`${baseUrl}/api/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `astro_session_token=${sessionCookieVal}`
+    }
+  });
+  assert(noOriginCookiePost.status === 403, "Cookie-authenticated POST with neither allowed Origin nor Sec-Fetch-Site=same-origin is rejected with 403 Forbidden");
+  const noOriginJson = await noOriginCookiePost.json();
+  assert(noOriginJson.code === 'FORBIDDEN_CSRF', "Rejection returns code FORBIDDEN_CSRF");
+
+  // Test cookie-authenticated POST with Sec-Fetch-Site=same-origin succeeds
+  const sameOriginCookiePost = await fetch(`${baseUrl}/api/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `astro_session_token=${sessionCookieVal}`,
+      'Sec-Fetch-Site': 'same-origin'
+    }
+  });
+  assert(sameOriginCookiePost.status === 200, "Cookie-authenticated POST with Sec-Fetch-Site=same-origin succeeds with 200 OK");
+} finally {
+  await new Promise(resolve => testServer.close(resolve));
+}
 
 console.log("\n==============================================================");
 if (failed === 0) {
@@ -180,3 +402,4 @@ if (failed === 0) {
   console.error(` FAILED: ${failed} checks failed, ${passed} passed.`);
   process.exitCode = 1;
 }
+

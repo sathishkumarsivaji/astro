@@ -47,10 +47,10 @@ export default function HomeDashboard({
   const formattedToday = todayDate.toLocaleDateString(isTamil ? "ta-IN" : "en-US", options);
 
   const curDasha = chartData?.currentDasha || null;
-  const dashaLord = curDasha?.lord || "Jupiter";
-  const antardashaLord = curDasha?.bukthis?.find(b => b.isCurrent)?.lord || "Mars";
-  const moonSign = chartData?.moonSign?.name || "Aries";
-  const ascSign = chartData?.ascendantSign?.name || "Sagittarius";
+  const dashaLord = curDasha?.lord ?? null;
+  const antardashaLord = curDasha?.bukthis?.find(b => b.isCurrent)?.lord ?? curDasha?.currentAntar ?? null;
+  const moonSign = chartData?.moonSign?.name ?? (typeof chartData?.moonSign === "string" ? chartData.moonSign : null);
+  const ascSign = chartData?.ascendantSign?.name ?? (typeof chartData?.ascendantSign === "string" ? chartData.ascendantSign : null);
 
   // Daily Curated Focus Metrics (Qualitative Traditional Indicators)
   const DAILY_THEMES = [
@@ -61,8 +61,8 @@ export default function HomeDashboard({
       rating: "★★★★☆",
       color: "text-amber-700 bg-amber-50 border-amber-200",
       indicator: isTamil
-        ? `தற்போது ${dashaLord} தசா செல்வாக்குடன் 10-ம் பாவ தொழில் சார்ந்த திட்டமிடலுக்கு சாதகமான நாள்.`
-        : `Active ${dashaLord} Mahadasha favors strategic execution and vocational leadership today.`
+        ? (dashaLord ? `தற்போது ${dashaLord} தசா செல்வாக்குடன் 10-ம் பாவ தொழில் சார்ந்த திட்டமிடலுக்கு சாதகமான நாள்.` : "தொழில் சார்ந்த திட்டமிடலுக்கு சாதகமான நாள்.")
+        : (dashaLord ? `Active ${dashaLord} Mahadasha favors strategic execution and vocational leadership today.` : "Favorable period for strategic execution and vocational leadership.")
     },
     {
       id: "relationships",
@@ -71,8 +71,8 @@ export default function HomeDashboard({
       rating: "★★★★☆",
       color: "text-rose-700 bg-rose-50 border-rose-200",
       indicator: isTamil
-        ? `சந்திரனின் சஞ்சாரம் உணர்ச்சிப் புரிதலையும் உரையாடல்களையும் இனிமையாக்கும்.`
-        : `Moon transit in ${moonSign} encourages empathetic dialogue and emotional clarity.`
+        ? "சந்திரனின் சஞ்சாரம் உணர்ச்சிப் புரிதலையும் உரையாடல்களையும் இனிமையாக்கும்."
+        : (moonSign ? `Moon transit relative to natal ${moonSign} encourages empathetic dialogue and emotional clarity.` : "Transit Moon encourages empathetic dialogue and emotional clarity.")
     },
     {
       id: "money",
@@ -81,8 +81,8 @@ export default function HomeDashboard({
       rating: "★★★★★",
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
       indicator: isTamil
-        ? `அவசர நிதி முடிவுகளைத் தவிர்த்து நிலையான வரவு-செலவு திட்டமிடலுக்கு உகந்த நாள்.`
-        : `Favorable day for structured budgeting and evaluating long-term asset security.`
+        ? "அவசர நிதி முடிவுகளைத் தவிர்த்து நிலையான வரவு-செலவு திட்டமிடலுக்கு உகந்த நாள்."
+        : "Favorable day for structured budgeting and evaluating long-term asset security."
     },
     {
       id: "energy",
@@ -91,8 +91,8 @@ export default function HomeDashboard({
       rating: "★★★☆☆",
       color: "text-purple-700 bg-purple-50 border-purple-200",
       indicator: isTamil
-        ? `அமைதியான சிந்தனை, தியானம் மற்றும் உடல் புத்துணர்ச்சிக்கு முன்னுரிமை அளியுங்கள்.`
-        : `Chart indicates reflective, inward focus rather than high-strain physical exertion.`
+        ? "அமைதியான சிந்தனை, தியானம் மற்றும் உடல் புத்துணர்ச்சிக்கு முன்னுரிமை அளியுங்கள்."
+        : "Chart indicates reflective, inward focus rather than high-strain physical exertion."
     }
   ];
 
@@ -167,7 +167,7 @@ export default function HomeDashboard({
                   {isTamil ? `வணக்கம், ${birthProfile?.name || "ஜாதகர்"}!` : `Good Day, ${birthProfile?.name || "Friend"}!`}
                 </h1>
                 <p className="text-xs text-stone-600 font-medium">
-                  {formattedToday} • {isTamil ? `லக்னம்: ${ascSign} | ராசி: ${moonSign}` : `Lagna: ${ascSign} | Moon: ${moonSign}`}
+                  {formattedToday} • {isTamil ? `லக்னம்: ${ascSign || "கணக்கிடப்படவில்லை"} | ராசி: ${moonSign || "கணக்கிடப்படவில்லை"}` : `Lagna: ${ascSign || "Not available"} | Moon: ${moonSign || "Not available"}`}
                 </p>
               </div>
 
@@ -240,9 +240,13 @@ export default function HomeDashboard({
                   </span>
                 </div>
                 <p className="text-xs text-stone-700">
-                  {isTamil
-                    ? `தற்போது இயங்கும் விம்சோத்தரி தசா: ${dashaLord} மகா தசை / ${antardashaLord} புக்தி. சந்திரன் உங்கள் ஜென்ம ராசியான ${moonSign}-ல் சஞ்சரிக்கிறது.`
-                    : `Active Vimshottari period: ${dashaLord} Mahadasha / ${antardashaLord} Antardasha. Moon transits your natal ${moonSign} sign.`}
+                  {dashaLord && antardashaLord
+                    ? (isTamil
+                        ? `தற்போது இயங்கும் விம்சோத்தரி தசா: ${dashaLord} மகா தசை / ${antardashaLord} புக்தி.${moonSign ? ` சந்திரன் உங்கள் ஜென்ம ராசியான ${moonSign}-ல் சஞ்சரிக்கிறது.` : ""}`
+                        : `Active Vimshottari period: ${dashaLord} Mahadasha / ${antardashaLord} Antardasha.${moonSign ? ` Moon transits relative to your natal ${moonSign} sign.` : ""}`)
+                    : (isTamil
+                        ? "விம்சோத்தரி தசா விவரங்கள் மற்றும் நடப்பு கோசார நிலைகள் உங்கள் முழு அறிக்கையில் கிடைக்கின்றன."
+                        : "Vimshottari Dasha and active planetary transits are available in your full dossier.")}
                 </p>
               </div>
 

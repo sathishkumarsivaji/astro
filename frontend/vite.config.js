@@ -7,6 +7,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5000',
+          changeOrigin: true
+        }
+      },
       watch: {
         ignored: ['**/*.rar', '**/*.rartemp', '**/*rartemp*', '**/*.zip', '**/*.7z', '**/*.tar*', '**/*.gz', '**/dist/**', '**/.git/**']
       }
