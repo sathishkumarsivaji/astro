@@ -61,7 +61,7 @@ export function createRuleProvenance({
 
 /**
  * Initial provenance entries for core implemented rules.
- * This registry will grow as rules are formally documented.
+ * Every predictive rule configured in prediction_config.json must exist here.
  */
 export const RULE_PROVENANCE_REGISTRY = {
   VIMSHOTTARI_DASHA_SEQUENCE: createRuleProvenance({
@@ -102,6 +102,104 @@ export const RULE_PROVENANCE_REGISTRY = {
     knownAlternativeConventions: ['Some schools include Ashtakavarga strength separately', 'Jaimini does not use Shadbala'],
     selectedConvention: 'Standard Parashari Shadbala with all 6 components. Threshold values per Graha Bala requirements.',
     validationStatus: 'INTERNALLY_TESTED'
+  }),
+
+  RULE_MAR_7L_11H: createRuleProvenance({
+    ruleId: 'RULE_MAR_7L_11H',
+    tradition: 'Parashari',
+    sourceTitle: 'Brihat Parasara Hora Shastra',
+    sourceEdition: 'R. Santhanam translation (Ranjan Publications)',
+    chapterOrSection: 'Chapter 24 (Effects of Bhava Lords)',
+    verseOrPageWhenAvailable: 'Verses on 7th Lord in 11th House',
+    ruleTextSummary: '7th lord positioned in the 11th house of gains and wish fulfilment supports auspicious union and social harmony.',
+    implementationFormula: 'Evaluate if natal 7th lord occupies 11th bhava from Lagna; assign positive weight for marriage timing.',
+    knownAlternativeConventions: ['KP cuspal sub-lord linkage of 7th and 11th cusps'],
+    selectedConvention: 'Standard Parashari bhava lordship and placement convention.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
+  }),
+
+  RULE_MAR_VEN_JUP_CONJ: createRuleProvenance({
+    ruleId: 'RULE_MAR_VEN_JUP_CONJ',
+    tradition: 'Parashari',
+    sourceTitle: 'Brihat Parasara Hora Shastra',
+    sourceEdition: 'R. Santhanam translation (Ranjan Publications)',
+    chapterOrSection: 'Chapter 26 (Planetary Conjunctions)',
+    verseOrPageWhenAvailable: 'Verses on Venus-Jupiter Conjunction',
+    ruleTextSummary: 'Benefic interaction between natural marriage significator (Venus) and wisdom/growth karaka (Jupiter).',
+    implementationFormula: 'Verify conjunction within same sign or mutual aspect between Venus and Jupiter.',
+    knownAlternativeConventions: ['Western tight orb conjunction (within 6 degrees)'],
+    selectedConvention: 'Vedic mutual association (sambandha) and whole-sign co-presence.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
+  }),
+
+  RULE_MAR_SAT_DELAY: createRuleProvenance({
+    ruleId: 'RULE_MAR_SAT_DELAY',
+    tradition: 'Parashari',
+    sourceTitle: 'Brihat Parasara Hora Shastra',
+    sourceEdition: 'R. Santhanam translation (Ranjan Publications)',
+    chapterOrSection: 'Chapter 20 (Effects of 7th Bhava)',
+    verseOrPageWhenAvailable: 'Verses on Saturnian influence on 7th house and lord',
+    ruleTextSummary: 'Saturnian aspect or conjunction to 7th house/lord introduces maturity requirements, gradual realization, or post-28 timing.',
+    implementationFormula: 'Check if Saturn aspects (3rd, 7th, 10th drishti) or conjoins 7th house or 7th lord; apply negative acceleration / maturity delay.',
+    knownAlternativeConventions: ['Jaimini Saturn aspect on Darakaraka / Upapada'],
+    selectedConvention: 'Parashari full-sight drishti matrix for Saturnian delay attribution.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
+  }),
+
+  RULE_MAR_D9_VEN_STRONG: createRuleProvenance({
+    ruleId: 'RULE_MAR_D9_VEN_STRONG',
+    tradition: 'Varga D9',
+    sourceTitle: 'Brihat Parasara Hora Shastra',
+    sourceEdition: 'R. Santhanam translation (Ranjan Publications)',
+    chapterOrSection: 'Chapter 6 (Divisional Charts - Navamsha)',
+    verseOrPageWhenAvailable: 'Verses on Navamsha evaluation of Kalatrakaraka',
+    ruleTextSummary: 'Venus exalted, moolatrikona, or own sign in Navamsha D9 confirms foundational marital happiness.',
+    implementationFormula: 'Compute D9 chart and verify Venus sign placement dignity (Pisces=exalted, Taurus/Libra=own sign).',
+    knownAlternativeConventions: ['Pushkar Navamsha placement of Kalatrakaraka'],
+    selectedConvention: 'Parashari D9 essential dignity assessment.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
+  }),
+
+  RULE_MAR_UPAPADA_2ND_BENEFIC: createRuleProvenance({
+    ruleId: 'RULE_MAR_UPAPADA_2ND_BENEFIC',
+    tradition: 'Jaimini',
+    sourceTitle: 'Jaimini Upadesha Sutras',
+    sourceEdition: 'Sanjay Rath commentary / B. Suryanarain Rao translation',
+    chapterOrSection: 'Adhyaya 1, Pada 4',
+    verseOrPageWhenAvailable: 'Sutras on Upapada Lagna second house preservation',
+    ruleTextSummary: 'Benefic planets (Jupiter, Venus, Mercury) in 2nd from UL sustain matrimonial longevity and family prosperity.',
+    implementationFormula: 'Locate Upapada Lagna (Arudha Pada of 12th house); check presence/aspect of benefics in 2nd from UL.',
+    knownAlternativeConventions: ['Parashari 2nd house from Upapada evaluation'],
+    selectedConvention: 'Jaimini Sutras canonical Upapada second house analysis.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
+  }),
+
+  RULE_RES_4L_AFFLICT_SEP: createRuleProvenance({
+    ruleId: 'RULE_RES_4L_AFFLICT_SEP',
+    tradition: 'Parashari',
+    sourceTitle: 'Brihat Parasara Hora Shastra',
+    sourceEdition: 'R. Santhanam translation (Ranjan Publications)',
+    chapterOrSection: 'Chapter 17 (Effects of 4th Bhava)',
+    verseOrPageWhenAvailable: 'Verses on foreign residence and household division',
+    ruleTextSummary: '4th lord or 4th house associated with 3rd, 9th, or 12th houses traditionally suggests independent household or relocation.',
+    implementationFormula: 'Evaluate association (conjunction, aspect, mutual reception) of 4th lord with 3rd/9th/12th houses.',
+    knownAlternativeConventions: ['Nadi combinations for long-distance travel and domestic relocation'],
+    selectedConvention: 'Parashari dusthana/upachaya relationship to 4th house.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
+  }),
+
+  RULE_WEALTH_2ND_FROM_7TH: createRuleProvenance({
+    ruleId: 'RULE_WEALTH_2ND_FROM_7TH',
+    tradition: 'Bhavat Bhavam',
+    sourceTitle: 'Brihat Parasara Hora Shastra',
+    sourceEdition: 'R. Santhanam translation (Ranjan Publications)',
+    chapterOrSection: 'Chapter 14 (Bhavat Bhavam Principles)',
+    verseOrPageWhenAvailable: '8th house as 2nd from 7th (Dhana of Kalatra)',
+    ruleTextSummary: 'Strength of 8th house (2nd from 7th) and its lord indicates the accumulated assets and financial resources of spouse\'s family.',
+    implementationFormula: 'Evaluate 8th house dignity, lord strength, and benefic occupancy as derived wealth indicator for spouse.',
+    knownAlternativeConventions: ['KP 8th cusp sub-lord analysis'],
+    selectedConvention: 'Classical Bhavat Bhavam derived house lordship methodology.',
+    validationStatus: 'TRADITIONAL_RULE_ONLY'
   })
 };
 

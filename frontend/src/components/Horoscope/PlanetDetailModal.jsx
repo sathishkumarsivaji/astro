@@ -152,7 +152,7 @@ export default function PlanetDetailModal({ isOpen, onClose, planet, chartData, 
           <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/70">
             <span className="text-[10px] uppercase font-bold text-stone-500 block">{isTamil ? "ராசி / பாவகம்" : "Sign / House"}</span>
             <span className="font-bold text-stone-900 text-sm">{isTamil ? (SIGN_NAMES_TAMIL[planet.sign] || planet.sign) : planet.sign}</span>
-            <span className="text-[11px] text-amber-800 block">H{planet.house || 1} ({isTamil ? `${planet.house || 1}-ம் வீடு` : `House ${planet.house || 1}`})</span>
+            <span className="text-[11px] text-amber-800 block">{planet.house ? `H${planet.house} (${isTamil ? `${planet.house}-ம் வீடு` : `House ${planet.house}`})` : (isTamil ? "வீடு குறிப்பிடப்படவில்லை" : "House unassigned")}</span>
           </div>
 
           <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/70">

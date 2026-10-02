@@ -1030,22 +1030,39 @@ export function calculateNewbornAstroProfile(input = {}) {
 /**
  * AI Bespoke Name Generation for Newborn using Gemini
  */
-export async function generateAINewbornNames({
-  nakshatraName = "Rohini",
-  pada = 3,
-  syllable = "Vi",
-  syllableTa = "வி",
-  gender = "boy",
-  initial = "S",
-  driverNumber = 1,
-  destinyNumber = 1,
-  lagnaLord = "Mars",
-  lang = "en"
-}) {
+export async function generateAINewbornNames(params = {}) {
+  const {
+    nakshatraName,
+    pada,
+    syllable,
+    syllableTa = "",
+    gender,
+    initial = "",
+    driverNumber,
+    destinyNumber,
+    lagnaLord,
+    lang = "en"
+  } = (params || {});
+
+  if (
+    !nakshatraName ||
+    pada === undefined ||
+    pada === null ||
+    !syllable ||
+    !gender ||
+    driverNumber === undefined ||
+    driverNumber === null ||
+    destinyNumber === undefined ||
+    destinyNumber === null ||
+    !lagnaLord
+  ) {
+    throw new Error("INSUFFICIENT_DATA: Valid newborn birth profile parameters (nakshatraName, pada, syllable, gender, driverNumber, destinyNumber, lagnaLord) are required.");
+  }
+
   const isTamil = lang === "ta";
   const prompt = isTamil
-    ? `நட்சத்திரம்: ${nakshatraName} (பாதம் ${pada}), சுப தொடக்க எழுத்து: ${syllableTa} (${syllable}), பாலினம்: ${gender}, லக்னாதிபதி: ${lagnaLord}, எண் கணிதம்: எண் ${destinyNumber}. இந்த அமைப்பிற்கு ஏற்ற 10 தெய்வீக, நவீன மற்றும் பாரம்பரிய குழந்தைப் பெயர்களை JSON வடிவில் பட்டியலிடுக. வடிவம்: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]`
-    : `Nakshatra: ${nakshatraName} (Pada ${pada}), Auspicious Syllable: ${syllable} (${syllableTa}), Gender: ${gender}, Lagna Lord: ${lagnaLord}, Destiny Number: ${destinyNumber}. Generate 10 elegant, meaningful newborn baby names adhering strictly to these parameters in JSON format: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]. Return valid JSON array only.`;
+    ? `நட்சத்திரம்: ${nakshatraName} (பாதம் ${pada}), சுப தொடக்க எழுத்து: ${syllableTa || syllable} (${syllable}), பாலினம்: ${gender}, லக்னாதிபதி: ${lagnaLord}, எண் கணிதம்: எண் ${destinyNumber}. இந்த அமைப்பிற்கு ஏற்ற 10 தெய்வீக, நவீன மற்றும் பாரம்பரிய குழந்தைப் பெயர்களை JSON வடிவில் பட்டியலிடுக. வடிவம்: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]`
+    : `Nakshatra: ${nakshatraName} (Pada ${pada}), Auspicious Syllable: ${syllable} (${syllableTa || syllable}), Gender: ${gender}, Lagna Lord: ${lagnaLord}, Destiny Number: ${destinyNumber}. Generate 10 elegant, meaningful newborn baby names adhering strictly to these parameters in JSON format: [{"name": "...", "nameTa": "...", "meaning": "...", "meaningTa": "..."}]. Return valid JSON array only.`;
 
   const token = await ensureSessionToken();
 

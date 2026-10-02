@@ -1,0 +1,13 @@
+{
+  "generationTimestamp": "2026-10-02T15:53:53.996Z",
+  "gitCommit": "d5048a5c7aae1390d7dc1f57a95bd61c0f5ebe6a",
+  "sourceTreeHash": "67acaa60fd745c1e2021696379df9166bba4c6f45047f116e1b64dee8aa3b020",
+  "sourceFileCount": 135,
+  "testTreeHash": "47b6bfcb30073a2b90053214468cebc1495e7f20a1157cbc269b1ebb0fe0bc76",
+  "testFileCount": 54,
+  "fixtureTreeHash": "a6f217849761cfcf70deb02a3c169cd1e55671d108dc9f9c613082c3331bda35",
+  "fixtureFileCount": 4,
+  "packageLockHash": "6cd9ed18c752f974c8f88af4e15ad4291d6f62ff46e10221d976b24dada48182",
+  "manifestVersion": "1.0.0",
+  "manifestHash": "80f84ca43c9767b8542ad889f39ee209993d72c2fdb3a6a25bf7d8aeb837a585"
+}

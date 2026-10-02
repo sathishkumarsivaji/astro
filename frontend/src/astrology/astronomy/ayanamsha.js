@@ -157,7 +157,7 @@ export function getKPAyanamsha(jd) {
 
 /**
  * B.V. Raman Ayanamsha
- * Zero year: 397 AD, J2000.0 anchor ≈ 22°24'51.47" = 22.4142963°, precession rate 50⅓"/year
+ * Zero year: 397 AD, J2000.0 anchor ≈ 22°24'44.333" = 22.4123148°, precession rate 50⅓"/year
  * 
  * @param {number} jd Julian Day
  * @returns {number} Raman Ayanamsha in decimal degrees

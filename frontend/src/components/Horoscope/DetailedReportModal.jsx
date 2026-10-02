@@ -3811,7 +3811,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 <div><strong>Dasha Year:</strong> 365.2422 Days</div>
               </div>
               <div className="text-[10px] text-stone-500 pt-1 border-t border-stone-200 leading-relaxed">
-                <strong>Technical Disclosure:</strong> All planetary coordinates are computed via Astronomy Engine (VSOP87/NOVAS-derived planetary model) with AstroVerse Lahiri / Chitrapaksha Sidereal conversion. Planetary war (Graha Yuddha) is evaluated under classical 1.0° angular threshold; Virupa war reduction is disclosed as unimplemented. Traditional wellness correspondences and gemstone suggestions represent traditional symbolic interpretations and do NOT constitute medical diagnoses or commercial performance guarantees.
+                <strong>Technical Disclosure:</strong> All planetary coordinates are computed via Astronomy Engine (VSOP87/NOVAS-derived planetary model) with AstroVerse Lahiri / Chitrapaksha Sidereal conversion. Planetary war (Graha Yuddha) is evaluated under ASTROVERSE_DECLARED_SHADBALA_CONVENTION (classical 1.0° angular threshold with proximity-scaled ±30 Virupa correction per BPHS). Traditional wellness correspondences and gemstone suggestions represent traditional symbolic interpretations and do NOT constitute medical diagnoses or commercial performance guarantees.
               </div>
             </div>
           </div>

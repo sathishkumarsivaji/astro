@@ -197,7 +197,7 @@ console.log("\n7. Raman J2000 Convention: Value matches documented convention");
 console.log("   " + "=".repeat(60));
 
 const ramanJ2000 = getRamanAyanamsha(2451545.0);
-// The documented convention says approximately 22°24'51" = 22.4142°
+// Classical linear 50⅓"/year from 397 AD yields 22°24'44.333" = 22.41231481° at J2000.0
 assertClose(ramanJ2000, 22.41231481, 0.0001, "Raman", "J2000 README Check");
 
 // Verify it does NOT produce the old incorrect value of 22.37°

@@ -5957,12 +5957,35 @@ export function calculatePlanetaryAvasthas(planets = [], ascendantLong = 0) {
 
   for (const p of planets) {
     if (!p || !p.name) continue;
-    let pLong = 0;
-    if (typeof p.longitude === "number") pLong = p.longitude;
-    else if (typeof p.long === "number") pLong = p.long;
-    else if (p.sign) {
-      const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === p.sign.toLowerCase());
-      pLong = (sIdx >= 0 ? sIdx * 30 : 0) + (p.degreeInSign || 0);
+    let pLong = null;
+    if (typeof p.longitude === "number" && !isNaN(p.longitude)) {
+      pLong = p.longitude;
+    } else if (typeof p.long === "number" && !isNaN(p.long)) {
+      pLong = p.long;
+    } else if (p.sign) {
+      const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === String(p.sign).toLowerCase());
+      if (sIdx >= 0) {
+        pLong = (sIdx * 30) + (typeof p.degreeInSign === "number" && !isNaN(p.degreeInSign) ? p.degreeInSign : 0);
+      }
+    }
+
+    const houseVal = (typeof p.house === 'number' && p.house >= 1 && p.house <= 12) ? p.house : null;
+
+    if (pLong === null) {
+      result.push({
+        planet: p.name,
+        planetTamil: p.tamil || p.name,
+        status: "INSUFFICIENT_DATA",
+        degreeInSign: null,
+        sign: null,
+        house: houseVal,
+        baladi: null,
+        jagratadi: null,
+        deeptadi: null,
+        isRetrograde: Boolean(p.isRetrograde || (typeof p.speed === 'number' && p.speed < 0)),
+        isCombust: Boolean(p.isCombust)
+      });
+      continue;
     }
 
     const sIdx = Math.floor(norm360(pLong) / 30);
@@ -6010,9 +6033,10 @@ export function calculatePlanetaryAvasthas(planets = [], ascendantLong = 0) {
     result.push({
       planet: p.name,
       planetTamil: p.tamil || p.name,
+      status: "CALCULATED",
       degreeInSign: parseFloat(degInSign.toFixed(2)),
-      sign: p.sign || ZODIAC_SIGNS[sIdx]?.name,
-      house: p.house || 1,
+      sign: p.sign || ZODIAC_SIGNS[sIdx]?.name || null,
+      house: houseVal,
       baladi,
       jagratadi,
       deeptadi,
@@ -6689,11 +6713,15 @@ export function calculateNakshatraDispositorProfile(planet = {}, planets = [], a
   const signLordPlanet = planets.find(p => p.name.toLowerCase() === signLord.toLowerCase());
   const nakLordPlanet = planets.find(p => p.name.toLowerCase() === nakLord.toLowerCase());
 
+  const plHouse = (typeof planet.house === "number" && planet.house >= 1 && planet.house <= 12) ? planet.house : null;
+  const signLordHouse = (typeof signLordPlanet?.house === "number" && signLordPlanet.house >= 1 && signLordPlanet.house <= 12) ? signLordPlanet.house : null;
+  const nakLordHouse = (typeof nakLordPlanet?.house === "number" && nakLordPlanet.house >= 1 && nakLordPlanet.house <= 12) ? nakLordPlanet.house : null;
+
   // Build dispositor chain
   const dispositorChain = [
-    { level: 1, role: "Graha", name: planet.name, sign: sign.name, house: planet.house || 1 },
-    { level: 2, role: "Rasi Lord", name: signLord, sign: signLordPlanet?.sign || "Unknown", house: signLordPlanet?.house || 1, dignity: signLordPlanet?.dignity || "Neutral" },
-    { level: 3, role: "Nakshatra Lord", name: nakLord, sign: nakLordPlanet?.sign || "Unknown", house: nakLordPlanet?.house || 1, dignity: nakLordPlanet?.dignity || "Neutral" }
+    { level: 1, role: "Graha", name: planet.name, sign: sign.name, house: plHouse },
+    { level: 2, role: "Rasi Lord", name: signLord, sign: signLordPlanet?.sign || "Unknown", house: signLordHouse, dignity: signLordPlanet?.dignity || "Neutral" },
+    { level: 3, role: "Nakshatra Lord", name: nakLord, sign: nakLordPlanet?.sign || "Unknown", house: nakLordHouse, dignity: nakLordPlanet?.dignity || "Neutral" }
   ];
 
   return {
@@ -6703,7 +6731,7 @@ export function calculateNakshatraDispositorProfile(planet = {}, planets = [], a
     sign: sign.name,
     signTamil: sign.tamil,
     signLord,
-    house: planet.house || 1,
+    house: plHouse,
     nakshatra: nak.name,
     nakshatraTamil: nak.tamil,
     pada,
@@ -6713,8 +6741,8 @@ export function calculateNakshatraDispositorProfile(planet = {}, planets = [], a
     dispositorChain,
     signLordDignity: signLordPlanet?.dignity || "Neutral",
     nakLordDignity: nakLordPlanet?.dignity || "Neutral",
-    descriptionEn: `${planet.name} in ${nak.name} Pada ${pada} (Deity: ${nak.deity}, Lord: ${nakLord}) with Rasi dispositor ${signLord} situated in House ${signLordPlanet?.house || 1}.`,
-    descriptionTa: `${planet.tamil || planet.name} கிரகம் ${nak.tamil} பாதம் ${pada} (அதிபதி: ${nakLord}, தெய்வம்: ${nak.deity}) மற்றும் ராசிநாதன் ${signLord} ${signLordPlanet?.house || 1}-ம் வீட்டில் அமர்வு.`
+    descriptionEn: `${planet.name} in ${nak.name} Pada ${pada} (Deity: ${nak.deity}, Lord: ${nakLord}) with Rasi dispositor ${signLord}${signLordHouse ? ` situated in House ${signLordHouse}` : ""}.`,
+    descriptionTa: `${planet.tamil || planet.name} கிரகம் ${nak.tamil} பாதம் ${pada} (அதிபதி: ${nakLord}, தெய்வம்: ${nak.deity}) மற்றும் ராசிநாதன் ${signLord}${signLordHouse ? ` ${signLordHouse}-ம் வீட்டில் அமர்வு` : ""}.`
   };
 }
 
@@ -6739,8 +6767,33 @@ export function calculateDedicatedGocharDashboard(chartData = {}, targetDate = n
   const ayanamsa = getAyanamshaForSystem(jd, chartSystem);
 
   // Extract Natal Moon & Lagna
-  const natalMoonLong = chartData.moon?.longitude ?? chartData.moonLong ?? 0;
-  const natalAscLong = chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0;
+  const rawMoonLong = chartData.moon?.longitude ?? chartData.moonLong ?? chartData.planets?.find(p => p.name === 'Moon')?.longitude ?? null;
+  const rawAscLong = chartData.ascendant?.longitude ?? chartData.ascendantLong ?? chartData.planets?.find(p => p.name === 'Ascendant' || p.name === 'Lagna')?.longitude ?? null;
+
+  const natalMoonLong = (typeof rawMoonLong === "number" && !isNaN(rawMoonLong)) ? rawMoonLong : null;
+  const natalAscLong = (typeof rawAscLong === "number" && !isNaN(rawAscLong)) ? rawAscLong : null;
+
+  if (natalMoonLong === null || natalAscLong === null) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      natalReference: null,
+      transits: [],
+      sadeSati: {
+        status: "INSUFFICIENT_DATA"
+      },
+      ashtamaShani: {
+        isActive: null,
+        status: "INSUFFICIENT_DATA"
+      },
+      kantakaShani: {
+        isActive: null,
+        status: "INSUFFICIENT_DATA"
+      },
+      jupiterTransit: {
+        status: "INSUFFICIENT_DATA"
+      }
+    };
+  }
 
   const natalMoonSignIdx = Math.floor(norm360(natalMoonLong) / 30);
   const natalAscSignIdx = Math.floor(norm360(natalAscLong) / 30);
@@ -6800,7 +6853,7 @@ export function calculateDedicatedGocharDashboard(chartData = {}, targetDate = n
     const houseFromLagna = ((sIdx - natalAscSignIdx + 12) % 12) + 1;
 
     // Lookup SAV bindus for the transit sign from natal chart if available
-    let savBindus = 28;
+    let savBindus = null;
     if (chartData.ashtakavarga?.savByHouse?.[houseFromLagna - 1] !== undefined) {
       savBindus = chartData.ashtakavarga.savByHouse[houseFromLagna - 1];
     } else if (chartData.ashtakavarga?.savBySign?.[sIdx] !== undefined) {
@@ -10225,7 +10278,7 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
   const config = domainConfig[domain] || domainConfig.general;
   const vargaChart = config.vargaFn ? getVargaChartData(planets, ctx?.ascendantLong ?? 0, config.vargaFn) : null;
   const bkPlanet = planets.find(p => p.name?.toLowerCase() === bkLord?.toLowerCase());
-  const bkHouse = bkPlanet?.house || 1;
+  const bkHouse = (typeof bkPlanet?.house === "number" && bkPlanet.house >= 1 && bkPlanet.house <= 12) ? bkPlanet.house : null;
 
   // Pre-calculate major transit events across the full antardasha window once
   let windowTransits = [];
@@ -10244,7 +10297,7 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
     const scoreBreakdown = [];
     const pLord = pd.lord;
     const pl = planets.find(p => p.name?.toLowerCase() === pLord?.toLowerCase());
-    const plHouse = pl?.house || 1;
+    const plHouse = (typeof pl?.house === "number" && pl.house >= 1 && pl.house <= 12) ? pl.house : null;
     const ruledHouses = getHousesRuled(pLord);
 
     // 1. D1 House Lordship & Karaka
@@ -10302,7 +10355,7 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
 
     // 4. Supportive Relative House Relationship with AD Lord (bkLord)
     let hasSupportiveRel = false;
-    if (bkLord && pLord) {
+    if (bkLord && pLord && plHouse !== null && bkHouse !== null) {
       const relHouses = ((plHouse - bkHouse + 12) % 12) + 1;
       if (relHouses === 1 || relHouses === 7 || relHouses === 5 || relHouses === 9 || relHouses === 3 || relHouses === 11) {
         score += 1.0;
@@ -10439,17 +10492,17 @@ export function calculateMarriageTimingEvents(chartOrPlanets, maybeAscLong, mayb
     h7Sign: ZODIAC_SIGNS[h7SignIdx].name,
     h7Lord: h7LordName,
     h7LordDignity: h7Lord?.dignity || "Neutral",
-    h7LordHouse: h7Lord?.house || 7,
+    h7LordHouse: (typeof h7Lord?.house === "number" && h7Lord.house >= 1 && h7Lord.house <= 12) ? h7Lord.house : null,
     venusDignity: venus?.dignity || "Neutral",
-    venusHouse: venus?.house || 1,
+    venusHouse: (typeof venus?.house === "number" && venus.house >= 1 && venus.house <= 12) ? venus.house : null,
     jupiterDignity: jupiter?.dignity || "Neutral",
-    jupiterHouse: jupiter?.house || 1,
+    jupiterHouse: (typeof jupiter?.house === "number" && jupiter.house >= 1 && jupiter.house <= 12) ? jupiter.house : null,
     d9Lagna: d9Chart.ascendant.signName,
     d9H7Lord: d9H7LordName,
     d9H7LordDignity: d9H7Lord?.vargaDignity || "Neutral",
-    d9H7LordHouse: d9H7Lord?.vargaHouse || 7,
+    d9H7LordHouse: (typeof d9H7Lord?.vargaHouse === "number" && d9H7Lord.vargaHouse >= 1 && d9H7Lord.vargaHouse <= 12) ? d9H7Lord.vargaHouse : null,
     d9VenusDignity: d9Venus?.vargaDignity || "Neutral",
-    d9VenusHouse: d9Venus?.vargaHouse || 1,
+    d9VenusHouse: (typeof d9Venus?.vargaHouse === "number" && d9Venus.vargaHouse >= 1 && d9Venus.vargaHouse <= 12) ? d9Venus.vargaHouse : null,
     isVargaPromised,
     status: (["Exalted", "Own", "Moolatrikona"].includes(h7Lord?.dignity) || [1, 4, 5, 7, 9, 10, 11].includes(h7Lord?.house))
       ? (isTamil ? "வலுவான களத்திர யோக அமைப்பு" : "Strong Matrimonial Promise")
@@ -10669,15 +10722,15 @@ export function calculateCareerTimingEvents(chartOrPlanets, maybeAscLong, maybeM
     h10Sign: ZODIAC_SIGNS[h10SignIdx].name,
     h10Lord: h10LordName,
     h10LordDignity: h10Lord?.dignity || "Neutral",
-    h10LordHouse: h10Lord?.house || 10,
+    h10LordHouse: (typeof h10Lord?.house === "number" && h10Lord.house >= 1 && h10Lord.house <= 12) ? h10Lord.house : null,
     sunDignity: sun?.dignity || "Neutral",
-    sunHouse: sun?.house || 1,
+    sunHouse: (typeof sun?.house === "number" && sun.house >= 1 && sun.house <= 12) ? sun.house : null,
     saturnDignity: saturn?.dignity || "Neutral",
-    saturnHouse: saturn?.house || 1,
+    saturnHouse: (typeof saturn?.house === "number" && saturn.house >= 1 && saturn.house <= 12) ? saturn.house : null,
     d10Lagna: d10Chart.ascendant.signName,
     d10H10Lord: d10H10LordName,
     d10H10LordDignity: d10H10Lord?.vargaDignity || "Neutral",
-    d10H10LordHouse: d10H10Lord?.vargaHouse || 10,
+    d10H10LordHouse: (typeof d10H10Lord?.vargaHouse === "number" && d10H10Lord.vargaHouse >= 1 && d10H10Lord.vargaHouse <= 12) ? d10H10Lord.vargaHouse : null,
     isVargaPromised,
     status: (["Exalted", "Own", "Moolatrikona"].includes(h10Lord?.dignity) || [1, 4, 5, 9, 10, 11].includes(h10Lord?.house))
       ? (isTamil ? "சிறப்பான தொழில்/உத்தியோக யோகம்" : "Strong Career & Leadership Promise")
@@ -10885,13 +10938,13 @@ export function calculatePropertyTimingEvents(chartOrPlanets, maybeAscLong, mayb
     h4Sign: ZODIAC_SIGNS[h4SignIdx].name,
     h4Lord: h4LordName,
     h4LordDignity: h4Lord?.dignity || "Neutral",
-    h4LordHouse: h4Lord?.house || 4,
+    h4LordHouse: (typeof h4Lord?.house === "number" && h4Lord.house >= 1 && h4Lord.house <= 12) ? h4Lord.house : null,
     marsDignity: mars?.dignity || "Neutral",
-    marsHouse: mars?.house || 1,
+    marsHouse: (typeof mars?.house === "number" && mars.house >= 1 && mars.house <= 12) ? mars.house : null,
     d4Lagna: d4Chart.ascendant.signName,
     d4H4Lord: d4H4LordName,
     d4H4LordDignity: d4H4Lord?.vargaDignity || "Neutral",
-    d4H4LordHouse: d4H4Lord?.vargaHouse || 4,
+    d4H4LordHouse: (typeof d4H4Lord?.vargaHouse === "number" && d4H4Lord.vargaHouse >= 1 && d4H4Lord.vargaHouse <= 12) ? d4H4Lord.vargaHouse : null,
     isVargaPromised,
     status: (["Exalted", "Own", "Moolatrikona"].includes(h4Lord?.dignity) || [1, 4, 5, 9, 10, 11].includes(h4Lord?.house))
       ? (isTamil ? "வலுவான மனை/சொத்து யோகம்" : "Strong Real Estate & Asset Promise")
@@ -11103,7 +11156,7 @@ export function calculateEducationTimingEvents(chartOrPlanets, maybeAscLong, may
     jupiterDignity: jupiter?.dignity || "Neutral",
     d24Lagna: d24Chart.ascendant.signName,
     d24H4Lord: d24H4LordName,
-    d24H4LordHouse: d24H4Lord?.vargaHouse || 4,
+    d24H4LordHouse: (typeof d24H4Lord?.vargaHouse === "number" && d24H4Lord.vargaHouse >= 1 && d24H4Lord.vargaHouse <= 12) ? d24H4Lord.vargaHouse : null,
     isVargaPromised,
     status: (["Exalted", "Own", "Moolatrikona", "Friend"].includes(mercury?.dignity) || [1, 4, 5, 9, 10, 11].includes(mercury?.house))
       ? (isTamil ? "சிறப்பான வித்யா/கல்வி மேன்மை யோகம்" : "High Scholastic & Intellectual Promise")
@@ -11308,12 +11361,12 @@ export function calculateProgenyTimingEvents(chartOrPlanets, maybeAscLong, maybe
     h5Sign: ZODIAC_SIGNS[h5SignIdx].name,
     h5Lord: h5LordName,
     h5LordDignity: h5Lord?.dignity || "Neutral",
-    h5LordHouse: h5Lord?.house || 5,
+    h5LordHouse: (typeof h5Lord?.house === "number" && h5Lord.house >= 1 && h5Lord.house <= 12) ? h5Lord.house : null,
     jupiterDignity: jupiter?.dignity || "Neutral",
-    jupiterHouse: jupiter?.house || 1,
+    jupiterHouse: (typeof jupiter?.house === "number" && jupiter.house >= 1 && jupiter.house <= 12) ? jupiter.house : null,
     d7Lagna: d7Chart.ascendant.signName,
     d7H5Lord: d7H5LordName,
-    d7H5LordHouse: d7H5Lord?.vargaHouse || 5,
+    d7H5LordHouse: (typeof d7H5Lord?.vargaHouse === "number" && d7H5Lord.vargaHouse >= 1 && d7H5Lord.vargaHouse <= 12) ? d7H5Lord.vargaHouse : null,
     isVargaPromised,
     status: (["Exalted", "Own", "Moolatrikona"].includes(h5Lord?.dignity) || [1, 4, 5, 9, 10, 11].includes(h5Lord?.house))
       ? (isTamil ? "வலுவான புத்திர பாக்கிய அமைப்பு" : "Strong Progeny & Lineage Promise")

@@ -200,9 +200,10 @@ function formatStructuredVargas(structuredVargas, divisionalCharts, isTamil) {
         const ret = p.isRetrograde ? " [Retrograde]" : "";
         const comb = p.isCombust ? " [Combust]" : "";
         const signStr = p.signName || p.sign || p.vargaSign || "Unknown Sign";
-        const houseStr = p.house || p.vargaHouse || 1;
+        const hVal = p.house ?? p.vargaHouse ?? null;
+        const houseStr = hVal != null ? `House ${hVal}` : "House unassigned";
         const dignityStr = p.dignity || "Neutral";
-        return `${p.name}: in ${signStr} (House ${houseStr}, Dignity: ${dignityStr}${ret}${comb})`;
+        return `${p.name}: in ${signStr} (${houseStr}, Dignity: ${dignityStr}${ret}${comb})`;
       }).join("; ");
       lines.push(`- Planetary Placements: ${planetsList}`);
     }

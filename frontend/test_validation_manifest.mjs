@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync, existsSync, writeFileSync } from '
 import { join, resolve, relative } from 'path';
 
 const ROOT = resolve(import.meta.dirname || '.');
-const MANIFEST_PATH = join(ROOT, 'validation_manifest.json');
+const MANIFEST_PATH = join(ROOT, 'source_validation_manifest.json');
 
 let passed = 0;
 let failed = 0;

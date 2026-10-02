@@ -104,6 +104,8 @@ export function calculateNumerology(birthDateStr, fullName = "", system = "pytha
 
   return {
     system,
+    tradition: system === "chaldean" ? "Chaldean Numerology Tradition" : "Pythagorean Numerology Tradition",
+    epistemicStatus: "TRADITIONAL_NUMEROLOGY_SYMBOLISM",
     lifePathNumber,
     destinyNumber,
     soulUrgeNumber,

@@ -141,7 +141,7 @@ function buildHouseLordshipMap(lagnaSignIdx, planets) {
       signName: sign.name,
       lordName,
       lordDignity: lord?.dignity || "Neutral",
-      lordHouse: lord?.house || houseNum,
+      lordHouse: (typeof lord?.house === "number" && lord.house >= 1 && lord.house <= 12) ? lord.house : null,
       lordLongitude: lord?.longitude ?? null,
       lordRetrograde: lord?.isRetrograde || false,
       lordCombust: lord?.isCombust || false,
