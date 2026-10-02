@@ -162,9 +162,9 @@ assert(candCrossPrev.localTime === "23:40", `Local time correctly wraps to 23:40
 // -----------------------------------------------------------------
 console.log("\n8. Testing Out-of-Sample LOEO Cross-Validation (P0-18, P0-20)...");
 const testEvents = [
-  { id: "E1", type: "CAREER_START", parsedDate: new Date("2016-07-01"), importance: "HIGH", sourceReliability: "DOCUMENTED" },
-  { id: "E2", type: "MARRIAGE", parsedDate: new Date("2019-11-20"), importance: "CRITICAL", sourceReliability: "DOCUMENTED" },
-  { id: "E3", type: "CHILD_BIRTH", parsedDate: new Date("2021-08-14"), importance: "HIGH", sourceReliability: "DOCUMENTED" }
+  { id: "E1", type: "CAREER_START", parsedDate: new Date("2016-07-01"), importance: "HIGH", sourceReliability: "SYNTHETIC_GROUND_TRUTH", isSynthetic: true },
+  { id: "E2", type: "MARRIAGE", parsedDate: new Date("2019-11-20"), importance: "CRITICAL", sourceReliability: "SYNTHETIC_GROUND_TRUTH", isSynthetic: true },
+  { id: "E3", type: "CHILD_BIRTH", parsedDate: new Date("2021-08-14"), importance: "HIGH", sourceReliability: "SYNTHETIC_GROUND_TRUTH", isSynthetic: true }
 ];
 const testScoredCands = generateTimeCandidates({ birthDate: "1992-08-15", approximateTime: "06:00", marginMinutes: 10 }).map(c => {
   const chart = calculatePlanetaryPositions("1992-08-15", c.localTime, 13.0827, 80.2707, "lahiri", 5.5, { lightweight: true });
@@ -197,8 +197,8 @@ const rectResult = runBirthTimeRectification({
   timezoneId: "Asia/Kolkata",
   utcOffset: 5.5,
   events: [
-    { type: "CAREER_START", date: "2016-07-01", importance: "HIGH", sourceReliability: "DOCUMENTED", verified: true },
-    { type: "MARRIAGE", date: "2019-11-20", importance: "CRITICAL", sourceReliability: "DOCUMENTED", verified: true }
+    { type: "CAREER_START", date: "2016-07-01", importance: "HIGH", sourceReliability: "SYNTHETIC_GROUND_TRUTH", isSynthetic: true, verified: true },
+    { type: "MARRIAGE", date: "2019-11-20", importance: "CRITICAL", sourceReliability: "SYNTHETIC_GROUND_TRUTH", isSynthetic: true, verified: true }
   ]
 });
 assert(rectResult.status === "SUCCESS", "Rectification pipeline executed successfully");

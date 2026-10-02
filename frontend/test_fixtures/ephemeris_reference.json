@@ -1,8 +1,17 @@
 {
   "provenance": {
-    "source": "Swiss Ephemeris 2.10.03 / DE431 Astronomical Integration Reference",
+    "source": "Swiss Ephemeris 2.10.03 (Moshier/Swiss Analytical Ephemeris Reference)",
     "compiler": "AstroVerse Verification Team",
-    "description": "Independent multi-epoch planetary positions and multi-latitude Placidus house cusp benchmarks for rigorous verification of AstroVerse astronomical engines."
+    "description": "Independent multi-epoch planetary positions and multi-latitude Placidus house cusp benchmarks for rigorous verification of AstroVerse astronomical engines.",
+    "libraryVersion": "2.10.03",
+    "ephemerisMode": "Moshier/Swiss Analytical (built-in)",
+    "ephemerisFiles": "None (Analytical Moshier ephemeris, zero DE431 file dependency)",
+    "coordinateFrame": "Geocentric True Ecliptic of Date (ECT)",
+    "timeScale": "UTC converted to TT/UT1 via Delta-T",
+    "ayanamsha": "Tropical (Zero Ayanamsha) & Lahiri Sidereal",
+    "nodeModel": "Chapront Mean Node (SE_MEAN_NODE)",
+    "houseSystem": "Placidus",
+    "generatorVersion": "2.10.03"
   },
   "planetary_benchmarks": [
     {
@@ -167,7 +176,7 @@
   "ayanamsha_anchors": {
     "lahiri_j2000": 23.857083,
     "kp_j2000": 23.765556,
-    "raman_j2000": 22.4143,
+    "raman_j2000": 22.412315,
     "tropical_j2000": 0.0
   }
 }

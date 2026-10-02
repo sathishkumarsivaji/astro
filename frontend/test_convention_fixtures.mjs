@@ -33,15 +33,12 @@ function assert(condition, message) {
   }
 }
 
-function assertClose(actual, expected, tolerance, message) {
-  const diff = Math.abs(actual - expected);
-  if (diff <= tolerance) {
-    console.log(`✓ ${message} (actual: ${actual.toFixed(6)}°, expected: ${expected.toFixed(6)}°, diff: ${(diff * 3600).toFixed(2)}")`);
-    passed++;
-  } else {
-    console.error(`✗ FAIL: ${message} (actual: ${actual.toFixed(6)}°, expected: ${expected.toFixed(6)}°, diff: ${(diff * 3600).toFixed(2)}")`);
-    failed++;
-  }
+function assertClose(actual, expected, tolerance, modelId, epochLabel) {
+  const diffDeg = Math.abs(actual - expected);
+  const diffArcsec = diffDeg * 3600;
+  const tolArcsec = tolerance * 3600;
+  console.log(`  Model: ${modelId} | Actual: ${actual.toFixed(8)}° | Expected: ${expected.toFixed(8)}° | Diff: ${diffArcsec.toFixed(4)}" | Tol: ${tolArcsec.toFixed(1)}"`);
+  assert(diffDeg <= tolerance, `${modelId} at ${epochLabel}: diff ${diffArcsec.toFixed(4)}" is within tolerance ${tolArcsec.toFixed(1)}"`);
 }
 
 function getJDForYear(year, month = 1, day = 1, hour = 0) {
@@ -66,18 +63,17 @@ console.log("   " + "=".repeat(60));
 // At 2050: (2050 - 397) × 50.333333/3600 = 1653 × 0.013981481 = 23.1074°
 
 const RAMAN_FIXTURES = [
-  { year: 1900, month: 1, day: 1, hour: 0,  expected: 21.0102, label: "1900-01-01 00:00 UTC" },
-  { year: 1950, month: 1, day: 1, hour: 0,  expected: 21.7093, label: "1950-01-01 00:00 UTC" },
-  { year: 2000, month: 1, day: 1, hour: 12, expected: 22.4085, label: "J2000.0 (2000-01-01 12:00 UTC)" },
-  { year: 2024, month: 4, day: 14, hour: 0, expected: 22.7493, label: "2024-04-14 Mesha Sankranti" },
-  { year: 2050, month: 1, day: 1, hour: 0,  expected: 23.1074, label: "2050-01-01 00:00 UTC" },
+  { year: 1900, month: 1, day: 1, hour: 0,  expected: 21.01418581, label: "1900-01-01 00:00 UTC" },
+  { year: 1950, month: 1, day: 1, hour: 0,  expected: 21.71324074, label: "1950-01-01 00:00 UTC" },
+  { year: 2000, month: 1, day: 1, hour: 12, expected: 22.41231481, label: "J2000.0 (2000-01-01 12:00 UTC)" },
+  { year: 2024, month: 4, day: 14, hour: 0, expected: 22.75183227, label: "2024-04-14 Mesha Sankranti" },
+  { year: 2050, month: 1, day: 1, hour: 0,  expected: 23.11138889, label: "2050-01-01 00:00 UTC" },
 ];
 
 for (const fix of RAMAN_FIXTURES) {
   const jd = getJDForYear(fix.year, fix.month, fix.day, fix.hour);
   const actual = getRamanAyanamsha(jd);
-  // Allow 0.02° tolerance (= 72" = ~1.2 arcminutes) for rounding in the linear model
-  assertClose(actual, fix.expected, 0.02, `Raman at ${fix.label}`);
+  assertClose(actual, fix.expected, 0.0001, 'Raman', fix.label);
 }
 
 // Raman should always be less than Lahiri
@@ -105,17 +101,17 @@ console.log("   Convention: NC Lahiri / Indian Astronomical Ephemeris / Chitrapa
 console.log("   " + "=".repeat(60));
 
 const LAHIRI_FIXTURES = [
-  { year: 1900, month: 1, day: 1, hour: 0,  expected: 22.4605, label: "1900-01-01" },
-  { year: 1950, month: 1, day: 1, hour: 0,  expected: 23.1587, label: "1950-01-01" },
-  { year: 2000, month: 1, day: 1, hour: 12, expected: 23.8571, label: "J2000.0" },
-  { year: 2024, month: 4, day: 14, hour: 0, expected: 24.1964, label: "2024-04-14 Mesha Sankranti" },
-  { year: 2050, month: 1, day: 1, hour: 0,  expected: 24.5557, label: "2050-01-01" },
+  { year: 1900, month: 1, day: 1, hour: 0,  expected: 22.46044887, label: "1900-01-01" },
+  { year: 1950, month: 1, day: 1, hour: 0,  expected: 23.15868378, label: "1950-01-01" },
+  { year: 2000, month: 1, day: 1, hour: 12, expected: 23.85709222, label: "J2000.0" },
+  { year: 2024, month: 4, day: 14, hour: 0, expected: 24.19634210, label: "2024-04-14 Mesha Sankranti" },
+  { year: 2050, month: 1, day: 1, hour: 0,  expected: 24.55565505, label: "2050-01-01" },
 ];
 
 for (const fix of LAHIRI_FIXTURES) {
   const jd = getJDForYear(fix.year, fix.month, fix.day, fix.hour);
   const actual = getLahiriAyanamsha(jd);
-  assertClose(actual, fix.expected, 0.02, `Lahiri at ${fix.label}`);
+  assertClose(actual, fix.expected, 0.005, 'Lahiri', fix.label);
 }
 
 // ============================================================
@@ -126,13 +122,13 @@ console.log("   Convention: KP Original, J2000 anchor 23°45'56\" = 23.76556°")
 console.log("   " + "=".repeat(60));
 
 const KP_FIXTURES = [
-  { year: 2000, month: 1, day: 1, hour: 12, expected: 23.7656, label: "J2000.0" },
+  { year: 2000, month: 1, day: 1, hour: 12, expected: 23.76555556, label: "J2000.0" },
 ];
 
 for (const fix of KP_FIXTURES) {
   const jd = getJDForYear(fix.year, fix.month, fix.day, fix.hour);
   const actual = getKPAyanamsha(jd);
-  assertClose(actual, fix.expected, 0.005, `KP at ${fix.label}`);
+  assertClose(actual, fix.expected, 0.005, 'KP', fix.label);
 }
 
 // ============================================================
@@ -192,7 +188,7 @@ try {
 }
 
 // Numeric passthrough
-assertClose(getAyanamshaForSystem(jd2000, 23.5), 23.5, 0.0001, "Numeric ayanamsha passthrough");
+assertClose(getAyanamshaForSystem(jd2000, 23.5), 23.5, 0.0001, "Numeric", "passthrough");
 
 // ============================================================
 // SECTION 7: Raman J2000 README Convention Check
@@ -202,7 +198,7 @@ console.log("   " + "=".repeat(60));
 
 const ramanJ2000 = getRamanAyanamsha(2451545.0);
 // The documented convention says approximately 22°24'51" = 22.4142°
-assertClose(ramanJ2000, 22.4143, 0.01, `Raman J2000 matches documented convention (~22°24'51")`);
+assertClose(ramanJ2000, 22.41231481, 0.0001, "Raman", "J2000 README Check");
 
 // Verify it does NOT produce the old incorrect value of 22.37°
 assert(Math.abs(ramanJ2000 - 22.37) > 0.03, `Raman J2000 (${ramanJ2000.toFixed(4)}°) is NOT the old incorrect value (~22.37°)`);

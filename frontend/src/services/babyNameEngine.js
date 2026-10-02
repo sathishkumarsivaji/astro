@@ -761,7 +761,10 @@ export function calculateNewbornAstroProfile(input = {}) {
     throw new Error("Unable to calculate lunar nakshatra from the provided birth data.");
   }
 
-  const pada = moonNakshatra.pada || 1;
+  const pada = moonNakshatra.pada;
+  if (!pada || pada < 1 || pada > 4) {
+    throw new Error('INSUFFICIENT_DATA: Moon nakshatra pada is not calculated. Cannot determine baby name syllables without valid pada (1-4).');
+  }
   const nakName = moonNakshatra.name;
   const nakSyllableMeta = NAKSHATRA_PADA_SYLLABLES[nakName];
   if (!nakSyllableMeta) {

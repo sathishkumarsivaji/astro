@@ -24,15 +24,19 @@ export function executeSandboxedPrediction(sandboxedInputJson) {
     throw new Error("Invalid sandboxed input: missing birth date/time");
   }
 
+  if (isNaN(Number(latitude)) || isNaN(Number(longitude))) {
+    throw new Error('INSUFFICIENT_DATA: Valid latitude and longitude are required for chart calculation.');
+  }
+
   // Calculate chart within isolated context
   let chart = null;
   try {
     chart = calculateChartBySystem("lahiri", {
       birthDate,
       birthTime,
-      latitude: Number(latitude) || 0,
-      longitude: Number(longitude) || 0,
-      utcOffset: Number(utcOffset) || 0,
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      utcOffset: Number(utcOffset),
       timezoneId: timezoneId || "UTC"
     }, { lang: "en" });
   } catch (_err) {

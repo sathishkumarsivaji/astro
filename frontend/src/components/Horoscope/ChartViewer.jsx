@@ -1422,7 +1422,7 @@ export default function ChartViewer({
                       {typeof planet.deg !== "undefined" ? planet.deg : (typeof planet.degreeInSign === "number" ? planet.degreeInSign.toFixed(2) : (planet.longitude % 30).toFixed(2))}°
                     </td>
                     <td className="p-2.5 text-purple-800 font-medium">
-                      {planet.nakshatra ? `${isTamil ? (planet.nakshatraTamil || planet.nakshatra) : planet.nakshatra} (${planet.pada ?? 1})` : "—"}
+                      {planet.nakshatra ? `${isTamil ? (planet.nakshatraTamil || planet.nakshatra) : planet.nakshatra} (${planet.pada ?? '—'})` : "—"}
                     </td>
                     <td className="p-2.5 text-cyan-800 font-medium">
                       {planet.navamsaSign ? (isTamil ? (planet.navamsaTamil || SIGN_NAMES_TAMIL[planet.navamsaSign] || planet.navamsaSign) : planet.navamsaSign) : (planet.dignity || "—")}

@@ -125,9 +125,23 @@ export default function CalculationCertificateModal({ isOpen, onClose, chartData
             </span>
             <p className="font-semibold text-stone-900">{chartData.calendarSystem || cert.calendarSystem}</p>
             <p className="text-[10px] text-stone-500">Precision: {cert.accuracy}</p>
+            <p className="text-[10px] text-stone-500">Dasha Year: {cert.dashaYearConvention || "Solar Tropical Year (365.24219878 days)"}</p>
+            <p className="text-[10px] text-stone-500">House System: {cert.houseSystem || "Whole Sign"}</p>
             <p className="text-[10px] text-stone-500">Generated: {new Date(cert.calculatedAt).toLocaleString()}</p>
           </div>
         </div>
+
+        {/* Cryptographic Hashes for Reproducibility */}
+        {(cert.inputHash || cert.chartHash) && (
+          <div className="p-3 rounded-2xl bg-stone-100/80 border border-stone-300/80 font-mono text-[10px] space-y-1 text-stone-750">
+            <div className="flex items-center justify-between text-stone-600 font-bold uppercase tracking-wider text-[9px]">
+              <span>{isTamil ? "மறுஉருவாக்க ஹேஷ்கள் (FIPS 180-4 SHA-256)" : "Reproducibility Hashes (FIPS 180-4 SHA-256)"}</span>
+              <span>v{cert.softwareVersion || cert.version}</span>
+            </div>
+            <div className="truncate"><span className="text-stone-500">Input:</span> {cert.inputHash}</div>
+            <div className="truncate"><span className="text-stone-500">Chart:</span> {cert.chartHash}</div>
+          </div>
+        )}
 
         {/* Polar Fallback Disclosure if Applicable */}
         {(chartData.isHouseSystemFallback || chartData.houseSystemFallbackReason) && (

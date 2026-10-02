@@ -1471,7 +1471,7 @@ export function evaluateNatalPromise(chartData, domain = "MARRIAGE", questionTyp
       neutralIndicators: neutral,
       cancellations,
       cancellationFactors: cancellations.length > 0 ? cancellations : ["Disciplined diversification and risk management protect accumulated gains."],
-      birthTimeSensitivity: "D4 Chaturthamsha shifts every ~30 minutes; D16 Shodashamsha shifts every ~7.5 minutes; D11 Labhamsha confirms windfall liquidity."
+      birthTimeSensitivity: "D4 Chaturthamsha shifts every ~30 minutes; D16 Shodashamsha shifts every ~7.5 minutes; reflects asset and vehicle timing."
     };
   }
 
@@ -1623,7 +1623,7 @@ export function evaluateNatalPromise(chartData, domain = "MARRIAGE", questionTyp
       neutralIndicators: neutral,
       cancellations,
       cancellationFactors: cancellations,
-      birthTimeSensitivity: "D6 Shashtamsha and D10 Dashamsha confirm dispute victory timing."
+      birthTimeSensitivity: "D10 Dashamsha shifts every ~12 minutes; reflects professional and dispute timing."
     };
   }
 
@@ -1762,40 +1762,40 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let summaryEn = "";
   let summaryTa = "";
   if (intent.domain === "HEALTH") {
-    summaryEn = "Synthesized evaluation across Lagna (Deha Bala vitality), 6th Bhava (immune resilience), Sun (vitality karaka), Moon (mental calm), and D30 Trimsamsha confirms foundational health stability.";
-    summaryTa = "லக்ன பலம் (தேக பலம்), 6-ம் பாவகம் (நோய் எதிர்ப்புத் திறன்), மற்றும் சூரியன் (உயிர் சக்தி), சந்திரன் (மன அமைதி) பலங்கள் இணைந்து உங்கள் உடல் நலனைப் பாதுகாக்கின்றன.";
+    summaryEn = "Synthesized evaluation across Lagna (Deha Bala vitality), 6th Bhava (immune resilience), Sun (vitality karaka), Moon (mental calm), and D30 Trimsamsha supports foundational constitutional stability.";
+    summaryTa = "லக்ன பலம் (தேக பலம்), 6-ம் பாவகம் (நோய் எதிர்ப்புத் திறன்), மற்றும் சூரியன் (உயிர் சக்தி), சந்திரன் (மன அமைதி) பலங்கள் இணைந்து உங்கள் உடல் நலனைப் பாதுகாக்க உதவுகின்றன.";
   } else if (intent.domain === "CAREER") {
-    summaryEn = "Synthesized evaluation across 10th Bhava (Karma Sthana), 11th Bhava (gains), Mercury (commerce karaka), Sun (executive authority), and D10 Dashamsha confirms positive career and business growth momentum.";
-    summaryTa = "10-ம் கர்ம பாவகம், 11-ம் லாப ஸ்தானம், புதன் (வியாபார காரகன்), சூரியன் (நிர்வாக அதிகாரம்), மற்றும் D10 தசாம்ச பலங்கள் இணைந்து தொழில் வளர்ச்சியை உறுதி செய்கின்றன.";
+    summaryEn = "Synthesized evaluation across 10th Bhava (Karma Sthana), 11th Bhava (gains), Mercury (commerce karaka), Sun (executive authority), and D10 Dashamsha indicates positive career and business growth momentum.";
+    summaryTa = "10-ம் கர்ம பாவகம், 11-ம் லாப ஸ்தானம், புதன் (வியாபார காரகன்), சூரியன் (நிர்வாக அதிகாரம்), மற்றும் D10 தசாம்ச பலங்கள் இணைந்து தொழில் வளர்ச்சிக்கான சுப யோகங்களை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.questionType === "MEGA_WEALTH_BILLIONAIRE") {
-    summaryEn = "Synthesized evaluation across 2nd Bhava (Treasury), 11th Bhava (Mega Gains), 9th Bhava (Bhagya), Jupiter (Dhanakaraka), and D4/D11 vargas confirms exceptional wealth potential and compounding asset capacity.";
-    summaryTa = "2-ம் தன ஸ்தானம், 11-ம் பெருலாப ஸ்தானம், 9-ம் பாக்கிய ஸ்தானம், குரு (தனகாரகன்) மற்றும் D4/D11 வர்க்க பலங்கள் இணைந்து பெருஞ்செல்வ சேர்க்கை மற்றும் உயர் பொருளாதார யோகத்தை உறுதி செய்கின்றன.";
+    summaryEn = "Synthesized evaluation across 2nd Bhava (Treasury), 11th Bhava (Mega Gains), 9th Bhava (Bhagya), Jupiter (Dhanakaraka), and D4 Chaturthamsha indicates significant wealth potential and asset accumulation capacity.";
+    summaryTa = "2-ம் தன ஸ்தானம், 11-ம் பெருலாப ஸ்தானம், 9-ம் பாக்கிய ஸ்தானம், குரு (தனகாரகன்) மற்றும் D4 சதுர்த்தாம்ச வர்க்க பலங்கள் இணைந்து பெருஞ்செல்வ சேர்க்கைக்கான வாய்ப்புகளை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "WEALTH") {
     summaryEn = "Synthesized evaluation across 2nd Bhava (Dhana), 11th Bhava (Labha), 4th Bhava (assets), Jupiter, and D4 Chaturthamsha validates steady wealth accumulation and property potential.";
-    summaryTa = "2-ம் தன பாவகம், 11-ம் லாப பாவகம், 4-ம் சொத்து பாவகம், மற்றும் குருவின் அமைப்புகள் நிலையான நிதி வளர்ச்சி மற்றும் சொத்து சேர்க்கையை உறுதி செய்கின்றன.";
+    summaryTa = "2-ம் தன பாவகம், 11-ம் லாப பாவகம், 4-ம் சொத்து பாவகம், மற்றும் குருவின் அமைப்புகள் நிலையான நிதி வளர்ச்சி மற்றும் சொத்து சேர்க்கையை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "MARRIAGE") {
-    summaryEn = "The synthesized analysis across D1 Rashi, D9 Navamsha, Upapada Lagna, and 7th Bhava confirms foundational marital harmony with supportive timing windows.";
-    summaryTa = "ஜாதகத்தின் பிரதான 7-ம் பாவகம், நவாம்சம் (D9), உபபத லக்னம் மற்றும் குரு, சுக்கிரன் பலங்கள் ஒருங்கிணைந்து திருமண வாழ்வின் சுப யோகங்களை உறுதி செய்கின்றன.";
+    summaryEn = "The synthesized analysis across D1 Rashi, D9 Navamsha, Upapada Lagna, and 7th Bhava supports foundational marital harmony with supportive timing windows.";
+    summaryTa = "ஜாதகத்தின் பிரதான 7-ம் பாவகம், நவாம்சம் (D9), உபபத லக்னம் மற்றும் குரு, சுக்கிரன் பலங்கள் ஒருங்கிணைந்து திருமண வாழ்வின் சுப யோகங்களை வெளிப்படுத்துகின்றன.";
   } else if (intent.questionType === "RESEARCH_PHD") {
-    summaryEn = "Synthesized evaluation across 5th Bhava (Buddhi), 8th Bhava (Investigative Discovery), 9th Bhava (Doctoral Scholarship), Mercury, Jupiter, Rahu, and D24 Siddhamsa confirms strong research breakthroughs, doctoral completion, and scholarly publications.";
-    summaryTa = "5-ம் புத்தி ஸ்தானம், 8-ம் ஆழமான ஆய்வு ஸ்தானம், 9-ம் உயர் ஞான ஸ்தானம், புதன், குரு, ராகு மற்றும் D24 சித்தாம்சம் ஆகியவை முனைவர் பட்டம் (PhD) மற்றும் ஆராய்ச்சி வெற்றியை முழுமையாக உறுதி செய்கின்றன.";
+    summaryEn = "Synthesized evaluation across 5th Bhava (Buddhi), 8th Bhava (Investigative Discovery), 9th Bhava (Doctoral Scholarship), Mercury, Jupiter, Rahu, and D24 Siddhamsa indicates strong research breakthroughs, doctoral completion, and scholarly publications.";
+    summaryTa = "5-ம் புத்தி ஸ்தானம், 8-ம் ஆழமான ஆய்வு ஸ்தானம், 9-ம் உயர் ஞான ஸ்தானம், புதன், குரு, ராகு மற்றும் D24 சித்தாம்சம் ஆகியவை முனைவர் பட்டம் (PhD) மற்றும் ஆராய்ச்சி வெற்றிக்கான சிறப்பான அமைப்புகளை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "EDUCATION") {
     summaryEn = "Analysis across 4th Bhava (Vidya), 5th Bhava (Buddhi), Mercury, Jupiter, and D24 Siddhamsa indicates strong intellectual absorption and academic progress.";
-    summaryTa = "4-ம் வித்யா ஸ்தானம், 5-ம் புத்தி ஸ்தானம், புதன், குரு மற்றும் D24 சித்தாம்ச பலங்கள் சிறந்த கல்வி வளர்ச்சி மற்றும் தேர்ச்சி யோகத்தை உறுதி செய்கின்றன.";
+    summaryTa = "4-ம் வித்யா ஸ்தானம், 5-ம் புத்தி ஸ்தானம், புதன், குரு மற்றும் D24 சித்தாம்ச பலங்கள் சிறந்த கல்வி வளர்ச்சி மற்றும் தேர்ச்சி யோகத்தை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "CHILDREN") {
-    summaryEn = "Synthesized evaluation across 5th Bhava (Putra Sthana), Jupiter (Putrakaraka), and D7 Saptamsha confirms auspicious progeny blessings and family happiness.";
-    summaryTa = "5-ம் புத்திர ஸ்தானம், குரு (புத்திரகாரகன்) மற்றும் D7 சப்தாம்ச பலங்கள் சந்தான பாக்கியத்தையும் குழந்தைகளின் மேன்மையையும் உறுதி செய்கின்றன.";
+    summaryEn = "Synthesized evaluation across 5th Bhava (Putra Sthana), Jupiter (Putrakaraka), and D7 Saptamsha indicates auspicious progeny blessings and family happiness.";
+    summaryTa = "5-ம் புத்திர ஸ்தானம், குரு (புத்திரகாரகன்) மற்றும் D7 சப்தாம்ச பலங்கள் சந்தான பாக்கியத்தையும் குழந்தைகளின் மேன்மையையும் சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "SPIRITUALITY") {
     summaryEn = "Analysis across 9th Bhava (Dharma), 12th Bhava (Moksha), Ketu (Mokshakaraka), and D20 Vimsamsha indicates deep spiritual awakening and meditative mastery.";
-    summaryTa = "9-ம் தர்ம ஸ்தானம், 12-ம் மோட்ச ஸ்தானம், கேது (ஞானகாரகன்) மற்றும் D20 விம்சாம்சம் ஆகியவை ஆன்மீக ஞானம் மற்றும் மன அமைதியை உறுதி செய்கின்றன.";
+    summaryTa = "9-ம் தர்ம ஸ்தானம், 12-ம் மோட்ச ஸ்தானம், கேது (ஞானகாரகன்) மற்றும் D20 விம்சாம்சம் ஆகியவை ஆன்மீக ஞானம் மற்றும் மன அமைதியை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "LEGAL") {
-    summaryEn = "Evaluation across 6th Bhava (Shatru Nashana), Mars, and D6 Shashtamsha confirms legal resilience and dispute resolution.";
-    summaryTa = "6-ம் சத்ரு ஜெய ஸ்தானம், செவ்வாயின் வீரியம் மற்றும் D6 சஷ்டாம்ச பலங்கள் வழக்கு விவகாரங்களில் சாதகமான முடிவை உறுதி செய்கின்றன.";
+    summaryEn = "Evaluation across 6th Bhava (Shatru Sthana) and Mars placement indicates legal resilience and defensive dispute capacity.";
+    summaryTa = "6-ம் சத்ரு ஸ்தானம் மற்றும் செவ்வாயின் அமைப்பானது பாரம்பரிய முறைப்படி சவாலான விவகாரங்களை எதிர்கொள்ளும் ஆற்றலை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "RELOCATION") {
     summaryEn = "Analysis across 9th Bhava (long journeys), 12th Bhava (foreign lands), and Rahu indicates favorable conditions for overseas mobility and location transitions.";
-    summaryTa = "9-ம் பாக்கிய ஸ்தானம், 12-ம் அயன/வெளிநாட்டு ஸ்தானம் மற்றும் ராகுவின் பலங்கள் தூரதேச பயணம் மற்றும் புதிய இடத்தில் குடியேறும் யோகத்தை உறுதி செய்கின்றன.";
+    summaryTa = "9-ம் பாக்கிய ஸ்தானம், 12-ம் அயன/வெளிநாட்டு ஸ்தானம் மற்றும் ராகுவின் பலங்கள் தூரதேச பயணம் மற்றும் புதிய இடத்தில் குடியேறும் யோகத்தை வெளிப்படுத்துகின்றன.";
   } else {
-    summaryEn = "The synthesized analysis across D1 Rashi, D9 Navamsha, and transit triggers confirms foundational support with measured timing windows.";
+    summaryEn = "The synthesized analysis across D1 Rashi, D9 Navamsha, and transit triggers indicates foundational support with measured timing windows.";
     summaryTa = "ஜன்ம ராசி (D1), நவாம்சம் (D9) மற்றும் கோச்சார கிரக நிலைகள் ஒருங்கிணைந்து சாதகமான வாய்ப்புகளை வெளிப்படுத்துகின்றன.";
   }
 
@@ -1879,7 +1879,7 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     reasoningEn = "4th Bhava (foundational learning) and 5th Bhava (higher intellect & retention) aspected by Mercury and Jupiter bestow sharp comprehension and competitive examination success.";
     reasoningTa = "4-ம் கல்வி ஸ்தானமும் 5-ம் புத்தி ஸ்தானமும் புதன், குருவின் சுப பார்வையைப் பெறுவதால் கூரிய நினைவாற்றல், ஆழமான புரிதல் மற்றும் கல்வித் தேர்வுகளில் நல்வெற்றி உண்டாகும்.";
   } else if (intent.domain === "CHILDREN") {
-    reasoningEn = "5th house of progeny blessed by natural benefics and Jupiter (Putrakaraka) dignity ensures fertile lineage, harmonious child development, and filial pride.";
+    reasoningEn = "5th house of progeny blessed by natural benefics and Jupiter (Putrakaraka) dignity is traditionally associated with fertile potential, harmonious child development, and filial pride.";
     reasoningTa = "5-ம் புத்திர ஸ்தானத்தின் சுப பலமும் குருவின் அருளும் நல்ல சந்தான பாக்கியம், குழந்தைகளின் சிறப்பான கல்வி மற்றும் குடும்ப மகிழ்ச்சியை ஏற்படுத்துகின்றன.";
   } else if (intent.domain === "SPIRITUALITY") {
     reasoningEn = "9th house (Dharma) and 12th house (Moksha) energized by Ketu and Jupiter foster introspective meditation, philosophical realization, and spiritual evolution.";
@@ -1921,30 +1921,30 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let vargaContentTa = "";
 
   if (intent.domain === "HEALTH") {
-    vargaTitleEn = "Supporting Divisional Charts (D30 Trimsamsha / D6 Shashtamsha)";
-    vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D30 திரிம்சாம்சம் / D6 சஷ்டாம்சம்)";
-    vargaContentEn = "D30 Trimsamsha (arista & affliction mapping) and D6 Shashtamsha charts confirm constitutional resilience and effective recovery dynamics.";
-    vargaContentTa = "D30 திரிம்சாம்சம் (D30 Trimsamsha) மற்றும் D6 சஷ்டாம்சம் (D6 Shashtamsha) வர்க்க சக்கரங்கள் கடுமையான உடல் உபாதைகள் இன்றி தோஷங்கள் மட்டுப்படுத்தப்படுவதை உறுதி செய்கின்றன.";
+    vargaTitleEn = "Supporting Divisional Chart (D30 Trimsamsha)";
+    vargaTitleTa = "வர்க்க சக்கரத்தின் ஆதரவு (D30 திரிம்சாம்சம்)";
+    vargaContentEn = "D30 Trimsamsha (arista & affliction mapping) indicates constitutional resilience and supportive recuperative dynamics.";
+    vargaContentTa = "D30 திரிம்சாம்சம் (D30 Trimsamsha) வர்க்க சக்கரம் பாரம்பரிய முறைப்படி உடல் ஆரோக்கிய தற்காப்பு மற்றும் மீண்டெழும் திறனை சுட்டிக்காட்டுகிறது.";
   } else if (intent.domain === "CAREER") {
     vargaTitleEn = "Supporting Divisional Charts (D10 Dashamsha)";
     vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D10 தசாம்சம்)";
     vargaContentEn = "D10 Dashamsha chart ascendant and 10th lord placement independently validate executive competence, leadership authority, and commercial resilience.";
-    vargaContentTa = "D10 தசாம்ச சக்கரத்தில் லக்னம் மற்றும் 10-ம் அதிபதியின் நிலைப்பாடு தொழில் தலைமை மற்றும் நீண்டகால சந்தை நிலைத்தன்மையை உறுதி செய்கிறது.";
+    vargaContentTa = "D10 தசாம்ச சக்கரத்தில் லக்னம் மற்றும் 10-ம் அதிபதியின் நிலைப்பாடு தொழில் தலைமை மற்றும் நீண்டகால சந்தை நிலைத்தன்மையை சுட்டிக்காட்டுகிறது.";
   } else if (intent.questionType === "MEGA_WEALTH_BILLIONAIRE") {
-    vargaTitleEn = "Supporting Divisional Charts (D4 Chaturthamsha / D11 Labhamsha / D16 Shodashamsha)";
-    vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D4 சதுர்த்தாம்சம் / D11 லாபாம்சம் / D16 சோடசாம்சம்)";
-    vargaContentEn = "D4 Chaturthamsha (immovable assets), D11 Labhamsha (extreme wealth multipliers), and D16 Shodashamsha confirm continuous gains, large capital growth, and material sovereignty.";
-    vargaContentTa = "D4 சதுர்த்தாம்சம் (நிலையான சொத்துக்கள்), D11 லாபாம்சம் (பெருஞ்செல்வப் பெருக்கம்) மற்றும் D16 சோடசாம்சம் ஆகியவை பெரிய அளவிலான மூலதன சேர்க்கையையும் சொத்து வளர்ச்சியையும் உறுதி செய்கின்றன.";
+    vargaTitleEn = "Supporting Divisional Charts (D4 Chaturthamsha / D16 Shodashamsha)";
+    vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D4 சதுர்த்தாம்சம் / D16 சோடசாம்சம்)";
+    vargaContentEn = "D4 Chaturthamsha (immovable assets) and D16 Shodashamsha indicate potential for asset expansion, capital growth, and material stability.";
+    vargaContentTa = "D4 சதுர்த்தாம்சம் (நிலையான சொத்துக்கள்) மற்றும் D16 சோடசாம்சம் ஆகியவை பெரிய அளவிலான மூலதன சேர்க்கையையும் சொத்து வளர்ச்சியையும் சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "WEALTH") {
     vargaTitleEn = "Supporting Divisional Charts (D4 Chaturthamsha / D16 Shodashamsha)";
     vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D4 சதுர்த்தாம்சம் / D16 சோடசாம்சம்)";
-    vargaContentEn = "D4 Chaturthamsha (property/vehicles) and D16 Shodashamsha confirm continuous gains, land acquisition capacity, and material comforts.";
-    vargaContentTa = "D4 சதுர்த்தாம்சம் (சொத்து/வாகனம்) மற்றும் D16 சோடசாம்சம் ஆகியவை நிலம், வீடு வாங்கும் யோகத்தையும் பொருள் சேர்க்கையையும் உறுதி செய்கின்றன.";
+    vargaContentEn = "D4 Chaturthamsha (property/vehicles) and D16 Shodashamsha indicate potential for property acquisition, land ownership, and material comforts.";
+    vargaContentTa = "D4 சதுர்த்தாம்சம் (சொத்து/வாகனம்) மற்றும் D16 சோடசாம்சம் ஆகியவை நிலம், வீடு வாங்கும் வாய்ப்பையும் பொருள் சேர்க்கையையும் சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "MARRIAGE") {
     vargaTitleEn = "Supporting Divisional Charts (D9 Navamsha)";
     vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D9 நவாம்சம்)";
     vargaContentEn = "Navamsha (D9) ascendant and Venus Vargottama/dignified disposition independently corroborate the Rashi D1 indications.";
-    vargaContentTa = "நவாம்சம் (D9) லக்னம் மற்றும் சுக்கிரனின் நிலைப்பாடு திருமண பாக்யத்தை உறுதி செய்கிறது.";
+    vargaContentTa = "நவாம்சம் (D9) லக்னம் மற்றும் சுக்கிரனின் நிலைப்பாடு திருமண பாக்யத்தை சுட்டிக்காட்டுகிறது.";
   } else if (intent.domain === "EDUCATION") {
     vargaTitleEn = "Supporting Divisional Charts (D24 Siddhamsa)";
     vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D24 சித்தாம்சம்)";
@@ -1953,8 +1953,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   } else if (intent.domain === "CHILDREN") {
     vargaTitleEn = "Supporting Divisional Charts (D7 Saptamsha)";
     vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D7 சப்தாம்சம்)";
-    vargaContentEn = "D7 Saptamsha confirms progeny fruition, family happiness, and auspicious child wellbeing.";
-    vargaContentTa = "D7 சப்தாம்சம் (D7 Saptamsha) சந்தான பாக்கிய விருத்தியையும் குழந்தைகளின் சிறப்பான நல்வாழ்வையும் உறுதி செய்கிறது.";
+    vargaContentEn = "D7 Saptamsha traditionally supports progeny fruition, family happiness, and auspicious child wellbeing.";
+    vargaContentTa = "D7 சப்தாம்சம் (D7 Saptamsha) சந்தான பாக்கிய விருத்தியையும் குழந்தைகளின் சிறப்பான நல்வாழ்வையும் சுட்டிக்காட்டுகிறது.";
   } else if (intent.domain === "SPIRITUALITY") {
     vargaTitleEn = "Supporting Divisional Charts (D20 Vimsamsha)";
     vargaTitleTa = "வர்க்க சக்கரங்களின் ஆதரவு (D20 விம்சாம்சம்)";
@@ -1962,7 +1962,7 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     vargaContentTa = "D20 விம்சாம்சம் (D20 Vimsamsha) உபாசனா பலம், இறை வழிபாடு மற்றும் ஆன்மீக முதிர்ச்சியை வெளிப்படுத்துகிறது.";
   } else {
     vargaContentEn = "Divisional varga charts independently corroborate the foundational Rashi D1 indications.";
-    vargaContentTa = "வர்க்க சக்கரங்கள் ஜன்ம ராசியின் சுப வாக்குறுதியை உறுதி செய்கின்றன.";
+    vargaContentTa = "வர்க்க சக்கரங்கள் ஜன்ம ராசியின் சுப வாக்குறுதியை சுட்டிக்காட்டுகின்றன.";
   }
 
   sections.push({

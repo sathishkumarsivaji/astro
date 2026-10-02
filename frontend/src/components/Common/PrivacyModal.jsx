@@ -241,7 +241,7 @@ export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErase
           <p className="text-[11px] text-stone-500">
             {isTamil
               ? "AstroVerse உங்கள் தனிப்பட்ட ஜாதக தகவல்களை மூன்றாம் தரப்பினருக்கு விற்பனை செய்வதில்லை."
-              : "AstroVerse guarantees zero third-party data broker transmission. All birth ephemeris computation occurs on privacy-shielded nodes."}
+              : "AstroVerse commits to zero third-party data broker transmission. All birth ephemeris computation occurs on privacy-shielded nodes."}
           </p>
         </div>
       </div>

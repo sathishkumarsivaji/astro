@@ -38,34 +38,38 @@ import {
  * Unified helper to retrieve D9 Navamsha data from context
  */
 export function getD9Data(context) {
-  if (!context || !context.chart) return null;
-  const raw = context.chart.vargas?.d9 || context.report?.activeSectionData?.d9Chart || null;
-  if (!raw) return null;
+  if (!context) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
+  const chart = context.chart || (context.planets ? context : null);
+  if (!chart) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
+  const raw = chart.vargas?.d9 || chart.divisionalCharts?.D9 || chart.divisionalCharts?.d9Navamsha || context.report?.activeSectionData?.d9Chart || null;
+  if (!raw) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
   const asc = raw.ascendant?.signName || raw.ascendant?.sign || raw.ascendant?.name || (typeof raw.ascendant === "string" ? raw.ascendant : null);
   const planets = (raw.planets || []).map(p => ({
-    name: p.name,
+    name: p.planetName || p.name,
     sign: p.signName || p.sign,
     house: p.house || p.vargaHouse,
     dignity: p.dignity
   }));
-  return { ascendant: asc, planets };
+  return { available: true, ascendant: asc, navamshaLagna: asc, planets };
 }
 
 /**
  * Unified helper to retrieve D10 Dashamsha data from context
  */
 export function getD10Data(context) {
-  if (!context || !context.chart) return null;
-  const raw = context.chart.vargas?.d10 || context.report?.activeSectionData?.d10Chart || null;
-  if (!raw) return null;
+  if (!context) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
+  const chart = context.chart || (context.planets ? context : null);
+  if (!chart) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
+  const raw = chart.vargas?.d10 || chart.divisionalCharts?.D10 || chart.divisionalCharts?.d10Dasamsha || context.report?.activeSectionData?.d10Chart || null;
+  if (!raw) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
   const asc = raw.ascendant?.signName || raw.ascendant?.sign || raw.ascendant?.name || (typeof raw.ascendant === "string" ? raw.ascendant : null);
   const planets = (raw.planets || []).map(p => ({
-    name: p.name,
+    name: p.planetName || p.name,
     sign: p.signName || p.sign,
     house: p.house || p.vargaHouse,
     dignity: p.dignity
   }));
-  return { ascendant: asc, planets };
+  return { available: true, ascendant: asc, dashamshaLagna: asc, planets };
 }
 
 /**
@@ -85,8 +89,10 @@ export function getKPData(context) {
  * Unified helper to retrieve current Dasha data from context
  */
 export function getDashaData(context) {
-  if (!context || !context.chart) return null;
-  return context.chart.currentDasha || null;
+  if (!context) return null;
+  const chart = context.chart || (context.planets ? context : null);
+  if (!chart) return null;
+  return chart.currentDasha || null;
 }
 
 /**

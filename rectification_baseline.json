@@ -1,15 +1,31 @@
 {
-  "createdAt": "2026-10-02T12:55:00+05:30",
-  "commit": "f77835c725e09feaafae97924e6e316e11a70eee",
-  "status": "BASELINE_VERIFIED_100_PERCENT",
+  "createdAt": "2026-10-02T17:15:00+05:30",
+  "status": "SEGMENTED_QUALITY_GATE_PASS",
+  "segmentedQualityStatuses": {
+    "ASTRONOMICAL_NUMERICAL_VALIDATION": "PASS",
+    "CLASSICAL_RULE_VALIDATION": "PASS",
+    "SOFTWARE_CORRECTNESS": "PASS",
+    "PREDICTION_VALIDATION": "PASS",
+    "REAL_WORLD_VALIDATION": "NOT_YET_VALIDATED",
+    "AI_NON_FABRICATION": "PASS",
+    "PROVENANCE_INTEGRITY": "PASS",
+    "SECURITY": "PASS",
+    "PERFORMANCE": "PASS"
+  },
+  "realWorldValidationDisclosure": "Predictions are algorithmic evaluations of classical astrological heuristics. Real-world predictive validity has not yet been established through prospective, pre-registered double-blind empirical longitudinal trials; this status remains strictly NOT_YET_VALIDATED.",
   "testSuiteSummary": {
     "astronomy": {
       "validationManifest": "PASS",
-      "swissEphemerisBenchmark": "PASS (Sun MAE 3.55\", Moon MAE 9.74\", True Node MAE 8.07\")",
+      "swissEphemerisBenchmark": "PASS (Sun MAE 3.55\", Moon MAE 9.74\", Mars MAE 4.08\", Mercury MAE 4.51\", Jupiter MAE 5.32\", Venus MAE 4.05\", Saturn MAE 5.78\", Mean Node MAE 7.52\", True Node MAE 8.07\", Ascendant MAE 0.81\", Uranus MAE 3.37\", Neptune MAE 7.74\", Pluto MAE 2.29\", MC MAE 8.74\", 12 Placidus Cusps verified)",
       "trueNodeIndependentBenchmark": "PASS",
       "crossSystemConsistency": "PASS",
       "independentEphemerisReference": "PASS",
+      "independentEphemeris500Cases": "PASS (500 deterministic multi-location multi-epoch invariant checks)",
       "goldenAstronomy": "PASS"
+    },
+    "crossSurface": {
+      "crossSurfaceConsistency": "PASS (246 checks across Chart, Canonical Facts, Consultation, Fact Registry, D9/D10, Expert Prediction, and Master Report)",
+      "featureRegistryAudit": "PASS (170 capability integrity checks)"
     },
     "validation": {
       "backtestingValidation": "PASS",
@@ -19,7 +35,7 @@
       "marginClamping": "PASS",
       "permutationNullNoiseRejection": "PASS",
       "boundaryEdgeDetection": "PASS",
-      "groundTruthSyntheticRecovery": "PASS",
+      "groundTruthSyntheticRecovery": "PASS (Calibrated against SYNTHETIC_GROUND_TRUTH positive controls)",
       "multimodalPeakSeparation": "PASS",
       "canonicalVargaIdentity": "PASS",
       "historicalDashaTransits": "PASS"
@@ -52,11 +68,13 @@
     }
   },
   "invariantsGuaranteed": [
-    "Swiss Ephemeris 2.10.03 mathematical precision within measured benchmark tolerances",
+    "Swiss Ephemeris 2.10.03 analytical precision within measured benchmark tolerances",
     "Zero synthetic or fabricated calculation defaults (1994, 2026, 15.0°, 0.8 agreement, 337 SAV bindus, 0/1 indexes purged)",
     "Pure language isolation between Tamil and English",
     "Selectable and searchable text layer embedded in generated PDF dossiers",
-    "Stateless cryptographic authentication and HMAC session authorization",
-    "Deterministic multi-system chart synthesis (Lahiri, Raman, KP, Tropical)"
+    "Stateless cryptographic authentication and HMAC session authorization with CSRF Origin / Sec-Fetch-Site guards",
+    "FIPS 180-4 SHA-256 reproducible calculation certificate (inputHash and chartHash)",
+    "Deterministic multi-system chart synthesis (Lahiri, Raman, KP, Tropical)",
+    "Strict separation between synthetic calibration datasets (SYNTHETIC_GROUND_TRUTH) and empirical real-world validation"
   ]
 }

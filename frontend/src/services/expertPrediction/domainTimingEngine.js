@@ -250,8 +250,8 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
     if (hasVargaActivation) {
       const vargaNames = vargaConfirmations.filter(v => v.isActivated).map(v => v.varga).join(", ");
       whySupported.push({
-        description: `${vargaNames} divisional chart confirms domain activation`,
-        descriptionTamil: `${vargaNames} வர்க்க வரைபடம் இயக்கத்தை உறுதிப்படுத்துகிறது`
+        description: `${vargaNames} divisional chart corroborates domain activation according to classical tradition`,
+        descriptionTamil: `${vargaNames} வர்க்க சக்கரம் பாரம்பரிய முறைப்படி இயக்கத்தை ஆதரிக்கிறது`
       });
     }
     if (hasTransits) {

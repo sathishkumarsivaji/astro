@@ -25,43 +25,51 @@ const trueChart = getCachedOrComputeChart({
 assert.ok(trueChart, "True ground truth chart must calculate successfully");
 const trueMinutes = parseTimeToMinutes(trueBirthTime);
 
-// 2. Synthesize Ground-Truth Tailored Life Events from Chart Dasha & Historical Transits
+// 2. Synthesize Ground-Truth Tailored Life Events from Chart Dasha & Historical Transits (Explicit Synthetic Positive Control)
 const groundTruthEvents = [
   {
     id: "EVT-GT-CAREER",
     type: "CAREER_START",
     date: "2016-07-01",
     importance: "HIGH",
-    sourceReliability: "DOCUMENTED",
+    sourceReliability: "SYNTHETIC_GROUND_TRUTH",
+    provenance: "SYNTHETIC_POSITIVE_CONTROL",
+    isSynthetic: true,
     verified: true,
-    description: "Principal engineering milestone aligned with 10H Saturn & Sun Dasha"
+    description: "Principal engineering milestone aligned with 10H Saturn & Sun Dasha (Synthetic Control)"
   },
   {
     id: "EVT-GT-MARRIAGE",
     type: "MARRIAGE",
     date: "2019-11-20",
     importance: "CRITICAL",
-    sourceReliability: "DOCUMENTED",
+    sourceReliability: "SYNTHETIC_GROUND_TRUTH",
+    provenance: "SYNTHETIC_POSITIVE_CONTROL",
+    isSynthetic: true,
     verified: true,
-    description: "Traditional marriage ceremony aligned with Jupiter double transit"
+    description: "Traditional marriage ceremony aligned with Jupiter double transit (Synthetic Control)"
   },
   {
     id: "EVT-GT-CHILD",
     type: "CHILD_BIRTH",
     date: "2021-08-14",
     importance: "HIGH",
-    sourceReliability: "DOCUMENTED",
+    sourceReliability: "SYNTHETIC_GROUND_TRUTH",
+    provenance: "SYNTHETIC_POSITIVE_CONTROL",
+    isSynthetic: true,
     verified: true,
-    description: "First progeny milestone aligned with 5H / Jupiter transit"
+    description: "First progeny milestone aligned with 5H / Jupiter transit (Synthetic Control)"
   },
   {
     id: "EVT-GT-RELOCATION",
     type: "RELOCATION",
     date: "2023-03-10",
     importance: "MEDIUM",
-    sourceReliability: "DOCUMENTED",
+    sourceReliability: "SYNTHETIC_GROUND_TRUTH",
+    provenance: "SYNTHETIC_POSITIVE_CONTROL",
+    isSynthetic: true,
     verified: true,
-    description: "Metropolitan relocation aligned with 4H/9H activation"
+    description: "Metropolitan relocation aligned with 4H/9H activation (Synthetic Control)"
   }
 ];
 

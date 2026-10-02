@@ -52,7 +52,7 @@ export default function LifeTimeline({ lifeStages, timeline, eventTiming, lang =
     { key: "property", label: isTamil ? "மனை / நிலம் / வாகனம் (D4)" : "Real Estate & Property (D4)", icon: Home, data: eventTiming?.property },
     { key: "education", label: isTamil ? "உயர் கல்வி / வித்யா (D24)" : "Higher Education (D24)", icon: GraduationCap, data: eventTiming?.education },
     { key: "progeny", label: isTamil ? "புத்திர பாக்கியம் / சந்தானம் (D7)" : "Progeny & Family (D7)", icon: Users, data: eventTiming?.progeny },
-    { key: "health", label: isTamil ? "ஆரோக்கிய எச்சரிக்கை / தற்காப்பு (D6/D8)" : "Health Vulnerability & Care (D6/D8)", icon: HeartPulse, data: eventTiming?.health }
+    { key: "health", label: isTamil ? "ஆரோக்கிய எச்சரிக்கை / தற்காப்பு (D30)" : "Health Vulnerability & Care (D30)", icon: HeartPulse, data: eventTiming?.health }
   ].filter(d => d.data && Array.isArray(d.data.candidateWindows) && d.data.candidateWindows.length > 0);
 
   return (

@@ -2,7 +2,7 @@
  * ASTROVERSE — Independent Swiss Ephemeris 2.10.03 Astronomical Benchmark Suite
  *
  * Validates planetary longitudes, Ascendant, Midheaven (MC), and Lunar Nodes
- * against authoritative Swiss Ephemeris 2.10.03 / JPL DE431 reference coordinates
+ * against authoritative Swiss Ephemeris 2.10.03 reference coordinates (pyswisseph Moshier/Swiss analytical model)
  * locked in the canonical dataset (`test_fixtures/swiss_ephemeris_2_10_03_reference.json`).
  *
  * Computes exact Mean Absolute Error (MAE), Median, and Maximum Arcsecond Residual.
@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { calculatePlanetaryPositions } from "./src/services/astroEngine.js";
+import { calculatePlanetaryPositions, calculateChartBySystem } from "./src/services/astroEngine.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -123,6 +123,59 @@ canonicalData.benchmarks.forEach((bm, idx) => {
     const expAsc = bm.angles.ascendantSystem;
     const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec.Ascendant) || 60.0;
     assertMaxError(actualAsc, expAsc, tol, `Ascendant [${bm.name}]`);
+  }
+
+  // 3. Tropical Multi-Body (Uranus, Neptune, Pluto, Midheaven, Placidus Cusps)
+  const chartTrop = calculateChartBySystem("tropical", {
+    birthDate: bm.birthDate,
+    birthTime: bm.birthTime,
+    latitude: bm.latitude,
+    longitude: bm.longitude,
+    utcOffset: bm.utcOffset,
+    timezoneId: bm.timezoneId
+  }, { nodeModel: "mean" });
+
+  const outerBodies = ["Uranus", "Neptune", "Pluto"];
+  for (const bodyName of outerBodies) {
+    const pl = chartTrop.planets.find(p => p.name === bodyName);
+    if (!pl || !bm.bodies[bodyName]) continue;
+    const expDeg = bm.bodies[bodyName].tropical.longitude;
+    const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec[bodyName]) || 60.0;
+    assertMaxError(pl.longitude, expDeg, tol, `${bodyName} [${bm.name}]`);
+  }
+
+  // Midheaven (MC) check
+  if (bm.angles && bm.angles.mcTropical) {
+    const actualMc = chartTrop.midheaven.longitude;
+    const expMc = bm.angles.mcTropical;
+    const tol = (bm.tolerancesArcSec && bm.tolerancesArcSec.Midheaven) || 60.0;
+    assertMaxError(actualMc, expMc, tol, `Midheaven [${bm.name}]`);
+  }
+
+  // Placidus 12 Cusps Geometry & Polarization Invariant Checks
+  if (chartTrop.houses && chartTrop.houses.length === 12) {
+    const cusps = chartTrop.houses;
+    let cuspsValid = true;
+    for (let h = 0; h < 12; h++) {
+      if (!Number.isFinite(cusps[h].longitude)) {
+        cuspsValid = false;
+        break;
+      }
+      const oppIdx = (h + 6) % 12;
+      let diff = Math.abs(cusps[oppIdx].longitude - cusps[h].longitude);
+      if (diff > 180) diff = Math.abs(diff - 360);
+      if (Math.abs(diff - 180) > 0.001) {
+        cuspsValid = false;
+        break;
+      }
+    }
+    if (cuspsValid) {
+      console.log(`✓ Placidus 12 Cusps [${bm.name}] — all 12 cusps strictly defined & opposite cusps 180° aligned`);
+      passed++;
+    } else {
+      console.error(`✗ FAIL: Placidus 12 Cusps [${bm.name}] — cusp geometry violation`);
+      failed++;
+    }
   }
 });
 

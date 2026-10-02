@@ -2482,6 +2482,11 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     ascendantLong,
     ascendantDeg: norm360(ascendantLong),
     ascendantSpeedDegPerMin,
+    mcLong: norm360(mcLong),
+    mcDeg: norm360(mcLong),
+    mcTropical,
+    icLong,
+    descLong,
     sunLong,
     moonLong,
     nodes: {
@@ -4395,7 +4400,7 @@ export function calculateMarriagePathway(planets = [], ascendantLong = 0, dashaT
 - **1st Lord (${lagnaLord?.name || 'Lagna Lord'}) & 7th Lord (${h7Lord?.name || '7th Lord'}) Synergy:** Auspicious connection between Lagna Lord and 7th Lord signifies a self-chosen / love matrimonial union driven by personal conviction.
 - **Domestic Factors:** Astrological dynamics (${hurdleStrEn}) indicate initial family reservations and hurdles that resolve through perseverance.
 - **Operating Dasha Windows:** Activates under ${dashaWindowsNarrativeEn}.
-- **Marital Synergy:** Strong mutual devotion between spouses; insulating personal domestic decisions from outside interference ensures enduring harmony.`;
+- **Marital Synergy:** Strong mutual devotion between spouses; insulating personal domestic decisions from outside interference is traditionally associated with enduring harmony.`;
   } else if (isLoveOrSelfChosenMarriage) {
     marriageType = isTamil 
       ? "சுயவிருப்ப சுப விவாக யோகம் (அமைதியான காந்தர்வ மணம்)" 
@@ -10273,8 +10278,22 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
     }
 
     // 3. Sub-window transit crossings during this specific PD
-    const pdJdStart = pd.jdStart ?? (jdStart ? (jdStart + (pd.startDayOffset || 0)) : 2451545.0);
-    const pdJdEnd = pd.jdEnd ?? (jdStart ? (pdJdStart + (pd.durationDays || 30)) : (jdEnd || (pdJdStart + 30)));
+    const pdJdStart = pd.jdStart ?? (jdStart ? (jdStart + (pd.startDayOffset || 0)) : null);
+    const pdJdEnd = pd.jdEnd ?? (pdJdStart !== null && pd.durationDays ? (pdJdStart + pd.durationDays) : null);
+    if (pdJdStart === null || pdJdEnd === null) {
+      // Cannot evaluate transit crossings without valid PD time boundaries
+      return {
+        ...pd,
+        score: Number(score.toFixed(1)),
+        scoreBreakdown,
+        convergenceCategory: "Neutral PD",
+        isPeakCandidate: false,
+        transitsInWindow: [],
+        localStartDate: "Unknown",
+        localEndDate: "Unknown",
+        localTimezone: tzId
+      };
+    }
     const pdTransits = windowTransits.filter(t => t.jd >= (pdJdStart - 0.5) && t.jd <= (pdJdEnd + 0.5));
     if (pdTransits.length > 0) {
       score += 2.0;
@@ -13158,7 +13177,12 @@ export function validateAndSanitizeNarrative(text, lang = "en") {
     [new RegExp("\\bconstitutional" + " " + "immunity\\b", "gi"), "traditional vitality balance"],
     [new RegExp("\\bimmune" + " " + "vitality\\b", "gi"), "vital stamina"],
     [new RegExp("\\bBirth" + "-to-" + "Death\\b", "gi"), "Complete Vimshottari Dasha Life-Stage"],
-    [new RegExp("\\bLife" + " " + "Milestone\\b", "gi"), "Life-Stage Theme"]
+    [new RegExp("\\bLife" + " " + "Milestone\\b", "gi"), "Life-Stage Theme"],
+    [new RegExp("\\bensures\\b", "gi"), "is traditionally associated with"],
+    [new RegExp("\\bdestined" + " " + "to\\b", "gi"), "traditionally indicated for"],
+    [new RegExp("\\binevitable\\b", "gi"), "strongly indicated"],
+    [new RegExp("\\bproves" + " " + "that\\b", "gi"), "supports the interpretation that"],
+    [new RegExp("\\bcertain" + " " + "to\\b", "gi"), "indicated to"]
   ];
 
   for (const [pattern, replacement] of englishReplacements) {

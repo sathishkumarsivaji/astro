@@ -19,33 +19,83 @@ import { calculateTropicalChart } from "./systems/tropical.js";
 import { compareSystems } from "./comparison/compareSystems.js";
 import { ASTROLOGY_SYSTEMS, getSystemConfig } from "../config/astrologySystems.js";
 import { REPORT_CHAPTERS, getChaptersForSystem } from "../config/reportChapters.js";
+import { SIGN_NAMES } from "./derived/nakshatra.js";
 
 /**
  * Calculates a single system chart
  */
-export function calculateChartBySystem(systemId = "lahiri", birthData, options = {}) {
+export function calculateChartBySystem(systemId, birthData, options = {}) {
   const normData = normalizeBirthData(birthData);
   const nodeModel = options.nodeModel || birthData.nodeModel || normData.nodeModel || "mean";
   normData.nodeModel = nodeModel;
   const mergedOptions = { ...options, nodeModel };
   const observations = getAstronomicalObservations(normData, mergedOptions);
-  const sys = (systemId || "lahiri").toLowerCase();
+  if (!systemId) {
+    throw new Error('INVALID_ASTROLOGY_SYSTEM: systemId is required. Valid systems: lahiri, kp, raman, tropical.');
+  }
+  const sys = String(systemId).toLowerCase();
 
+  let chart;
   switch (sys) {
     case "kp":
-      return calculateKPChart(observations, normData, mergedOptions);
+      chart = calculateKPChart(observations, normData, mergedOptions);
+      break;
     case "tropical":
     case "sayana":
     case "western":
-      return calculateTropicalChart(observations, normData, mergedOptions);
+      chart = calculateTropicalChart(observations, normData, mergedOptions);
+      break;
     case "raman":
-      return calculateRamanChart(observations, normData, mergedOptions);
+      chart = calculateRamanChart(observations, normData, mergedOptions);
+      break;
     case "lahiri":
     case "vedic":
-      return calculateLahiriChart(observations, normData, mergedOptions);
+      chart = calculateLahiriChart(observations, normData, mergedOptions);
+      break;
     default:
       throw new Error(`Unknown astrological system: "${systemId}". Valid systems are lahiri, kp, raman, tropical.`);
   }
+
+  // Cross-system property standardization: ensure both ascendant/midheaven object and scalar degrees exist
+  const ascLon = chart.ascendant?.longitude ?? chart.ascendantLong ?? chart.ascendantDeg;
+  if (ascLon !== undefined) {
+    if (chart.ascendantLong === undefined) chart.ascendantLong = ascLon;
+    if (chart.ascendantDeg === undefined) chart.ascendantDeg = ascLon;
+    if (!chart.ascendant) chart.ascendant = { house: 1, longitude: ascLon };
+  }
+
+  const mcLon = chart.midheaven?.longitude ?? chart.mcLong ?? chart.mcDeg;
+  if (mcLon !== undefined) {
+    if (chart.mcLong === undefined) chart.mcLong = mcLon;
+    if (chart.mcDeg === undefined) chart.mcDeg = mcLon;
+    if (!chart.midheaven) chart.midheaven = { house: 10, longitude: mcLon };
+  }
+
+  if (!chart.houses) {
+    if (Array.isArray(chart.bhavasDetailed)) {
+      chart.houses = chart.bhavasDetailed.map(b => {
+        const signIdx = SIGN_NAMES.indexOf(b.signName);
+        const lon = (signIdx >= 0) ? signIdx * 30 : ((b.num - 1) * 30);
+        return {
+          house: b.num,
+          longitude: lon,
+          signName: b.signName,
+          signIndex: signIdx >= 0 ? signIdx : b.num - 1,
+          degreeInSign: 0
+        };
+      });
+    } else if (chart.bhavaChalit?.bhavas) {
+      chart.houses = chart.bhavaChalit.bhavas.map(b => ({
+        house: b.bhavaNum,
+        longitude: b.madhyaDegree,
+        signName: b.sign,
+        signIndex: Math.floor(b.madhyaDegree / 30),
+        degreeInSign: b.madhyaDegree % 30
+      }));
+    }
+  }
+
+  return chart;
 }
 
 /**

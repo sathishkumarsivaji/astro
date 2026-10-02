@@ -223,7 +223,7 @@ export function calculateSripatiCusps(ascendant, mc) {
   const midpoints = {
     1: h1Mid, 2: h2Mid, 3: h3Mid, 4: h4Mid,
     5: h5Mid, 6: h6Mid, 7: h7Mid, 8: h8Mid,
-    9: h9Mid, 10: h10Mid, 11: h5Mid, 12: h6Mid
+    9: h9Mid, 10: h10Mid, 11: h11Mid, 12: h12Mid
   };
 
   // Sandhis (junction points) are the exact midpoints between consecutive house midpoints

@@ -10,7 +10,7 @@
  */
 
 import { norm360 } from "../astronomy/time.js";
-import { calculatePlacidusCusps } from "../astronomy/coordinates.js";
+import { calculatePlacidusCusps, calculateEqualCusps, calculateAscendantAndMC } from "../astronomy/coordinates.js";
 import { SIGN_NAMES } from "../derived/nakshatra.js";
 
 const WESTERN_ASPECTS = [
@@ -37,12 +37,32 @@ export function calculateTropicalChart(observations, birthData, options = {}) {
   const nodeModel = (options?.nodeModel || birthData?.nodeModel || observations?.nodeModel || "mean").toLowerCase() === "true" ? "true" : "mean";
   const nodePrefix = nodeModel === "true" ? "True" : "Mean";
 
-  // 1. Tropical Placidus Cusps
-  const placidusRaw = calculatePlacidusCusps(lmst, lat, T);
-  const houseCusps = [];
+  const requestedHouseSystem = (options?.houseSystem || birthData?.houseSystem || "placidus").toLowerCase();
+  let rawCusps;
+  let isFallback = false;
+  let effectiveHouseSystem = "Placidus";
+  let fallbackReason = null;
+  let fallbackDisclosure = null;
 
+  if (requestedHouseSystem === "equal") {
+    const { ascendant, mc } = calculateAscendantAndMC(lmst, lat, T);
+    rawCusps = calculateEqualCusps(ascendant, mc);
+    effectiveHouseSystem = "Equal";
+  } else {
+    rawCusps = calculatePlacidusCusps(lmst, lat, T);
+    if (rawCusps.isFallbackSubstituted) {
+      isFallback = true;
+      effectiveHouseSystem = "Equal";
+      fallbackReason = rawCusps.divergenceReason;
+      fallbackDisclosure = rawCusps.disclosure;
+    } else {
+      effectiveHouseSystem = "Placidus";
+    }
+  }
+
+  const houseCusps = [];
   for (let h = 1; h <= 12; h++) {
-    const cuspDeg = placidusRaw.cusps[h];
+    const cuspDeg = rawCusps.cusps[h];
     const signIdx = Math.floor(cuspDeg / 30);
     houseCusps.push({
       house: h,
@@ -161,16 +181,23 @@ export function calculateTropicalChart(observations, birthData, options = {}) {
   const sun = planets.find(p => p.name === "Sun");
   const moon = planets.find(p => p.name === "Moon");
 
+  const effectiveLabel = isFallback ? "Equal (Placidus Polar Fallback)" : effectiveHouseSystem;
+
   return {
     system: {
       id: "tropical",
       name: "Tropical / Sayana (Western)",
       ayanamshaName: "None (Sayana)",
       ayanamshaValue: 0.0,
-      houseSystem: "Placidus",
+      houseSystem: effectiveLabel,
       nodeModel,
       lunarNodeConvention: nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node"
     },
+    houseSystemRequested: requestedHouseSystem === "equal" ? "Equal" : "Placidus",
+    houseSystemEffective: effectiveHouseSystem,
+    isHouseSystemFallback: isFallback,
+    houseSystemFallbackReason: fallbackReason,
+    houseSystemDisclosure: fallbackDisclosure,
     nodeModel,
     lunarNodeConvention: nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node",
     ascendant: ascCusp,

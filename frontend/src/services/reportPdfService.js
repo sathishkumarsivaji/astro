@@ -11,9 +11,11 @@ import {
 import { generateChartFingerprint } from "./astroEngine.js";
 import { getAscendantName } from "../types/chartAccessors.js";
 
-function safeNum(val, fallback = 0) {
-  if (typeof val === "number" && !isNaN(val)) return val;
+function safeNum(val, fallback = null) {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "number") return isNaN(val) ? fallback : val;
   if (typeof val === "string") {
+    if (val.trim() === "") return fallback;
     const parsed = parseFloat(val);
     return isNaN(parsed) ? fallback : parsed;
   }
@@ -183,7 +185,7 @@ function renderSouthIndianChartHTML(title, planets, ascSignName, isTamil, widthP
           ? (planetShortTa[p.name] || p.shortTa || p.nameTa || toTamilPlanet(p.name))
           : (planetShortEn[p.name] || p.shortEn || p.name?.slice(0, 3) || p.name);
         const pDeg = safeNum(p.deg !== undefined ? p.deg : p.longitude);
-        const degStr = pDeg > 0 ? `${pDeg.toFixed(0)}°` : "";
+        const degStr = pDeg !== null ? `${pDeg.toFixed(0)}°` : "N/C";
         const ret = p.isRetrograde ? "ᴿ" : "";
         return `<span style="display: inline-block; background: #EEF2FF; border: 0.5px solid #C7D2FE; border-radius: 2px; padding: 0.5px 2px; font-size: 6.5px; margin: 0.5px; color: #1E1B4B; font-weight: 600;">${pLabel}${ret} ${degStr}</span>`;
       }).join("");
@@ -558,6 +560,9 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
     const ascDeg = safeNum(chartData.ascendantDeg ?? chartData.ascendantLong ?? chartData.ascendant?.deg);
     const moonDeg = safeNum(chartData.moonLong ?? chartData.moon?.deg);
     const sunDeg = safeNum(chartData.sunLong ?? chartData.sun?.deg);
+    
+    const ascDegStr = ascDeg !== null ? `${ascDeg.toFixed(2)}°` : "N/C";
+    const sunDegStr = sunDeg !== null ? `${sunDeg.toFixed(2)}°` : "N/C";
 
     return `
       <div style="margin: 0 24px 8px 24px;">
@@ -568,7 +573,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
           <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 5px; padding: 6px; text-align: center;">
             <div style="font-size: 7.5px; color: #92400E; font-weight: bold; text-transform: uppercase;">${isTamil ? "ஜென்ம லக்னம்" : "Ascendant (Lagna)"}</div>
             <div style="font-size: 11px; font-weight: bold; color: #78350F; margin-top: 1px;">${ascName}</div>
-            <div style="font-size: 7.5px; color: #B45309;">${ascDeg.toFixed(2)}°</div>
+            <div style="font-size: 7.5px; color: #B45309;">${ascDegStr}</div>
           </div>
           <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 5px; padding: 6px; text-align: center;">
             <div style="font-size: 7.5px; color: #1E40AF; font-weight: bold; text-transform: uppercase;">${isTamil ? "ஜென்ம ராசி" : "Moon Sign (Rasi)"}</div>
@@ -578,7 +583,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
           <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 5px; padding: 6px; text-align: center;">
             <div style="font-size: 7.5px; color: #991B1B; font-weight: bold; text-transform: uppercase;">${isTamil ? "சூரிய ராசி" : "Sun Sign (Surya)"}</div>
             <div style="font-size: 11px; font-weight: bold; color: #7F1D1D; margin-top: 1px;">${sunSign}</div>
-            <div style="font-size: 7.5px; color: #DC2626;">${sunNak} (${sunDeg.toFixed(2)}°)</div>
+            <div style="font-size: 7.5px; color: #DC2626;">${sunNak} (${sunDegStr})</div>
           </div>
           <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 5px; padding: 6px; text-align: center;">
             <div style="font-size: 7.5px; color: #166534; font-weight: bold; text-transform: uppercase;">${isTamil ? "நடப்பு தசா - புக்தி" : "Active Dasha"}</div>
@@ -598,7 +603,8 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
     const rows = planetList.map((p, idx) => {
       const pName = isTamil ? (p.tamil || p.nameTa || toTamilPlanet(p.name)) : p.name;
       const pSign = isTamil ? (p.signTamil || toTamilRasi(p.sign)) : (p.sign || "-");
-      const pDeg = safeNum(p.deg !== undefined ? p.deg : p.longitude).toFixed(2);
+      const rawDeg = safeNum(p.deg !== undefined ? p.deg : p.longitude);
+      const pDeg = rawDeg !== null ? rawDeg.toFixed(2) : "N/C";
       const pNak = isTamil ? (p.nakshatraTamil || toTamilNakshatra(p.nakshatra)) : (p.nakshatra || "-");
       const pPada = p.pada ? (isTamil ? `பாதம் ${p.pada}` : `Pada ${p.pada}`) : (isTamil ? "பாதம் 1" : "Pada 1");
       const pMotion = p.isRetrograde
@@ -613,7 +619,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
         <tr style="background-color: ${bg}; border-bottom: 1px solid #E2E8F0; font-size: 7.5px;">
           <td style="padding: 3px 5px; font-weight: bold; color: #1E293B;">${pName}</td>
           <td style="padding: 3px 5px; color: #334155;">${pSign}</td>
-          <td style="padding: 3px 5px; font-family: monospace; color: #475569;">${pDeg}°</td>
+          <td style="padding: 3px 5px; font-family: monospace; color: #475569;">${rawDeg !== null ? `${pDeg}°` : pDeg}</td>
           <td style="padding: 3px 5px; color: #334155;">${pNak} (${pPada})</td>
           <td style="padding: 3px 5px; color: ${p.isRetrograde ? "#DC2626" : "#16A34A"}; font-weight: 600;">${pMotion}</td>
           <td style="padding: 3px 5px; color: #475569; font-weight: 500;">${pDignity}</td>
@@ -824,8 +830,8 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
     // Shadbala short summary
     const shadbalaRows = shadbalaList.slice(0, 7).map(sb => {
       const pName = isTamil ? (sb.planetTa || toTamilPlanet(sb.planet)) : sb.planet;
-      const v = sb.totalVirupas || 0;
-      const ratio = (sb.ratio || 0).toFixed(2);
+      const v = sb.totalVirupas !== undefined && sb.totalVirupas !== null ? sb.totalVirupas : "N/A";
+      const ratio = sb.ratio !== undefined && sb.ratio !== null ? sb.ratio.toFixed(2) : "N/A";
       return `<span style="display: inline-block; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 3px; padding: 2px 4px; margin: 1px; font-size: 7px;"><strong>${pName}</strong>: ${v}v (${ratio}x)</span>`;
     }).join("");
 
@@ -1597,10 +1603,10 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
     // PAGE 6: Shadbala Matrix & Ashtakavarga
     const shadbalaRows = shadbalaList.map((sb, idx) => {
       const pName = isTamil ? (sb.planetTa || toTamilPlanet(sb.planet)) : sb.planet;
-      const v = sb.totalVirupas || 0;
-      const r = (sb.totalRupas || 0).toFixed(2);
-      const req = (sb.requiredRupas || 0).toFixed(2);
-      const ratio = (sb.ratio || 0).toFixed(2);
+      const v = sb.totalVirupas !== undefined && sb.totalVirupas !== null ? sb.totalVirupas : "N/A";
+      const r = sb.totalRupas !== undefined && sb.totalRupas !== null ? sb.totalRupas.toFixed(2) : "N/A";
+      const req = sb.requiredRupas !== undefined && sb.requiredRupas !== null ? sb.requiredRupas.toFixed(2) : "N/A";
+      const ratio = sb.ratio !== undefined && sb.ratio !== null ? sb.ratio.toFixed(2) : "N/A";
       const status = sb.isSufficient
         ? (isTamil ? "சுப பலம்" : "Sufficient")
         : (isTamil ? "மிதமான பலம்" : "Moderate");

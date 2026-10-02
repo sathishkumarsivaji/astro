@@ -31,6 +31,25 @@ import { buildCanonicalVarga } from "./engine/rectificationVargaAdapter.js";
 import { resolveIanaTimezone } from "../geoService.js";
 
 /**
+ * Performance metrics for rectification runs.
+ */
+function createPerformanceMetrics() {
+  return {
+    startTime: Date.now(),
+    endTime: null,
+    durationMs: null,
+    candidateCount: 0,
+    eventCount: 0,
+    permutationCount: 0,
+    chartCacheHits: 0,
+    chartCacheMisses: 0,
+    transitCacheHits: 0,
+    transitCacheMisses: 0,
+    peakMemoryMB: null
+  };
+}
+
+/**
  * Runs complete Evidence-Based Birth-Time Rectification
  */
 export function runBirthTimeRectification({
@@ -48,6 +67,8 @@ export function runBirthTimeRectification({
   lang = "en",
   options = {}
 }) {
+  const metrics = createPerformanceMetrics();
+
   if (!birthDate) {
     throw new Error("birthDate is required for birth-time rectification.");
   }
@@ -67,6 +88,8 @@ export function runBirthTimeRectification({
   }
 
   if (validatedEvents.length === 0) {
+    metrics.endTime = Date.now();
+    metrics.durationMs = metrics.endTime - metrics.startTime;
     return {
       status: "INSUFFICIENT_DATA",
       centralEstimate: null,
@@ -79,7 +102,8 @@ export function runBirthTimeRectification({
       evaluatedEventsCount: 0,
       evidenceLineage: [],
       summaryEn: "Rectification failed: No valid lifetime events provided.",
-      summaryTa: "பிறந்த நேர திருத்தம் தோல்வியுற்றது: சரியான நிகழ்வுகள் வழங்கப்படவில்லை."
+      summaryTa: "பிறந்த நேர திருத்தம் தோல்வியுற்றது: சரியான நிகழ்வுகள் வழங்கப்படவில்லை.",
+      metrics
     };
   }
 
@@ -115,16 +139,27 @@ export function runBirthTimeRectification({
     lon: lng
   });
 
+  const localChartCache = new Map();
+
   const evaluateCandidateItem = (cand) => {
-    const chart = getCachedOrComputeChart({
-      birthDate: cand.localDate,
-      timeString: cand.localTime,
-      lat,
-      lng,
-      system,
-      tz: effUtcOffset,
-      options: { ...options, lightweight: true }
-    });
+    metrics.candidateCount++;
+    let chart;
+    if (localChartCache.has(cand.timeString)) {
+      metrics.chartCacheHits++;
+      chart = localChartCache.get(cand.timeString);
+    } else {
+      metrics.chartCacheMisses++;
+      chart = getCachedOrComputeChart({
+        birthDate: cand.localDate,
+        timeString: cand.localTime,
+        lat,
+        lng,
+        system,
+        tz: effUtcOffset,
+        options: { ...options, lightweight: true }
+      });
+      localChartCache.set(cand.timeString, chart);
+    }
 
     const evaluations = validatedEvents.map(evt =>
       evaluateEventForCandidate(evt, chart, cand.timeString)
@@ -363,6 +398,14 @@ export function runBirthTimeRectification({
 
   const evidenceLineage = peakCandidate.evaluations ? peakCandidate.evaluations.flatMap(e => e.evidence || e.premises || []) : [];
 
+  metrics.endTime = Date.now();
+  metrics.durationMs = metrics.endTime - metrics.startTime;
+  metrics.eventCount = validatedEvents.length;
+  metrics.permutationCount = 200; // Hardcoded in permutationEngine call above
+  if (typeof process !== "undefined" && process.memoryUsage) {
+    metrics.peakMemoryMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  }
+
   return {
     status: "SUCCESS",
     centralEstimate,
@@ -393,6 +436,7 @@ export function runBirthTimeRectification({
     evaluatedEventsCount: validatedEvents.length,
     events: validatedEvents,
     peakChart: peakCandidate.chart,
-    peakCandidateDetails: bestCandidateDetails
+    peakCandidateDetails: bestCandidateDetails,
+    metrics
   };
 }

@@ -17,7 +17,7 @@ export const ASTROLOGY_SYSTEMS = {
     ayanamshaType: "lahiri_chitrapaksha",
     defaultHouseSystem: "whole_sign",
     supportedHouseSystems: ["whole_sign", "sripati", "equal"],
-    dashaSystem: "vimshottari_365.25",
+    dashaSystem: "vimshottari_solar_365.2422",
     description: "Classical Indian National Calendar standard based on Spica (Chitra) at 180° longitude.",
     applicableTechniques: [
       "nakshatra", "vargas_d1_to_d60", "shadbala", "ashtakavarga",
@@ -55,7 +55,7 @@ export const ASTROLOGY_SYSTEMS = {
     ayanamshaType: "raman",
     defaultHouseSystem: "whole_sign",
     supportedHouseSystems: ["whole_sign", "sripati", "equal"],
-    dashaSystem: "vimshottari_365.25",
+    dashaSystem: "vimshottari_solar_365.2422",
     description: "Sidereal system popularized by Dr. B.V. Raman with zero-year epoch of 397 AD.",
     applicableTechniques: [
       "nakshatra", "vargas_d1_to_d60", "shadbala", "ashtakavarga",
@@ -72,7 +72,7 @@ export const ASTROLOGY_SYSTEMS = {
     zodiacType: "tropical",
     ayanamshaType: "none",
     defaultHouseSystem: "placidus",
-    supportedHouseSystems: ["placidus", "equal", "regiomontanus", "koch"],
+    supportedHouseSystems: ["placidus", "equal"],
     dashaSystem: null,
     description: "Western Tropical zodiac tied to the Vernal Equinox (0° Aries = Spring Equinox). No Ayanamsha applied.",
     applicableTechniques: [
@@ -89,9 +89,9 @@ export const ASTROLOGY_SYSTEMS = {
 
 export const DEFAULT_ASTROLOGY_SYSTEM = "lahiri";
 
-export function getSystemConfig(systemId = DEFAULT_ASTROLOGY_SYSTEM) {
+export function getSystemConfig(systemId) {
   if (!systemId) {
-    return ASTROLOGY_SYSTEMS.LAHIRI;
+    throw new Error('INVALID_ASTROLOGY_SYSTEM: systemId is required. Valid systems: lahiri, kp, raman, tropical.');
   }
   const normalized = String(systemId).trim().toUpperCase();
   if (normalized === "VEDIC") return ASTROLOGY_SYSTEMS.LAHIRI;

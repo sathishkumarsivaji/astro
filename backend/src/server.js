@@ -31,6 +31,7 @@ import {
   eraseUserData
 } from './services/privacyService.js';
 import { db } from './db/database.js';
+import { validateAndSanitizeAIResponse } from './middleware/aiEvidenceGate.js';
 
 dotenv.config();
 
@@ -784,11 +785,17 @@ async function handleGenerateAstrology(req, res) {
     db.saveUser(req.user.userId, entitlements);
 
     metrics.aiRequestsSuccess++;
+    const gateResult = validateAndSanitizeAIResponse(generatedText);
     return res.json({
       success: true,
-      text: generatedText,
+      text: gateResult.text,
       transactionId: txId,
-      remainingCredits: entitlements.availableCredits - entitlements.lockedCredits
+      remainingCredits: entitlements.availableCredits - entitlements.lockedCredits,
+      _evidenceGate: {
+        sanitized: gateResult.sanitized,
+        violationCount: gateResult.violations.length,
+        disclaimersAdded: gateResult.disclaimersAdded
+      }
     });
 
   } catch (err) {

@@ -1,0 +1,52 @@
+{
+  "_metadata": {
+    "type": "SYNTHETIC_TEST_FIXTURE",
+    "purpose": "Unit and integration testing only",
+    "warning": "This file contains SYNTHETIC data. No real users, no real payments, no real credentials.",
+    "generatedAt": "2026-10-02T00:00:00Z",
+    "version": "1.0.0"
+  },
+  "users": {
+    "usr_test_001": {
+      "userId": "usr_test_001",
+      "email": "test_user_001@example.test",
+      "name": "Test User Alpha",
+      "subscriptionTier": "free",
+      "monthlyCredits": 5,
+      "bonusCredits": 0,
+      "availableCredits": 5,
+      "lockedCredits": 0,
+      "pdfExport": false,
+      "profilesAllowance": 1,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "usr_test_002": {
+      "userId": "usr_test_002",
+      "email": "test_user_002@example.test",
+      "name": "Test User Beta",
+      "subscriptionTier": "tier1",
+      "monthlyCredits": 50,
+      "bonusCredits": 10,
+      "availableCredits": 60,
+      "lockedCredits": 0,
+      "pdfExport": true,
+      "profilesAllowance": 5,
+      "createdAt": "2026-01-15T00:00:00Z",
+      "updatedAt": "2026-06-01T00:00:00Z"
+    }
+  },
+  "user_secrets": {
+    "usr_test_001": "SYNTHETIC_SALT_abc123:SYNTHETIC_HASH_not_a_real_scrypt_output_0000",
+    "usr_test_002": "SYNTHETIC_SALT_def456:SYNTHETIC_HASH_not_a_real_scrypt_output_0001"
+  },
+  "payment_orders": {},
+  "payment_transactions": {},
+  "processed_payment_ids": {},
+  "push_subscriptions": {},
+  "audit_ledger": [],
+  "saved_charts": {},
+  "conversations": {},
+  "messages": {},
+  "claim_graphs": {}
+}

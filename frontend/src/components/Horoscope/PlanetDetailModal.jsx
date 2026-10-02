@@ -168,7 +168,7 @@ export default function PlanetDetailModal({ isOpen, onClose, planet, chartData, 
           <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/70">
             <span className="text-[10px] uppercase font-bold text-stone-500 block">{isTamil ? "நட்சத்திரம் & பாதம்" : "Nakshatra & Pada"}</span>
             <span className="font-bold text-stone-900 text-sm">{planet.nakshatra || "N/A"}</span>
-            <span className="text-[11px] text-amber-800 block">{isTamil ? `பாதம் ${planet.pada || 1}` : `Pada ${planet.pada || 1}`}</span>
+            <span className="text-[11px] text-amber-800 block">{isTamil ? `பாதம் ${planet.pada ?? 'N/A'}` : `Pada ${planet.pada ?? 'N/A'}`}</span>
           </div>
 
           <div className="p-3 rounded-xl bg-stone-50 border border-stone-200">

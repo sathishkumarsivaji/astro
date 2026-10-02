@@ -115,7 +115,7 @@ export default function PanchangMuhurta({ chartData, lang = "en" }) {
               {isTamil ? (dailyPanchang.nakshatra?.tamil || dailyPanchang.nakshatra?.name || dailyPanchang.nakshatraName || "") : (dailyPanchang.nakshatra?.name || dailyPanchang.nakshatraName || (typeof dailyPanchang.nakshatra === "string" ? dailyPanchang.nakshatra : ""))}
             </span>
             <span className="text-[10px] text-stone-500 block mt-0.5">
-              Pada {dailyPanchang.nakshatra?.pada || dailyPanchang.pada || 1} {dailyPanchang.nakshatra?.until ? `· Until ${dailyPanchang.nakshatra.until}` : ""}
+              Pada {dailyPanchang.nakshatra?.pada ?? dailyPanchang.pada ?? 'N/A'} {dailyPanchang.nakshatra?.until ? `· Until ${dailyPanchang.nakshatra.until}` : ""}
             </span>
           </div>
 

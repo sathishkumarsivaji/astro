@@ -125,12 +125,36 @@ export function validateLifeEvent(rawEvent, index = 0) {
     importance,
     sourceReliability,
     verified,
+    isSynthetic: Boolean(rawEvent.isSynthetic || sourceReliability === "SYNTHETIC" || sourceReliability === "SYNTHETIC_GROUND_TRUTH"),
+    provenance: rawEvent.provenance || (sourceReliability === "SYNTHETIC" || sourceReliability === "SYNTHETIC_GROUND_TRUTH" ? "SYNTHETIC_POSITIVE_CONTROL" : (verified ? "DOCUMENTED_RECORD" : "USER_REPORTED")),
     description,
     notes,
     parsedDate,
     parsedStartDate,
     parsedEndDate
   };
+}
+
+/**
+ * Provenance-based weight multipliers for rectification events.
+ * DOCUMENTED events from verified records carry full weight.
+ * SYNTHETIC events carry reduced weight to prevent synthetic data from dominating real validation.
+ */
+export const PROVENANCE_WEIGHT_MULTIPLIERS = {
+  DOCUMENTED: 1.0,
+  OFFICIALLY_DOCUMENTED: 1.0,
+  USER_CONFIRMED: 0.9,
+  APPROXIMATE: 0.6,
+  UNCERTAIN: 0.3,
+  SYNTHETIC_GROUND_TRUTH: 0.5,
+  SYNTHETIC_POSITIVE_CONTROL: 0.5,
+  UNKNOWN: 0.4
+};
+
+export function getProvenanceMultiplier(provenance) {
+  if (!provenance) return PROVENANCE_WEIGHT_MULTIPLIERS.UNKNOWN;
+  const key = String(provenance).toUpperCase().replace(/[- ]/g, '_');
+  return PROVENANCE_WEIGHT_MULTIPLIERS[key] ?? PROVENANCE_WEIGHT_MULTIPLIERS.UNKNOWN;
 }
 
 /**
@@ -150,6 +174,8 @@ export function getEventWeight(event) {
 
   // Source reliability factor
   switch (event.sourceReliability) {
+    case "SYNTHETIC":
+    case "SYNTHETIC_GROUND_TRUTH":
     case "DOCUMENTED": weight *= 1.3; break;
     case "USER_VERIFIED": weight *= 1.0; break;
     case "APPROXIMATE": weight *= 0.7; break;
@@ -170,6 +196,8 @@ export function getEventWeight(event) {
   if (!event.verified) {
     weight *= 0.5;
   }
+
+  weight *= getProvenanceMultiplier(event.provenance);
 
   return Number(weight.toFixed(3));
 }

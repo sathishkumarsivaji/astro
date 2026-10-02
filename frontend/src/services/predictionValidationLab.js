@@ -645,8 +645,12 @@ export function evaluatePredictions(predictions, groundTruthList) {
       if (hasEvent) {
         truePositives++;
         if (typeof predYr === "number" && Number.isFinite(predYr)) {
+          if (truth.actualYear === null || truth.actualYear === undefined) {
+            // Cannot evaluate prediction without known actual year
+            continue;
+          }
           evaluatedEventsCount++;
-          const deltaYears = Math.abs(predYr - (truth.actualYear || 0));
+          const deltaYears = Math.abs(predYr - truth.actualYear);
           errors.push(deltaYears);
 
           if (deltaYears <= 0.25) exactMatches++;
@@ -859,8 +863,15 @@ export function runAblationStudy(cohortOrPartitions, options = {}) {
               const transitChart = calculatePlanetaryPositions(`${targetYear}-06-15`, "12:00", native.latitude, native.longitude, "lahiri", native.utcOffset);
               const transitJup = transitChart.planets.find(p => p.name === "Jupiter");
               const natalMoon = chart.planets.find(p => p.name === "Moon");
-              const natalMoonSign = Math.floor((natalMoon?.longitude || 0) / 30);
-              const transitJupSign = Math.floor((transitJup?.longitude || 0) / 30);
+              if (!natalMoon?.longitude && natalMoon?.longitude !== 0) {
+                // Cannot compute Moon sign without longitude — skip this transit evaluation
+                return { eventWindowIdentified: false, indicativeYear: null, reason: 'INSUFFICIENT_DATA: natal Moon longitude unavailable' };
+              }
+              if (!transitJup?.longitude && transitJup?.longitude !== 0) {
+                return { eventWindowIdentified: false, indicativeYear: null, reason: 'INSUFFICIENT_DATA: transit Jupiter longitude unavailable' };
+              }
+              const natalMoonSign = Math.floor(natalMoon.longitude / 30);
+              const transitJupSign = Math.floor(transitJup.longitude / 30);
               const jupHouseFromMoon = ((transitJupSign - natalMoonSign + 12) % 12) + 1;
               const isAuspiciousTransit = [2, 5, 7, 9, 11].includes(jupHouseFromMoon);
               indicativeAge = isAuspiciousTransit ? Math.round(dashaMid) : Math.round(dashaMid + 1);
@@ -996,7 +1007,7 @@ export function runAblationStudy(cohortOrPartitions, options = {}) {
         const h7Bindus = chart?.ashtakavarga?.sarvashtakavarga?.[6] ?? null;
         const savFactor = h7Bindus !== null ? (h7Bindus >= 28 ? 0.04 : -0.04) : 0;
         const shadbalaTop = (chart?.shadbala || []).find(s => s.planet === "Venus" || s.planet === "Jupiter");
-        const shadbalaFactor = (shadbalaTop?.totalRupas || 1.0) >= 1.0 ? 0.03 : 0;
+        const shadbalaFactor = shadbalaTop?.totalRupas != null ? (shadbalaTop.totalRupas >= 1.0 ? 0.03 : 0) : 0;
         const kp7Cusp = chart?.bhavasDetailed?.[6]?.kpSubLord ?? null;
         const isKpBenefic = kp7Cusp ? ["Venus", "Jupiter", "Mercury", "Moon"].includes(kp7Cusp) : false;
         const kpFactor = isKpBenefic ? 0.02 : 0.0;
