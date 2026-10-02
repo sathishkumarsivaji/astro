@@ -14,7 +14,7 @@ export const TRUTH_STATUS = Object.freeze({
   /** Value has been tested against internal test suite */
   INTERNAL_TESTED: 'INTERNAL_TESTED',
   
-  /** Value has been numerically validated against an external reference (Swiss Ephemeris, JPL Horizons, etc.) */
+  /** Value has been numerically validated against an external reference (SWE, JPL Horizons, etc.) */
   EXTERNAL_NUMERICALLY_VALIDATED: 'EXTERNAL_NUMERICALLY_VALIDATED',
   
   /** Interpretive rule from a traditional astrological system */

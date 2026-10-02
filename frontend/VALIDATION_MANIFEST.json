@@ -1,13 +1,357 @@
 {
-  "generationTimestamp": "2026-10-02T13:35:09.845Z",
-  "gitCommit": "9b9d6e73c36fdb5e3402505da448f13a7fc28589",
-  "sourceTreeHash": "4aa0524f4cf34a52989939df63b158508249ae15481400926b459cc4b89a2cb5",
-  "sourceFileCount": 135,
-  "testTreeHash": "0351a1242f455a9302c8ae9527779e15a9ac193fad02b5083569e55c9146526a",
-  "testFileCount": 52,
-  "fixtureTreeHash": "a6f217849761cfcf70deb02a3c169cd1e55671d108dc9f9c613082c3331bda35",
-  "fixtureFileCount": 4,
-  "packageLockHash": "6cd9ed18c752f974c8f88af4e15ad4291d6f62ff46e10221d976b24dada48182",
-  "manifestVersion": "1.0.0",
-  "manifestHash": "d3e19e7c772a3bcb84f799a7cbce26d48b302d797177e56591faa401bf8069fd"
+  "manifestVersion": "2.3.0",
+  "generatedAt": "2026-10-01T14:19:47.225Z",
+  "application": {
+    "name": "AstroVerse",
+    "version": "4.2.0-Scientific",
+    "environment": "release-candidate"
+  },
+  "validationFramework": {
+    "tier1_astronomical_numerical": {
+      "status": "VERIFIED_INDEPENDENT_SWISS_EPHEMERIS",
+      "description": "Numerical ephemeris and lunar node coordinates verified against Swiss Ephemeris 2.10.03 (via pyswisseph with Moshier/Swiss fallback ephemeris model) reference across 1900-2100",
+      "trueNodeMaeArcSec": 8.07,
+      "meanNodeMaeArcSec": 7.52,
+      "maxResidualArcSec": 19.05,
+      "crossSystemConsistencyArcSec": 0,
+      "precisionTiers": {
+        "planetary": {
+          "preferredTargetArcSec": 1,
+          "warningThresholdArcSec": 3,
+          "hardRegressionToleranceArcSec": 60
+        },
+        "lunarNodes": {
+          "preferredTargetArcSec": 30,
+          "warningThresholdArcSec": 60,
+          "hardRegressionToleranceArcSec": 120
+        },
+        "houseCusps": {
+          "preferredTargetArcSec": 1,
+          "warningThresholdArcSec": 3,
+          "hardRegressionToleranceArcSec": 60
+        }
+      },
+      "lunarInvestigation": {
+        "benchmarkEpochsCount": 101,
+        "epochRange": [
+          1900,
+          2100
+        ],
+        "maeArcSec": 10.46,
+        "medianArcSec": 1.3,
+        "rmseArcSec": 19.9,
+        "percentile95ArcSec": 50.44,
+        "maxResidualArcSec": 64.26,
+        "maxResidualYear": 2100,
+        "maxResidualCause": "Secular Delta-T (TT-UT) polynomial extrapolation divergence beyond 2050 combined with high lunar angular velocity (~0.585 arcsec/sec)",
+        "modernEra1950_2050": {
+          "maeArcSec": 2.21,
+          "maxResidualArcSec": 10.65
+        }
+      }
+    },
+    "tier2_astrological_rule_computation": {
+      "status": "VERIFIED_CLASSICAL_RULES",
+      "description": "Parashari 6-fold Shadbala virupas with Graha Yuddha proximity-scaled ±30 Virupa correction (BPHS), Sripati Bhava Chalit cusps, D1-D60 Shodashavargas (720 deity sequence), Jaimini Chara Karakas, KP 249 Sub-Lords, 337 SAV bindus"
+    },
+    "tier3_synthetic_software_validation": {
+      "status": "SYNTHETIC_SIMULATION_BENCHMARK",
+      "description": "Pre-specified rule-based blind evaluation across partitioned cohorts. No model parameters are fitted or tuned on the synthetic cohort.",
+      "experimentType": "PRE_SPECIFIED_RULE_BASED_BLIND_EVALUATION"
+    },
+    "tier4_real_world_empirical_prediction": {
+      "status": "LABORATORY_ONLY_NO_EMPIRICAL_CLAIMS",
+      "description": "Real-world empirical prediction accuracy is strictly not claimed; verified historical records with documented provenance and objective outcome definitions are required for empirical certification"
+    }
+  },
+  "astronomyEngine": {
+    "version": "4.2.0-Universal",
+    "planetaryModel": "VSOP87 / NOVAS geocentric true ecliptic of date via astronomy-engine 2.1.19",
+    "lunarNodeEngine": "Instantaneous Lunar Orbital Angular Momentum State Vector (h = r x v)",
+    "meanNodePolynomial": "Chapront 2002 / IAU Standard with J2000.0 anchor 125.04455°",
+    "crossSystemConsistency": "Verified identical tropical coordinates (0.0000\" residual) across Lahiri, KP, Raman, and Tropical systems"
+  },
+  "benchmarkDatasets": {
+    "independentSwissReference": {
+      "file": "test_fixtures/swiss_ephemeris_2_10_03_reference.json",
+      "sha256": "4dd3b7156aeeba6243e6d4eefa11be3bbf448e72b7cbbf2d71c7c8084146f70b",
+      "provenance": "Swiss Ephemeris 2.10.03 via pyswisseph using the configured Moshier/Swiss fallback ephemeris source",
+      "epochs": 12,
+      "yearRange": [
+        1900,
+        2100
+      ],
+      "trueNodeMaeArcSec": 8.07,
+      "meanNodeMaeArcSec": 7.52
+    },
+    "canonicalSwissReference": {
+      "file": "test_fixtures/canonical_swiss_reference.json",
+      "sha256": "9dd057c8286f19f5bf9508ae86648d8716334d2e2e0b62e959ff228bc5b3f687",
+      "provenance": "LEGACY_REFERENCE_NOT_USED_FOR_VALIDATION. Retained solely for historical regression compatibility.",
+      "epochs": 4
+    },
+    "syntheticSimulationCohort": {
+      "datasetType": "SYNTHETIC_SIMULATION_BENCHMARK",
+      "verificationStatus": "SYNTHETIC_SIMULATION",
+      "provenance": "AstroVerse Empirical Benchmark Generator (v2.1)",
+      "cohortSize": 100,
+      "partitioning": {
+        "trainRatio": 0.6,
+        "valRatio": 0.2,
+        "blindTestRatio": 0.2
+      }
+    }
+  },
+  "ablationPipeline": {
+    "version": "7-Stage Pre-Specified Rule-Based Ablation (v2.2)",
+    "experimentType": "PRE_SPECIFIED_RULE_BASED_BLIND_EVALUATION",
+    "models": [
+      {
+        "id": "MODEL_A_D1_ONLY",
+        "features": [
+          "D1 Natal Dignity"
+        ]
+      },
+      {
+        "id": "MODEL_B_D1_DASHA",
+        "features": [
+          "D1 Natal Dignity",
+          "120-Yr Vimshottari Dasha Hierarchy"
+        ]
+      },
+      {
+        "id": "MODEL_C_D1_DASHA_TRANSIT",
+        "features": [
+          "D1 Natal Dignity",
+          "Vimshottari Dasha",
+          "Authentic Ephemeris Planetary Transits"
+        ]
+      },
+      {
+        "id": "MODEL_D_D1_DASHA_D9",
+        "features": [
+          "D1 Natal Dignity",
+          "Vimshottari Dasha",
+          "D9 Navamsha Lordships & Dignities"
+        ]
+      },
+      {
+        "id": "MODEL_E_D1_DASHA_VARGAS",
+        "features": [
+          "D1 Natal Dignity",
+          "Vimshottari Dasha",
+          "D9 Navamsha",
+          "D10 Dashamsha Dignities"
+        ]
+      },
+      {
+        "id": "MODEL_F_D1_DASHA_VARGAS_TRANSIT_JAIMINI",
+        "features": [
+          "D1 Natal Dignity",
+          "Vimshottari Dasha",
+          "D9",
+          "D10",
+          "Authentic Transits",
+          "Jaimini Dara Karaka (DK) & Upapada Lagna (UL)"
+        ]
+      },
+      {
+        "id": "MODEL_G_FULL_ASTROVERSE",
+        "features": [
+          "Full Ensemble",
+          "D1-D60 Vargas",
+          "Vimshottari Dasha",
+          "Transits",
+          "Jaimini Chara Karakas",
+          "KP 249 Sub-Lords",
+          "SAV 337 Bindus",
+          "Shadbala Virupas"
+        ]
+      }
+    ]
+  },
+  "cryptographicAntiLeakage": {
+    "hashStandard": "FIPS 180-4 SHA-256",
+    "knownAnswerVerification": {
+      "abc": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "empty": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "sandboxIsolation": "Strictly serialized and frozen input parameters omitting actualEvents and post-cutoff outcomes",
+    "inputAvailabilityAudit": "postCutoffHistoricalDataAccess = false"
+  },
+  "securityAndPrivacy": {
+    "vapidSafeguard": "Enforced fatal error at startup if VAPID keys missing in production; dynamic ephemeral keypairs in dev/test",
+    "authTokens": "Stateless HMAC session tokens & HttpOnly cookies; zero authentication secrets in localStorage",
+    "userDataErasure": "Full GDPR/CCPA user data erasure verified",
+    "databaseResilience": "Fail-closed PostgreSQL transactional persistence in production with write-through store",
+    "pushSubscriptions": "Persistent push_subscriptions table with user-scoped multi-tenant isolation",
+    "ciSecurityGate": "Blocking npm audit --omit=dev --audit-level=high release gate"
+  },
+  "releaseEngineering": {
+    "cleanInstall": "PASS",
+    "lintStatus": "PASS (0 errors)",
+    "buildStatus": "PASS",
+    "releaseGateStatus": "PASS"
+  },
+  "testSuiteSummary": {
+    "totalChecks": 1449,
+    "passed": 1449,
+    "failed": 0,
+    "status": "ALL_PASSED",
+    "suites": [
+      {
+        "name": "Swiss Ephemeris Benchmark",
+        "command": "node test_swiss_ephemeris_benchmark.mjs",
+        "checks": 120,
+        "passed": 120,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 413
+      },
+      {
+        "name": "True Node Independent Benchmark",
+        "command": "node test_true_node_independent_benchmark.mjs",
+        "checks": 24,
+        "passed": 24,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 379
+      },
+      {
+        "name": "Cross-System Consistency",
+        "command": "node test_cross_system_astronomical_consistency.mjs",
+        "checks": 90,
+        "passed": 90,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 526
+      },
+      {
+        "name": "Prediction Lab & Backtesting",
+        "command": "node test_backtesting_validation.mjs",
+        "checks": 77,
+        "passed": 77,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 853
+      },
+      {
+        "name": "Consultation Engine",
+        "command": "node test_consultation_engine.mjs",
+        "checks": 51,
+        "passed": 51,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 185
+      },
+      {
+        "name": "Multi-Turn QA Router",
+        "command": "node test_multiturn_qa.mjs",
+        "checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2882
+      },
+      {
+        "name": "PDF & Fingerprint Integrity",
+        "command": "node test_pdf_and_fingerprint.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1624
+      },
+      {
+        "name": "Tamil Purity & Localization",
+        "command": "node test_tamil_purity.mjs",
+        "checks": 11,
+        "passed": 11,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2326
+      },
+      {
+        "name": "Detailed Report Anti-Fabrication",
+        "command": "node test_detailed_report_integrity.mjs",
+        "checks": 104,
+        "passed": 104,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1637
+      },
+      {
+        "name": "Convention Fixtures",
+        "command": "node test_convention_fixtures.mjs",
+        "checks": 67,
+        "passed": 67,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 79
+      },
+      {
+        "name": "Golden Astronomy",
+        "command": "node test_golden_astronomy.mjs",
+        "checks": 780,
+        "passed": 780,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1907
+      },
+      {
+        "name": "Claim Graph",
+        "command": "node test_claim_graph.mjs",
+        "checks": 15,
+        "passed": 15,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 144
+      },
+      {
+        "name": "Calendar Engine",
+        "command": "node test_calendar_engine.mjs",
+        "checks": 13,
+        "passed": 13,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 87
+      },
+      {
+        "name": "Differential Prediction Integrity",
+        "command": "node test_differential_prediction_integrity.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 333
+      },
+      {
+        "name": "No Fabricated Calculated Values",
+        "command": "node test_no_fabricated_calculated_values.mjs",
+        "checks": 7,
+        "passed": 7,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1369
+      },
+      {
+        "name": "Backend Security & Push",
+        "command": "node test_backend.mjs",
+        "checks": 57,
+        "passed": 57,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1792
+      },
+      {
+        "name": "Validation Manifest Integrity",
+        "command": "node test_validation_manifest_integrity.mjs",
+        "checks": 5,
+        "passed": 5,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 64
+      }
+    ]
+  }
 }

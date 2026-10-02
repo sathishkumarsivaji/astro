@@ -54,6 +54,17 @@ export function runPermutationNullTest({
   const numPerms = Math.max(50, Math.min(500, Number(permutationsCount) || 200));
   const nullMaxScores = [];
 
+  const evalCache = new Map();
+  const getCachedEval = (pe, cand) => {
+    const key = `${cand.timeString}_${pe.type}_${pe.date}_${pe.importance || ""}_${pe.provenance || ""}`;
+    let res = evalCache.get(key);
+    if (res === undefined) {
+      res = evaluateEventForCandidate(pe, cand.chart, cand.timeString);
+      evalCache.set(key, res);
+    }
+    return res;
+  };
+
   for (let p = 0; p < numPerms; p++) {
     const pSeed = seed + p * 17 + 1;
     const shuffledDates = shuffleArray(datesPool, pSeed);
@@ -75,9 +86,7 @@ export function runPermutationNullTest({
 
     let permMax = 0;
     for (const cand of candidates) {
-      const evals = permutedEvents.map(pe =>
-        evaluateEventForCandidate(pe, cand.chart, cand.timeString)
-      );
+      const evals = permutedEvents.map(pe => getCachedEval(pe, cand));
       const scoreObj = scoreCandidate(evals, permutedEvents);
       if (scoreObj.totalScore > permMax) {
         permMax = scoreObj.totalScore;

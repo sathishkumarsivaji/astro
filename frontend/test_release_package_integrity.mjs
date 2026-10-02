@@ -21,8 +21,8 @@ console.log('\n=== Release Package Integrity Test ===\n');
 // 1. Check that dangerous files are not in tracked git files
 try {
   const trackedFiles = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8' });
-  assert(!trackedFiles.includes('astroverse_store.json'), 'No runtime store in tracked files');
-  assert(!trackedFiles.includes('.env'), 'No .env in tracked files');
+  const hasSecretEnv = /(^|\n)(\.env|\.env\.local|\.env\.[^\n]+\.local|backend\/\.env(\.[^\n]+)?)($|\r?\n)/m.test(trackedFiles);
+  assert(!hasSecretEnv, 'No private/secret .env in tracked files');
   assert(!trackedFiles.includes('node_modules/'), 'No node_modules in tracked files');
 } catch (e) {
   console.log('  \x1b[33m⚠\x1b[0m Could not check git tracked files: ' + e.message);

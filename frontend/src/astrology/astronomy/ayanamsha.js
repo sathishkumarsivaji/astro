@@ -67,16 +67,16 @@ export const AYANAMSHA_MODELS = {
   },
   KP_SWISS_EPHEMERIS: {
     id: "kp_swe",
-    name: "KP Swiss Ephemeris (SE_SIDM_KRISHNAMURTI)",
+    name: "KP SWE Reference (SE_SIDM_KRISHNAMURTI)",
     anchorEpoch: "1900.0 CE",
     anchorValueDms: "22° 21' 57.636\"",
     anchorValueDeg: 22.36601,
     precessionRate: "Variable (IAU precession)",
     referenceFrame: "Geocentric Ecliptic of Date",
     version: "SWE-2.10.03",
-    shastricAuthority: "Swiss Ephemeris library (Astrodienst)",
+    shastricAuthority: "SWE library (Astrodienst)",
     implementationStatus: "REFERENCE_ONLY",
-    note: "Swiss Ephemeris internally computes KP ayanamsha using IAU variable precession. Differences from KP_ORIGINAL are expected."
+    note: "SWE internally computes KP ayanamsha using IAU variable precession. Differences from KP_ORIGINAL are expected."
   },
   RAMAN_SIDEREAL: {
     id: "raman",
@@ -93,14 +93,14 @@ export const AYANAMSHA_MODELS = {
   },
   RAMAN_SWISS_EPHEMERIS: {
     id: "raman_swe",
-    name: "Raman Swiss Ephemeris (SE_SIDM_RAMAN)",
+    name: "Raman SWE Reference (SE_SIDM_RAMAN)",
     anchorEpoch: "1900.0 CE",
     anchorValueDms: "21° 00' 00.00\"",
     anchorValueDeg: 21.0,
     precessionRate: "Variable (IAU precession)",
     referenceFrame: "Geocentric Ecliptic of Date",
     version: "SWE-2.10.03",
-    shastricAuthority: "Swiss Ephemeris library (Astrodienst)",
+    shastricAuthority: "SWE library (Astrodienst)",
     implementationStatus: "REFERENCE_ONLY",
     note: "SWE anchors 1900.0 to 21°00'00\". ASTROVERSE uses RAMAN_SIDEREAL (classical linear 50⅓\"/year from 397 AD). Difference at J2000.0: ~7.13 arcseconds."
   },
