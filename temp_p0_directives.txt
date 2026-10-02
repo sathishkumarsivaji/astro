@@ -1,0 +1,851 @@
+<USER_REQUEST>
+Perform a complete P0/P1 correctness remediation on the current ASTROVERSE ASTR1O source tree.
+
+DO NOT merely modify tests to make them pass.
+
+DO NOT modify expected values to hide implementation errors.
+
+DO NOT claim a defect is fixed until the actual runtime behavior has been tested.
+
+============================================================
+GLOBAL NON-NEGOTIABLE RULE
+==========================
+
+For every calculated astrological value:
+
+VALID CALCULATED VALUE
+OR
+NULL / INSUFFICIENT_DATA.
+
+Never:
+
+MISSING VALUE
+→ arbitrary numerical default
+→ sign/house/dasha/evidence
+→ prediction.
+
+The following values are NOT valid substitutes for missing astronomical data:
+
+0°
+Aries
+House 1
+Pada 1
+28 SAV bindus
+Sun Mahadasha
+Sun Antardasha
+Rohini
+Pada 3
+Mars Lagna Lord
+5.5 timezone
+UTC timezone unless explicitly supplied/resolved.
+
+============================================================
+P0-1 — FIX EXPERT EVIDENCE CHAIN
+================================
+
+File:
+
+src/services/expertPrediction/evidenceChainBuilder.js
+
+Remove all calculated-fact defaults.
+
+FORBIDDEN:
+
+canonicalFacts?.ascendant?.sign || "Mesha"
+
+dashaMatch?.mdLord || "Sun"
+
+dashaMatch?.adLord || "Sun"
+
+dashaMatch?.lord || "Sun"
+
+Any equivalent fallback.
+
+If Ascendant is unavailable:
+
+lagnaSign = null
+
+If Dasha is unavailable:
+
+mdLord = null
+adLord = null
+pdLord = null
+
+If a required fact is absent:
+
+return an evidence node with:
+
+status: "INSUFFICIENT_DATA"
+value: null
+source: "MISSING_REQUIRED_INPUT"
+
+or terminate the evidence chain with:
+
+resolution = INSUFFICIENT_DATA.
+
+NEVER generate:
+
+"Natal Lagna confirmed in Mesha at 0.00°"
+
+from an empty chart.
+
+NEVER generate:
+
+"Active Mahadasha lord Sun"
+
+without a real Dasha result.
+
+Add mandatory negative tests:
+
+buildEvidenceChain("career", {}, {})
+
+must contain:
+
+zero fabricated sign
+zero fabricated longitude
+zero fabricated Dasha lord
+zero positive Varga evidence
+zero positive transit evidence
+resolution = INSUFFICIENT_DATA
+totalIndependentConfirmations = 0.
+
+============================================================
+P0-2 — REMOVE VARGA PLACEHOLDER EVIDENCE
+========================================
+
+Current code creates:
+
+"Divisional harmonics inspected for domain houses."
+
+with:
+
+value: 0.5
+
+when no Varga exists.
+
+This is prohibited.
+
+Replace with:
+
+status: INSUFFICIENT_DATA
+value: null
+evidenceIds: []
+contribution: 0
+
+The node must NOT count as an independent confirmation.
+
+============================================================
+P0-3 — REMOVE TRANSIT PLACEHOLDER EVIDENCE
+==========================================
+
+Current code creates:
+
+"Broad transit background calculated for period."
+
+with:
+
+value: 0.4
+
+when no transit hits exist.
+
+This is prohibited.
+
+No transit calculation:
+
+status = INSUFFICIENT_DATA
+
+No positive evidence.
+
+Do not count a background placeholder as a transit confirmation.
+
+============================================================
+P0-4 — FIX DEDICATED GOCHAR DASHBOARD
+=====================================
+
+File:
+
+src/services/astroEngine.js
+
+Function:
+
+calculateDedicatedGocharDashboard()
+
+Remove:
+
+chartData.moon?.longitude ?? chartData.moonLong ?? 0
+
+Remove:
+
+chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0
+
+Require both:
+
+natal Moon longitude
+natal Ascendant longitude
+
+If either is unavailable:
+
+return:
+
+{
+status: "INSUFFICIENT_DATA",
+natalReference: null,
+transits: [],
+sadeSati: {
+status: "INSUFFICIENT_DATA"
+},
+ashtamaShani: {
+isActive: null,
+status: "INSUFFICIENT_DATA"
+},
+kantakaShani: {
+isActive: null,
+status: "INSUFFICIENT_DATA"
+},
+jupiterTransit: {
+status: "INSUFFICIENT_DATA"
+}
+}
+
+Do NOT infer Aries.
+
+Do NOT calculate Sade Sati.
+
+Do NOT calculate Ashtama Shani.
+
+Do NOT calculate Jupiter-from-Moon.
+
+============================================================
+P0-5 — REMOVE SAV 28 DEFAULT
+============================
+
+In calculateDedicatedGocharDashboard():
+
+Current:
+
+let savBindus = 28;
+
+Replace with:
+
+let savBindus = null;
+
+If neither:
+
+ashtakavarga.savByHouse
+nor
+ashtakavarga.savBySign
+
+exists:
+
+savBindus = null
+
+Never present 28 as calculated SAV.
+
+Add negative test with an empty chart.
+
+============================================================
+P0-6 — FIX PLANETARY AVASTHAS
+=============================
+
+Function:
+
+calculatePlanetaryAvasthas()
+
+If a planet has no valid longitude:
+
+DO NOT assume:
+
+0°
+Aries.
+
+If house is absent:
+
+DO NOT assume:
+
+House 1.
+
+Return:
+
+status: "INSUFFICIENT_DATA"
+
+for that planet.
+
+Example:
+
+input:
+
+[{ name: "Mars" }]
+
+must NOT return:
+
+Mars Aries 0° House 1.
+
+============================================================
+P0-7 — REMOVE ALL CALCULATED HOUSE DEFAULTS
+===========================================
+
+Search the COMPLETE source tree for:
+
+.house || 1
+.house || 2
+.house || 5
+.house || 7
+.house || 10
+.vargaHouse || 1
+.vargaHouse || 5
+.vargaHouse || 7
+.vargaHouse || 10
+
+Classify every occurrence.
+
+If the field represents a calculated chart fact:
+
+missing → null.
+
+Only use a numeric fallback when the value is mathematically defined independent of missing chart data.
+
+Add automated semantic tests.
+
+============================================================
+P0-8 — REMOVE AI NEWBORN DEFAULT BIRTH DATA
+===========================================
+
+File:
+
+src/services/babyNameEngine.js
+
+Function:
+
+generateAINewbornNames()
+
+Remove defaults:
+
+nakshatraName = "Rohini"
+pada = 3
+syllable = "Vi"
+syllableTa = "வி"
+driverNumber = 1
+destinyNumber = 1
+lagnaLord = "Mars"
+
+These are calculated/user-specific facts and cannot have defaults.
+
+Require validated input.
+
+If missing:
+
+throw:
+
+INSUFFICIENT_DATA
+
+before calling the AI service.
+
+Add negative tests for:
+
+{}
+{ nakshatraName: null }
+{ pada: null }
+{ lagnaLord: null }
+missing driverNumber
+missing destinyNumber.
+
+============================================================
+P0-9 — RULE PROVENANCE COMPLETENESS
+===================================
+
+prediction_config.json currently contains seven explicit prediction rules.
+
+Create full RuleProvenance entries for:
+
+RULE_MAR_7L_11H
+RULE_MAR_VEN_JUP_CONJ
+RULE_MAR_SAT_DELAY
+RULE_MAR_D9_VEN_STRONG
+RULE_MAR_UPAPADA_2ND_BENEFIC
+RULE_RES_4L_AFFLICT_SEP
+RULE_WEALTH_2ND_FROM_7TH
+
+Every rule must include:
+
+ruleId
+tradition
+sourceTitle
+sourceEdition
+chapterOrSection
+verseOrPageWhenAvailable
+ruleTextSummary
+implementationFormula
+knownAlternativeConventions
+selectedConvention
+validationStatus.
+
+Add a test:
+
+every rule in prediction_config.json
+MUST exist in RULE_PROVENANCE_REGISTRY.
+
+============================================================
+P0-10 — STOP USING "VERIFIED" AS A GENERIC CLAIM
+================================================
+
+Use the explicit truth-status registry:
+
+CALCULATED
+INTERNAL_TESTED
+EXTERNAL_NUMERICALLY_VALIDATED
+TRADITIONAL_RULE
+SOURCE_CITED
+USER_CONFIRMED
+SYNTHETIC_TEST_ONLY
+EMPIRICALLY_VALIDATED
+UNDETERMINED.
+
+Do not describe a Shadbala number as:
+
+"verified Shadbala"
+
+unless external parity validation exists.
+
+Use:
+
+"Calculated under the selected Parashari Shadbala convention."
+
+============================================================
+P0-11 — SHADBALA CONVENTION DISCLOSURE
+======================================
+
+The current Graha Yuddha implementation uses:
+
+<= 1° war detection
+declination-based victor
+proximity-scaled ±30 Virupa adjustment.
+
+Do not call the exact proximity-scaled correction universally canonical BPHS unless an exact textual reference is provided.
+
+Label it:
+
+ASTROVERSE_DECLARED_SHADBALA_CONVENTION
+
+unless exact external source verification is established.
+
+Add:
+
+source
+edition
+chapter
+verse/page
+implementationFormula
+alternativeConventions.
+
+============================================================
+P0-12 — RAMAN DOCUMENTATION CLEANUP
+===================================
+
+The actual Raman J2000 value is:
+
+22.412314814814817°
+
+which corresponds to approximately:
+
+22°24′44.333″.
+
+Correct all comments/documentation that state:
+
+22°24′51″
+
+unless that value is explicitly identified as a different historical reference.
+
+Do not alter the implementation merely to satisfy the comment.
+
+============================================================
+P0-13 — KP VARIANT DISCLOSURE
+=============================
+
+Explicitly distinguish:
+
+KP_ORIGINAL
+KP_TABLE_DERIVED
+KP_SENTHILATHIBAN
+KP_SWISS_EPHEMERIS
+
+The application currently implements:
+
+KP_ORIGINAL.
+
+Do not call it simply:
+
+KP
+
+in a way that implies universal identity.
+
+Calculation certificates must contain:
+
+kpVariant
+anchor
+rate/model
+source
+version.
+
+Add external comparison fixtures for all supported reference variants.
+
+============================================================
+P0-14 — VALIDATION MANIFEST
+===========================
+
+Replace fixture-only hashing with complete release hashing.
+
+Manifest must contain:
+
+sourceTreeHash
+testTreeHash
+fixtureTreeHash
+packageLockHash
+distHash
+manifestGenerationTimestamp
+gitCommit
+applicationVersion
+calculationEngineVersion
+ruleVersion
+ephemerisVersion.
+
+CI must regenerate the manifest after source changes.
+
+A stale manifest must fail release validation.
+
+============================================================
+P0-15 — SOURCE PACKAGE CLEANLINESS
+==================================
+
+Do NOT distribute:
+
+node_modules/
+
+in the source archive.
+
+Do NOT distribute:
+
+runtime databases
+production data
+logs
+.env secrets
+temporary build caches.
+
+Source package must be reproducible using:
+
+npm ci
+npm run build
+
+from package-lock.json.
+
+============================================================
+P0-16 — CLEAN BUILD TEST
+========================
+
+CI must use a clean environment.
+
+Do not rely on packaged node_modules.
+
+Execute:
+
+rm -rf node_modules
+npm ci
+npm run build
+
+Then run:
+
+npm test
+
+and release-package tests.
+
+Record:
+
+Node version
+npm version
+OS
+Vite version
+Rolldown version
+build duration
+bundle size.
+
+============================================================
+P0-17 — TAMIL CERTAINTY LANGUAGE
+================================
+
+Review all Tamil generated narratives.
+
+Do not merely scan English phrases.
+
+Categorical Tamil claims must be classified as traditional interpretation.
+
+Avoid unconditional formulations equivalent to:
+
+guaranteed
+confirmed life outcome
+will definitely happen
+ensures
+certainly
+proves.
+
+Use:
+
+"பாரம்பரிய ஜோதிட விளக்கத்தில்..."
+"இந்த அமைப்பு ... தொடர்புடையதாகக் கருதப்படுகிறது"
+"ஒரு பாரம்பரிய குறியீடாக..."
+"பல காரணிகளில் ஒன்றாக..."
+
+Do not convert traditional astrology into empirical certainty.
+
+============================================================
+P0-18 — TAMIL LANGUAGE TEST REDEFINITION
+========================================
+
+Rename:
+
+PURE TAMIL
+
+to:
+
+TAMIL NARRATIVE LANGUAGE INTEGRITY
+
+Explicitly permit:
+
+Sanskrit mantras
+planet names
+traditional gemstone names
+proper nouns
+
+only where intentionally allowed.
+
+Track:
+
+English technical leakage
+untranslated UI labels
+Sanskrit mantra allowance
+traditional proper nouns.
+
+============================================================
+P0-19 — PALMISTRY
+=================
+
+Keep palmistry clearly labelled:
+
+SIMULATION_PROTOTYPE
+
+when no actual image telemetry is available.
+
+Never represent fixed illustrative mount ratings such as:
+
+88
+78
+84
+86
+85
+80
+
+as measured biometric values.
+
+The UI must display:
+
+Illustrative Reference Score
+
+not:
+
+Measured Score.
+
+Only actual image-derived measurements may be marked:
+
+MEASURED.
+
+============================================================
+P0-20 — NUMEROLOGY
+==================
+
+Clearly distinguish:
+
+PYTHAGOREAN
+CHALDEAN
+
+and label personality/lucky-color/lucky-stone associations as:
+
+TRADITIONAL_NUMEROLOGY_SYMBOLISM.
+
+Do not present them as empirically validated personality or outcome predictions.
+
+============================================================
+P0-21 — COMPLETE NEGATIVE-DATA TEST MATRIX
+==========================================
+
+Create a universal test generator that takes each major calculation module and runs:
+
+complete chart
+missing Moon
+missing Ascendant
+missing Sun
+missing planet
+missing house
+missing Dasha
+missing Varga
+missing Shadbala
+missing Ashtakavarga
+missing Jaimini
+missing timezone
+missing coordinates
+invalid system
+null input
+undefined input
+NaN input.
+
+Expected result:
+
+INSUFFICIENT_DATA
+
+or a safe partial result.
+
+Never:
+
+Aries
+House 1
+Pada 1
+28 bindus
+Sun Dasha
+Rohini
+Mars Lagna Lord.
+
+============================================================
+P0-22 — EVIDENCE CONVERGENCE SAFETY
+===================================
+
+Independent confirmations must count ONLY when their underlying evidence exists.
+
+Never count:
+
+placeholder Varga
+placeholder transit
+default Dasha
+default Lagna
+default Moon
+default SAV.
+
+If required evidence is absent:
+
+totalIndependentConfirmations = 0
+
+and:
+
+resolution = INSUFFICIENT_DATA.
+
+============================================================
+P0-23 — REAL-WORLD EMPIRICAL STATUS
+===================================
+
+Keep:
+
+LABORATORY_ONLY_NO_EMPIRICAL_CLAIMS
+
+until independently sourced real-world outcome data is available.
+
+Synthetic recovery tests must never be described as:
+
+real-world accuracy
+empirical accuracy
+historical prediction accuracy.
+
+============================================================
+P0-24 — FINAL NEGATIVE TESTS
+============================
+
+The following exact tests MUST pass:
+
+Test 1:
+
+buildEvidenceChain("career", {}, {})
+
+Expected:
+INSUFFICIENT_DATA.
+
+Test 2:
+
+calculateDedicatedGocharDashboard({}, "2026-10-02")
+
+Expected:
+INSUFFICIENT_DATA.
+
+Test 3:
+
+calculatePlanetaryAvasthas([{name:"Mars"}])
+
+Expected:
+INSUFFICIENT_DATA.
+
+Test 4:
+
+generateAINewbornNames({})
+
+Expected:
+INSUFFICIENT_DATA.
+
+Test 5:
+
+prediction config rule count == provenance registry coverage.
+
+Test 6:
+
+No source calculated-value path may use arbitrary fallback:
+0
+1
+28
+30
+house 1
+Aries
+Sun
+Rohini
+Pada 3
+Mars
+as a substitute for missing chart data.
+
+============================================================
+FINAL RELEASE REQUIREMENT
+=========================
+
+Do not report:
+
+"100% astrology prediction accuracy."
+
+Instead report independently:
+
+ASTRONOMICAL_NUMERICAL_VALIDATION
+SOFTWARE_CORRECTNESS
+TRADITIONAL_RULE_IMPLEMENTATION
+EXTERNAL_REFERENCE_PARITY
+AI_NON_FABRICATION
+PROVENANCE_INTEGRITY
+SYNTHETIC_VALIDATION
+REAL_WORLD_EMPIRICAL_VALIDATION
+BUILD_REPRODUCIBILITY
+SECURITY
+PERFORMANCE.
+
+The final system must follow:
+
+CALCULATED FACT
+→ EVIDENCE
+→ TRADITIONAL RULE
+→ QUALIFIED INTERPRETATION
+
+and never:
+
+MISSING DATA
+→ DEFAULT
+→ FAKE EVIDENCE
+→ PREDICTION.
+
+After all fixes, run the COMPLETE test suite from a clean npm installation and provide the exact PASS/FAIL/TIMEOUT counts.
+
+Do not hide failures.
+Do not change tests merely to obtain PASS.
+Do not fabricate validation results.
+
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-02T21:01:00+05:30.
+</ADDITIONAL_METADATA>

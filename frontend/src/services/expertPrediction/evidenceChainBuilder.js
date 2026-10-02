@@ -18,29 +18,31 @@ import {
  * @param {Array} transitHits - Array of concurrent transit events.
  * @param {Object|Array} vargaData - Divisional chart alignments.
  * @param {Object} [options] - Additional context options.
- * @returns {Object} Containing evidenceNodes, independenceGroups, totalIndependentConfirmations.
+ * @returns {Object} Containing evidenceNodes, independenceGroups, totalIndependentConfirmations, resolution.
  */
 export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {}, transitHits = [], vargaData = null, options = {}) {
   const evidenceNodes = [];
   const independenceGroups = [];
 
-  const mdLord = dashaMatch?.mdLord || dashaMatch?.lord || 'Sun';
+  const mdLord = dashaMatch?.mdLord || dashaMatch?.lord || null;
   const adLord = dashaMatch?.adLord || dashaMatch?.lord || mdLord;
   const pdLord = options.pdRanking?.peakPD?.lord || dashaMatch?.pdLord || null;
 
-  const lagnaSign = canonicalFacts?.ascendant?.sign || 'Mesha';
-  const lagnaLong = canonicalFacts?.ascendant?.longitude != null ? canonicalFacts.ascendant.longitude.toFixed(2) : '0.00';
+  const lagnaSign = canonicalFacts?.ascendant?.sign || null;
+  const lagnaLong = canonicalFacts?.ascendant?.longitude != null ? canonicalFacts.ascendant.longitude.toFixed(2) : null;
   const houses = options.relevantHouses || DOMAIN_HOUSES[domain] || [1, 7, 10];
   const houseStr = houses.join(', ');
   const karakas = options.relevantKarakas?.primary || DOMAIN_KARAKAS[domain]?.primary || ['Jupiter'];
   const karakaStr = karakas.join(', ');
 
+  const isIncomplete = !lagnaSign || !mdLord;
+
   // ─── LEVEL 1: ASTRONOMICAL FACT ───
-  const node1Id = generateDeterministicId('ev_1_astro', domain, mdLord, adLord);
+  const node1Id = generateDeterministicId('ev_1_astro', domain, mdLord || 'uncalculated', adLord || 'uncalculated');
   const igNatalId = generateDeterministicId('ig_natal_foundation', domain);
 
   // ─── LEVEL 2: NATAL FACT ───
-  const node2Id = generateDeterministicId('ev_2_natal', domain, lagnaSign);
+  const node2Id = generateDeterministicId('ev_2_natal', domain, lagnaSign || 'uncalculated');
 
   // ─── LEVEL 3: HOUSE ACTIVATION ───
   const node3Id = generateDeterministicId('ev_3_house', domain, houseStr);
@@ -60,7 +62,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     : (vargaData ? [vargaData] : []);
   const activeVargas = rawVargas.filter(v => v && (v.isActivated || v.isConfirmed));
   const vargaNodeIds = [];
-  const vargaGroupId = generateDeterministicId('ig_varga', domain, mdLord);
+  const vargaGroupId = generateDeterministicId('ig_varga', domain, mdLord || 'varga');
 
   if (activeVargas.length > 0) {
     activeVargas.forEach((vItem, vIdx) => {
@@ -98,44 +100,63 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
       nodeId: vNodeId,
       level: 6,
       type: 'VARGA',
-      description: `Divisional harmonics inspected for domain houses.`,
-      descriptionTamil: `வர்க்க சக்கர பாவக அமைப்புகள் ஆய்வு செய்யப்பட்டன.`,
-      value: 0.5,
+      description: `Divisional harmonics not actively established for domain houses.`,
+      descriptionTamil: `வர்க்க சக்கர பாவக ஒருங்கிணைவு இந்த களத்திற்கு நிறுவப்படவில்லை.`,
+      value: null,
       source: 'VARGA_ANALYSIS',
-      independenceGroupId: igNatalId
+      independenceGroupId: null
     });
+    vNode.status = 'INSUFFICIENT_DATA';
+    vNode.evidenceIds = [];
+    vNode.contribution = 0;
     validateEvidenceNode(vNode);
     evidenceNodes.push(vNode);
   }
 
   // ─── LEVEL 7: DASHA_MD ───
-  const dashaGroupId = generateDeterministicId('ig_dasha', domain, mdLord, adLord);
-  const node7Id = generateDeterministicId('ev_7_dasha_md', domain, mdLord);
+  const dashaGroupId = generateDeterministicId('ig_dasha', domain, mdLord || 'uncalculated', adLord || 'uncalculated');
+  const node7Id = generateDeterministicId('ev_7_dasha_md', domain, mdLord || 'uncalculated');
   const node7 = createEvidenceNode({
     nodeId: node7Id,
     level: 7,
     type: 'DASHA_MD',
-    description: `Active Mahadasha lord ${mdLord} establishes temporal governance.`,
-    descriptionTamil: `நடைமுறையில் உள்ள மகா தசா நாதன் ${mdLord} கால ஆளுகையை நிறுவுகிறார்.`,
-    value: 1.0,
-    source: 'VIMSHOTTARI_MD',
-    independenceGroupId: dashaGroupId
+    description: mdLord
+      ? `Active Mahadasha lord ${mdLord} establishes temporal governance.`
+      : `Active Mahadasha lord not established from dasha calculation.`,
+    descriptionTamil: mdLord
+      ? `நடைமுறையில் உள்ள மகா தசா நாதன் ${mdLord} கால ஆளுகையை நிறுவுகிறார்.`
+      : `தசா கணக்கீட்டில் இருந்து மகா தசா ஆளுகை நிறுவப்படவில்லை.`,
+    value: mdLord ? 1.0 : null,
+    source: mdLord ? 'VIMSHOTTARI_MD' : 'MISSING_REQUIRED_INPUT',
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (!mdLord) {
+    node7.status = 'INSUFFICIENT_DATA';
+    node7.contribution = 0;
+  }
   validateEvidenceNode(node7);
   evidenceNodes.push(node7);
 
   // ─── LEVEL 8: DASHA_AD ───
-  const node8Id = generateDeterministicId('ev_8_dasha_ad', domain, adLord);
+  const node8Id = generateDeterministicId('ev_8_dasha_ad', domain, adLord || 'uncalculated');
   const node8 = createEvidenceNode({
     nodeId: node8Id,
     level: 8,
     type: 'DASHA_AD',
-    description: `Antardasha lord ${adLord} activates specific sub-cycle focus.`,
-    descriptionTamil: `அந்தர்தசா நாதன் ${adLord} குறிப்பிட்ட உள்சுழற்சி தாக்கத்தை ஏற்படுத்துகிறது.`,
-    value: 0.9,
-    source: 'VIMSHOTTARI_AD',
-    independenceGroupId: dashaGroupId
+    description: adLord
+      ? `Antardasha lord ${adLord} activates specific sub-cycle focus.`
+      : `Antardasha sub-cycle focus not established.`,
+    descriptionTamil: adLord
+      ? `அந்தர்தசா நாதன் ${adLord} குறிப்பிட்ட உள்சுழற்சி தாக்கத்தை ஏற்படுத்துகிறது.`
+      : `அந்தர்தசா உள்சுழற்சி தாக்கம் நிறுவப்படவில்லை.`,
+    value: adLord ? 0.9 : null,
+    source: adLord ? 'VIMSHOTTARI_AD' : 'MISSING_REQUIRED_INPUT',
+    independenceGroupId: adLord ? dashaGroupId : null
   });
+  if (!adLord) {
+    node8.status = 'INSUFFICIENT_DATA';
+    node8.contribution = 0;
+  }
   validateEvidenceNode(node8);
   evidenceNodes.push(node8);
 
@@ -151,31 +172,36 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     descriptionTamil: pdLord
       ? `பிரத்யந்தர்தசா நாதன் ${pdLord} மிகத் துல்லியமான கால அளவை பிரிக்கிறார்.`
       : `மூன்றாம் நிலை தசா கால இடைவெளி மதிப்பீடு செய்யப்பட்டது.`,
-    value: pdLord ? 0.85 : 0.6,
+    value: pdLord ? 0.85 : (mdLord ? 0.6 : null),
     source: 'VIMSHOTTARI_PD',
-    independenceGroupId: dashaGroupId
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (!mdLord) {
+    node9.status = 'INSUFFICIENT_DATA';
+    node9.contribution = 0;
+  }
   validateEvidenceNode(node9);
   evidenceNodes.push(node9);
 
-  const dashaGroup = createIndependenceGroup({
-    groupId: dashaGroupId,
-    label: 'Vimshottari Dasha Hierarchy',
-    labelTamil: 'விம்சோத்தரி தசா படிநிலை',
-    evidenceNodeIds: [node7Id, node8Id, node9Id],
-    independenceScore: 1.0
-  });
-  validateIndependenceGroup(dashaGroup);
-  independenceGroups.push(dashaGroup);
+  if (mdLord) {
+    const dashaGroup = createIndependenceGroup({
+      groupId: dashaGroupId,
+      label: 'Vimshottari Dasha Hierarchy',
+      labelTamil: 'விம்சோத்தரி தசா படிநிலை',
+      evidenceNodeIds: [node7Id, node8Id, node9Id],
+      independenceScore: 1.0
+    });
+    validateIndependenceGroup(dashaGroup);
+    independenceGroups.push(dashaGroup);
+  }
 
   // ─── LEVEL 10: TRANSIT ───
-  const transitGroupId = generateDeterministicId('ig_transit', domain, mdLord);
+  const transitGroupId = generateDeterministicId('ig_transit', domain, mdLord || 'transit');
   const transitNodeIds = [];
 
   const rawTransits = Array.isArray(transitHits) ? transitHits : [];
   if (rawTransits.length > 0) {
     rawTransits.forEach((hit, idx) => {
-      // Fix field name: transitingPlanet || planet (never undefined)
       const planetName = hit.transitingPlanet || hit.planet || 'MajorPlanet';
       const tNodeId = generateDeterministicId('ev_10_transit', domain, planetName, idx);
       transitNodeIds.push(tNodeId);
@@ -209,38 +235,39 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
       nodeId: tNodeId,
       level: 10,
       type: 'TRANSIT',
-      description: `Broad transit background calculated for period.`,
-      descriptionTamil: `காலத்திற்கான பொதுவான கோட்சார பின்னணி கணக்கிடப்பட்டது.`,
-      value: 0.4,
+      description: `Transit concurrence not established for period.`,
+      descriptionTamil: `காலத்திற்கான கோட்சார ஒருங்கிணைவு எதுவும் நிறுவப்படவில்லை.`,
+      value: null,
       source: 'TRANSIT_CALCULATION',
-      independenceGroupId: transitGroupId
+      independenceGroupId: null
     });
+    tNode.status = 'INSUFFICIENT_DATA';
+    tNode.evidenceIds = [];
+    tNode.contribution = 0;
     validateEvidenceNode(tNode);
     evidenceNodes.push(tNode);
-
-    const transitGroup = createIndependenceGroup({
-      groupId: transitGroupId,
-      label: 'Transit Background',
-      labelTamil: 'கோட்சார பின்னணி',
-      evidenceNodeIds: transitNodeIds,
-      independenceScore: 0.7
-    });
-    validateIndependenceGroup(transitGroup);
-    independenceGroups.push(transitGroup);
   }
 
   // ─── LEVEL 11: EVENT_RULE ───
-  const node11Id = generateDeterministicId('ev_11_event_rule', domain, mdLord, adLord);
+  const node11Id = generateDeterministicId('ev_11_event_rule', domain, mdLord || 'uncalculated', adLord || 'uncalculated');
   const node11 = createEvidenceNode({
     nodeId: node11Id,
     level: 11,
     type: 'EVENT_RULE',
-    description: `Convergence rule for ${domain}: Dasha lords connect with houses [${houseStr}].`,
-    descriptionTamil: `${domain} ஒருங்கிணைவு விதி: தசா நாதர்கள் [${houseStr}] பாவகங்களுடன் இணைகிறார்கள்.`,
-    value: 0.85,
+    description: mdLord
+      ? `Convergence rule for ${domain}: Dasha lords connect with houses [${houseStr}].`
+      : `Convergence rule for ${domain}: Dasha lords not available for house connection.`,
+    descriptionTamil: mdLord
+      ? `${domain} ஒருங்கிணைவு விதி: தசா நாதர்கள் [${houseStr}] பாவகங்களுடன் இணைகிறார்கள்.`
+      : `${domain} ஒருங்கிணைவு விதி: தசா நாதர்கள் கிடைக்கப்பெறவில்லை.`,
+    value: mdLord ? 0.85 : null,
     source: 'DOMAIN_TIMING_RULE',
-    independenceGroupId: dashaGroupId
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (!mdLord) {
+    node11.status = 'INSUFFICIENT_DATA';
+    node11.contribution = 0;
+  }
   validateEvidenceNode(node11);
   evidenceNodes.push(node11);
 
@@ -250,12 +277,20 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     nodeId: node12Id,
     level: 12,
     type: 'INDEPENDENCE_GROUP',
-    description: `Multi-stream verification evaluated across Dasha, Transit, and Varga layers.`,
-    descriptionTamil: `தசா, கோச்சாரம் மற்றும் வர்க்க நிலைகளில் தனித்தனி ஆதாரங்கள் உறுதி செய்யப்பட்டன.`,
-    value: 0.9,
+    description: isIncomplete
+      ? `Multi-stream verification incomplete due to missing required inputs.`
+      : `Multi-stream verification evaluated across Dasha, Transit, and Varga layers.`,
+    descriptionTamil: isIncomplete
+      ? `தேவையான உள்ளீடுகள் இல்லாததால் பல்துறை சரிபார்ப்பு முழுமையடையவில்லை.`
+      : `தசா, கோச்சாரம் மற்றும் வர்க்க நிலைகளில் தனித்தனி ஆதாரங்கள் உறுதி செய்யப்பட்டன.`,
+    value: isIncomplete ? null : 0.9,
     source: 'INDEPENDENCE_CONTROLLER',
-    independenceGroupId: dashaGroupId
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (isIncomplete) {
+    node12.status = 'INSUFFICIENT_DATA';
+    node12.contribution = 0;
+  }
   validateEvidenceNode(node12);
   evidenceNodes.push(node12);
 
@@ -265,17 +300,27 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     nodeId: node13Id,
     level: 13,
     type: 'TIMING_INTERSECTION',
-    description: `Temporal concurrence established between primary dasha window and transit triggers.`,
-    descriptionTamil: `முக்கிய தசா காலத்திற்கும் கோட்சார தூண்டுதல்களுக்கும் இடையே கால ஒருங்கிணைப்பு ஏற்பட்டது.`,
-    value: 0.85,
+    description: isIncomplete
+      ? `Timing intersection not established.`
+      : `Temporal concurrence established between primary dasha window and transit triggers.`,
+    descriptionTamil: isIncomplete
+      ? `கால ஒருங்கிணைப்பு நிறுவப்படவில்லை.`
+      : `முக்கிய தசா காலத்திற்கும் கோட்சார தூண்டுதல்களுக்கும் இடையே கால ஒருங்கிணைப்பு ஏற்பட்டது.`,
+    value: isIncomplete ? null : 0.85,
     source: 'TIMING_SYNTHESIS',
-    independenceGroupId: dashaGroupId
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (isIncomplete) {
+    node13.status = 'INSUFFICIENT_DATA';
+    node13.contribution = 0;
+  }
   validateEvidenceNode(node13);
   evidenceNodes.push(node13);
 
   // ─── LEVEL 14: RESOLUTION ───
-  const resolutionName = options.resolution || (transitHits.length > 0 ? 'DATE_RANGE' : 'MONTH_RANGE');
+  const resolutionName = isIncomplete
+    ? 'INSUFFICIENT_DATA'
+    : (options.resolution || (rawTransits.length > 0 ? 'DATE_RANGE' : 'MONTH_RANGE'));
   const node14Id = generateDeterministicId('ev_14_resolution', domain, resolutionName);
   const node14 = createEvidenceNode({
     nodeId: node14Id,
@@ -283,25 +328,37 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     type: 'RESOLUTION',
     description: `Finest verified precision achieved: ${resolutionName}.`,
     descriptionTamil: `அடையப்பட்ட அதிகபட்ச துல்லியம்: ${resolutionName}.`,
-    value: 1.0,
+    value: isIncomplete ? null : 1.0,
     source: 'RESOLUTION_CLASSIFIER',
-    independenceGroupId: dashaGroupId
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (isIncomplete) {
+    node14.status = 'INSUFFICIENT_DATA';
+    node14.contribution = 0;
+  }
   validateEvidenceNode(node14);
   evidenceNodes.push(node14);
 
   // ─── LEVEL 15: CANDIDATE_WINDOW ───
-  const node15Id = generateDeterministicId('ev_15_candidate_window', domain, mdLord, adLord);
+  const node15Id = generateDeterministicId('ev_15_candidate_window', domain, mdLord || 'uncalculated', adLord || 'uncalculated');
   const node15 = createEvidenceNode({
     nodeId: node15Id,
     level: 15,
     type: 'CANDIDATE_WINDOW',
-    description: `Bounded candidate window defined with calculated entry and exit boundaries.`,
-    descriptionTamil: `துல்லியமான தொடக்கம் மற்றும் முடிவு எல்லைகளுடன் கால சாளரம் அமைக்கப்பட்டது.`,
-    value: 1.0,
+    description: isIncomplete
+      ? `Candidate window bounds not established due to insufficient data.`
+      : `Bounded candidate window defined with calculated entry and exit boundaries.`,
+    descriptionTamil: isIncomplete
+      ? `போதிய தரவு இல்லாததால் கால சாளர எல்லைகள் நிறுவப்படவில்லை.`
+      : `துல்லியமான தொடக்கம் மற்றும் முடிவு எல்லைகளுடன் கால சாளரம் அமைக்கப்பட்டது.`,
+    value: isIncomplete ? null : 1.0,
     source: 'WINDOW_COMPOSITION',
-    independenceGroupId: dashaGroupId
+    independenceGroupId: mdLord ? dashaGroupId : null
   });
+  if (isIncomplete) {
+    node15.status = 'INSUFFICIENT_DATA';
+    node15.contribution = 0;
+  }
   validateEvidenceNode(node15);
   evidenceNodes.push(node15);
 
@@ -315,7 +372,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     value: 1.0,
     source: 'EPHEMERIS_ENGINE',
     childNodeIds: [node2Id],
-    independenceGroupId: igNatalId
+    independenceGroupId: lagnaSign ? igNatalId : null
   });
   validateEvidenceNode(node1);
   evidenceNodes.unshift(node1);
@@ -324,13 +381,21 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     nodeId: node2Id,
     level: 2,
     type: 'NATAL',
-    description: `Natal Lagna confirmed in ${lagnaSign} at ${lagnaLong}°.`,
-    descriptionTamil: `மூல ஜாதக லக்னம் ${lagnaSign} ராசியில் ${lagnaLong}° பாகையில் உறுதி செய்யப்பட்டது.`,
-    value: 1.0,
-    source: 'NATAL_CHART',
+    description: lagnaSign
+      ? `Natal Lagna confirmed in ${lagnaSign}${lagnaLong ? ` at ${lagnaLong}°` : ''}.`
+      : `Natal Lagna data insufficient from calculation input.`,
+    descriptionTamil: lagnaSign
+      ? `மூல ஜாதக லக்னம் ${lagnaSign} ராசியில்${lagnaLong ? ` ${lagnaLong}° பாகையில்` : ''} உறுதி செய்யப்பட்டது.`
+      : `கணித உள்ளீட்டில் இருந்து மூல ஜாதக லக்னம் நிறுவப்படவில்லை.`,
+    value: lagnaSign ? 1.0 : null,
+    source: lagnaSign ? 'NATAL_CHART' : 'MISSING_REQUIRED_INPUT',
     childNodeIds: [node3Id],
-    independenceGroupId: igNatalId
+    independenceGroupId: lagnaSign ? igNatalId : null
   });
+  if (!lagnaSign) {
+    node2.status = 'INSUFFICIENT_DATA';
+    node2.contribution = 0;
+  }
   validateEvidenceNode(node2);
   evidenceNodes.splice(1, 0, node2);
 
@@ -343,7 +408,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     value: 1.0,
     source: 'BHAVA_MAPPING',
     childNodeIds: [node4Id],
-    independenceGroupId: igNatalId
+    independenceGroupId: lagnaSign ? igNatalId : null
   });
   validateEvidenceNode(node3);
   evidenceNodes.splice(2, 0, node3);
@@ -357,7 +422,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     value: 1.0,
     source: 'HOUSE_LORDS',
     childNodeIds: [node5Id],
-    independenceGroupId: igNatalId
+    independenceGroupId: lagnaSign ? igNatalId : null
   });
   validateEvidenceNode(node4);
   evidenceNodes.splice(3, 0, node4);
@@ -371,7 +436,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     value: 1.0,
     source: 'NAISARGIKA_KARAKA',
     childNodeIds: vargaNodeIds,
-    independenceGroupId: igNatalId
+    independenceGroupId: lagnaSign ? igNatalId : null
   });
   validateEvidenceNode(node5);
   evidenceNodes.splice(4, 0, node5);
@@ -391,24 +456,30 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
   node13.childNodeIds = [node14Id];
   node14.childNodeIds = [node15Id];
 
-  // Natal foundation group
-  const natalGroup = createIndependenceGroup({
-    groupId: igNatalId,
-    label: 'Natal Chart Foundation',
-    labelTamil: 'மூல ஜாதக அடிப்படை',
-    evidenceNodeIds: [node1Id, node2Id, node3Id, node4Id, node5Id],
-    independenceScore: 1.0
-  });
-  validateIndependenceGroup(natalGroup);
-  independenceGroups.unshift(natalGroup);
+  // Natal foundation group only if Lagna is confirmed
+  if (lagnaSign) {
+    const natalGroup = createIndependenceGroup({
+      groupId: igNatalId,
+      label: 'Natal Chart Foundation',
+      labelTamil: 'மூல ஜாதக அடிப்படை',
+      evidenceNodeIds: [node1Id, node2Id, node3Id, node4Id, node5Id],
+      independenceScore: 1.0
+    });
+    validateIndependenceGroup(natalGroup);
+    independenceGroups.unshift(natalGroup);
+  }
 
   // Count truly independent groups that have at least one node
-  const activeGroups = new Set(evidenceNodes.map(n => n.independenceGroupId).filter(Boolean));
-  const totalIndependentConfirmations = activeGroups.size;
+  let totalIndependentConfirmations = 0;
+  if (!isIncomplete) {
+    const activeGroups = new Set(evidenceNodes.map(n => n.independenceGroupId).filter(Boolean));
+    totalIndependentConfirmations = activeGroups.size;
+  }
 
   return {
     evidenceNodes,
     independenceGroups,
-    totalIndependentConfirmations
+    totalIndependentConfirmations,
+    resolution: resolutionName
   };
 }
