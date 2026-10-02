@@ -392,6 +392,12 @@ try {
   assert(sameOriginCookiePost.status === 200, "Cookie-authenticated POST with Sec-Fetch-Site=same-origin succeeds with 200 OK");
 } finally {
   await new Promise(resolve => testServer.close(resolve));
+  try {
+    const testStoreFile = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "data/astroverse_store.json");
+    if (fs.existsSync(testStoreFile)) {
+      fs.unlinkSync(testStoreFile);
+    }
+  } catch (e) {}
 }
 
 console.log("\n==============================================================");

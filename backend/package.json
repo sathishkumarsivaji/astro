@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node test_backend.mjs"
+    "test": "node test_backend.mjs && node test/test_no_pii_in_release.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
