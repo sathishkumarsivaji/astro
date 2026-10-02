@@ -7746,21 +7746,24 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   const cfg = DOMAIN_RULES[domain.toLowerCase()] || DOMAIN_RULES.career;
   const pfx = cfg.evidencePrefix;
 
-  // Build 9-Layer Full Reasoning Steps
+  // Build 9-Layer Full Reasoning Steps with explicit Epistemological Classification:
+  // C = CALCULATED (astronomical ephemeris, mathematical vargas, dasha, shadbala, SAV)
+  // R = TRADITIONAL_RULE (Parashari / Jaimini interpretive rules and significations)
+  // E = EMPIRICALLY_VALIDATED (evaluated against real-world outcome cohorts)
   const levels = [];
   const supportingFactors = [];
   const counterIndicators = [];
 
   // ----------------------------------------------------
-  // Level 1: Natal Promise (D1 House & Lordship)
+  // Level 1: Natal Promise (D1 House & Lordship) -> C01
   // ----------------------------------------------------
   const pHouseSignIdx = (ascSignIdx + cfg.primaryHouse - 1) % 12;
   const pLordName = ZODIAC_SIGNS[pHouseSignIdx].ruler;
   const pLord = planets.find(p => p.name.toLowerCase() === pLordName.toLowerCase());
   const l1Id = `${pfx}01`;
   const l1Title = isTamil 
-    ? `நிலை 1 — ஜாதக வாக்குறுதி (D1 ${cfg.primaryHouse}-ம் பாவாதிபதி ${pLordName})` 
-    : `Level 1 — Natal Promise (D1 House ${cfg.primaryHouse} Lord ${pLordName})`;
+    ? `நிலை 1 [கணக்கீடு C01] — ஜாதக வாக்குறுதி (D1 ${cfg.primaryHouse}-ம் பாவாதிபதி ${pLordName})` 
+    : `Level 1 [Calculated C01] — Natal Promise (D1 House ${cfg.primaryHouse} Lord ${pLordName})`;
   
   let l1Desc = pLord 
     ? `Lord ${pLordName} situated in House ${pLord.house} (${pLord.signName || pLord.sign || 'Zodiac Sign'}) in ${pLord.dignity || 'Neutral'} dignity.`
@@ -7774,6 +7777,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 1,
     evidenceId: l1Id,
+    epistemologicalCode: "C01",
+    evidenceClass: "CALCULATED",
     layer: "Natal Promise (D1)",
     title: l1Title,
     description: l1Desc,
@@ -7784,13 +7789,13 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 2: Functional Lordship for Lagna
+  // Level 2: Functional Lordship for Lagna -> R01
   // ----------------------------------------------------
   const l2Id = `${pfx}02`;
   const fRole = functionalMatrix.matrix[pLordName] || { category: "Neutral", role: "Ruler" };
   const l2Title = isTamil 
-    ? `நிலை 2 — லக்ன சுப/பாப அதிபத்தியம் (${fRole.role})` 
-    : `Level 2 — Functional Role for ${ascSign.name} Lagna (${fRole.role})`;
+    ? `நிலை 2 [சாஸ்திர விதி R01] — லக்ன சுப/பாப அதிபத்தியம் (${fRole.role})` 
+    : `Level 2 [Traditional Rule R01] — Functional Role for ${ascSign.name} Lagna (${fRole.role})`;
   
   if (["Supreme Yogakaraka", "Functional Benefic", "Supreme Functional Benefic"].includes(fRole.category)) {
     supportingFactors.push(`${l2Id}: ${pLordName} is a ${fRole.category} for ${ascSign.name} Lagna`);
@@ -7800,6 +7805,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 2,
     evidenceId: l2Id,
+    epistemologicalCode: "R01",
+    evidenceClass: "TRADITIONAL_RULE",
     layer: "Functional Lordship",
     title: l2Title,
     description: fRole.summaryEn || fRole.role,
@@ -7810,8 +7817,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // ----------------------------------------------------
-  // Level 3: Planetary Capacity vs Beneficence (Shadbala)
+  // Level 3: Planetary Capacity vs Beneficence (Shadbala) -> C02
   // ----------------------------------------------------
   const l3Id = `${pfx}03`;
   const rawShadbala = chartData.shadbala;
@@ -7829,8 +7835,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
     : (shadRatio !== null ? shadRatio >= 1.0 : false);
   
   const l3Title = isTamil
-    ? `நிலை 3 — கிரக திறன் vs சுபத்தன்மை (${virupas !== null ? "ஷட்பலம்: " + virupas.toFixed(1) + " விருபாக்கள்" : "ஷட்பல விபரம் இல்லை"})`
-    : `Level 3 — Planetary Capacity vs Beneficence (Shadbala: ${virupas !== null ? virupas.toFixed(1) + " Virupas" : "Evidence unavailable"})`;
+    ? `நிலை 3 [கணக்கீடு C02] — கிரக திறன் vs சுபத்தன்மை (${virupas !== null ? "ஷட்பலம்: " + virupas.toFixed(1) + " விருபாக்கள்" : "ஷட்பல விபரம் இல்லை"})`
+    : `Level 3 [Calculated C02] — Planetary Capacity vs Beneficence (Shadbala: ${virupas !== null ? virupas.toFixed(1) + " Virupas" : "Evidence unavailable"})`;
   const l3Desc = virupas !== null
     ? (isStrongCapacity 
         ? `Strong structural vigor (${virupas.toFixed(1)} Virupas) provides robust capacity to manifest natal promise.`
@@ -7843,6 +7849,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 3,
     evidenceId: l3Id,
+    epistemologicalCode: "C02",
+    evidenceClass: "CALCULATED",
     layer: "Planetary Capacity",
     title: l3Title,
     description: l3Desc,
@@ -7853,15 +7861,15 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 4: Shodashavarga Confirmation
+  // Level 4: Shodashavarga Confirmation -> C03
   // ----------------------------------------------------
   const l4Id = `${pfx}04`;
   const structuredVargas = chartData.structuredVargas || (chartData.ascendant ? getStructuredVargaData(planets, ascendantLong) : null);
   const targetVarga = structuredVargas?.[cfg.vargaKey] || null;
   const vPlanet = targetVarga?.planets?.find(p => p.name === pLordName);
   const l4Title = isTamil 
-    ? `நிலை 4 — வர்க்க உறுதிப்படுத்தல் (${cfg.vargaName})` 
-    : `Level 4 — Divisional Confirmation (${cfg.vargaName})`;
+    ? `நிலை 4 [கணக்கீடு C03] — வர்க்க உறுதிப்படுத்தல் (${cfg.vargaName})` 
+    : `Level 4 [Calculated C03] — Divisional Confirmation (${cfg.vargaName})`;
   const l4Desc = vPlanet 
     ? `${pLordName} situated in House ${vPlanet.house || vPlanet.vargaHouse} of ${cfg.vargaKey} in ${vPlanet.dignity} dignity.`
     : `Divisional calculation for ${pLordName} in ${cfg.vargaKey} is unavailable in current chart payload.`;
@@ -7874,6 +7882,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 4,
     evidenceId: l4Id,
+    epistemologicalCode: "C03",
+    evidenceClass: "CALCULATED",
     layer: "Varga Confirmation",
     title: l4Title,
     description: l4Desc,
@@ -7884,7 +7894,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 5: Dasha Activation & Sub-Period Hierarchy
+  // Level 5: Dasha Activation & Sub-Period Hierarchy -> C04
   // ----------------------------------------------------
   const l5Id = `${pfx}05`;
   const activeMdLord = activeDasha?.lord || null;
@@ -7902,8 +7912,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   }
 
   const l5Title = isTamil 
-    ? `நிலை 5 — தசா கால செயலாக்கம் (தற்போதைய தசை: ${activeMdLord || 'விபரம் இல்லை'})` 
-    : `Level 5 — Dasha Activation (Active Mahadasha: ${activeMdLord || 'Unavailable'})`;
+    ? `நிலை 5 [கணக்கீடு C04] — தசா கால செயலாக்கம் (தற்போதைய தசை: ${activeMdLord || 'விபரம் இல்லை'})` 
+    : `Level 5 [Calculated C04] — Dasha Activation (Active Mahadasha: ${activeMdLord || 'Unavailable'})`;
   const l5Desc = activeMdLord 
     ? `Current Vimshottari cycle is governed by ${activeMdLord}${activeAdLord ? ` / ${activeAdLord}` : ''} [${dashaActivationStatus}]. Natal promise activates during congruent sub-periods.`
     : `Vimshottari Dasha operating period data is unavailable for active phase verification.`;
@@ -7911,6 +7921,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 5,
     evidenceId: l5Id,
+    epistemologicalCode: "C04",
+    evidenceClass: "CALCULATED",
     layer: "Dasha Activation",
     title: l5Title,
     description: l5Desc,
@@ -7921,7 +7933,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 6: Gochara Transit Triggers & SAV Bindus
+  // Level 6: Gochara Transit Triggers & SAV Bindus -> C05
   // ----------------------------------------------------
   const l6Id = `${pfx}06`;
   const savBindus = chartData.ashtakavarga?.savBySign?.[pHouseSignIdx] ?? chartData.ashtakavarga?.SAV?.[pHouseSignIdx] ?? chartData.sarvashtakavarga?.[pHouseSignIdx] ?? null;
@@ -7934,8 +7946,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   }
 
   const l6Title = isTamil 
-    ? `நிலை 6 — கோச்சார கிரக தூண்டுதல் & அஷ்டகவர்க்கம்${savNote}` 
-    : `Level 6 — Gochara Transit Triggers & Ashtakavarga${savNote}`;
+    ? `நிலை 6 [கணக்கீடு C05] — கோச்சார கிரக தூண்டுதல் & அஷ்டகவர்க்கம்${savNote}` 
+    : `Level 6 [Calculated C05] — Gochara Transit Triggers & Ashtakavarga${savNote}`;
   const l6Desc = typeof savBindus === "number"
     ? `Sarvashtakavarga reserve in target bhava sign is ${savBindus} bindus. Dynamic activation occurs when transiting Jupiter and Saturn aspect or transit the natal ${cfg.primaryHouse}-th house axis.`
     : `Transit triggers operate as dynamic catalysts when Jupiter and Saturn aspect or transit the natal ${cfg.primaryHouse}-th house axis.`;
@@ -7943,6 +7955,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 6,
     evidenceId: l6Id,
+    epistemologicalCode: "C05",
+    evidenceClass: "CALCULATED",
     layer: "Transit Trigger",
     title: l6Title,
     description: l6Desc,
@@ -7952,7 +7966,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 7: Jaimini Karaka & Arudha Confirmation
+  // Level 7: Jaimini Karaka & Arudha Confirmation -> R02
   // ----------------------------------------------------
   const l7Id = `${pfx}07`;
   const jaimini = chartData.jaiminiSystem || (chartData.ascendant ? calculateJaiminiSystem(planets, ascendantLong) : null);
@@ -7970,8 +7984,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   const upapadaLagna = jaimini?.upapadaLagna?.sign || "UL";
 
   const l7Title = isTamil
-    ? `நிலை 7 — ஜைமினி காரகர் & ஆரூட உறுதிப்படுத்தல் (${targetKarakaRole}: ${jKarakaPlanet?.planet || jKarakaPlanet?.name || 'விபரம் இல்லை'})`
-    : `Level 7 — Jaimini Karaka & Arudha Confirmation (${targetKarakaRole}: ${jKarakaPlanet?.planet || jKarakaPlanet?.name || 'Available'})`;
+    ? `நிலை 7 [சாஸ்திர விதி R02] — ஜைமினி காரகர் & ஆரூட உறுதிப்படுத்தல் (${targetKarakaRole}: ${jKarakaPlanet?.planet || jKarakaPlanet?.name || 'விபரம் இல்லை'})`
+    : `Level 7 [Traditional Rule R02] — Jaimini Karaka & Arudha Confirmation (${targetKarakaRole}: ${jKarakaPlanet?.planet || jKarakaPlanet?.name || 'Available'})`;
 
   let l7Desc = jKarakaPlanet
     ? `Jaimini ${jKarakaPlanet.roleName || targetKarakaRole} (${jKarakaPlanet.planet || jKarakaPlanet.name}) sits in ${jKarakaPlanet.sign || 'sign'}, with Arudha Lagna (AL) in ${arudhaLagna}${domain === 'marriage' ? ` and Upapada (UL) in ${upapadaLagna}` : ''}.`
@@ -7983,6 +7997,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 7,
     evidenceId: l7Id,
+    epistemologicalCode: "R02",
+    evidenceClass: "TRADITIONAL_RULE",
     layer: "Jaimini Confirmation",
     title: l7Title,
     description: l7Desc,
@@ -7992,7 +8008,7 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 8: Counter-Indicator & Cancellation Filter
+  // Level 8: Counter-Indicator & Cancellation Filter -> C06
   // ----------------------------------------------------
   const l8Id = `${pfx}08`;
   const isCombust = pLord?.isCombust || false;
@@ -8015,8 +8031,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   }
 
   const l8Title = isTamil
-    ? `நிலை 8 — தோஷ நிவர்த்தி & முரண்பாட்டு ஆய்வு (${mitigations.length > 0 ? mitigations.join(', ') : 'முரண்பாடுகள் இல்லை'})`
-    : `Level 8 — Counter-Indicator & Cancellation Filter (${mitigations.length > 0 ? mitigations.join('; ') : 'No primary afflictions'})`;
+    ? `நிலை 8 [கணக்கீடு C06] — தோஷ நிவர்த்தி & முரண்பாட்டு ஆய்வு (${mitigations.length > 0 ? mitigations.join(', ') : 'முரண்பாடுகள் இல்லை'})`
+    : `Level 8 [Calculated C06] — Counter-Indicator & Cancellation Filter (${mitigations.length > 0 ? mitigations.join('; ') : 'No primary afflictions'})`;
   const l8Desc = mitigations.length > 0
     ? `Evaluation of astrological modifications: ${mitigations.join('. ')}.`
     : `No evaluated critical structural afflictions (such as severe combustion or uncancelled debilitation) detected for ${pLordName}.`;
@@ -8024,6 +8040,8 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   levels.push({
     level: 8,
     evidenceId: l8Id,
+    epistemologicalCode: "C06",
+    evidenceClass: "CALCULATED",
     layer: "Mitigation & Cancellation",
     title: l8Title,
     description: l8Desc,
@@ -8033,9 +8051,12 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 9: AstroVerse Synthesis & Qualitative Verification
+  // Level 9: Synthesis & Empirical Status -> E01 or R03
   // ----------------------------------------------------
+  const isMarriageDomain = domain.toLowerCase() === "marriage";
   const l9Id = `${pfx}09`;
+  const l9Code = isMarriageDomain ? "E01" : "R03";
+  const l9Class = isMarriageDomain ? "EMPIRICALLY_VALIDATED" : "TRADITIONAL_RULE";
   const reconciliation = reconcileEvidenceContradictions(supportingFactors, counterIndicators, domain, lang);
   const netSynthesisScore = (supportingFactors.length * 2.0) - (counterIndicators.length * 1.5);
   const qualitativeStatus = netSynthesisScore >= 3.0 
@@ -8043,16 +8064,22 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
     : (netSynthesisScore >= 0.5 ? "Moderate Astrological Support" : "Guarded / Mixed Classical Factors");
 
   const l9Title = isTamil
-    ? `நிலை 9 — ஆஸ்ட்ரோவர்ஸ் ஒட்டுமொத்த சாஸ்திர தொகுப்பு (${qualitativeStatus})`
-    : `Level 9 — AstroVerse Synthesis & Qualitative Verification (${qualitativeStatus})`;
+    ? (isMarriageDomain 
+        ? `நிலை 9 [நிரூபணம் E01] — அனுபவ பூர்வ சரிபார்ப்பு நிலை (${qualitativeStatus})` 
+        : `நிலை 9 [சாஸ்திர விதி R03] — ஆஸ்ட்ரோவர்ஸ் ஒட்டுமொத்த சாஸ்திர தொகுப்பு (${qualitativeStatus})`)
+    : (isMarriageDomain
+        ? `Level 9 [Empirical E01] — Real-World Outcome Evaluation (${qualitativeStatus})`
+        : `Level 9 [Traditional Rule R03] — Astrological Synthesis (${qualitativeStatus})`);
   const l9Desc = isTamil
-    ? `9-அடுக்கு ஆய்வின் முடிவு: ${supportingFactors.length} ஆதரவு காரணிகள், ${counterIndicators.length} கவனக் குறிப்புகள். (உள்ளக மதிப்பீட்டு வழிமுறை; அறுதி எதிர்வுகூறல் அல்ல).`
-    : `Integrated 9-layer synthesis: ${supportingFactors.length} supporting factors vs ${counterIndicators.length} counter-indicators. Classification: ${qualitativeStatus} (Internal synthesis heuristic; not an empirical certainty).`;
+    ? `9-அடுக்கு ஆய்வின் முடிவு: ${supportingFactors.length} ஆதரவு காரணிகள், ${counterIndicators.length} கவனக் குறிப்புகள். (வானியல் கணக்கீடுகள் C01-C06 உண்மை நிகழ்வை E01 உறுதி செய்யாது).`
+    : `Integrated 9-layer synthesis: ${supportingFactors.length} supporting factors vs ${counterIndicators.length} counter-indicators. (Notice: Astronomical calculation evidence C01–C06 does NOT prove empirical real-world outcome E01).`;
 
   levels.push({
     level: 9,
     evidenceId: l9Id,
-    layer: "Qualitative Synthesis",
+    epistemologicalCode: l9Code,
+    evidenceClass: l9Class,
+    layer: isMarriageDomain ? "Empirical Outcome Evaluation" : "Qualitative Synthesis",
     title: l9Title,
     description: l9Desc,
     synthesisStatus: qualitativeStatus,

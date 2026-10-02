@@ -1,0 +1,34 @@
+{
+  "manifestVersion": "1.0.0",
+  "generatedAt": "2026-10-02T16:52:01.170Z",
+  "totalRecords": 15791,
+  "splitPolicy": "PERSON_AND_SPOUSE_CLUSTER_HASH_SHA256",
+  "ratios": {
+    "train": 0.6,
+    "validation": 0.2,
+    "blindTest": 0.1,
+    "externalHoldout": 0.1
+  },
+  "splits": {
+    "TRAIN": {
+      "recordCount": 9404,
+      "file": "train.json",
+      "sha256": "5b639726f4ac2e9e4c298749a40b78809f0d6bb9c09b068414314edf81f3c9b2"
+    },
+    "VALIDATION": {
+      "recordCount": 3183,
+      "file": "val.json",
+      "sha256": "3d9c6b3ef8f1949f024354233590b25de2cacb49aa90054b053a76fecf4d0f70"
+    },
+    "BLIND_TEST": {
+      "recordCount": 1630,
+      "file": "blind_test.json",
+      "sha256": "ce45cbfa416d3e407526f3c8c0d8b21d248e7f4b48b91ee524d1c8fcbea11f75"
+    },
+    "EXTERNAL_HOLDOUT": {
+      "recordCount": 1574,
+      "file": "external_holdout.json",
+      "sha256": "86a2d946f36412f411cdca4c0d2f7f978f2d7182327de90d2d6b275b04c556c0"
+    }
+  }
+}

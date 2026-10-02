@@ -139,9 +139,9 @@ export const REPORT_CHAPTERS = [
   {
     id: "milestoneAudit",
     chapterNumber: 16,
-    title: "16. Retrospective Milestone Verification",
-    titleTamil: "16. கடந்த கால மைல்கற்கள் சரிபார்ப்பு",
-    description: "Historical retrospective checkpoints for verification against native life milestones.",
+    title: "16. Retrospective Milestone Candidate Audit",
+    titleTamil: "16. கடந்த கால மைல்கற்கள் வேட்பாளர் தணிக்கை",
+    description: "Historical retrospective checkpoints and candidate timing windows audited against documented or native life milestones.",
     systems: ["lahiri", "raman"]
   },
   {
@@ -163,9 +163,9 @@ export const REPORT_CHAPTERS = [
   {
     id: "multiSystemComparison",
     chapterNumber: 19,
-    title: "19. Multi-System Comparative Analysis",
-    titleTamil: "19. பல ஜோதிட முறைகளின் ஒப்பீடு",
-    description: "Rigorous side-by-side comparison of Lahiri, KP, Raman, and Tropical systems with agreement metrics.",
+    title: "19. Multi-System Comparative Analysis & Synthesis",
+    titleTamil: "19. பல ஜோதிட முறைகளின் ஒப்பீடு & ஒருங்கிணைப்பு",
+    description: "Shared canonical astronomical observations with independent astrological transformations across Lahiri, KP, Raman, and Tropical.",
     systems: ["lahiri", "kp", "raman", "tropical"]
   }
 ];

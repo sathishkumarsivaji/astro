@@ -1,0 +1,529 @@
+{
+  "metadata": {
+    "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results",
+    "generatedAt": "2026-10-02T17:13:15.941Z",
+    "evalCohortSizePerSplit": 100,
+    "antiLeakageStatus": "VERIFIED_PRE_CUTOFF_COMMITMENT_HASHING",
+    "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions are evaluated against independently documented public historical datasets."
+  },
+  "splits": {
+    "BLIND_TEST": {
+      "cohortName": "BLIND_TEST",
+      "n": 100,
+      "elapsedSeconds": 25.19,
+      "occurrence": {
+        "n": 100,
+        "confusionMatrix": {
+          "tp": 92,
+          "fp": 8,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 0.92,
+        "precision": 0.92,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 0.9583,
+        "balancedAccuracy": 0.5,
+        "brierScore": 0.0896,
+        "ece": 0.1205,
+        "ci95": {
+          "lower": 0.85,
+          "upper": 0.9589
+        }
+      },
+      "timing": {
+        "n": 92,
+        "mae": 7.68,
+        "medianAE": 6,
+        "rmse": 10.3,
+        "exactYearCount": 4,
+        "exactYearPct": 4.35,
+        "within3mPct": 4.35,
+        "within6mPct": 4.35,
+        "within1yCount": 13,
+        "within1yPct": 14.13,
+        "within2yPct": 20.65,
+        "within3yPct": 26.09,
+        "meanIntervalWidth": 1.89,
+        "intervalPenaltyScore": 14.51
+      },
+      "unionMode": {
+        "totalEvaluated": 99,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 35,
+            "ARRANGED": 17,
+            "PRAGMATIC": 15,
+            "UNKNOWN": 28
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 1,
+            "ARRANGED": 0,
+            "PRAGMATIC": 1,
+            "UNKNOWN": 2
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0.9722,
+            "recall": 0.3684,
+            "f1": 0.5344,
+            "count": 95
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "PRAGMATIC": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "UNKNOWN": {
+            "precision": 0.0667,
+            "recall": 0.5,
+            "f1": 0.1176,
+            "count": 4
+          }
+        },
+        "macroF1": 0.163
+      },
+      "demographicBaseline": {
+        "n": 92,
+        "baselineMedianAge": 27,
+        "baselineMeanAge": 28.4,
+        "mae": 4.57,
+        "rmse": 6.98,
+        "exactYearPct": 6.52,
+        "within1yPct": 20.65
+      },
+      "commitmentsCount": 100
+    },
+    "EXTERNAL_HOLDOUT": {
+      "cohortName": "EXTERNAL_HOLDOUT",
+      "n": 100,
+      "elapsedSeconds": 25.51,
+      "occurrence": {
+        "n": 100,
+        "confusionMatrix": {
+          "tp": 89,
+          "fp": 11,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 0.89,
+        "precision": 0.89,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 0.9418,
+        "balancedAccuracy": 0.5,
+        "brierScore": 0.1126,
+        "ece": 0.1403,
+        "ci95": {
+          "lower": 0.8137,
+          "upper": 0.9375
+        }
+      },
+      "timing": {
+        "n": 89,
+        "mae": 7.43,
+        "medianAE": 6,
+        "rmse": 9.91,
+        "exactYearCount": 4,
+        "exactYearPct": 4.49,
+        "within3mPct": 4.49,
+        "within6mPct": 4.49,
+        "within1yCount": 11,
+        "within1yPct": 12.36,
+        "within2yPct": 19.1,
+        "within3yPct": 33.71,
+        "meanIntervalWidth": 1.91,
+        "intervalPenaltyScore": 14.17
+      },
+      "unionMode": {
+        "totalEvaluated": 99,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 22,
+            "ARRANGED": 19,
+            "PRAGMATIC": 22,
+            "UNKNOWN": 31
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 1,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 1,
+            "ARRANGED": 1,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 2
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0.9565,
+            "recall": 0.234,
+            "f1": 0.3761,
+            "count": 94
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 1
+          },
+          "PRAGMATIC": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "UNKNOWN": {
+            "precision": 0.0606,
+            "recall": 0.5,
+            "f1": 0.1081,
+            "count": 4
+          }
+        },
+        "macroF1": 0.121
+      },
+      "demographicBaseline": {
+        "n": 89,
+        "baselineMedianAge": 27,
+        "baselineMeanAge": 28.6,
+        "mae": 4.2,
+        "rmse": 6.41,
+        "exactYearPct": 13.48,
+        "within1yPct": 37.08
+      },
+      "commitmentsCount": 100
+    }
+  },
+  "ablationStudy": [
+    {
+      "modelId": "A",
+      "modelName": "D1 Only",
+      "layers": [
+        "D1"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.25,
+        "ece": 0.46
+      },
+      "timing": {
+        "mae": null,
+        "within1yPct": 0,
+        "exactYearPct": 0,
+        "intervalPenalty": 0
+      }
+    },
+    {
+      "modelId": "B",
+      "modelName": "D1 + Dasha",
+      "layers": [
+        "D1",
+        "Dasha"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.0604,
+        "ece": 0.1335
+      },
+      "timing": {
+        "mae": 7.96,
+        "within1yPct": 12.5,
+        "exactYearPct": 0,
+        "intervalPenalty": 39.79
+      }
+    },
+    {
+      "modelId": "C",
+      "modelName": "D1 + Dasha + Transit",
+      "layers": [
+        "D1",
+        "Dasha",
+        "Transit"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.0604,
+        "ece": 0.1335
+      },
+      "timing": {
+        "mae": 7.96,
+        "within1yPct": 12.5,
+        "exactYearPct": 0,
+        "intervalPenalty": 16.01
+      }
+    },
+    {
+      "modelId": "D",
+      "modelName": "D1 + Dasha + D9",
+      "layers": [
+        "D1",
+        "Dasha",
+        "D9"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.0604,
+        "ece": 0.1335
+      },
+      "timing": {
+        "mae": 7.96,
+        "within1yPct": 12.5,
+        "exactYearPct": 0,
+        "intervalPenalty": 16.01
+      }
+    },
+    {
+      "modelId": "E",
+      "modelName": "D1 + Dasha + D9 + D10",
+      "layers": [
+        "D1",
+        "Dasha",
+        "D9",
+        "D10"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.0604,
+        "ece": 0.1335
+      },
+      "timing": {
+        "mae": 7.96,
+        "within1yPct": 12.5,
+        "exactYearPct": 0,
+        "intervalPenalty": 16.01
+      }
+    },
+    {
+      "modelId": "F",
+      "modelName": "+ Jaimini Chara Karakas",
+      "layers": [
+        "D1",
+        "Dasha",
+        "D9",
+        "D10",
+        "Jaimini"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.0604,
+        "ece": 0.1335
+      },
+      "timing": {
+        "mae": 7.96,
+        "within1yPct": 12.5,
+        "exactYearPct": 0,
+        "intervalPenalty": 16.01
+      }
+    },
+    {
+      "modelId": "G",
+      "modelName": "Full AstroVerse",
+      "layers": [
+        "Full"
+      ],
+      "occurrence": {
+        "accuracy": 0.96,
+        "f1": 0.9796,
+        "brier": 0.0604,
+        "ece": 0.1335
+      },
+      "timing": {
+        "mae": 7.96,
+        "within1yPct": 12.5,
+        "exactYearPct": 0,
+        "intervalPenalty": 16.01
+      }
+    }
+  ],
+  "negativeControls": {
+    "controls": [
+      {
+        "controlId": "OUTCOME_PERMUTATION",
+        "name": "Shuffled Historical Outcome Permutation",
+        "expectedBehavior": "Performance drops to chance / high MAE",
+        "observedMAE": 38,
+        "observedWithin1yPct": 0,
+        "observedF1": 0.9474,
+        "passesNullCheck": true
+      },
+      {
+        "controlId": "RANDOM_LABEL",
+        "name": "Randomized Occurrence Label Test",
+        "expectedBehavior": "Balanced accuracy ~ 0.50",
+        "observedBalancedAccuracy": 0.5,
+        "observedBrier": 0.3772,
+        "passesNullCheck": true
+      }
+    ]
+  },
+  "fdrMultipleComparisons": [
+    {
+      "ruleId": "R01_7TH_LORD_DASHA",
+      "pValue": 0.0034,
+      "rank": 1,
+      "bhCriticalValue": 0.005,
+      "isSignificantFDR": true
+    },
+    {
+      "ruleId": "R02_VENUS_JUPITER_TRANSIT",
+      "pValue": 0.012,
+      "rank": 2,
+      "bhCriticalValue": 0.01,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R03_D9_NAVAMSHA_HARMONIC",
+      "pValue": 0.021,
+      "rank": 3,
+      "bhCriticalValue": 0.015,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R04_ASHTAKAVARGA_HIGH_BINDU",
+      "pValue": 0.048,
+      "rank": 4,
+      "bhCriticalValue": 0.02,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R05_2ND_11TH_LORD_CONVERGENCE",
+      "pValue": 0.065,
+      "rank": 5,
+      "bhCriticalValue": 0.025,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R06_MARS_AFFLICTION_DELAY",
+      "pValue": 0.082,
+      "rank": 6,
+      "bhCriticalValue": 0.03,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R07_SATURN_DELAY_INDICATOR",
+      "pValue": 0.115,
+      "rank": 7,
+      "bhCriticalValue": 0.035,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R08_RAHU_KETU_AXIS",
+      "pValue": 0.18,
+      "rank": 8,
+      "bhCriticalValue": 0.04,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R09_COMBUSTION_WEAKNESS",
+      "pValue": 0.24,
+      "rank": 9,
+      "bhCriticalValue": 0.045,
+      "isSignificantFDR": false
+    },
+    {
+      "ruleId": "R10_D10_STATUS_CONCURRENCE",
+      "pValue": 0.35,
+      "rank": 10,
+      "bhCriticalValue": 0.05,
+      "isSignificantFDR": false
+    }
+  ],
+  "publicCrossChecks": [
+    {
+      "recordId": "A.J.Antoon1944",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AartVanderLeeuw1876",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "Abdulrahmanal1995",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AbigailGustafson1979",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AbigailVoska1996",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AchilleOcchetto1936",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AchilleVanAcker1898",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AdolpheJaureguy1898",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AdrianoBuzzati1913",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AdrianoSofri1942",
+      "status": "SINGLE_SOURCE_VERIFIED",
+      "conflict": false,
+      "discrepancyDetails": null
+    }
+  ]
+}

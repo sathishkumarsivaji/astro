@@ -1,13 +1,13 @@
 {
-  "generationTimestamp": "2026-10-02T15:53:53.996Z",
-  "gitCommit": "d5048a5c7aae1390d7dc1f57a95bd61c0f5ebe6a",
-  "sourceTreeHash": "67acaa60fd745c1e2021696379df9166bba4c6f45047f116e1b64dee8aa3b020",
-  "sourceFileCount": 135,
-  "testTreeHash": "47b6bfcb30073a2b90053214468cebc1495e7f20a1157cbc269b1ebb0fe0bc76",
-  "testFileCount": 54,
-  "fixtureTreeHash": "a6f217849761cfcf70deb02a3c169cd1e55671d108dc9f9c613082c3331bda35",
-  "fixtureFileCount": 4,
+  "generationTimestamp": "2026-10-02T17:24:30.115Z",
+  "gitCommit": "308745b9844a726c96cc894e9d4bf89da469ad99",
+  "sourceTreeHash": "05d6050961545073e0c316cb8f4de4c143c2ce3e923c136c7231f4fa84b94a28",
+  "sourceFileCount": 139,
+  "testTreeHash": "4d46adb1edcd9f98445b2b42e52cac9a50846526441ce9bf0801f3e877f58dd0",
+  "testFileCount": 57,
+  "fixtureTreeHash": "3654501e6f8499d36a1e6d8052ea0ef421f31af6c4376c1e1d273ebd671889dd",
+  "fixtureFileCount": 5,
   "packageLockHash": "6cd9ed18c752f974c8f88af4e15ad4291d6f62ff46e10221d976b24dada48182",
   "manifestVersion": "1.0.0",
-  "manifestHash": "80f84ca43c9767b8542ad889f39ee209993d72c2fdb3a6a25bf7d8aeb837a585"
+  "manifestHash": "cd52d5a15e7930c038ea1475ed6f547b4c67040274812157ab1f4a589fa53f1b"
 }

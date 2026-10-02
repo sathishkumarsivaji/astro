@@ -1,0 +1,295 @@
+{
+  "provenance": {
+    "title": "Astrotheme / Astro-Databank Public Reference Parity Dataset",
+    "description": "Authoritative public Rodden AA benchmark charts computed strictly using Swiss Ephemeris C-bindings (pyswisseph) under Tropical Sayana and Placidus houses",
+    "source": "Astrotheme / Astro-Databank Public Records verified against pyswisseph 2.10.03",
+    "standards": "Tropical Zodiac (0\u00b0 Aries = Vernal Equinox), Placidus House System, Geocentric Positions",
+    "compiler": "tools/generate_astrotheme_parity_reference.py (pyswisseph)",
+    "created": "2026-10-02T22:31:00Z",
+    "version": "1.0.0"
+  },
+  "benchmarks": [
+    {
+      "id": "albert_einstein",
+      "name": "Albert Einstein",
+      "source": "Astrotheme (ID: 3514) / Astro-Databank (Rodden AA)",
+      "roddenRating": "AA",
+      "sourceReliability": "High (Birth certificate in hand)",
+      "timeStandard": "LOCAL_MEAN_TIME",
+      "input": {
+        "birthDate": "1879-03-14",
+        "birthTime": "11:30",
+        "latitude": 48.4,
+        "longitude": 9.9833,
+        "utcOffset": 0.6655533333333333,
+        "place": "Ulm, Germany",
+        "system": "tropical",
+        "houseSystem": "placidus"
+      },
+      "expectedPositions": {
+        "Sun": {
+          "longitude": 353.5078,
+          "sign": "Pisces",
+          "degInSign": 23.5078
+        },
+        "Moon": {
+          "longitude": 254.5266,
+          "sign": "Sagittarius",
+          "degInSign": 14.5266
+        },
+        "Mercury": {
+          "longitude": 3.144,
+          "sign": "Aries",
+          "degInSign": 3.144
+        },
+        "Venus": {
+          "longitude": 16.9851,
+          "sign": "Aries",
+          "degInSign": 16.9851
+        },
+        "Mars": {
+          "longitude": 296.9142,
+          "sign": "Capricorn",
+          "degInSign": 26.9142
+        },
+        "Jupiter": {
+          "longitude": 327.484,
+          "sign": "Aquarius",
+          "degInSign": 27.484
+        },
+        "Saturn": {
+          "longitude": 4.1898,
+          "sign": "Aries",
+          "degInSign": 4.1898
+        },
+        "Uranus": {
+          "longitude": 151.2884,
+          "sign": "Virgo",
+          "degInSign": 1.2884
+        },
+        "Neptune": {
+          "longitude": 37.8722,
+          "sign": "Taurus",
+          "degInSign": 7.8722
+        },
+        "Pluto": {
+          "longitude": 54.7254,
+          "sign": "Taurus",
+          "degInSign": 24.7254
+        },
+        "Ascendant": {
+          "longitude": 101.6464,
+          "sign": "Cancer",
+          "degInSign": 11.6464
+        },
+        "MC": {
+          "longitude": 342.8399,
+          "sign": "Pisces",
+          "degInSign": 12.8399
+        }
+      },
+      "expectedHouses": {
+        "1": 101.6464,
+        "2": 118.6173,
+        "3": 137.808,
+        "4": 162.8399,
+        "5": 198.333,
+        "6": 243.1095,
+        "7": 281.6464,
+        "8": 298.6173,
+        "9": 317.808,
+        "10": 342.8399,
+        "11": 18.333,
+        "12": 63.1095
+      }
+    },
+    {
+      "id": "queen_elizabeth_ii",
+      "name": "Queen Elizabeth II",
+      "source": "Astrotheme (ID: 3550) / Astro-Databank (Rodden AA)",
+      "roddenRating": "AA",
+      "sourceReliability": "High (Official Royal Bulletin / Birth certificate)",
+      "timeStandard": "DAYLIGHT_SAVING",
+      "input": {
+        "birthDate": "1926-04-21",
+        "birthTime": "02:40",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "utcOffset": 1.0,
+        "place": "London, United Kingdom",
+        "system": "tropical",
+        "houseSystem": "placidus"
+      },
+      "expectedPositions": {
+        "Sun": {
+          "longitude": 30.2059,
+          "sign": "Taurus",
+          "degInSign": 0.2059
+        },
+        "Moon": {
+          "longitude": 132.1216,
+          "sign": "Leo",
+          "degInSign": 12.1216
+        },
+        "Mercury": {
+          "longitude": 4.6621,
+          "sign": "Aries",
+          "degInSign": 4.6621
+        },
+        "Venus": {
+          "longitude": 343.9561,
+          "sign": "Pisces",
+          "degInSign": 13.9561
+        },
+        "Mars": {
+          "longitude": 320.8662,
+          "sign": "Aquarius",
+          "degInSign": 20.8662
+        },
+        "Jupiter": {
+          "longitude": 322.5097,
+          "sign": "Aquarius",
+          "degInSign": 22.5097
+        },
+        "Saturn": {
+          "longitude": 234.4451,
+          "sign": "Scorpio",
+          "degInSign": 24.4451
+        },
+        "Uranus": {
+          "longitude": 357.356,
+          "sign": "Pisces",
+          "degInSign": 27.356
+        },
+        "Neptune": {
+          "longitude": 142.0348,
+          "sign": "Leo",
+          "degInSign": 22.0348
+        },
+        "Pluto": {
+          "longitude": 102.7061,
+          "sign": "Cancer",
+          "degInSign": 12.7061
+        },
+        "Ascendant": {
+          "longitude": 291.4167,
+          "sign": "Capricorn",
+          "degInSign": 21.4167
+        },
+        "MC": {
+          "longitude": 235.5847,
+          "sign": "Scorpio",
+          "degInSign": 25.5847
+        }
+      },
+      "expectedHouses": {
+        "1": 291.4167,
+        "2": 348.4869,
+        "3": 30.3387,
+        "4": 55.5847,
+        "5": 74.1297,
+        "6": 91.1178,
+        "7": 111.4167,
+        "8": 168.4869,
+        "9": 210.3387,
+        "10": 235.5847,
+        "11": 254.1297,
+        "12": 271.1178
+      }
+    },
+    {
+      "id": "carl_jung",
+      "name": "Carl Gustav Jung",
+      "source": "Astrotheme (ID: 3524) / Astro-Databank (Rodden AA)",
+      "roddenRating": "AA",
+      "sourceReliability": "High (Birth certificate in hand)",
+      "timeStandard": "LOCAL_MEAN_TIME",
+      "input": {
+        "birthDate": "1875-07-26",
+        "birthTime": "19:20",
+        "latitude": 47.6,
+        "longitude": 9.3167,
+        "utcOffset": 0.6211133333333334,
+        "place": "Kesswil, Switzerland",
+        "system": "tropical",
+        "houseSystem": "placidus"
+      },
+      "expectedPositions": {
+        "Sun": {
+          "longitude": 123.3027,
+          "sign": "Leo",
+          "degInSign": 3.3027
+        },
+        "Moon": {
+          "longitude": 45.3939,
+          "sign": "Taurus",
+          "degInSign": 15.3939
+        },
+        "Mercury": {
+          "longitude": 103.7619,
+          "sign": "Cancer",
+          "degInSign": 13.7619
+        },
+        "Venus": {
+          "longitude": 107.4887,
+          "sign": "Cancer",
+          "degInSign": 17.4887
+        },
+        "Mars": {
+          "longitude": 261.3721,
+          "sign": "Sagittarius",
+          "degInSign": 21.3721
+        },
+        "Jupiter": {
+          "longitude": 203.7982,
+          "sign": "Libra",
+          "degInSign": 23.7982
+        },
+        "Saturn": {
+          "longitude": 324.1957,
+          "sign": "Aquarius",
+          "degInSign": 24.1957
+        },
+        "Uranus": {
+          "longitude": 134.8044,
+          "sign": "Leo",
+          "degInSign": 14.8044
+        },
+        "Neptune": {
+          "longitude": 33.0425,
+          "sign": "Taurus",
+          "degInSign": 3.0425
+        },
+        "Pluto": {
+          "longitude": 53.5116,
+          "sign": "Taurus",
+          "degInSign": 23.5116
+        },
+        "Ascendant": {
+          "longitude": 297.5805,
+          "sign": "Capricorn",
+          "degInSign": 27.5805
+        },
+        "MC": {
+          "longitude": 236.3644,
+          "sign": "Scorpio",
+          "degInSign": 26.3644
+        }
+      },
+      "expectedHouses": {
+        "1": 297.5805,
+        "2": 350.5315,
+        "3": 30.52,
+        "4": 56.3644,
+        "5": 76.1379,
+        "6": 94.7895,
+        "7": 117.5805,
+        "8": 170.5315,
+        "9": 210.52,
+        "10": 236.3644,
+        "11": 256.1379,
+        "12": 274.7895
+      }
+    }
+  ]
+}

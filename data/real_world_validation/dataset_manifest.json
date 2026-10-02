@@ -1,0 +1,46 @@
+{
+  "manifestVersion": "1.0.0",
+  "schemaVersion": "REAL_WORLD_VALIDATION_SCHEMA_V1",
+  "parserVersion": "1.0.0-vedastro-canonical",
+  "importDate": "2026-10-02T16:51:36.448Z",
+  "sourceDatasets": [
+    {
+      "name": "VedAstro 15000-Famous-People-Birth-Date-Location",
+      "url": "https://huggingface.co/datasets/vedastro-org/15000-Famous-People-Birth-Date-Location",
+      "fileName": "PersonList-15k.csv",
+      "sha256": "ca28a3fea1250b2ea01eb06a54b4921ec0bf790fdc14c5c561006f1c592c634b"
+    },
+    {
+      "name": "VedAstro 15000-Famous-People-Marriage-Divorce-Info",
+      "url": "https://huggingface.co/datasets/vedastro-org/15000-Famous-People-Marriage-Divorce-Info",
+      "fileName": "MarriageInfoDataset.csv",
+      "sha256": "dc704ba2b22a18d8e3b15b961b2f0288d11aaeeef768351d340ed9bd9eae73ab"
+    }
+  ],
+  "processedDataset": {
+    "fileName": "real_world_validation_dataset.json",
+    "sha256": "7364cfdc3fb27d18d48ee047ad60a9881775447ef9192493bc4f44007970af55",
+    "recordCount": 15791
+  },
+  "statistics": {
+    "totalRawRows": 15807,
+    "validBirthRecords": 15807,
+    "canonicalIngestedPersons": 15791,
+    "validMarriageRecords": 16797,
+    "validDivorceRecords": 5060,
+    "unknownDates": 1351,
+    "highCredibility": 15553,
+    "mediumCredibility": 1667,
+    "lowCredibility": 916,
+    "missingTime": 0,
+    "duplicatePersons": 16,
+    "duplicateEvents": 0,
+    "excludedRecords": 16
+  },
+  "eligibilityRules": {
+    "birthData": "Valid birth date (YYYY-MM-DD), birth time (HH:mm), non-null latitude and longitude coordinates.",
+    "roddenRating": "Requires documented Rodden rating (AA preferred, certified public record baseline).",
+    "marriageEvaluation": "Candidate must possess non-null marriage year or full date with documented credibility rating.",
+    "divorceEvaluation": "Candidate must possess documented dissolution status or explicit divorce date."
+  }
+}
