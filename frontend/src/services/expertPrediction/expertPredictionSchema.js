@@ -201,6 +201,7 @@ export function createTimingWindow({
  */
 export function createEvidenceNode({
   nodeId,
+  evidenceId = null,
   level,
   type,           // "ASTRONOMICAL", "NATAL", "HOUSE", "LORD", "KARAKA", "VARGA",
                   // "DASHA_MD", "DASHA_AD", "DASHA_PD", "TRANSIT", "EVENT_RULE",
@@ -209,19 +210,40 @@ export function createEvidenceNode({
   descriptionTamil = null,
   value = null,
   source = null,  // which calculation produced this
+  sourceClass = null,
+  calculationStatus = null,
+  confidence = null,
+  provenance = null,
   childNodeIds = [],
-  independenceGroupId = null
+  independenceGroupId = null,
+  independenceGroup = null,
+  contribution = null
 } = {}) {
+  const finalId = evidenceId || nodeId || generateDeterministicId("ev", level, type, description);
+  const finalSourceClass = sourceClass || (type === "ASTRONOMICAL" || type === "NATAL" ? "CALCULATED" : "TRADITIONAL_RULE");
+  const finalStatus = calculationStatus || (value !== null ? "CALCULATED" : "INSUFFICIENT_DATA");
+  const finalConfidence = confidence ?? (value !== null ? 1.0 : 0.0);
+  const finalProvenance = provenance || source || "EPHEMERIS_OR_SHASTRA";
+  const finalGroup = independenceGroup || independenceGroupId || null;
+  const finalContribution = contribution ?? (value !== null ? (typeof value === "number" ? value : 1.0) : 0.0);
+
   return {
-    nodeId: nodeId || generateDeterministicId("ev", level, type, description),
+    nodeId: finalId,
+    evidenceId: finalId,
     level,
     type,
     description,
     descriptionTamil,
     value,
     source,
-    childNodeIds,
-    independenceGroupId
+    sourceClass: finalSourceClass,
+    calculationStatus: finalStatus,
+    confidence: finalConfidence,
+    provenance: finalProvenance,
+    independenceGroup: finalGroup,
+    independenceGroupId: finalGroup,
+    contribution: finalContribution,
+    childNodeIds
   };
 }
 

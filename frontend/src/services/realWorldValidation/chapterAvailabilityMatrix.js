@@ -172,8 +172,8 @@ export const CHAPTER_DEFINITIONS = [
     empiricalValidationAvailable: true,
     externalReferenceAvailable: true,
     sourceProvenance: "VedAstro 15k Famous People public dataset (15,807 records, 11,081 exact dates)",
-    status: "EMPIRICALLY_VALIDATED",
-    empiricalNotes: "Formally validated on frozen blind test (N=1,630) and holdout (N=1,574) with zero leakage."
+    status: "EXPERIMENTAL",
+    empiricalNotes: "Classified as EXPERIMENTAL until the corrected independent benchmark establishes defensible empirical performance against demographic baseline."
   },
   {
     chapterId: "CH_10",
@@ -277,8 +277,8 @@ export const CHAPTER_DEFINITIONS = [
     empiricalValidationAvailable: true,
     externalReferenceAvailable: true,
     sourceProvenance: "Audited public life milestone records with documented historical sources",
-    status: "EMPIRICALLY_VALIDATED",
-    empiricalNotes: "Semantic status strictly renamed from 'Verification' to 'Candidate Audit' per Requirement 12."
+    status: "EXPERIMENTAL",
+    empiricalNotes: "Retrospective Candidate Audit only. Evaluates past milestones against candidate dasha windows; strictly NOT prospective validation."
   },
   {
     chapterId: "CH_17",
@@ -356,4 +356,10 @@ export function validateChapterMatrixCompleteness() {
     countsByStatus: byStatus,
     isValid: true
   };
+}
+
+export const CHAPTER_AVAILABILITY_MATRIX = CHAPTER_DEFINITIONS;
+
+export function getChapterAvailability(chapterNum) {
+  return CHAPTER_DEFINITIONS.find(ch => ch.chapterNumber === Number(chapterNum)) || null;
 }

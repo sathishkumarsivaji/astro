@@ -6141,30 +6141,61 @@ export function calculateBhavaChalit(ascendantLong = 0, planets = [], lat = 0, l
 // ---------------------------------------------------------------------------
 // 7.7 EXTENDED JAIMINI & ARUDHA MODULE
 // ---------------------------------------------------------------------------
-export function calculateJaiminiSystem(planets = [], ascendantLong = 0, divisionalCharts = null) {
+export function calculateJaiminiSystem(planets = [], ascendantLong = null, divisionalCharts = null) {
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : ascendantLong?.longitude;
+  const hasAsc = rawAsc !== null && rawAsc !== undefined && Number.isFinite(Number(rawAsc));
+  if (!hasAsc || !planets || planets.length === 0) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      scheme: "7-Karaka Classical Parashari (Sun to Saturn; deterministic degree tie-breaking)",
+      karakaScheme: "7-Karaka Parashari",
+      charaKarakas: [],
+      atmakaraka: null,
+      darakaraka: null,
+      amatyakaraka: null,
+      karakamsaLagna: {
+        status: "INSUFFICIENT_DATA",
+        sign: null,
+        signTamil: null,
+        signIndex: null,
+        significationEn: null,
+        significationTa: null
+      },
+      arudhaLagna: null,
+      upapadaLagna: null,
+      bhavaPadas: [],
+      rasiDrishti: [],
+      argalaAnalysis: []
+    };
+  }
+
   const charaKarakas = calculateJaiminiKarakas(planets);
-  const ascLong = requireLongitude(typeof ascendantLong === "number" ? ascendantLong : ascendantLong?.longitude, "calculateJaiminiSystem Ascendant");
+  const ascLong = requireLongitude(rawAsc, "calculateJaiminiSystem Ascendant");
   const ascSignIdx = Math.floor(norm360(ascLong) / 30);
 
   // 1. Karakamsa Lagna (D9 Navamsha sign of Atmakaraka)
   const atmakaraka = charaKarakas[0] || null;
-  let karakamsaSign = "Aries";
-  let karakamsaSignTamil = "மேஷம்";
-  let karakamsaIndex = 0;
+  let karakamsaSign = null;
+  let karakamsaSignTamil = null;
+  let karakamsaIndex = null;
+  let karakamsaStatus = "INSUFFICIENT_DATA";
 
   if (atmakaraka) {
     const akPlanet = planets.find(p => p.name === atmakaraka.planet);
     if (akPlanet) {
-      let akLong = 0;
+      let akLong = null;
       if (typeof akPlanet.longitude === "number") akLong = akPlanet.longitude;
-      else if (akPlanet.sign) {
+      else if (akPlanet.sign && akPlanet.degreeInSign != null) {
         const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === akPlanet.sign.toLowerCase());
         akLong = (sIdx >= 0 ? sIdx * 30 : 0) + (akPlanet.degreeInSign || 0);
       }
-      const d9 = calculateD9(akLong);
-      karakamsaSign = d9.name;
-      karakamsaSignTamil = d9.tamil;
-      karakamsaIndex = d9.index;
+      if (akLong !== null) {
+        const d9 = calculateD9(akLong);
+        karakamsaSign = d9.name;
+        karakamsaSignTamil = d9.tamil;
+        karakamsaIndex = d9.index;
+        karakamsaStatus = "CALCULATED";
+      }
     }
   }
 
@@ -6284,6 +6315,7 @@ export function calculateJaiminiSystem(planets = [], ascendantLong = 0, division
   };
 
   return {
+    status: "COMPLETE",
     scheme: "7-Karaka Classical Parashari (Sun to Saturn; deterministic degree tie-breaking)",
     karakaScheme: "7-Karaka Parashari",
     charaKarakas,
@@ -6291,11 +6323,12 @@ export function calculateJaiminiSystem(planets = [], ascendantLong = 0, division
     darakaraka: charaKarakas.find(k => k.code === "DK") || null,
     amatyakaraka: charaKarakas.find(k => k.code === "AmK") || null,
     karakamsaLagna: {
+      status: karakamsaStatus,
       sign: karakamsaSign,
       signTamil: karakamsaSignTamil,
       signIndex: karakamsaIndex,
-      significationEn: "The spiritual and vocational destiny center in the Navamsha framework.",
-      significationTa: "நவாம்சத்தில் ஆன்ம மற்றும் தர்ம கடமைகளின் மையம்."
+      significationEn: karakamsaSign ? "The spiritual and vocational destiny center in the Navamsha framework." : null,
+      significationTa: karakamsaSign ? "நவாம்சத்தில் ஆன்ம மற்றும் தர்ம கடமைகளின் மையம்." : null
     },
     arudhaLagna,
     upapadaLagna,
@@ -8051,12 +8084,12 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
   });
 
   // ----------------------------------------------------
-  // Level 9: Synthesis & Empirical Status -> E01 or R03
+  // Level 9: Synthesis & Empirical Status -> X01 (Experimental) or R03
   // ----------------------------------------------------
   const isMarriageDomain = domain.toLowerCase() === "marriage";
   const l9Id = `${pfx}09`;
-  const l9Code = isMarriageDomain ? "E01" : "R03";
-  const l9Class = isMarriageDomain ? "EMPIRICALLY_VALIDATED" : "TRADITIONAL_RULE";
+  const l9Code = isMarriageDomain ? "X01" : "R03";
+  const l9Class = isMarriageDomain ? "EXPERIMENTAL" : "TRADITIONAL_RULE";
   const reconciliation = reconcileEvidenceContradictions(supportingFactors, counterIndicators, domain, lang);
   const netSynthesisScore = (supportingFactors.length * 2.0) - (counterIndicators.length * 1.5);
   const qualitativeStatus = netSynthesisScore >= 3.0 
@@ -8065,14 +8098,14 @@ export function calculatePredictionReasoningChain(chartData = {}, domain = "care
 
   const l9Title = isTamil
     ? (isMarriageDomain 
-        ? `நிலை 9 [நிரூபணம் E01] — அனுபவ பூர்வ சரிபார்ப்பு நிலை (${qualitativeStatus})` 
+        ? `நிலை 9 [ஆய்வுநிலை X01] — அனுபவ பூர்வ சரிபார்ப்பு நிலை (${qualitativeStatus})` 
         : `நிலை 9 [சாஸ்திர விதி R03] — ஆஸ்ட்ரோவர்ஸ் ஒட்டுமொத்த சாஸ்திர தொகுப்பு (${qualitativeStatus})`)
     : (isMarriageDomain
-        ? `Level 9 [Empirical E01] — Real-World Outcome Evaluation (${qualitativeStatus})`
+        ? `Level 9 [Experimental X01] — Real-World Outcome Evaluation (${qualitativeStatus})`
         : `Level 9 [Traditional Rule R03] — Astrological Synthesis (${qualitativeStatus})`);
   const l9Desc = isTamil
-    ? `9-அடுக்கு ஆய்வின் முடிவு: ${supportingFactors.length} ஆதரவு காரணிகள், ${counterIndicators.length} கவனக் குறிப்புகள். (வானியல் கணக்கீடுகள் C01-C06 உண்மை நிகழ்வை E01 உறுதி செய்யாது).`
-    : `Integrated 9-layer synthesis: ${supportingFactors.length} supporting factors vs ${counterIndicators.length} counter-indicators. (Notice: Astronomical calculation evidence C01–C06 does NOT prove empirical real-world outcome E01).`;
+    ? `9-அடுக்கு ஆய்வின் முடிவு: ${supportingFactors.length} ஆதரவு காரணிகள், ${counterIndicators.length} கவனக் குறிப்புகள். (வானியல் கணக்கீடுகள் C01-C06 உண்மை நிகழ்வை உறுதி செய்யாது).`
+    : `Integrated 9-layer synthesis: ${supportingFactors.length} supporting factors vs ${counterIndicators.length} counter-indicators. (Notice: Astronomical calculation evidence C01–C06 does NOT prove empirical real-world outcome).`;
 
   levels.push({
     level: 9,
@@ -10213,7 +10246,7 @@ export function getVargaChartData(planets = [], ascendantLong, vargaFn) {
  * Evaluates D1 lordship, Varga activation, sub-window transit crossings, and Sambandha
  * to rank all 9 PDs and qualify peak activation windows (score >= 3.0).
  */
-export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkLord, jdStart, jdEnd) {
+export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkLord, jdStart, jdEnd, precomputedTransits = null) {
   if (!Array.isArray(pratyantardashas) || pratyantardashas.length === 0) {
     return { rankedPDs: [], peakPD: null, peakWindow: null };
   }
@@ -10307,16 +10340,20 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
   const bkPlanet = planets.find(p => p.name?.toLowerCase() === bkLord?.toLowerCase());
   const bkHouse = (typeof bkPlanet?.house === "number" && bkPlanet.house >= 1 && bkPlanet.house <= 12) ? bkPlanet.house : null;
 
-  // Pre-calculate major transit events across the full antardasha window once
+  // Pre-calculate major transit events across the full antardasha window once (or reuse if passed)
   let windowTransits = [];
-  try {
-    const fullStart = isFinite(jdStart) ? jdStart : (pratyantardashas[0]?.jdStart ?? 2451545.0);
-    const fullEnd = isFinite(jdEnd) ? jdEnd : (pratyantardashas[pratyantardashas.length - 1]?.jdEnd ?? (fullStart + 365.25));
-    if (isFinite(fullStart) && isFinite(fullEnd) && fullEnd > fullStart) {
-      windowTransits = findMajorTransitEventsForWindow(planets, ctx?.ascendantLong ?? 0, fullStart, fullEnd, config.transitCategory, tzOffset, ctx?.timezoneId || null);
+  if (Array.isArray(precomputedTransits)) {
+    windowTransits = precomputedTransits;
+  } else {
+    try {
+      const fullStart = isFinite(jdStart) ? jdStart : (pratyantardashas[0]?.jdStart ?? 2451545.0);
+      const fullEnd = isFinite(jdEnd) ? jdEnd : (pratyantardashas[pratyantardashas.length - 1]?.jdEnd ?? (fullStart + 365.25));
+      if (isFinite(fullStart) && isFinite(fullEnd) && fullEnd > fullStart) {
+        windowTransits = findMajorTransitEventsForWindow(planets, ctx?.ascendantLong ?? 0, fullStart, fullEnd, config.transitCategory, tzOffset, ctx?.timezoneId || null);
+      }
+    } catch (_err) {
+      windowTransits = [];
     }
-  } catch (_err) {
-    windowTransits = [];
   }
 
   const scoredPDs = pratyantardashas.map(pd => {
@@ -10549,6 +10586,10 @@ export function calculateMarriageTimingEvents(chartOrPlanets, maybeAscLong, mayb
           const isBkKey = keyMarriageLords.includes(bkLord);
 
           if (isMdKey || isBkKey) {
+            // Marriage horizon bounds: skip childhood (<16) and late age (>70)
+            if (Number.isFinite(bk.endAge) && bk.endAge < 16.0) continue;
+            if (Number.isFinite(bk.startAge) && bk.startAge > 70.0) continue;
+
             const supportingFactors = [];
             const counterIndicators = [];
 
@@ -10643,7 +10684,7 @@ export function calculateMarriageTimingEvents(chartOrPlanets, maybeAscLong, mayb
                 bk.startAge,
                 jdStart
               );
-              pdRanking = rankPratyantardashasForDomain(pratyantardashas, "marriage", ctx, bkLord, jdStart, jdEnd);
+              pdRanking = rankPratyantardashasForDomain(pratyantardashas, "marriage", ctx, bkLord, jdStart, jdEnd, transitConcurrence);
               peakWindow = pdRanking.peakWindow;
             }
 

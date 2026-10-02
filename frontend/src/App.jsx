@@ -383,14 +383,7 @@ export default function App() {
             birthProfile={birthProfile}
             lang={lang}
             onCalculate={handleApplyProfile}
-            onOpenReport={() => {
-              if (!isRegistered) {
-                setAuthInitialMode("register");
-                setIsAuthOpen(true);
-              } else {
-                setIsDetailedReportOpen(true);
-              }
-            }}
+            onOpenReport={() => setIsDetailedReportOpen(true)}
             onOpenAsk={() => {
               if (!isRegistered) {
                 setAuthInitialMode("register");
@@ -418,14 +411,7 @@ export default function App() {
                 currentUser={currentUser}
                 onOpenAuth={() => { setAuthInitialMode("register"); setIsAuthOpen(true); }}
                 onOpenPricing={() => setIsPricingOpen(true)}
-                onOpenDetailedReport={() => {
-                  if (!isRegistered) {
-                    setAuthInitialMode("register");
-                    setIsAuthOpen(true);
-                  } else {
-                    setIsDetailedReportOpen(true);
-                  }
-                }}
+                onOpenDetailedReport={() => setIsDetailedReportOpen(true)}
                 isExpertMode={isExpertMode}
                 onAskAboutPlanet={(query) => {
                   if (!isRegistered) {

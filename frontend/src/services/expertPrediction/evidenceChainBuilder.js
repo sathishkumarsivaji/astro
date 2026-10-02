@@ -9,6 +9,23 @@ import {
 } from './expertPredictionSchema.js';
 
 /**
+ * Formal mapping between 15 Internal Evidence Levels and 9 Consolidated User-Facing Sections.
+ * Implements Requirement 23:
+ * Resolves the structural relationship between granular computational evidence and user-facing presentation.
+ */
+export const INTERNAL_TO_USER_FACING_EVIDENCE_MAPPING = Object.freeze([
+  { sectionNumber: 1, title: "Astronomical & Natal Anchor", internalLevels: [1, 2], description: "Ephemeris coordinates, celestial longitudes, and Ascendant anchor" },
+  { sectionNumber: 2, title: "Bhava & Lord Signification", internalLevels: [3, 4], description: "Domain houses activated and their governing planetary lords" },
+  { sectionNumber: 3, title: "Karaka Alignment", internalLevels: [5], description: "Naisargika and Chara karaka significator confirmations" },
+  { sectionNumber: 4, title: "Harmonic Varga Corroboration", internalLevels: [6], description: "Divisional chart micro-alignments (D9, D10, D4, D7, etc.)" },
+  { sectionNumber: 5, title: "Vimshottari Dasha Triad", internalLevels: [7, 8, 9], description: "Mahadasha, Antardasha, and Pratyantardasha temporal rulers" },
+  { sectionNumber: 6, title: "Transit Gochara Concurrence", internalLevels: [10], description: "Dynamic transit conjunctions, aspects, and house passages" },
+  { sectionNumber: 7, title: "Ashtakavarga Strength & Bindus", internalLevels: [11], description: "Sarvashtakavarga (SAV) and Bhinnashtakavarga (BAV) support" },
+  { sectionNumber: 8, title: "Contradiction & Mitigation Filter", internalLevels: [12, 13], description: "Combustion, debilitation, malefic aspects, and independence assessment" },
+  { sectionNumber: 9, title: "Synthesis, Resolution & Epistemological Verdict", internalLevels: [14, 15], description: "Finest achievable resolution, uncertainty bounds, and truth status" }
+]);
+
+/**
  * Builds an evidence chain for a specific domain timing window following
  * the complete 15-level traversable hierarchy.
  *

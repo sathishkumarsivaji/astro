@@ -90,7 +90,7 @@ export function splitRealWorldDataset() {
     TRAIN: [],
     VALIDATION: [],
     BLIND_TEST: [],
-    EXTERNAL_HOLDOUT: []
+    INTERNAL_HOLDOUT: []
   };
 
   for (const [clusterRoot, clusterRecords] of clusterMap.entries()) {
@@ -108,7 +108,7 @@ export function splitRealWorldDataset() {
     } else if (bucket < 90) {
       targetSplit = 'BLIND_TEST';
     } else {
-      targetSplit = 'EXTERNAL_HOLDOUT';
+      targetSplit = 'INTERNAL_HOLDOUT';
     }
 
     for (const rec of clusterRecords) {
@@ -120,8 +120,8 @@ export function splitRealWorldDataset() {
   console.log(`  • TRAIN:            ${splits.TRAIN.length} (${(splits.TRAIN.length / records.length * 100).toFixed(2)}%)`);
   console.log(`  • VALIDATION:       ${splits.VALIDATION.length} (${(splits.VALIDATION.length / records.length * 100).toFixed(2)}%)`);
   console.log(`  • BLIND_TEST:       ${splits.BLIND_TEST.length} (${(splits.BLIND_TEST.length / records.length * 100).toFixed(2)}%)`);
-  console.log(`  • EXTERNAL_HOLDOUT: ${splits.EXTERNAL_HOLDOUT.length} (${(splits.EXTERNAL_HOLDOUT.length / records.length * 100).toFixed(2)}%)`);
-  console.log(`  • Total Conserved:  ${splits.TRAIN.length + splits.VALIDATION.length + splits.BLIND_TEST.length + splits.EXTERNAL_HOLDOUT.length}`);
+  console.log(`  • INTERNAL_HOLDOUT: ${splits.INTERNAL_HOLDOUT.length} (${(splits.INTERNAL_HOLDOUT.length / records.length * 100).toFixed(2)}%)`);
+  console.log(`  • Total Conserved:  ${splits.TRAIN.length + splits.VALIDATION.length + splits.BLIND_TEST.length + splits.INTERNAL_HOLDOUT.length}`);
 
   // Rigorous verification of zero overlap
   const seenIds = new Map();
@@ -147,11 +147,11 @@ export function splitRealWorldDataset() {
     TRAIN: join(SPLITS_DIR, 'train.json'),
     VALIDATION: join(SPLITS_DIR, 'val.json'),
     BLIND_TEST: join(SPLITS_DIR, 'blind_test.json'),
-    EXTERNAL_HOLDOUT: join(SPLITS_DIR, 'external_holdout.json')
+    INTERNAL_HOLDOUT: join(SPLITS_DIR, 'internal_holdout.json')
   };
 
   const splitManifest = {
-    manifestVersion: '1.0.0',
+    manifestVersion: '2.0.0',
     generatedAt: new Date().toISOString(),
     totalRecords: records.length,
     splitPolicy: 'PERSON_AND_SPOUSE_CLUSTER_HASH_SHA256',
@@ -159,7 +159,7 @@ export function splitRealWorldDataset() {
       train: 0.60,
       validation: 0.20,
       blindTest: 0.10,
-      externalHoldout: 0.10
+      internalHoldout: 0.10
     },
     splits: {}
   };
@@ -174,6 +174,16 @@ export function splitRealWorldDataset() {
     };
     console.log(`  ✓ Saved ${sName} -> ${splitManifest.splits[sName].file} (${sha256.slice(0, 16)}...)`);
   }
+
+  // Also write external_holdout.json for backwards compatibility
+  const legacyHoldoutPath = join(SPLITS_DIR, 'external_holdout.json');
+  writeFileSync(legacyHoldoutPath, JSON.stringify(splits.INTERNAL_HOLDOUT, null, 2));
+  splitManifest.splits.EXTERNAL_HOLDOUT_ALIAS = {
+    recordCount: splits.INTERNAL_HOLDOUT.length,
+    file: 'external_holdout.json',
+    sha256: computeFileSha256(legacyHoldoutPath),
+    note: 'Alias of INTERNAL_HOLDOUT for backwards compatibility; true external dataset is Astro-Databank in data/external_validation/astro_databank/'
+  };
 
   writeFileSync(SPLIT_MANIFEST_PATH, JSON.stringify(splitManifest, null, 2));
   console.log(`\n✓ Split manifest generated at: ${SPLIT_MANIFEST_PATH}`);

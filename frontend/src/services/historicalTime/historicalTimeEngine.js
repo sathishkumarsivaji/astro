@@ -15,11 +15,16 @@
 import { calculatePlanetaryPositions } from '../astroEngine.js';
 
 export const TIME_STANDARDS = Object.freeze({
-  STANDARD_TIME: 'STANDARD_TIME',
-  DAYLIGHT_SAVING: 'DAYLIGHT_SAVING',
+  SOURCE_DECLARED_CIVIL_TIME: 'SOURCE_DECLARED_CIVIL_TIME',
+  HISTORICAL_TIMEZONE: 'HISTORICAL_TIMEZONE',
   LOCAL_MEAN_TIME: 'LOCAL_MEAN_TIME',
-  HISTORICAL_ZONE_TIME: 'HISTORICAL_ZONE_TIME',
-  SOURCE_DECLARED_OFFSET: 'SOURCE_DECLARED_OFFSET'
+  STANDARD_TIME: 'STANDARD_TIME',
+  DAYLIGHT_SAVING_TIME: 'DAYLIGHT_SAVING_TIME',
+  DAYLIGHT_SAVING: 'DAYLIGHT_SAVING_TIME',
+  LOCAL_APPARENT_TIME: 'LOCAL_APPARENT_TIME',
+  HISTORICAL_ZONE_TIME: 'HISTORICAL_TIMEZONE',
+  SOURCE_DECLARED_OFFSET: 'SOURCE_DECLARED_CIVIL_TIME',
+  UTC: 'UTC'
 });
 
 /**
@@ -114,13 +119,37 @@ export function resolveHistoricalTimeStandard({
     ? parseFloat(((effectiveOffset - lmt.lmtHours) * 60).toFixed(2))
     : 0.0;
 
+  const inputTime = birthTime || '12:00';
+  const inputTimeStandard = sourceTimeConvention || (isPreStandardEra ? 'LOCAL_MEAN_TIME' : (timezoneId ? 'STANDARD_TIME' : 'SOURCE_DECLARED_CIVIL_TIME'));
+  const [bH, bM] = inputTime.split(':').map(Number);
+  const totalBirthMinutes = (isNaN(bH) ? 12 : bH) * 60 + (isNaN(bM) ? 0 : bM);
+  const offsetMins = Math.round((effectiveOffset !== null ? effectiveOffset : lmt.lmtHours) * 60);
+  const utcTotalMinutes = ((totalBirthMinutes - offsetMins) % 1440 + 1440) % 1440;
+  const utcH = Math.floor(utcTotalMinutes / 60);
+  const utcM = utcTotalMinutes % 60;
+  const resolvedUTC = `${String(utcH).padStart(2, '0')}:${String(utcM).padStart(2, '0')}`;
+
+  const timeConfidence = (sourceTimeConvention && !isPreStandardEra) ? 'HIGH' : (isPreStandardEra ? 'MEDIUM_HISTORICAL_SENSITIVITY' : 'STANDARD');
+  const sensitivity = {
+    lmtVsCivilMinutes: differenceMinutesFromLMT,
+    requiresDualChart: Math.abs(differenceMinutesFromLMT) > 1.0,
+    ascendantShiftLikelihood: Math.abs(differenceMinutesFromLMT) > 4.0 ? 'HIGH' : (Math.abs(differenceMinutesFromLMT) > 1.0 ? 'MODERATE' : 'NEGLIGIBLE')
+  };
+
   return {
     timeStandard,
+    inputTime,
+    inputTimeStandard,
+    resolvedUTC,
+    resolvedOffset: effectiveOffset !== null ? parseFloat(Number(effectiveOffset).toFixed(4)) : lmt.lmtHours,
+    timezoneId: timezoneId || (isPreStandardEra ? 'HISTORICAL_LMT' : 'UTC'),
+    historicalSource: sourceTimeConvention || (isPreStandardEra ? 'REGIONAL_ADOPTION_TABLE' : 'IANA_TIMEZONE_DATABASE'),
+    timeConfidence,
+    sensitivity,
     utcOffset: effectiveOffset !== null ? parseFloat(Number(effectiveOffset).toFixed(4)) : lmt.lmtHours,
     longitudeDerivedLMT: lmt.lmtHours,
     longitudeDerivedLMTMinutes: lmt.lmtMinutes,
     longitudeDerivedLMTFormatted: lmt.formatted,
-    timezoneId: timezoneId || 'HISTORICAL_ERA',
     sourceTimeConvention: sourceTimeConvention || (isPreStandardEra ? 'HISTORICAL_ERA_LMT_DEFAULT' : 'STANDARD_TIME'),
     isPreStandardEra,
     eraAdoptionDate: eraBoundary.adoptionDate,

@@ -51,6 +51,7 @@ import {
 } from "../../services/tamilAstrologyUtils";
 import FollowUpQuestions from "./FollowUpQuestions";
 import ExpertPredictionReportView from "./ExpertPredictionReportView";
+import ReportErrorBoundary from "../Common/ReportErrorBoundary";
 
 function CertaintyBadge({ type = "calculated", isTamil = false }) {
   if (type === "calculated") {
@@ -379,6 +380,9 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const rawAscLong = chartData.ascendant?.longitude ?? chartData.ascendantLong;
   const hasAscLong = rawAscLong !== null && rawAscLong !== undefined && !isNaN(Number(rawAscLong));
   const ascLong = hasAscLong ? Number(rawAscLong) : null;
+  const ascDegStr = ascLong !== null
+    ? `${(ascLong % 30).toFixed(2)}° ${isTamil ? ascTamil : ascName}`
+    : (chartData.ascendant?.dms || (isTamil ? ascTamil : ascName) || "N/A");
   const birthDataConfidence = chartData.reportEvidencePackage?.birthDataConfidence || {
     lagnaDegreeInSign: ascLong !== null ? parseFloat((ascLong % 30).toFixed(2)) : null,
     boundaryProximityAlert: ascLong !== null ? ((ascLong % 30) < 1.0 || (ascLong % 30) > 29.0) : null,
@@ -480,6 +484,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   return (
     <div className="detailed-report-modal-overlay fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-2 md:p-4 overflow-y-auto">
       <div className="detailed-report-modal-card max-w-5xl w-full my-4 md:my-8 p-4 md:p-8 rounded-3xl bg-[#FFFDF9] border border-amber-300 relative space-y-6 shadow-2xl text-stone-800 max-h-[92vh] overflow-y-auto">
+        <ReportErrorBoundary lang={lang} onClose={onClose}>
         
         {/* Top Header & Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-200 pb-4">
@@ -3863,6 +3868,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             </div>
           </div>
         )}
+        </ReportErrorBoundary>
       </div>
     </div>
   );

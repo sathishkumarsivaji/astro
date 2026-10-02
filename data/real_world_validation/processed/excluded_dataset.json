@@ -1,0 +1,293 @@
+[
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty0001",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty0001"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.624Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00011",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00011"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000110",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000110"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000111",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000111"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000112",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000112"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000113",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000113"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000114",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000114"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000115",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000115"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty000116",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty000116"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00012",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00012"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00013",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00013"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00014",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00014"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00015",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00015"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00016",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00016"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00017",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00017"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00018",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00018"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Empty00019",
+    "reasonCode": "PLACEHOLDER_PERSON_RECORD",
+    "rawValue": {
+      "name": "Empty",
+      "rowKey": "Empty00019"
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "KingofEnglandHenryVIII1491",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1491,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.668Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "LeonardodaVinci1452",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1452,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.671Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MartinLuther1483",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1483,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.680Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MichelangeloBuonarroti1475",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1475,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.685Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "NicolausCopernicus1473",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1473,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.688Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "PierodiCosimo1462",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1462,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.694Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "PopeLeoX1475",
+    "reasonCode": "INVALID_BIRTH_YEAR",
+    "rawValue": 1475,
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T19:24:40.696Z",
+    "version": "2.0.0-audited"
+  }
+]

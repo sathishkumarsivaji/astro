@@ -1,8 +1,8 @@
 {
-  "manifestVersion": "1.0.0",
-  "schemaVersion": "REAL_WORLD_VALIDATION_SCHEMA_V1",
-  "parserVersion": "1.0.0-vedastro-canonical",
-  "importDate": "2026-10-02T16:51:36.448Z",
+  "manifestVersion": "2.0.0",
+  "schemaVersion": "REAL_WORLD_VALIDATION_SCHEMA_V2",
+  "parserVersion": "2.0.0-vedastro-canonical-audited",
+  "importDate": "2026-10-02T19:24:41.276Z",
   "sourceDatasets": [
     {
       "name": "VedAstro 15000-Famous-People-Birth-Date-Location",
@@ -19,28 +19,40 @@
   ],
   "processedDataset": {
     "fileName": "real_world_validation_dataset.json",
-    "sha256": "7364cfdc3fb27d18d48ee047ad60a9881775447ef9192493bc4f44007970af55",
-    "recordCount": 15791
+    "sha256": "672734d4abbf1958d692506a28f70e3cc937cc1da9c53fb82518097952fb25bf",
+    "recordCount": 15773
   },
   "statistics": {
     "totalRawRows": 15807,
-    "validBirthRecords": 15807,
-    "canonicalIngestedPersons": 15791,
-    "validMarriageRecords": 16797,
-    "validDivorceRecords": 5060,
-    "unknownDates": 1351,
-    "highCredibility": 15553,
-    "mediumCredibility": 1667,
-    "lowCredibility": 916,
-    "missingTime": 0,
-    "duplicatePersons": 16,
+    "validBirthRecords": 15783,
+    "canonicalIngestedPersons": 15773,
+    "excludedRecords": 24,
+    "unknownFollowupRecords": 10,
+    "duplicatePersons": 0,
     "duplicateEvents": 0,
-    "excludedRecords": 16
+    "highCredibility": 15542,
+    "mediumCredibility": 1667,
+    "lowCredibility": 915,
+    "exactDateCount": 11074,
+    "yearOnlyCount": 5716,
+    "missingDateCount": 1346
+  },
+  "exclusionReasonCounts": {
+    "MISSING_RECORD_IDENTIFIER": 0,
+    "CORRUPT_JSON_BIRTH_TIME": 0,
+    "MISSING_BIRTH_TIME_OR_COORDINATES": 0,
+    "INVALID_COORDINATES": 0,
+    "INVALID_BIRTH_YEAR": 7,
+    "SUSPICIOUS_PLACEHOLDER_DATE": 0,
+    "PLACEHOLDER_PERSON_RECORD": 17,
+    "DUPLICATE_PERSON_FINGERPRINT": 0
   },
   "eligibilityRules": {
     "birthData": "Valid birth date (YYYY-MM-DD), birth time (HH:mm), non-null latitude and longitude coordinates.",
+    "coordinates": "Latitude in [-90, 90], Longitude in [-180, 180].",
     "roddenRating": "Requires documented Rodden rating (AA preferred, certified public record baseline).",
-    "marriageEvaluation": "Candidate must possess non-null marriage year or full date with documented credibility rating.",
-    "divorceEvaluation": "Candidate must possess documented dissolution status or explicit divorce date."
+    "eventOrdering": "Marriages must be strictly chronologically ordered (firstDocumentedMarriage is earliest known).",
+    "horizon": "Evaluation horizon fixed to adult span age 18 to 50.",
+    "censoring": "Right-censored cases strictly excluded from binary occurrence targets."
   }
 }

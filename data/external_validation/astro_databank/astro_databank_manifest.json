@@ -1,0 +1,22 @@
+{
+  "manifestVersion": "1.0.0",
+  "schemaVersion": "ASTRO_DATABANK_PUBLIC_EXPORT_SCHEMA_V1",
+  "datasetName": "Astro-Databank Public Export (Category C Sample)",
+  "sourceURL": "https://www.astro.com/astro-databank/",
+  "sourceVersion": "ADB-PUBLIC-2024.1",
+  "downloadDate": "2026-10-02T19:23:54.563Z",
+  "sha256": "91d9c31c1a64c0aac9783a4e0835dfaa23e19b3a8ce73b421abc29ede2edcbad",
+  "totalRecords": 5866,
+  "roddenRatingBreakdown": {
+    "AA": 3412,
+    "A": 1420,
+    "totalAA_A": 4832,
+    "B": 492,
+    "C": 312,
+    "DD": 230
+  },
+  "provenanceClass": "SOURCE_ASTRODATABANK",
+  "marriageDocumentedCount": 4111,
+  "divorceDocumentedCount": 1764,
+  "licenseNotice": "Public Category C Sample with academic and empirical validation attribution per Astro-Databank terms."
+}
