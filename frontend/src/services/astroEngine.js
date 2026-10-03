@@ -891,12 +891,13 @@ export function getUtcInstantFromLocal(dateStr, timeStr, timezoneId, options = {
     throw new Error(`Invalid day ${d} for month ${m} in date "${dateStr}".`);
   }
 
-  const timeParts = timeStr.split(":").map(Number);
-  if (timeParts.length < 2 || timeParts.slice(0, 2).some(p => !Number.isFinite(p))) {
+  const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!timeMatch) {
     throw new Error(`Invalid time format "${timeStr}". Expected HH:mm or HH:mm:ss.`);
   }
-  const [h, min] = timeParts;
-  const sec = (timeParts.length > 2 && Number.isFinite(timeParts[2])) ? timeParts[2] : 0;
+  const h = parseInt(timeMatch[1], 10);
+  const min = parseInt(timeMatch[2], 10);
+  const sec = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
   if (h < 0 || h > 23 || min < 0 || min > 59 || sec < 0 || sec > 59) {
     throw new Error(`Invalid time components in "${timeStr}". Hour must be 0-23, Minute must be 0-59, Second must be 0-59.`);
   }
@@ -1928,7 +1929,11 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   } else {
     throw new Error("Valid date (string YYYY-MM-DD or UTC Date object) is required for planetary ephemeris calculation.");
   }
-  const [hour, min, sec = 0] = String(timeString || "00:00:00").split(":").map(Number);
+  const timeMatch = String(timeString || "00:00:00").match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  const hour = timeMatch ? parseInt(timeMatch[1], 10) : 0;
+  const min = timeMatch ? parseInt(timeMatch[2], 10) : 0;
+  const sec = timeMatch && timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+  const cleanTimeString = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 
   let tzOffsetHours;
   let timezoneId = null;
@@ -1948,7 +1953,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     timezoneId = tz;
     const isoDateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     // Resolve exact UTC instant respecting DST fold ambiguity
-    utcDate = getUtcInstantFromLocal(isoDateStr, timeString, timezoneId, options);
+    utcDate = getUtcInstantFromLocal(isoDateStr, cleanTimeString, timezoneId, options);
     // Derive exact timezone offset at this specific UTC instant (prevents DST noon-shift discrepancy)
     tzOffsetHours = getTimezoneOffsetMinutes(utcDate, timezoneId) / 60;
   } else if (typeof tz === "number" && Number.isFinite(tz)) {
@@ -8518,16 +8523,27 @@ export function findExactSolarIngressJd(targetSiderealDeg, approxJdStart, approx
   if (diffHigh > 180) diffHigh -= 360;
   if (diffHigh < -180) diffHigh += 360;
 
-  if (diffLow > 0 && diffHigh > 0) {
-    low -= 15.0;
-    // Re-evaluate after shift
-    diffLow = getSiderealSunLongitudeAtJd(low, system) - target;
+  // Dynamic iterative bracketing across all historical eras (e.g. ancient Julian dates where ingress occurred earlier)
+  let bracketAttempts = 0;
+  while (diffLow * diffHigh > 0 && bracketAttempts < 15) {
+    bracketAttempts++;
+    if (diffLow > 0 && diffHigh > 0) {
+      // Both bounds are after target -> ingress occurred earlier in time
+      const shiftDays = Math.max(7, Math.ceil(Math.min(diffLow, diffHigh) / 0.9856) + 3);
+      low -= shiftDays;
+      high -= Math.min(shiftDays, (high - low) > 10 ? Math.floor(shiftDays / 2) : shiftDays);
+    } else if (diffLow < 0 && diffHigh < 0) {
+      // Both bounds are before target -> ingress occurs later in time
+      const shiftDays = Math.max(7, Math.ceil(Math.min(Math.abs(diffLow), Math.abs(diffHigh)) / 0.9856) + 3);
+      high += shiftDays;
+      low += Math.min(shiftDays, (high - low) > 10 ? Math.floor(shiftDays / 2) : shiftDays);
+    }
+    sLow = getSiderealSunLongitudeAtJd(low, system);
+    sHigh = getSiderealSunLongitudeAtJd(high, system);
+    diffLow = sLow - target;
     if (diffLow > 180) diffLow -= 360;
     if (diffLow < -180) diffLow += 360;
-  } else if (diffLow < 0 && diffHigh < 0) {
-    high += 15.0;
-    // Re-evaluate after shift
-    diffHigh = getSiderealSunLongitudeAtJd(high, system) - target;
+    diffHigh = sHigh - target;
     if (diffHigh > 180) diffHigh -= 360;
     if (diffHigh < -180) diffHigh += 360;
   }
@@ -8536,7 +8552,7 @@ export function findExactSolarIngressJd(targetSiderealDeg, approxJdStart, approx
   if (diffLow * diffHigh > 0) {
     throw new Error(
       `Solar ingress root is not bracketed for target ${targetSiderealDeg.toFixed(4)}°. ` +
-      `Interval [JD ${approxJdStart.toFixed(2)}, JD ${approxJdEnd.toFixed(2)}] does not span the requested ingress. ` +
+      `Interval [JD ${low.toFixed(2)}, JD ${high.toFixed(2)}] does not span the requested ingress. ` +
       `diffLow=${diffLow.toFixed(4)}, diffHigh=${diffHigh.toFixed(4)}`
     );
   }

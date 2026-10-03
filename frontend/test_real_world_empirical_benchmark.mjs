@@ -112,42 +112,62 @@ function getPredictionsForRecord(record) {
   }
 
   const clean = sanitizeRecordForPrediction(record);
-  // Calculate chart (transient, allowed to be GC'd)
-  const chart = calculatePlanetaryPositions(
-    clean.birthDate,
-    clean.birthTime,
-    clean.latitude,
-    clean.longitude,
-    "lahiri",
-    clean.sourceUtcOffset
-  );
+  try {
+    // Calculate chart (transient, allowed to be GC'd)
+    const chart = calculatePlanetaryPositions(
+      clean.birthDate,
+      clean.birthTime,
+      clean.latitude,
+      clean.longitude,
+      "lahiri",
+      clean.sourceUtcOffset
+    );
 
-  const occ = predictMarriageOccurrence(clean, chart);
-  const timing = predictMarriageTiming(clean, chart);
-  const div = predictDivorce(clean, chart);
-  const mode = predictUnionMode(clean, chart);
+    const occ = predictMarriageOccurrence(clean, chart);
+    const timing = predictMarriageTiming(clean, chart);
+    const div = predictDivorce(clean, chart);
+    const mode = predictUnionMode(clean, chart);
 
-  const compact = {
-    occ,
-    timing,
-    div,
-    mode,
-    commitments: {
-      recordId: clean.sourceRecordId,
-      occCommitment: occ.commitmentHash,
-      timingCommitment: timing.commitmentHash,
-      divCommitment: div.commitmentHash,
-      modeCommitment: mode.commitmentHash
+    const compact = {
+      occ,
+      timing,
+      div,
+      mode,
+      commitments: {
+        recordId: clean.sourceRecordId,
+        occCommitment: occ.commitmentHash,
+        timingCommitment: timing.commitmentHash,
+        divCommitment: div.commitmentHash,
+        modeCommitment: mode.commitmentHash
+      }
+    };
+
+    predictionCache[cacheKey] = compact;
+    pendingCacheWrites++;
+    if (pendingCacheWrites >= 100) {
+      flushPredictionCache();
     }
-  };
 
-  predictionCache[cacheKey] = compact;
-  pendingCacheWrites++;
-  if (pendingCacheWrites >= 100) {
-    flushPredictionCache();
+    return compact;
+  } catch (err) {
+    console.warn(`[WARN] Calculation exception on ${record.sourceRecordId}: ${err.message}`);
+    const fallback = {
+      occ: { predictedOccurrence: 'UNRESOLVED', calibratedProbability: 0.5, rawRuleScore: 0, status: 'ERROR', reason: err.message },
+      timing: { predictedYear: null, primaryWindow: null, status: 'ERROR', reason: err.message },
+      div: { predictedDivorce: 'UNRESOLVED', status: 'ERROR', reason: err.message },
+      mode: { predictedUnionMode: 'UNKNOWN', status: 'ERROR', reason: err.message },
+      commitments: {
+        recordId: clean.sourceRecordId,
+        occCommitment: 'ERROR',
+        timingCommitment: 'ERROR',
+        divCommitment: 'ERROR',
+        modeCommitment: 'ERROR'
+      }
+    };
+    predictionCache[cacheKey] = fallback;
+    pendingCacheWrites++;
+    return fallback;
   }
-
-  return compact;
 }
 
 // Evaluate cohort across 100% of records

@@ -46,13 +46,20 @@ export function createSeededPRNG(seed = 133742) {
  */
 export function sanitizeRecordForPrediction(personRecord) {
   if (!personRecord) throw new Error("INSUFFICIENT_DATA: Missing person record for prediction.");
+  let cleanTime = personRecord.birthTime || "12:00:00";
+  const tm = String(cleanTime).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (tm) {
+    cleanTime = `${tm[1].padStart(2, '0')}:${tm[2]}:${tm[3] || '00'}`;
+  } else {
+    cleanTime = "12:00:00";
+  }
   return Object.freeze({
     sourceRecordId: personRecord.sourceRecordId,
     birthDate: personRecord.birthDate,
     birthYear: personRecord.birthYear,
     birthMonth: personRecord.birthMonth,
     birthDay: personRecord.birthDay,
-    birthTime: personRecord.birthTime,
+    birthTime: cleanTime,
     birthPlace: personRecord.birthPlace,
     latitude: personRecord.latitude,
     longitude: personRecord.longitude,

@@ -107,8 +107,9 @@ assert(syntheticMarriages === 0, 'Zero generated marriage outcomes or fake place
 // 6. Independent holdout check
 const independentHoldout = JSON.parse(fs.readFileSync(INDEPENDENT_PATH, 'utf8'));
 const overlap = JSON.parse(fs.readFileSync(OVERLAP_PATH, 'utf8'));
-assert(independentHoldout.length + overlap.totalOverlapCount === dataset.length, 
-  `Independent holdout (${independentHoldout.length}) + overlap (${overlap.totalOverlapCount}) equals total (${dataset.length})`);
+const overlapCount = overlap.totalVedAstroOverlap ?? overlap.totalOverlapCount ?? overlap.totalOverlapRecords ?? 0;
+assert(independentHoldout.length + overlapCount === dataset.length, 
+  `Independent holdout (${independentHoldout.length}) + overlap (${overlapCount}) equals total (${dataset.length})`);
 
 console.log(`\nResult: ${passes} passed, ${fails} failed`);
 process.exit(fails > 0 ? 1 : 0);
