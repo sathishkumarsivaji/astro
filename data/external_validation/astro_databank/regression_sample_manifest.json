@@ -1,0 +1,24 @@
+{
+  "sampleName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
+  "purpose": "Rapid non-authoritative regression testing only. Never substitute for full external validation.",
+  "generatedAt": "2026-10-03T07:40:00.034Z",
+  "seed": 133742,
+  "sampleSize": 500,
+  "sourcePopulation": 4798,
+  "strataDimensions": [
+    "Rodden rating",
+    "Gender",
+    "Birth century",
+    "Marriage occurrence",
+    "Time standard",
+    "Date precision"
+  ],
+  "strataCount": 133,
+  "composition": {
+    "aaCount": 268,
+    "aCount": 122,
+    "otherRoddenCount": 110,
+    "marriageDocumentedCount": 45
+  },
+  "sha256": "5e0a1b39fafc15cac696afe710178514bcb9659df9ac440800d1a9039477a1d6"
+}

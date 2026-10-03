@@ -43,40 +43,48 @@ const raw = fs.readFileSync(DATASET_PATH, 'utf8');
 const dataset = JSON.parse(raw);
 const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
 
+const INDEPENDENT_PATH = path.join(ROOT, 'data/external_validation/astro_databank/astro_databank_independent_holdout.json');
+const datasetsToCheck = [{ path: DATASET_PATH, data: dataset, name: 'Astro-Databank Export' }];
+if (fs.existsSync(INDEPENDENT_PATH)) {
+  datasetsToCheck.push({ path: INDEPENDENT_PATH, data: JSON.parse(fs.readFileSync(INDEPENDENT_PATH, 'utf8')), name: 'Independent Holdout' });
+}
+
 // 1. Check for prohibited synthetic strings in raw JSON
 assert(!raw.includes('AstroDatabank Public Case'), 'No "AstroDatabank Public Case" placeholder names found');
 assert(!raw.includes('Spouse ADB'), 'No "Spouse ADB" placeholder spouses found');
 
-// 2. Scan every record for synthetic patterns
-let syntheticIdCount = 0;
-let syntheticFormulaCount = 0;
-let validAdbIdCount = 0;
-let genuineNameCount = 0;
+for (const { name: dsName, data: targetData } of datasetsToCheck) {
+  // 2. Scan every record for synthetic patterns
+  let syntheticIdCount = 0;
+  let syntheticFormulaCount = 0;
+  let validAdbIdCount = 0;
+  let genuineNameCount = 0;
 
-for (const r of dataset) {
-  if (r.name && (r.name.includes('AstroDatabank Public Case') || /public case\s*\d+/i.test(r.name))) {
-    syntheticIdCount++;
-  }
-  if (r.adbId && typeof r.adbId === 'number' && r.adbId > 0) {
-    validAdbIdCount++;
-  }
-  if (r.name && r.name !== 'Unknown' && !r.name.startsWith('ADB_')) {
-    genuineNameCount++;
-  }
-  // Check for deterministic synthetic marriage formula: mAge = 20 + (idx % 15) with June 15
-  if (r.marriages) {
-    for (const m of r.marriages) {
-      if (m.marriageDate && m.marriageDate.endsWith('-06-15') && m.spouse && m.spouse.startsWith('Spouse ADB')) {
-        syntheticFormulaCount++;
+  for (const r of targetData) {
+    if (r.name && (r.name.includes('AstroDatabank Public Case') || /public case\s*\d+/i.test(r.name))) {
+      syntheticIdCount++;
+    }
+    if (r.adbId && typeof r.adbId === 'number' && r.adbId > 0) {
+      validAdbIdCount++;
+    }
+    if (r.name && r.name !== 'Unknown' && !r.name.startsWith('ADB_')) {
+      genuineNameCount++;
+    }
+    // Check for deterministic synthetic marriage formula: mAge = 20 + (idx % 15) with June 15
+    if (r.marriages) {
+      for (const m of r.marriages) {
+        if (m.marriageDate && m.marriageDate.endsWith('-06-15') && m.spouse && m.spouse.startsWith('Spouse ADB')) {
+          syntheticFormulaCount++;
+        }
       }
     }
   }
-}
 
-assert(syntheticIdCount === 0, `Zero synthetic placeholder names (got ${syntheticIdCount})`);
-assert(syntheticFormulaCount === 0, `Zero synthetic marriage formulas (got ${syntheticFormulaCount})`);
-assert(validAdbIdCount === dataset.length, `All ${dataset.length} records have valid numerical ADB IDs`);
-assert(genuineNameCount >= 5800, `At least 5,800 records have genuine public names (got ${genuineNameCount})`);
+  assert(syntheticIdCount === 0, `[${dsName}] Zero synthetic placeholder names (got ${syntheticIdCount})`);
+  assert(syntheticFormulaCount === 0, `[${dsName}] Zero synthetic marriage formulas (got ${syntheticFormulaCount})`);
+  assert(validAdbIdCount === targetData.length, `[${dsName}] All ${targetData.length} records have valid numerical ADB IDs`);
+  assert(genuineNameCount >= (targetData.length * 0.95), `[${dsName}] At least 95% records have genuine public names (got ${genuineNameCount})`);
+}
 
 // 3. Verify Rodden rating distribution is from authentic public export
 assert(manifest.roddenRatingBreakdown?.AA >= 3600, `Authentic AA rating count >= 3,600 (got ${manifest.roddenRatingBreakdown?.AA})`);

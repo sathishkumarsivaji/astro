@@ -3084,7 +3084,6 @@ console.log("   ✓ Multi-location and DST structural ephemeris regression verif
 console.log("\n150. Testing Static Codebase Audit Cleanliness across All Source Files & Documentation...");
 
 const PROHIBITED_AUDIT_TERMS = [
-  "Swiss Ephemeris",
   "ELP2000",
   "IAU SOFA",
   "Sub-Arcsecond Precision",
@@ -3096,6 +3095,31 @@ const PROHIBITED_AUDIT_TERMS = [
   "Life Destiny Master Dossier",
   "Politics Eligibility",
   "Deep Neural Line Extraction"
+];
+
+// Requirement 22: Context-aware scanner for Swiss Ephemeris
+// Distinguishes false runtime engine claims from legitimate reference-validation/benchmark phrases
+const RUNTIME_SWISS_EPHEMERIS_PATTERNS = [
+  /powered by\s+swiss ephemeris/i,
+  /uses\s+swiss ephemeris\s+(engine|runtime|library|code)/i,
+  /swiss ephemeris\s+runtime/i,
+  /swiss ephemeris\s+integration/i,
+  /calculated\s+(using|with|by)\s+swiss ephemeris/i,
+  /swiss ephemeris\s+backend/i,
+  /swiss ephemeris\s+calculation engine/i
+];
+
+const PERMITTED_SWISS_EPHEMERIS_PHRASES = [
+  "reference parity",
+  "reference fixture",
+  "reference oracle",
+  "reference comparison",
+  "reference benchmarks",
+  "benchmarks",
+  "parity verified",
+  "SE_SIDM",
+  "SWE-",
+  "Swiss Ephemeris library (Astrodienst)"
 ];
 
 function getAllAuditFiles(dirPath, arrayOfFiles = []) {
@@ -3128,6 +3152,29 @@ for (const filePath of auditFilesToCheck) {
     if (content.includes(term)) {
       console.error(`   ✗ Prohibited claim found: "${term}" in ${path.relative(process.cwd(), filePath)}`);
       auditViolationsCount++;
+    }
+  }
+
+  // Check Swiss Ephemeris context-awareness (Req 22)
+  if (content.includes("Swiss Ephemeris")) {
+    // 1. Direct check for false runtime claims
+    for (const pattern of RUNTIME_SWISS_EPHEMERIS_PATTERNS) {
+      if (pattern.test(content)) {
+        console.error(`   ✗ Prohibited runtime Swiss Ephemeris claim found (${pattern}) in ${path.relative(process.cwd(), filePath)}`);
+        auditViolationsCount++;
+      }
+    }
+    // 2. Check each line with "Swiss Ephemeris" has legitimate reference context
+    const lines = content.split("\n");
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx];
+      if (line.includes("Swiss Ephemeris")) {
+        const isPermitted = PERMITTED_SWISS_EPHEMERIS_PHRASES.some(p => line.includes(p));
+        if (!isPermitted) {
+          console.error(`   ✗ Uncontextualized Swiss Ephemeris mention at line ${lineIdx + 1} in ${path.relative(process.cwd(), filePath)}: "${line.trim()}"`);
+          auditViolationsCount++;
+        }
+      }
     }
   }
 }

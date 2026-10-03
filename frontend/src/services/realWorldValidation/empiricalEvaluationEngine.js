@@ -21,6 +21,7 @@
 
 import crypto from "node:crypto";
 import { calculatePlanetaryPositions, calculateMarriageTimingEvents } from "../astroEngine.js";
+import { getCalibrationParameters, getConformalQuantiles } from "./calibrationProvider.js";
 
 // ============================================================================
 // 1. REPRODUCIBLE DETERMINISTIC PRNG (Mulberry32)
@@ -109,15 +110,16 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
   // Raw rule-based score [0, 1]
   const rawRuleScore = promiseScore + (topWindowScore * 0.65);
 
-  // Requirement 4: Fitted Platt scaling parameters on TRAIN partition (calibratorType: PLATT_LOGISTIC_SCALING_V2)
-  // Parameters strictly fitted on TRAIN: slope = 1.7284, intercept = 0.8661
-  const calSlope = options.calibrationSlope ?? 1.7284;
-  const calIntercept = options.calibrationIntercept ?? 0.8661;
+  // Requirement 4 & 10: Single source of truth calibration parameters via calibrationProvider
+  const calParams = options.calibrationParameters || getCalibrationParameters();
+  const calSlope = options.calibrationSlope ?? calParams.slope;
+  const calIntercept = options.calibrationIntercept ?? calParams.intercept;
+  const effectiveThreshold = options.threshold ?? calParams.threshold ?? threshold;
   const logit = (calSlope * rawRuleScore) + calIntercept;
   const calibratedProbability = 1 / (1 + Math.exp(-logit));
   const pMarriage = Math.min(Math.max(calibratedProbability, 0.05), 0.95);
 
-  const isPredicted = eligibleWindows.length > 0 && pMarriage >= threshold;
+  const isPredicted = eligibleWindows.length > 0 && pMarriage >= effectiveThreshold;
   const prediction = isPredicted ? "MARRIAGE_PREDICTED" : "NO_EVENT_PREDICTED";
 
   const result = {
@@ -219,12 +221,12 @@ export function predictMarriageTiming(cleanRecord, chartData, options = {}) {
     ? Math.max(primaryWindow.endAge - primaryWindow.startAge, 0.25)
     : 2.0;
 
-  // Requirement 7: Conformal prediction error quantiles fitted strictly on TRAIN residuals
-  // Quantiles: q50 = ±3.0y, q80 = ±6.0y, q90 = ±10.0y, q95 = ±14.0y
-  const q50 = options.q50 ?? 3.0;
-  const q80 = options.q80 ?? 6.0;
-  const q90 = options.q90 ?? 10.0;
-  const q95 = options.q95 ?? 14.0;
+  // Requirement 7, 9 & 10: Conformal prediction error quantiles from single source of truth calibrationProvider
+  const quantiles = options.conformalQuantiles || getConformalQuantiles();
+  const q50 = options.q50 ?? quantiles.q50;
+  const q80 = options.q80 ?? quantiles.q80;
+  const q90 = options.q90 ?? quantiles.q90;
+  const q95 = options.q95 ?? quantiles.q95;
 
   // Calibrated prediction interval bounds (80% nominal coverage)
   const lowerYear = estYear !== null ? Number((estYear - q80).toFixed(2)) : null;
@@ -827,9 +829,24 @@ export function evaluateUnionMode(predictions, groundTruths) {
     macroF1Sum += f1;
   }
 
+  // Requirement 11: If no records have documented union types (all UNKNOWN), set NOT_AVAILABLE
+  const documentedCount = (perClass.LOVE?.count || 0) + (perClass.ARRANGED?.count || 0) + (perClass.PRAGMATIC?.count || 0);
+  if (documentedCount === 0) {
+    return {
+      status: "NOT_AVAILABLE",
+      reason: "INSUFFICIENT_LABELED_GROUND_TRUTH_ALL_UNKNOWN",
+      note: "All ground-truth union types in this cohort are UNKNOWN. Class accuracy and Macro F1 are excluded to prevent misleading metrics.",
+      totalEvaluated,
+      confusionMatrix: matrix,
+      perClass,
+      macroF1: null
+    };
+  }
+
   const macroF1 = macroF1Sum / classes.length;
 
   return {
+    status: "EVALUATED",
     totalEvaluated,
     confusionMatrix: matrix,
     perClass,

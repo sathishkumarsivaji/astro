@@ -1,10 +1,10 @@
 {
   "metadata": {
     "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results (V2)",
-    "generatedAt": "2026-10-02T21:59:19.650Z",
+    "generatedAt": "2026-10-03T05:56:12.259Z",
     "cohortExecution": "FULL_COHORT_100_PERCENT",
-    "blindCohortSize": 1638,
-    "internalHoldoutSize": 1560,
+    "blindCohortSize": 1634,
+    "internalHoldoutSize": 1555,
     "astroDatabankSize": 500,
     "antiLeakageStatus": "VERIFIED_PRE_CUTOFF_COMMITMENT_HASHING",
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes."
@@ -12,84 +12,89 @@
   "splits": {
     "BLIND_TEST": {
       "cohortName": "BLIND_TEST",
-      "n": 1638,
-      "elapsedSeconds": 244.79,
+      "n": 1634,
+      "elapsedSeconds": 0.04,
       "occurrence": {
-        "n": 1614,
+        "n": 1610,
         "censoringBreakdown": {
-          "totalRecords": 1638,
-          "evaluatedCount": 1614,
-          "eventCount": 1449,
+          "totalRecords": 1634,
+          "evaluatedCount": 1610,
+          "eventCount": 1445,
           "noEventCount": 139,
           "rightCensoredCount": 24,
           "unknownCount": 0
         },
         "confusionMatrix": {
-          "tp": 1449,
+          "tp": 1445,
           "fp": 165,
           "tn": 0,
           "fn": 0
         },
-        "accuracy": 0.8978,
-        "precision": 0.8978,
+        "accuracy": 0.8975,
+        "precision": 0.8975,
         "recall": 1,
         "specificity": 0,
-        "f1": 0.9461,
+        "f1": 0.946,
         "balancedAccuracy": 0.5,
-        "brierScore": 0.1371,
-        "ece": 0.2119,
+        "mcc": 0,
+        "rocAuc": 0.5465,
+        "prAuc": 0.9138,
+        "calibrationSlope": 1.134,
+        "calibrationIntercept": -0.1314,
+        "brierScore": 0.0919,
+        "ece": 0.0098,
         "ci95": {
-          "lower": 0.882,
-          "upper": 0.9116
+          "lower": 0.8817,
+          "upper": 0.9114
         }
       },
       "timing": {
-        "n": 1488,
+        "n": 1484,
         "precisionDistribution": {
-          "dayPrecisionCount": 1488,
+          "dayPrecisionCount": 1484,
           "monthPrecisionCount": 0,
           "yearPrecisionCount": 0
         },
         "mae": 6.89,
         "medianAE": 6,
-        "rmse": 9.06,
+        "rmse": 9.07,
         "exactYearCount": 61,
-        "exactYearPct": 4.1,
-        "within1yCount": 194,
-        "within1yPct": 13.04,
+        "exactYearPct": 4.11,
+        "within1yCount": 193,
+        "within1yPct": 13.01,
         "within2yPct": 22.78,
-        "within3yPct": 32.39,
-        "meanIntervalWidth": 1.89,
-        "intervalPenaltyScore": 13.01,
+        "within3yPct": 32.41,
+        "meanIntervalWidth": 12,
+        "intervalPenaltyScore": 82.7,
         "coverage": {
           "nominal50": 0.5,
-          "observed50": 0.041,
+          "observed50": 0.3241,
           "nominal80": 0.8,
-          "observed80": 0.0934,
+          "observed80": 0.5863,
           "nominal90": 0.9,
-          "observed90": 0.1055,
+          "observed90": 0.8053,
           "nominal95": 0.95,
-          "observed95": 0.1364
+          "observed95": 0.9057
         },
-        "meanWinklerScore80": 61.93,
+        "meanWinklerScore80": 37.17,
         "dayPrecisionMetrics": {
-          "n": 1485,
-          "meanDaysError": 2506.5,
-          "medianDaysError": 2027,
+          "n": 1481,
+          "meanDaysError": 2509,
+          "medianDaysError": 2020,
           "exactDatePct": 0,
           "within7DaysPct": 0,
           "within30DaysPct": 0.74,
-          "within90DaysPct": 1.75,
-          "within180DaysPct": 4.11,
-          "within365DaysPct": 9.02
+          "within90DaysPct": 1.76,
+          "within180DaysPct": 4.12,
+          "within365DaysPct": 8.98
         }
       },
       "unionMode": {
-        "totalEvaluated": 1628,
+        "totalEvaluated": 1624,
         "confusionMatrix": {
           "LOVE": {
             "LOVE": 511,
-            "ARRANGED": 280,
+            "ARRANGED": 276,
             "PRAGMATIC": 311,
             "UNKNOWN": 395
           },
@@ -115,14 +120,14 @@
         "perClass": {
           "LOVE": {
             "precision": 0.9093,
-            "recall": 0.3413,
-            "f1": 0.4964,
-            "count": 1497
+            "recall": 0.3423,
+            "f1": 0.4973,
+            "count": 1493
           },
           "ARRANGED": {
-            "precision": 0.0167,
+            "precision": 0.0169,
             "recall": 0.1136,
-            "f1": 0.0292,
+            "f1": 0.0295,
             "count": 44
           },
           "PRAGMATIC": {
@@ -138,100 +143,105 @@
             "count": 75
           }
         },
-        "macroF1": 0.158
+        "macroF1": 0.1584
       },
       "demographicBaseline": {
-        "n": 1488,
+        "n": 1484,
         "baselineMedianAge": 26,
         "baselineMeanAge": 27.8,
-        "mae": 4.27,
-        "rmse": 6.34,
-        "exactYearPct": 10.28,
-        "within1yPct": 28.83,
+        "mae": 4.28,
+        "rmse": 6.35,
+        "exactYearPct": 10.31,
+        "within1yPct": 28.71,
         "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
       },
-      "commitmentsCount": 1638
+      "commitmentsCount": 1634
     },
     "INTERNAL_HOLDOUT": {
       "cohortName": "INTERNAL_HOLDOUT",
-      "n": 1560,
-      "elapsedSeconds": 7205.88,
+      "n": 1555,
+      "elapsedSeconds": 0.04,
       "occurrence": {
-        "n": 1531,
+        "n": 1529,
         "censoringBreakdown": {
-          "totalRecords": 1560,
-          "evaluatedCount": 1531,
-          "eventCount": 1384,
+          "totalRecords": 1555,
+          "evaluatedCount": 1529,
+          "eventCount": 1382,
           "noEventCount": 127,
-          "rightCensoredCount": 29,
+          "rightCensoredCount": 26,
           "unknownCount": 0
         },
         "confusionMatrix": {
-          "tp": 1384,
+          "tp": 1382,
           "fp": 147,
           "tn": 0,
           "fn": 0
         },
-        "accuracy": 0.904,
-        "precision": 0.904,
+        "accuracy": 0.9039,
+        "precision": 0.9039,
         "recall": 1,
         "specificity": 0,
-        "f1": 0.9496,
+        "f1": 0.9495,
         "balancedAccuracy": 0.5,
-        "brierScore": 0.1339,
-        "ece": 0.2156,
+        "mcc": 0,
+        "rocAuc": 0.5389,
+        "prAuc": 0.9205,
+        "calibrationSlope": 0.7491,
+        "calibrationIntercept": 0.2234,
+        "brierScore": 0.0868,
+        "ece": 0.0045,
         "ci95": {
-          "lower": 0.8882,
-          "upper": 0.9177
+          "lower": 0.8881,
+          "upper": 0.9176
         }
       },
       "timing": {
-        "n": 1421,
+        "n": 1419,
         "precisionDistribution": {
-          "dayPrecisionCount": 1421,
+          "dayPrecisionCount": 1419,
           "monthPrecisionCount": 0,
           "yearPrecisionCount": 0
         },
         "mae": 7.1,
         "medianAE": 6,
-        "rmse": 9.53,
+        "rmse": 9.54,
         "exactYearCount": 54,
-        "exactYearPct": 3.8,
+        "exactYearPct": 3.81,
         "within1yCount": 166,
-        "within1yPct": 11.68,
-        "within2yPct": 20.9,
-        "within3yPct": 30.47,
-        "meanIntervalWidth": 1.88,
-        "intervalPenaltyScore": 13.34,
+        "within1yPct": 11.7,
+        "within2yPct": 20.93,
+        "within3yPct": 30.44,
+        "meanIntervalWidth": 12,
+        "intervalPenaltyScore": 85.21,
         "coverage": {
           "nominal50": 0.5,
-          "observed50": 0.038,
+          "observed50": 0.3044,
           "nominal80": 0.8,
-          "observed80": 0.0823,
+          "observed80": 0.5765,
           "nominal90": 0.9,
-          "observed90": 0.0901,
+          "observed90": 0.8069,
           "nominal95": 0.95,
-          "observed95": 0.1203
+          "observed95": 0.9049
         },
-        "meanWinklerScore80": 63.97,
+        "meanWinklerScore80": 38.71,
         "dayPrecisionMetrics": {
-          "n": 1420,
-          "meanDaysError": 2585,
+          "n": 1418,
+          "meanDaysError": 2586.5,
           "medianDaysError": 2024,
           "exactDatePct": 0.07,
           "within7DaysPct": 0.14,
           "within30DaysPct": 0.49,
           "within90DaysPct": 1.83,
-          "within180DaysPct": 3.73,
-          "within365DaysPct": 8.1
+          "within180DaysPct": 3.74,
+          "within365DaysPct": 8.11
         }
       },
       "unionMode": {
-        "totalEvaluated": 1546,
+        "totalEvaluated": 1542,
         "confusionMatrix": {
           "LOVE": {
             "LOVE": 446,
-            "ARRANGED": 255,
+            "ARRANGED": 252,
             "PRAGMATIC": 287,
             "UNKNOWN": 433
           },
@@ -249,7 +259,7 @@
           },
           "UNKNOWN": {
             "LOVE": 22,
-            "ARRANGED": 10,
+            "ARRANGED": 9,
             "PRAGMATIC": 11,
             "UNKNOWN": 14
           }
@@ -257,14 +267,14 @@
         "perClass": {
           "LOVE": {
             "precision": 0.9047,
-            "recall": 0.3139,
-            "f1": 0.466,
-            "count": 1421
+            "recall": 0.3145,
+            "f1": 0.4668,
+            "count": 1418
           },
           "ARRANGED": {
-            "precision": 0.0327,
+            "precision": 0.0332,
             "recall": 0.1364,
-            "f1": 0.0528,
+            "f1": 0.0534,
             "count": 66
           },
           "PRAGMATIC": {
@@ -275,107 +285,112 @@
           },
           "UNKNOWN": {
             "precision": 0.03,
-            "recall": 0.2456,
-            "f1": 0.0534,
-            "count": 57
+            "recall": 0.25,
+            "f1": 0.0535,
+            "count": 56
           }
         },
-        "macroF1": 0.1431
+        "macroF1": 0.1434
       },
       "demographicBaseline": {
-        "n": 1421,
+        "n": 1419,
         "baselineMedianAge": 26,
         "baselineMeanAge": 27.8,
-        "mae": 4.42,
-        "rmse": 6.84,
-        "exactYearPct": 9.01,
-        "within1yPct": 27.73,
+        "mae": 4.43,
+        "rmse": 6.85,
+        "exactYearPct": 9.02,
+        "within1yPct": 27.7,
         "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
       },
-      "commitmentsCount": 1560
+      "commitmentsCount": 1555
     },
     "EXTERNAL_ASTRO_DATABANK": {
       "cohortName": "ASTRO_DATABANK_EXTERNAL",
       "n": 500,
-      "elapsedSeconds": 205.99,
+      "elapsedSeconds": 282.18,
       "occurrence": {
-        "n": 353,
+        "n": 448,
         "censoringBreakdown": {
           "totalRecords": 500,
-          "evaluatedCount": 353,
-          "eventCount": 353,
-          "noEventCount": 0,
-          "rightCensoredCount": 0,
-          "unknownCount": 147
+          "evaluatedCount": 448,
+          "eventCount": 63,
+          "noEventCount": 385,
+          "rightCensoredCount": 52,
+          "unknownCount": 0
         },
         "confusionMatrix": {
-          "tp": 353,
-          "fp": 0,
+          "tp": 63,
+          "fp": 385,
           "tn": 0,
           "fn": 0
         },
-        "accuracy": 1,
-        "precision": 1,
+        "accuracy": 0.1406,
+        "precision": 0.1406,
         "recall": 1,
         "specificity": 0,
-        "f1": 1,
+        "f1": 0.2466,
         "balancedAccuracy": 0.5,
-        "brierScore": 0.0987,
-        "ece": 0.3118,
+        "mcc": 0,
+        "rocAuc": 0.5039,
+        "prAuc": 0.1648,
+        "calibrationSlope": 0.1676,
+        "calibrationIntercept": -0.0114,
+        "brierScore": 0.7088,
+        "ece": 0.7665,
         "ci95": {
-          "lower": 0.9892,
-          "upper": 1
+          "lower": 0.1115,
+          "upper": 0.1759
         }
       },
       "timing": {
-        "n": 353,
+        "n": 71,
         "precisionDistribution": {
-          "dayPrecisionCount": 353,
+          "dayPrecisionCount": 71,
           "monthPrecisionCount": 0,
           "yearPrecisionCount": 0
         },
-        "mae": 6.03,
-        "medianAE": 6,
-        "rmse": 7.36,
-        "exactYearCount": 23,
-        "exactYearPct": 6.52,
-        "within1yCount": 62,
-        "within1yPct": 17.56,
-        "within2yPct": 26.91,
-        "within3yPct": 35.41,
-        "meanIntervalWidth": 1.94,
-        "intervalPenaltyScore": 11.67,
+        "mae": 12.37,
+        "medianAE": 7,
+        "rmse": 17.45,
+        "exactYearCount": 2,
+        "exactYearPct": 2.82,
+        "within1yCount": 5,
+        "within1yPct": 7.04,
+        "within2yPct": 15.49,
+        "within3yPct": 19.72,
+        "meanIntervalWidth": 12,
+        "intervalPenaltyScore": 148.39,
         "coverage": {
           "nominal50": 0.5,
-          "observed50": 0.0652,
+          "observed50": 0.1972,
           "nominal80": 0.8,
-          "observed80": 0.119,
+          "observed80": 0.4366,
           "nominal90": 0.9,
-          "observed90": 0.1331,
+          "observed90": 0.5634,
           "nominal95": 0.95,
-          "observed95": 0.1558
+          "observed95": 0.7183
         },
-        "meanWinklerScore80": 53.46,
+        "meanWinklerScore80": 86.51,
         "dayPrecisionMetrics": {
-          "n": 353,
-          "meanDaysError": 2194.2,
-          "medianDaysError": 2045,
+          "n": 71,
+          "meanDaysError": 4519.8,
+          "medianDaysError": 2747,
           "exactDatePct": 0,
-          "within7DaysPct": 0.28,
-          "within30DaysPct": 1.42,
-          "within90DaysPct": 3.12,
-          "within180DaysPct": 5.95,
-          "within365DaysPct": 12.18
+          "within7DaysPct": 1.41,
+          "within30DaysPct": 1.41,
+          "within90DaysPct": 1.41,
+          "within180DaysPct": 2.82,
+          "within365DaysPct": 4.23
         }
       },
       "unionMode": {
-        "totalEvaluated": 353,
+        "totalEvaluated": 71,
         "confusionMatrix": {
           "LOVE": {
-            "LOVE": 94,
-            "ARRANGED": 37,
-            "PRAGMATIC": 54,
-            "UNKNOWN": 70
+            "LOVE": 20,
+            "ARRANGED": 11,
+            "PRAGMATIC": 9,
+            "UNKNOWN": 31
           },
           "ARRANGED": {
             "LOVE": 0,
@@ -384,10 +399,10 @@
             "UNKNOWN": 0
           },
           "PRAGMATIC": {
-            "LOVE": 29,
-            "ARRANGED": 13,
-            "PRAGMATIC": 17,
-            "UNKNOWN": 39
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
           },
           "UNKNOWN": {
             "LOVE": 0,
@@ -398,10 +413,10 @@
         },
         "perClass": {
           "LOVE": {
-            "precision": 0.7642,
-            "recall": 0.3686,
-            "f1": 0.4974,
-            "count": 255
+            "precision": 1,
+            "recall": 0.2817,
+            "f1": 0.4396,
+            "count": 71
           },
           "ARRANGED": {
             "precision": 0,
@@ -410,10 +425,10 @@
             "count": 0
           },
           "PRAGMATIC": {
-            "precision": 0.2394,
-            "recall": 0.1735,
-            "f1": 0.2012,
-            "count": 98
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
           },
           "UNKNOWN": {
             "precision": 0,
@@ -422,16 +437,16 @@
             "count": 0
           }
         },
-        "macroF1": 0.1746
+        "macroF1": 0.1099
       },
       "demographicBaseline": {
-        "n": 353,
+        "n": 71,
         "baselineMedianAge": 26,
         "baselineMeanAge": 27.8,
-        "mae": 3.79,
-        "rmse": 4.45,
-        "exactYearPct": 9.07,
-        "within1yPct": 23.51,
+        "mae": 9.37,
+        "rmse": 14.77,
+        "exactYearPct": 7.04,
+        "within1yPct": 16.9,
         "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
       },
       "commitmentsCount": 500
@@ -467,14 +482,14 @@
       "occurrence": {
         "accuracy": 0.9167,
         "f1": 0.9565,
-        "brier": 0.1178,
-        "ece": 0.212
+        "brier": 0.0749,
+        "ece": 0.0125
       },
       "timing": {
-        "mae": 6.54,
+        "mae": 6.46,
         "within1yPct": 10.87,
         "exactYearPct": 2.17,
-        "intervalPenalty": 32.72
+        "intervalPenalty": 32.28
       }
     },
     {
@@ -488,14 +503,14 @@
       "occurrence": {
         "accuracy": 0.9167,
         "f1": 0.9565,
-        "brier": 0.1178,
-        "ece": 0.212
+        "brier": 0.0749,
+        "ece": 0.0125
       },
       "timing": {
-        "mae": 6.54,
+        "mae": 6.46,
         "within1yPct": 10.87,
         "exactYearPct": 2.17,
-        "intervalPenalty": 12.92
+        "intervalPenalty": 77.48
       }
     },
     {
@@ -509,14 +524,14 @@
       "occurrence": {
         "accuracy": 0.9167,
         "f1": 0.9565,
-        "brier": 0.1178,
-        "ece": 0.212
+        "brier": 0.0749,
+        "ece": 0.0125
       },
       "timing": {
-        "mae": 6.54,
+        "mae": 6.46,
         "within1yPct": 10.87,
         "exactYearPct": 2.17,
-        "intervalPenalty": 12.92
+        "intervalPenalty": 77.48
       }
     },
     {
@@ -531,14 +546,14 @@
       "occurrence": {
         "accuracy": 0.9167,
         "f1": 0.9565,
-        "brier": 0.1178,
-        "ece": 0.212
+        "brier": 0.0749,
+        "ece": 0.0125
       },
       "timing": {
-        "mae": 6.54,
+        "mae": 6.46,
         "within1yPct": 10.87,
         "exactYearPct": 2.17,
-        "intervalPenalty": 12.92
+        "intervalPenalty": 77.48
       }
     },
     {
@@ -554,14 +569,14 @@
       "occurrence": {
         "accuracy": 0.9167,
         "f1": 0.9565,
-        "brier": 0.1178,
-        "ece": 0.212
+        "brier": 0.0749,
+        "ece": 0.0125
       },
       "timing": {
-        "mae": 6.54,
+        "mae": 6.46,
         "within1yPct": 10.87,
         "exactYearPct": 2.17,
-        "intervalPenalty": 12.92
+        "intervalPenalty": 77.48
       }
     },
     {
@@ -573,14 +588,14 @@
       "occurrence": {
         "accuracy": 0.9167,
         "f1": 0.9565,
-        "brier": 0.1178,
-        "ece": 0.212
+        "brier": 0.0749,
+        "ece": 0.0125
       },
       "timing": {
-        "mae": 6.54,
+        "mae": 6.46,
         "within1yPct": 10.87,
         "exactYearPct": 2.17,
-        "intervalPenalty": 12.92
+        "intervalPenalty": 77.48
       }
     }
   ],
@@ -592,8 +607,8 @@
         "controlId": "OUTCOME_PERMUTATION",
         "name": "Shuffled Historical Outcome Permutation",
         "expectedBehavior": "Performance drops to chance / high MAE",
-        "observedMAE": 44.77,
-        "observedWithin1yPct": 1.09,
+        "observedMAE": 43.26,
+        "observedWithin1yPct": 2.17,
         "observedF1": 0.9519,
         "passesNullCheck": true
       },
@@ -602,7 +617,7 @@
         "name": "Randomized Occurrence Label Test",
         "expectedBehavior": "Balanced accuracy ~ 0.50",
         "observedBalancedAccuracy": 0.5,
-        "observedBrier": 0.092,
+        "observedBrier": 0.0079,
         "passesNullCheck": true
       },
       {
@@ -616,35 +631,35 @@
   },
   "fdrMultipleComparisons": [
     {
-      "ruleId": "R03_NARROW_INTERVAL_ACCURACY",
-      "pValue": 0.0017305,
+      "ruleId": "R05_UNION_MODE_ROMANTIC_INDICATOR",
+      "pValue": 0.42851,
       "rank": 1,
       "bhCriticalValue": 0.01,
-      "isSignificantFDR": true
+      "isSignificantFDR": false
     },
     {
-      "ruleId": "R04_CALIBRATED_PROBABILITY_THRESHOLD",
-      "pValue": 0.31436,
+      "ruleId": "R01_TOP_WINDOW_CONVERGENCE",
+      "pValue": 1,
       "rank": 2,
       "bhCriticalValue": 0.02,
       "isSignificantFDR": false
     },
     {
-      "ruleId": "R05_UNION_MODE_ROMANTIC_INDICATOR",
-      "pValue": 0.41761,
+      "ruleId": "R02_MULTI_WINDOW_ACTIVATION",
+      "pValue": 1,
       "rank": 3,
       "bhCriticalValue": 0.03,
       "isSignificantFDR": false
     },
     {
-      "ruleId": "R01_TOP_WINDOW_CONVERGENCE",
-      "pValue": 0.93789,
+      "ruleId": "R03_NARROW_INTERVAL_ACCURACY",
+      "pValue": 1,
       "rank": 4,
       "bhCriticalValue": 0.04,
       "isSignificantFDR": false
     },
     {
-      "ruleId": "R02_MULTI_WINDOW_ACTIVATION",
+      "ruleId": "R04_CALIBRATED_PROBABILITY_THRESHOLD",
       "pValue": 1,
       "rank": 5,
       "bhCriticalValue": 0.05,
@@ -766,10 +781,18 @@
     },
     {
       "recordId": "AiméClariond1894",
-      "status": "PRIMARY_SOURCE_ONLY",
-      "provenanceClass": "PRIMARY_SOURCE_ONLY",
-      "conflict": false,
-      "discrepancyDetails": null
+      "status": "SOURCE_CONFLICT",
+      "provenanceClass": "SOURCE_CONFLICT",
+      "conflict": true,
+      "discrepancyDetails": {
+        "birthDate": {
+          "primary": "1894-05-10",
+          "external": "1894-05-10"
+        },
+        "utcOffset": {
+          "primary": 0.15
+        }
+      }
     },
     {
       "recordId": "AlBano1943",
@@ -808,10 +831,18 @@
     },
     {
       "recordId": "AlainCarpentier1933",
-      "status": "PRIMARY_SOURCE_ONLY",
-      "provenanceClass": "PRIMARY_SOURCE_ONLY",
-      "conflict": false,
-      "discrepancyDetails": null
+      "status": "SOURCE_CONFLICT",
+      "provenanceClass": "SOURCE_CONFLICT",
+      "conflict": true,
+      "discrepancyDetails": {
+        "birthDate": {
+          "primary": "1933-08-11",
+          "external": "1933-08-11"
+        },
+        "utcOffset": {
+          "primary": 1
+        }
+      }
     },
     {
       "recordId": "AlainDelon1935",
@@ -864,20 +895,21 @@
     },
     {
       "recordId": "NicoleCalfan1947",
-      "status": "PRIMARY_SOURCE_ONLY",
-      "provenanceClass": "PRIMARY_SOURCE_ONLY",
-      "conflict": false,
-      "discrepancyDetails": null
+      "status": "SOURCE_CONFLICT",
+      "provenanceClass": "SOURCE_CONFLICT",
+      "conflict": true,
+      "discrepancyDetails": {
+        "birthDate": {
+          "primary": "1947-03-04",
+          "external": "1947-03-04"
+        },
+        "utcOffset": {
+          "primary": 1
+        }
+      }
     },
     {
       "recordId": "AlainFinkielkraut1949",
-      "status": "PRIMARY_SOURCE_ONLY",
-      "provenanceClass": "PRIMARY_SOURCE_ONLY",
-      "conflict": false,
-      "discrepancyDetails": null
-    },
-    {
-      "recordId": "AlainJeanAssailly2000",
       "status": "PRIMARY_SOURCE_ONLY",
       "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
@@ -934,8 +966,8 @@
     },
     {
       "recordId": "AlbertCamus1913",
-      "status": "PRIMARY_SOURCE_ONLY",
-      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "status": "CROSS_SOURCE_CONFIRMED",
+      "provenanceClass": "CROSS_SOURCE_CONFIRMED",
       "conflict": false,
       "discrepancyDetails": null
     },
@@ -997,6 +1029,13 @@
     },
     {
       "recordId": "AlbertoFujimori1938",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AldaMerini1931",
       "status": "PRIMARY_SOURCE_ONLY",
       "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,

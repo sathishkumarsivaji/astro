@@ -1,6 +1,6 @@
 {
-  "manifestVersion": "2.0.0",
-  "schemaVersion": "ASTRO_DATABANK_PUBLIC_EXPORT_SCHEMA_V2",
+  "manifestVersion": "3.0.0",
+  "schemaVersion": "ASTRO_DATABANK_PUBLIC_EXPORT_SCHEMA_V3",
   "datasetName": "Astro-Databank Official Public Export (Category C)",
   "sourceURL": "https://www.astro.com/adbexport/",
   "exportFormat": "260911",
@@ -8,7 +8,8 @@
   "sourceVersion": "ADB-PUBLIC-2026.09",
   "downloadDate": "2026-10-03T03:34:26Z",
   "rawXmlSha256": "7d42ac78520685b3013e929f3f238989a78c2f1ae1a360248a9b3b459d93549c",
-  "sha256": "b873e765dd8c47fdaf9e8d5b6ca335ed180965e9d608ff8d05937e2b0786fc40",
+  "sha256": "65a90414f2fd94ee1697921b4615c44bf0267411c7ae4a6e8f1067472f74c070",
+  "independentHoldoutSha256": "ed662c0130abcaff66106ea95f49594279e9b259a1fb788d6f55be63a2f83dd4",
   "totalRecords": 6036,
   "roddenRatingBreakdown": {
     "B": 233,
@@ -22,8 +23,17 @@
   },
   "provenanceClass": "SOURCE_ASTRODATABANK",
   "marriageDocumentedCount": 615,
-  "divorceDocumentedCount": 135,
-  "independentHoldoutCount": 5308,
-  "crossDatasetOverlapCount": 728,
+  "divorceDocumentedCount": 122,
+  "overlapAudit": {
+    "totalAstroDatabankRecords": 6036,
+    "trainOverlap": 746,
+    "validationOverlap": 249,
+    "blindOverlap": 118,
+    "internalHoldoutOverlap": 125,
+    "totalVedAstroOverlap": 1238,
+    "trueIndependentCount": 4798,
+    "trueIndependentAAACount": 3751
+  },
+  "independentHoldoutCount": 4798,
   "licenseNotice": "Astrodienst AG Astro-Databank public research export. Non-synthetic, official raw XML ingested."
 }
