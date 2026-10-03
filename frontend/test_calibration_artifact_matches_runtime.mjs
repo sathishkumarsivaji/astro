@@ -57,7 +57,19 @@ if (!fs.existsSync(MODEL_PATH)) {
 
 const rawModel = JSON.parse(fs.readFileSync(MODEL_PATH, "utf8"));
 
-// 2. Validate artifact structure and provenance metadata
+import crypto from "crypto";
+import {
+  initCacheManager,
+  getCurrentHashes
+} from "./src/services/realWorldValidation/predictionCacheManager.js";
+
+// Initialize cache manager to calculate authoritative current hashes
+initCacheManager();
+const currentHashes = getCurrentHashes();
+const currentPredictionEngineHash = currentHashes.predictionEngineHash;
+const TRAIN_PATH = path.join(ROOT, "data/real_world_validation/splits/train.json");
+const currentTrainSha256 = crypto.createHash("sha256").update(fs.readFileSync(TRAIN_PATH)).digest("hex");
+
 check("Model specifies PLATT_LOGISTIC_SCALING_V2", rawModel.calibratorType === "PLATT_LOGISTIC_SCALING_V2");
 check("Model version specified", typeof rawModel.modelVersion === "string" && rawModel.modelVersion.length > 0);
 check("Training dataset is TRAIN partition", rawModel.trainingDataset === "TRAIN_SPLIT_VEDASTRO_15K");
@@ -67,6 +79,8 @@ check("Fitted slope is finite positive number", Number.isFinite(rawModel.paramet
 check("Fitted intercept is finite number", Number.isFinite(rawModel.parameters?.intercept));
 check("Classification threshold is 0.50", rawModel.parameters?.classificationThreshold === 0.50);
 check("Model specifies predictionEngineHash", typeof rawModel.predictionEngineHash === "string" && rawModel.predictionEngineHash.length === 64);
+check("Model predictionEngineHash matches CURRENT production engine hash", rawModel.predictionEngineHash === currentPredictionEngineHash);
+check("Model trainingDatasetHash matches CURRENT TRAIN dataset hash", rawModel.trainingDatasetHash === currentTrainSha256);
 check("Model specifies calibrationInputHash", typeof rawModel.calibrationInputHash === "string" && rawModel.calibrationInputHash.length === 64);
 check("Model specifies trainingSampleHash", typeof rawModel.trainingSampleHash === "string" && rawModel.trainingSampleHash.length === 64);
 check("Model specifies fitSeed 133742", rawModel.fitSeed === 133742);

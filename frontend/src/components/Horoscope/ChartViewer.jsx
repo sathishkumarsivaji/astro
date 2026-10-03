@@ -17,7 +17,8 @@ import {
   HelpCircle,
   Eye,
   Info,
-  Lock
+  Lock,
+  FileText
 } from "lucide-react";
 import {
   calculateD60StabilityTest,
@@ -1988,28 +1989,55 @@ export default function ChartViewer({
         </button>
       </div>
 
-      {/* Action Banner: Open Complete 18-Chapter Detailed Report and PDF Export */}
+      {/* Action Banner: Open Complete Detailed Report / Expert Dossier and PDF Export */}
       {onOpenDetailedReport && (
-        <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border-2 border-amber-400/90 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className={`p-5 md:p-6 rounded-3xl border-2 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 ${
+          isExpertMode
+            ? "bg-gradient-to-r from-violet-600/15 via-purple-600/10 to-amber-500/15 border-violet-400/90 shadow-violet-500/10"
+            : "bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-emerald-500/10 border-emerald-400/80 shadow-emerald-500/10"
+        }`}>
           <div className="space-y-1 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-2">
-              <Sparkles className="w-5 h-5 text-amber-600" />
+              {isExpertMode ? (
+                <Sparkles className="w-5 h-5 text-violet-600" />
+              ) : (
+                <FileText className="w-5 h-5 text-emerald-600" />
+              )}
               <h3 className="font-serif font-bold text-stone-900 text-base md:text-lg">
-                {isTamil ? "முழுமையான 18 அத்தியாய மகா ஜோதிட அறிக்கை மற்றும் PDF சேமிப்பு" : "Complete 18-Chapter Astrological Life Dossier & PDF Export"}
+                {isExpertMode
+                  ? (isTamil ? "நிபுணர் ஜோதிட அறிக்கை — 17 வாழ்க்கை களங்கள் & 18 அத்தியாயங்கள்" : "Expert Astrologer Dossier — 17 Domains & Complete 18 Chapters")
+                  : (isTamil ? "எளிய ஜோதிட சுருக்க அறிக்கை மற்றும் PDF சேமிப்பு" : "Essential Horoscope Summary & PDF Export")}
               </h3>
             </div>
             <p className="text-xs text-stone-600 max-w-xl">
-              {isTamil
-                ? "ஆரோக்கியம், கல்வி, தொழில், பூமி/வாகனம், அரசியல் தலைமை, 16 வர்க்கங்கள், ஷட்பலம் மற்றும் முழுமையான அஷ்டகவர்க்க அட்டவணைகளை PDF ஆக சேமிக்க."
-                : "Explore multi-domain lifecycle analysis, full 16 harmonic vargas, Shadbala calculation ledger, Ashtakavarga, and download Minimal or Detailed Master PDF."}
+              {isExpertMode
+                ? (isTamil
+                    ? "17 வாழ்க்கை களங்களுக்கான விரிவான நேர சாளரங்கள் (ஏன் & ஏன் இல்லை), 16 வர்க்கங்கள், ஷட்பலம் மற்றும் 18 அத்தியாய முழுமையான தொழில்நுட்ப அறிக்கை."
+                    : "Deep predictive timelines across 17 life domains with WHY & WHY NOT evidence, plus complete 18-chapter dossier with 16 vargas, Shadbala, and Ashtakavarga.")
+                : (isTamil
+                    ? "அடிப்படை லக்னம், ராசி, சுருக்கமான 12 பாவகங்கள் மற்றும் 1-பக்க எளிய சுருக்க அறிக்கையை PDF ஆக சேமிக்க."
+                    : "Quick 12-Bhava snapshot, core planetary alignment, top yogas overview, and download 1-page Minimal Summary PDF.")}
             </p>
           </div>
           <button
             onClick={onOpenDetailedReport}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all"
+            className={`w-full sm:w-auto px-6 py-3 rounded-2xl hover:brightness-110 text-white font-bold text-xs shadow-lg flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all ${
+              isExpertMode
+                ? "bg-gradient-to-r from-violet-600 via-purple-600 to-amber-600 shadow-violet-500/25"
+                : "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-emerald-500/25"
+            }`}
           >
-            <Sparkles className="w-4 h-4 fill-amber-300 text-amber-300" />
-            <span>{isTamil ? "முழு அறிக்கையைத் திறக்கவும் (PDF)" : "Open Complete Report (PDF)"}</span>
+            {isExpertMode ? (
+              <>
+                <Sparkles className="w-4 h-4 fill-amber-300 text-amber-300" />
+                <span>{isTamil ? "நிபுணர் அறிக்கையைத் திறக்கவும் (PDF)" : "Open Expert Dossier (PDF)"}</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 fill-emerald-200 text-emerald-200" />
+                <span>{isTamil ? "சுருக்க அறிக்கையைத் திறக்கவும் (PDF)" : "Open Simple Report (PDF)"}</span>
+              </>
+            )}
           </button>
         </div>
       )}

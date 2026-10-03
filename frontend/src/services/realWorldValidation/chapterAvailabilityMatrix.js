@@ -185,7 +185,7 @@ export const CHAPTER_DEFINITIONS = [
     externalReferenceAvailable: true,
     sourceProvenance: "VedAstro 15k Famous People public dataset (15,807 records, 11,081 exact dates)",
     status: "EXPERIMENTAL",
-    empiricalNotes: "Classified as EXPERIMENTAL until the corrected independent benchmark establishes defensible empirical performance against demographic baseline."
+    empiricalNotes: "Classified as EXPERIMENTAL: Clean-cache independent benchmarks establish that demographic median-age baseline (MAE 4.28y internal, 6.41y external) substantially outperforms raw astrological timing (MAE 6.89y internal, 9.19y external), with 0% occurrence specificity."
   },
   {
     chapterId: "CH_10",

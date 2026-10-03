@@ -1,0 +1,12 @@
+{
+  "status": "HISTORICAL_RESULT_NOT_CURRENT",
+  "archivedAt": "2026-10-03T11:06:37.743Z",
+  "archivedFiles": [
+    "data/real_world_validation/cache/prediction_cache.json",
+    "data/real_world_validation/results/calibration_model.json",
+    "data/real_world_validation/results/benchmark_results.json",
+    "data/real_world_validation/results/astro_databank_external_benchmark.json",
+    "data/real_world_validation/results/external_validation_report.json"
+  ],
+  "reason": "Source code hash changed. Previous predictions and calibration are stale."
+}

@@ -8,6 +8,8 @@ const __dirname = path.dirname(__filename);
 
 let currentPredictionEngineHash = null;
 let currentCalibrationModelHash = null;
+let currentCalibrationInputHash = null;
+let currentTrainingDatasetHash = null;
 const predictionSchemaVersion = '3.0';
 const modelVersion = '2.2.0';
 const astronomyEngineVersion = '4.2.0';
@@ -24,15 +26,28 @@ function computeFileHash(filePath) {
 }
 
 export function initCacheManager(options = {}) {
-  const astroEnginePath = options.astroEnginePath || path.resolve(__dirname, '../../astroEngine.js');
+  const astroEnginePath = options.astroEnginePath || path.resolve(__dirname, '../astroEngine.js');
   const evalEnginePath = options.evalEnginePath || path.resolve(__dirname, './empiricalEvaluationEngine.js');
   const calibrationModelPath = options.calibrationModelPath || path.resolve(__dirname, '../../../../data/real_world_validation/results/calibration_model.json');
+  const trainingDatasetPath = options.trainingDatasetPath || path.resolve(__dirname, '../../../../data/real_world_validation/splits/train.json');
 
   const h1 = computeFileHash(astroEnginePath) || '';
   const h2 = computeFileHash(evalEnginePath) || '';
   currentPredictionEngineHash = crypto.createHash('sha256').update(h1 + h2).digest('hex');
   
   currentCalibrationModelHash = computeFileHash(calibrationModelPath);
+  currentTrainingDatasetHash = computeFileHash(trainingDatasetPath);
+
+  if (fs.existsSync(calibrationModelPath)) {
+    try {
+      const modelData = JSON.parse(fs.readFileSync(calibrationModelPath, 'utf8'));
+      currentCalibrationInputHash = modelData.calibrationInputHash || null;
+    } catch {
+      currentCalibrationInputHash = null;
+    }
+  } else {
+    currentCalibrationInputHash = null;
+  }
 }
 
 export function computeInputHash(record) {
@@ -73,6 +88,8 @@ export function getCachedPrediction(recordId, inputHash) {
     cached.inputHash === inputHash &&
     cached.predictionEngineHash === currentPredictionEngineHash &&
     cached.calibrationModelHash === currentCalibrationModelHash &&
+    cached.calibrationInputHash === currentCalibrationInputHash &&
+    cached.trainingDatasetHash === currentTrainingDatasetHash &&
     cached.astronomyEngineVersion === astronomyEngineVersion &&
     cached.predictionSchemaVersion === predictionSchemaVersion;
     
@@ -92,11 +109,20 @@ export function setCachedPrediction(recordId, inputHash, prediction) {
   const divorceCommitment = prediction.commitments?.divCommitment || prediction.div?.commitmentHash || null;
   const unionCommitment = prediction.commitments?.modeCommitment || prediction.mode?.commitmentHash || null;
 
+  // Memory safety: strip verbose candidateWindows tree from persisted cache entry
+  let compactTiming = prediction.timing;
+  if (compactTiming && compactTiming.candidateWindows) {
+    const { candidateWindows, ...restTiming } = compactTiming;
+    compactTiming = restTiming;
+  }
+
   predictionCache[recordId] = {
     recordId,
     inputHash,
     predictionEngineHash: currentPredictionEngineHash,
     calibrationModelHash: currentCalibrationModelHash,
+    calibrationInputHash: currentCalibrationInputHash,
+    trainingDatasetHash: currentTrainingDatasetHash,
     astronomyEngineVersion,
     historicalTimeEngineVersion,
     predictionSchemaVersion,
@@ -107,7 +133,7 @@ export function setCachedPrediction(recordId, inputHash, prediction) {
     divorceCommitment,
     unionCommitment,
     occ: prediction.occ,
-    timing: prediction.timing,
+    timing: compactTiming,
     div: prediction.div,
     mode: prediction.mode,
     commitments: prediction.commitments || {
@@ -136,7 +162,11 @@ export function getCurrentHashes() {
   return {
     predictionEngineHash: currentPredictionEngineHash,
     calibrationModelHash: currentCalibrationModelHash,
-    predictionSchemaVersion
+    calibrationInputHash: currentCalibrationInputHash,
+    trainingDatasetHash: currentTrainingDatasetHash,
+    predictionSchemaVersion,
+    astronomyEngineVersion,
+    modelVersion
   };
 }
 

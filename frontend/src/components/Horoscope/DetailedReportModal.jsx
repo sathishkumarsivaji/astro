@@ -139,7 +139,7 @@ const getNakRuler = (n) => {
 };
 
 export default function DetailedReportModal({ isOpen, onClose, chartData, lang = "en", onCreditDeducted = null, isExpertMode = false, onLoadDemoChart = null }) {
-  const [reportTier, setReportTier] = useState("detailed"); // "short" or "detailed"
+  const [reportTier, setReportTier] = useState(() => (isExpertMode ? "expert" : "short")); // "short" (Simple Mode), "detailed" (Master Dossier), "expert" (17 Domains + Full Dossier)
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("algorithmic"); // "algorithmic" or "ai"
   const [audienceMode, setAudienceMode] = useState(() => (isExpertMode ? "astrologer" : "client")); // "client" (Client View) or "astrologer" (Astrologer View)
@@ -147,7 +147,14 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
 
   React.useEffect(() => {
     setAudienceMode(isExpertMode ? "astrologer" : "client");
+    setReportTier(isExpertMode ? "expert" : "short");
   }, [isExpertMode]);
+
+  React.useEffect(() => {
+    if (reportTier !== "expert" && !isExpertMode && activeTab === "expertPredictions") {
+      setActiveTab("all");
+    }
+  }, [reportTier, isExpertMode, activeTab]);
 
   const chartId = chartData?.reportId || (chartData?.birthDate || chartData?.date ? `chart_${String(chartData.birthDate || chartData.date)}_${chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? "na"}` : "chart_generic");
   const milestoneStorageKey = `astro_milestones_${chartId}`;
@@ -448,6 +455,9 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
 
   const tabs = [
     { id: "all", label: isTamil ? "அனைத்து பக்கங்கள் (முழு அறிக்கை)" : "All Chapters (Full View)", icon: Layers },
+    ...((isExpertMode || reportTier === "expert") ? [
+      { id: "expertPredictions", label: isTamil ? "⭐ நிபுணர் ஆய்வு (17 களங்கள்)" : "⭐ Expert Predictions (17 Domains)", icon: Sparkles }
+    ] : []),
     { id: "execSummary", label: isTamil ? "0. நிர்வாக சுருக்கம்" : "0. Executive Summary", icon: FileText },
     { id: "blueprint", label: isTamil ? "1. மூல ஜாதகம்" : "1. Natal Blueprint", icon: Compass },
     { id: "yogas", label: isTamil ? "2. முக்கிய யோகங்கள் & தோஷங்கள்" : "2. Important Yogas & Doshas", icon: Award },
@@ -478,8 +488,8 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const isKP = chartSys === "kp";
 
   const systemChapterIds = new Set(getChaptersForSystem(chartSys).map(c => c.id));
-  const isChapterApplicable = (id) => systemChapterIds.has(id);
-  const visibleTabs = tabs.filter(tab => tab.id === "all" || systemChapterIds.has(tab.id));
+  const isChapterApplicable = (id) => id === "expertPredictions" || systemChapterIds.has(id);
+  const visibleTabs = tabs.filter(tab => tab.id === "all" || isChapterApplicable(tab.id));
 
   return (
     <div className="detailed-report-modal-overlay fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-2 md:p-4 overflow-y-auto">
@@ -497,8 +507,18 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 <h2 className="text-lg md:text-2xl font-serif font-bold text-stone-900">
                   {isTamil ? "முழுமையான வேத ஜோதிட விரிவான அறிக்கை" : "Comprehensive Vedic Astrology Report"}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
-                  {reportTier === "detailed" ? (isTamil ? "முழு விரிவான பதிப்பு" : "Master Edition") : (isTamil ? "சுருக்கப் பதிப்பு" : "Essential Summary")}
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                  reportTier === "expert"
+                    ? "bg-violet-100 text-violet-900 border-violet-300"
+                    : reportTier === "detailed"
+                    ? "bg-amber-100 text-amber-900 border-amber-300"
+                    : "bg-emerald-100 text-emerald-900 border-emerald-300"
+                }`}>
+                  {reportTier === "expert"
+                    ? (isTamil ? "🟣 நிபுணர் பதிப்பு (17 களங்கள் + முழு அறிக்கை)" : "🟣 Expert Astrologer Edition (17 Domains + Full Dossier)")
+                    : reportTier === "detailed"
+                    ? (isTamil ? "மகா பதிப்பு (18 அத்தியாயங்கள்)" : "Master Edition (18 Chapters)")
+                    : (isTamil ? "🟢 எளிய முறை: சுருக்கப் பதிப்பு" : "🟢 Simple Mode: Essential Summary")}
                 </span>
               </div>
               <p className="text-xs text-stone-600">
@@ -735,7 +755,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-violet-900 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-violet-500" />
-                    {isTamil ? "நிபுணர் பயன்முறை (Expert Prediction)" : "Expert Mode — Deep Prediction Timeline"}
+                    {isTamil ? "நிபுணர் பதிப்பு (17 களங்கள் + முழு அறிக்கை)" : "Expert Mode — 17 Domains + Full Dossier"}
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-gradient-to-r from-violet-600 to-purple-600 text-white font-extrabold shadow-sm">
                     {isTamil ? "நிபுணர்" : "EXPERT"}
@@ -743,8 +763,8 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 </div>
                 <p className="text-[11px] text-violet-700 mt-1">
                   {isTamil
-                    ? "17 வாழ்க்கை களங்களுக்கான விரிவான நேர சாளரங்கள், ஆதார சங்கிலி, ஏன் & ஏன் இல்லை பகுப்பாய்வு."
-                    : "17-domain evidence-linked timelines with WHY & WHY NOT, sub-phases, and resolution declarations."}
+                    ? "17 வாழ்க்கை களங்களுக்கான விரிவான நேர சாளரங்கள் (ஏன் & ஏன் இல்லை) மற்றும் 18 அத்தியாய முழுமையான தொழில்நுட்ப அறிக்கை."
+                    : "17-domain evidence-linked timelines with WHY & WHY NOT, combined with complete 18-chapter master dossier."}
                 </p>
               </button>
             )}
@@ -882,8 +902,8 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
           </div>
         )}
 
-        {/* Detailed Mode: Chapter Navigation Tabs */}
-        {viewMode === "algorithmic" && reportTier === "detailed" && (
+        {/* Detailed & Expert Mode: Chapter Navigation Tabs */}
+        {viewMode === "algorithmic" && (reportTier === "detailed" || reportTier === "expert") && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs border-b border-amber-200/80 no-scrollbar no-print print:hidden">
             {visibleTabs.map((tab) => {
               const Icon = tab.icon;
@@ -1070,8 +1090,12 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
 
         {/* ========================================================================= */}
         {/* EXPERT PREDICTION TIMELINE VIEW (17-DOMAIN FULL LIFETIME TIMELINE) */}
+        {/* Rendered when in expert tier (for "all" or "expertPredictions" tab) or when expertPredictions tab is active */}
         {/* ========================================================================= */}
-        {viewMode === "algorithmic" && reportTier === "expert" && (
+        {viewMode === "algorithmic" && (
+          (reportTier === "expert" && (activeTab === "all" || activeTab === "expertPredictions")) ||
+          activeTab === "expertPredictions"
+        ) && (
           <div className="space-y-6">
             <ExpertPredictionReportView chartData={chartData} lang={lang} />
           </div>
@@ -1079,9 +1103,28 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
 
         {/* ========================================================================= */}
         {/* COMPREHENSIVE MASTER REPORT VIEW (FULL MULTI-PAGE DOSSIER) */}
+        {/* Rendered for "detailed" tier OR "expert" tier (when not isolated to expertPredictions tab) */}
         {/* ========================================================================= */}
-        {viewMode === "algorithmic" && reportTier === "detailed" && (
+        {viewMode === "algorithmic" && (
+          (reportTier === "detailed" && activeTab !== "expertPredictions") ||
+          (reportTier === "expert" && activeTab !== "expertPredictions")
+        ) && (
           <div className="space-y-8">
+            {reportTier === "expert" && activeTab === "all" && (
+              <div className="flex items-center gap-3 pt-6 border-t-2 border-dashed border-amber-300">
+                <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  18
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-stone-900">
+                    {isTamil ? "முழுமையான 18-அத்தியாய மகா ஜோதிட அறிக்கை (Complete Technical Dossier)" : "Complete 18-Chapter Master Astrological Dossier"}
+                  </h3>
+                  <p className="text-xs text-stone-600">
+                    {isTamil ? "12 பாவகங்கள், வர்க்கங்கள், ஷட்பலம், தசா காலக்கோடு மற்றும் தொழில்நுட்ப பிற்சேர்க்கை" : "Bhavas, Shodashavarga, Shadbala, Ashtakavarga, Vimshottari Timeline & Technical Appendix"}
+                  </p>
+                </div>
+              </div>
+            )}
             {/* PAGE 1: YOUR HOROSCOPE IN SIMPLE WORDS (CLIENT-FRIENDLY OVERVIEW) */}
             <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-emerald-50 via-white to-amber-50/70 border-2 border-emerald-300 shadow-md space-y-4">
               <div className="flex items-center justify-between border-b border-emerald-200 pb-3">
@@ -2827,15 +2870,27 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">6. Ayanamsha Model</span>
-                      <strong className="text-stone-900">{chartData.ayanamsaDms || (typeof chartData.ayanamsa === "number" ? `${chartData.ayanamsa.toFixed(4)}°` : "23°51'25\"")} ({chartData.system?.name || chartData.system || "Lahiri"})</strong>
+                      <strong className="text-stone-900">{chartData.ayanamsaDms || (typeof chartData.ayanamsa === "number" ? `${chartData.ayanamsa.toFixed(4)}°` : "23°51'25\"")} ({typeof chartData.system === "string" ? chartData.system : (chartData.system?.name || chartData.system?.id || "Lahiri")})</strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">7. Node Model</span>
-                      <strong className="text-stone-900">{chartData.lunarNodeConvention || chartData.nodeModel || "Astronomical True (Osculating) Node"}</strong>
+                      <strong className="text-stone-900">
+                        {typeof chartData.lunarNodeConvention === "object" && chartData.lunarNodeConvention !== null
+                          ? `${chartData.lunarNodeConvention.model === "TRUE_OSCULATING" ? "Astronomical True (Osculating) Node" : (chartData.lunarNodeConvention.model || "Astronomical Mean Node")}${chartData.lunarNodeConvention.referenceFrame ? ` (${chartData.lunarNodeConvention.referenceFrame})` : ""}`
+                          : (typeof chartData.lunarNodeConvention === "string"
+                              ? chartData.lunarNodeConvention
+                              : (chartData.nodeModel === "true" ? "Astronomical True (Osculating) Node" : "Astronomical Mean Node"))}
+                      </strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">8. House System</span>
-                      <strong className="text-stone-900">{chartData.houseSystemRequested || chartData.houseSystem || "Placidus / Whole Sign Bhava Chalit"}</strong>
+                      <strong className="text-stone-900">
+                        {typeof chartData.houseSystemRequested === "string"
+                          ? chartData.houseSystemRequested
+                          : (typeof chartData.houseSystem === "string"
+                              ? chartData.houseSystem
+                              : (chartData.houseSystem?.name || "Placidus / Whole Sign Bhava Chalit"))}
+                      </strong>
                     </div>
                     <div>
                       <span className="text-[10px] text-stone-500 block uppercase">9. Varga Convention</span>

@@ -88,15 +88,13 @@ export function fitCalibrationModel(sampleSize = 2500) {
   });
 
   const trainSha256 = computeFileSha256(TRAIN_PATH);
-  const valSha256 = computeFileSha256(VAL_PATH);
+  const valSha256 = fs.existsSync(VAL_PATH) ? computeFileSha256(VAL_PATH) : null;
   const trainRecords = JSON.parse(fs.readFileSync(TRAIN_PATH, 'utf8'));
-  const valRecords = JSON.parse(fs.readFileSync(VAL_PATH, 'utf8'));
 
-  console.log(`1. Loaded TRAIN (N=${trainRecords.length}) & VAL (N=${valRecords.length})`);
+  console.log(`1. Loaded TRAIN (N=${trainRecords.length})`);
 
-  // Initialize prediction cache manager with clean empty cache (Requirement 4)
-  initCacheManager();
-  invalidateAll();
+  // Initialize prediction cache manager
+  initCacheManager({ calibrationModelPath: OUTPUT_PATH, trainingDatasetPath: TRAIN_PATH });
   loadCache(PREDICTION_CACHE_FILE);
 
   // 1. Select reproducible stratified sample of TRAIN (minimum N >= 2,000 per Req 8)
@@ -294,12 +292,17 @@ export function fitCalibrationModel(sampleSize = 2500) {
   console.log(`   q90 (nominal 90% half-width): ±${q90} years (width ${q90 * 2}y)`);
   console.log(`   q95 (nominal 95% half-width): ±${q95} years (width ${q95 * 2}y)`);
 
+  const currentEngineHash = getCurrentHashes().predictionEngineHash;
+  if (!currentEngineHash) {
+    throw new Error('CRITICAL: Current prediction engine hash could not be calculated.');
+  }
+
   const model = {
     calibratorType: 'PLATT_LOGISTIC_SCALING_V2',
     modelVersion: '2.2.0-actual-model-fitted',
     predictionEngineVersion: '4.2.0',
-    predictionEngineHash: getCurrentHashes().predictionEngineHash,
-    calibrationInputHash: crypto.createHash('sha256').update(trainSha256 + valSha256).digest('hex'),
+    predictionEngineHash: currentEngineHash,
+    calibrationInputHash: crypto.createHash('sha256').update(trainSha256).digest('hex'),
     trainingSampleHash: crypto.createHash('sha256').update(JSON.stringify(finalSample.map(s => s.sourceRecordId))).digest('hex'),
     fitTimestamp: new Date().toISOString(),
     fitSeed: 133742,

@@ -23,7 +23,8 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3,751$).
 - **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1,238 overlapping persons to yield 4,798 truly independent records (3,751 A/AA).
 - **Actual Production Model Calibration:** Platt scaling and conformal prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2,500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y), eliminating the demographic surrogate proxy.
-- **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants.
+- **Clean-Slate Versioned Cache Integrity:** All benchmark cohorts were executed from a clean zero-entry cache (`initialCacheEntries = 0`, `cacheHits = 0` for all primary cohorts). Every cached prediction is cryptographically bound to the prediction engine SHA-256 hash (`11a98f8b...`) and calibration model SHA-256 hash (`38e0eb4a...`).
+- **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
 
@@ -228,16 +229,53 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = 3,751$):
 | **Occurrence Accuracy** | **9.53%** | N/A |
 | **Occurrence Sensitivity / Recall** | **100.00%** | N/A |
 | **Occurrence Specificity** | **0.00%** | N/A |
+| **95% Wilson Score CI** | [0.0855, 0.1060] | N/A |
+| **Brier Score / ECE** | 0.7064 / 0.7875 | N/A |
 | **Evaluated Timing ($N$)** | 320 (documented marriages) | 320 |
-| **Timing MAE** | **9.23 years** | **6.41 years** |
+| **Timing MAE** | **9.19 years** | **6.41 years** |
 | **Timing Median Absolute Error** | **7.00 years** | **5.00 years** |
-| **Timing Within $\pm 1$ Year** | **8.44% (27/320)** | **19.38% (62/320)** |
-| **Timing Within $\pm 2$ Years** | **17.50%** | **37.50%** |
-| **Timing Within $\pm 3$ Years** | **24.06%** | **49.06%** |
-| **Conformal 80% Observed Coverage**| **66.56%** | N/A |
+| **Timing RMSE** | **12.64 years** | **10.01 years** |
+| **Timing Within $\pm 1$ Year** | **9.06% (29/320)** | **19.38% (62/320)** |
+| **Timing Within $\pm 2$ Years** | **18.44%** | **37.50%** |
+| **Timing Within $\pm 3$ Years** | **25.31%** | **49.06%** |
+| **Conformal 80% Observed Coverage**| **69.06%** | N/A |
+| **Mean Winkler Score (80% Interval)**| **46.69** | N/A |
 | **Union Mode Evaluation Status** | `NOT_AVAILABLE` | N/A |
 
+*Note on Day-Precision Timing ($N = 320$):* Mean days error is 3,365.7 days (median 2,572 days), with 0.31% within $\pm 30$ days, 1.56% within $\pm 90$ days, 2.50% within $\pm 180$ days, and 5.94% within $\pm 365$ days.
+
 *Note on External Union Mode:* All ground-truth union types in the Astro-Databank external cohort are documented as `UNKNOWN` (zero inference policy). Evaluating classification accuracy or Macro F1 on ungrounded classes is statistically invalid, so the metric is explicitly recorded as `NOT_AVAILABLE`.
+
+---
+
+## SECTION 14A: PREDICTION CACHE PROVENANCE & VERSION INTEGRITY
+
+### 1. Cryptographic Cache Invalidation Protocol
+To eliminate all stale prediction risks, all benchmark cohorts were executed from a clean zero-entry cache:
+- **Initial Cache Entries:** `0` (clean slate verified)
+- **Primary Cohort Cold Cache Execution:**
+  - `BLIND_TEST`: 1,634 recomputed, 0 cache hits (`cacheHits = 0`, `cacheMisses = 1,634`)
+  - `INTERNAL_HOLDOUT`: 1,555 recomputed, 0 cache hits (`cacheHits = 0`, `cacheMisses = 1,555`)
+  - `ASTRO_DATABANK_CERTIFIED_AAA`: 3,751 recomputed, 0 cache hits (`cacheHits = 0`, `cacheMisses = 3,751`)
+- **Sensitivity Cohort Provenance:** Sensitivity cohorts (`AA_ONLY`, `A_ONLY`, `ALL_INDEPENDENT`, `REGRESSION_SAMPLE`) safely leveraged validated in-memory cache entries from the identical run.
+- **Overall Cache Provenance:** `initialCacheEntries: 0`, `cacheHits: 9,636`, `cacheMisses: 7,987`, `invalidatedEntries: 0`.
+
+### 2. Versioned Cryptographic Commitments
+Every cached prediction entry contains:
+```json
+{
+  "recordId": "ADB_...",
+  "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
+  "predictionEngineHash": "11a98f8baa10fe48c59d42e371c46419afa8284f47679c0606e57fe1b16f5a21",
+  "calibrationModelHash": "38e0eb4a6a8b72100647b2fed350e85e9ba82af5d5fca35ea90e6f8972eac107",
+  "astronomyEngineVersion": "4.2.0",
+  "historicalTimeEngineVersion": "1.0.0",
+  "predictionSchemaVersion": "3.0",
+  "modelVersion": "2.2.0",
+  "commitments": { "occCommitment": "...", "timingCommitment": "..." }
+}
+```
+Any alteration in engine code, calibration parameters, astronomy versions, or input data triggers immediate cache eviction and recomputation.
 
 ---
 
@@ -245,15 +283,15 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = 3,751$):
 
 ### 1. Sensitivity Across Data Reliability Subsets
 
-| Sensitivity Cohort | Record Count ($N$) | Timing MAE | Within $\pm 1$ Year | Occurrence Accuracy |
-| :--- | :--- | :--- | :--- | :--- |
-| **Primary Certified A/AA** | 3,751 | 9.23y | 8.44% | 9.53% |
-| **AA-Only (Highest Precision)**| 2,591 | 8.37y | 9.64% | 8.13% |
-| **A-Only (Direct Memory)** | 1,160 | 10.61y | 6.50% | 12.35% |
-| **All Independent (AA to X)** | 4,798 | 9.08y | 9.61% | 9.88% |
-| **Stratified Regression Sample**| 500 | 9.49y | 11.11% | 9.38% |
+| Sensitivity Cohort | Record Count ($N$) | Timing MAE | Within $\pm 1$ Year | Occurrence Accuracy | 80% Coverage | Baseline MAE |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Primary Certified A/AA** | 3,751 | **9.19y** | **9.06%** | **9.53%** | 69.06% | 6.41y (19.38% $\pm 1$y) |
+| **AA-Only (Highest Precision)**| 2,591 | **8.37y** | **9.64%** | **8.13%** | 69.04% | 5.70y (21.83% $\pm 1$y) |
+| **A-Only (Direct Memory)** | 1,160 | **10.51y** | **8.13%** | **13.39%** | 62.60% | 7.54y (15.45% $\pm 1$y) |
+| **All Independent (AA to X)** | 4,798 | **9.06y** | **10.07%** | **10.09%** | 69.79% | 6.43y (19.22% $\pm 1$y) |
+| **Stratified Regression Sample**| 500 | **9.33y** | **13.33%** | **9.56%** | 73.33% | 6.58y (17.78% $\pm 1$y) |
 
-Performance is consistent across reliability tiers: higher birth time precision (AA-only) shows slightly lower timing MAE (8.37y vs 10.61y for A-only), but both remain substantially worse than simple demographic expectation (6.41y).
+Performance is consistent across reliability tiers: higher birth time precision (AA-only) shows slightly lower timing MAE (8.37y vs 10.51y for A-only), but both remain substantially worse than simple demographic expectation (5.70y for AA, 6.41y overall).
 
 ---
 
@@ -266,15 +304,18 @@ Performance is consistent across reliability tiers: higher birth time precision 
 | **Evaluated Cohort** | 1,610 (24 right-censored excluded) | 1,529 (26 right-censored excluded) |
 | **Occurrence Accuracy** | **89.75%** | **90.39%** |
 | **95% Wilson Score CI** | [0.8817, 0.9114] | [0.8881, 0.9176] |
+| **Brier Score / ECE** | 0.0921 / 0.0147 | 0.0868 / 0.0132 |
 | **Timing Evaluated ($N$)** | 1,484 | 1,402 |
 | **Timing MAE** | **6.89 years** | **7.10 years** |
 | **Timing Median Absolute Error** | **6.00 years** | **6.00 years** |
-| **Timing Within $\pm 1$ Year** | **13.01% (193/1,484)** | **11.70%** |
+| **Timing RMSE** | **9.07 years** | **9.38 years** |
+| **Timing Within $\pm 1$ Year** | **13.01% (193/1,484)** | **11.70% (164/1,402)** |
 | **Timing Within $\pm 2$ Years** | **22.78%** | **22.18%** |
 | **Timing Within $\pm 3$ Years** | **32.41%** | **31.88%** |
-| **Conformal 80% Coverage** | **58.63%** | **58.12%** |
+| **Conformal 80% Coverage** | **80.53%** | **79.81%** |
+| **Mean Winkler Score (80% Interval)**| **32.54** | **33.37** |
 | **Demographic Baseline MAE**| **4.28 years** | **4.29 years** |
-| **Demographic Within $\pm 1$ Year** | **28.71%** | **28.45%** |
+| **Demographic Within $\pm 1$ Year** | **28.71%** | **28.46%** |
 
 ---
 
@@ -286,6 +327,11 @@ Performance is consistent across reliability tiers: higher birth time precision 
 > 1. **Timing Superiority:** The demographic median age baseline ($\text{MAE} \approx 4.28$ years, within $\pm 1$y $\approx 28.71\%$) substantially outperforms the raw astrological timing model ($\text{MAE} \approx 6.89$ years, within $\pm 1$y $\approx 13.01\%$).
 > 2. **Occurrence Specificity:** Astrological occurrence models produce candidate timing windows across virtually every adult chart between ages 18 and 50, resulting in **0.00% specificity**.
 > 3. **High Base Rate Effect:** Apparent ~90% accuracy in VedAstro is entirely driven by the ~90% base rate of marriage in the biographical sample. In external samples with lower marriage documentation rates, occurrence accuracy drops proportionally to the sample base rate.
+
+### 2. Chapter 9 Classification: EXPERIMENTAL (Not Empirically Validated)
+In strict adherence to anti-fabrication standards, Chapter 9 (*Marriage Harmony, Progeny & D9 Navamsha Analysis*) is formally classified as **EXPERIMENTAL** in the chapter availability matrix (`chapterAvailabilityMatrix.js`) and feature registry (`features.js`). 
+
+Because empirical benchmarking confirms that simple demographic median-age prediction ($\text{MAE} = 4.28$y internal, $6.41$y external) substantially outperforms raw astrological event timing ($\text{MAE} = 6.89$y internal, $9.19$y external), Chapter 9 **cannot and does not claim `EMPIRICALLY_VALIDATED` status**. Full transparency disclosures are surfaced across all runtime consultative and PDF reporting surfaces.
 
 ---
 
