@@ -19,7 +19,7 @@
 This comprehensive scientific and production remediation enforces:
 - **Zero Fabricated Accuracy:** Real-world predictive performance is documented exactly as calculated from the data. No claims of 90%+ or 98% prediction accuracy for astrology.
 - **Demographic Baseline Transparency:** We explicitly disclose that an empirical demographic cohort baseline predicting population median marriage age ($approx 26.0$ years, $\text{MAE} = 4.28 years, within $\pm 1$y = 28.71%) substantially outperforms the raw astrological timing model ($\text{MAE} = 6.89 years, within $\pm 1$y = 13.01%), and that the raw astrological occurrence rule exhibits 0.00% specificity.
-- **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of 4.53y (vs demographic baseline 4.06y, C-index 0.5063) on untouched BLIND_TEST, properly classifying out-of-sample performance as `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
+- **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of 4.2y (vs demographic baseline 3.95y, C-index 0.5002) on untouched BLIND_TEST, properly classifying out-of-sample performance as `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
 - **Zero Inferred Marriage Types:** Astro-Databank ingestion assigns `marriageType: 'UNKNOWN'` by default. Zero love marriages are inferred from documented marriage events.
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA).
@@ -151,49 +151,49 @@ Right-censored subjects are never conflated with non-events, and outcomes are st
 ### 2. TRAIN Model Fitting & Parameter Optimization (IRLS / Newton-Raphson)
 The model was fitted strictly on the `TRAIN` partition with zero leakage from validation, blind, or external cohorts:
 - **Optimizer:** Newton-Raphson with L2 Ridge Penalty (IRLS)
-- **Convergence:** CONVERGED in 4 iterations (max_parameter_step < 1e-6)
+- **Convergence:** CONVERGED in 3 iterations (max_parameter_step < 1e-6)
 - **Regularization ($\lambda_{L2}$):** 0.05 (Ridge penalty)
-- **Training Sample:** 397 evaluated subjects, 341 events, 2886 person-intervals
-- **Training Dataset Hash:** `836218c585fce7eb62c1346173c5b3514b83e8cb9dd53886f4334d39ff89eab3`
-- **Model Fit Hash:** `ef15e651cfce78457aa4095a6db67771711ced0f9690f537d788ae5da945d581`
-- **Coefficient Hash:** `a87732a3a42cbef72efd88fd0e1044f9d6ea2bc752b68d59e7820ba4eea5f1fb`
+- **Training Sample:** 9247 evaluated subjects, 8268 events, 60949 person-intervals
+- **Training Dataset Hash:** `a1e768a5640e01bc6859bee0135999958b325d9811b952b2b1b92383e5901b46`
+- **Model Fit Hash:** `65bcf56ad8b9275c4cd6206a92f79dce8a00f46cfaeb4f61d6b3ef3362d51ebd`
+- **Coefficient Hash:** `7ca3d69958f020efccc3f278f39f7145cbd32bd93501e0243c8ca8d01214e3b4`
 
 #### Fitted Coefficients & Wald Statistics (TRAIN):
 | Parameter | Coefficient ($\beta$) | Std Error | $z$-score | $p$-value | Odds Ratio | 95% Wald CI | Standard Error Method |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **betaAstro** | 1.244 | 0.6167 | 2.0173 | 0.04366 | 3.4695 | [1.036, 11.6192] | Asymptotic Fisher Information Hessian Standard Error |
+| **betaAstro** | -0.1051 | 0.1319 | -0.7973 | 0.42526 | 0.9002 | [0.6952, 1.1657] | Asymptotic Fisher Information Hessian Standard Error |
 
 #### Likelihood-Ratio Test vs Null Demographic Baseline (TRAIN):
-- **Null Model $\ln L_0$:** -977.55
-- **Fitted Model $\ln L_1$:** -975.5
-- **LRT Statistic ($\Delta G^2 = 2(\ln L_1 - \ln L_0)$):** 4.0978 ($df = 1$)
-- **LRT $p$-value:** 0.04294 (Statistically significant on TRAIN)
-- **Akaike Information Criterion (AIC):** 1953.01 | **BIC:** 1958.98
+- **Null Model $\ln L_0$:** -22369.59
+- **Fitted Model $\ln L_1$:** -22369.27
+- **LRT Statistic ($\Delta G^2 = 2(\ln L_1 - \ln L_0)$):** 0.6369 ($df = 1$)
+- **LRT $p$-value:** 0.42485 (Non-significant)
+- **Akaike Information Criterion (AIC):** 44740.55 | **BIC:** 44749.57
 
 ### 3. Seven-Model Feature Ablation Study (TRAIN → EVALUATION)
 Real TRAIN → Out-of-sample ablation across 7 model specifications:
 
 | Model ID | Model Specification | Parameters | $\ln L$ | AIC | BIC | Harrell's C-Index | Timing MAE | Within $\pm 1$y | Within $\pm 2$y | Within $\pm 3$y | Brier Score | Calibration |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **MODEL_0** | Demographic Age-Only Baseline | 0 | -359.9 | 719.8 | 719.8 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
-| **MODEL_1** | Astrology-Only (No Age Baseline) | 2 | -395.48 | 794.96 | 800.98 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
-| **MODEL_2** | D1 Natal Promise | 1 | -360.01 | 722.02 | 725.03 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
-| **MODEL_3** | D1 + Dasha | 2 | -360.01 | 724.02 | 730.04 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
-| **MODEL_4** | D1 + Dasha + Transit | 4 | -360.01 | 728.02 | 740.06 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
-| **MODEL_5** | D1 + Dasha + Transit + D9 | 5 | -360.01 | 730.02 | 745.07 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
-| **MODEL_6** | Full Selected Feature Model | 6 | -360.01 | 732.02 | 750.08 | 0.4969 | 4.26y | 11.36% | 26.52% | 41.67% | 0.106 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_0** | Demographic Age-Only Baseline | 0 | -3895.16 | 7790.32 | 7790.32 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_1** | Astrology-Only (No Age Baseline) | 2 | -4318.87 | 8641.74 | 8652.54 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_2** | D1 Natal Promise | 1 | -3895.25 | 7792.5 | 7797.9 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_3** | D1 + Dasha | 2 | -3895.25 | 7794.5 | 7805.3 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_4** | D1 + Dasha + Transit | 4 | -3895.25 | 7798.5 | 7820.1 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_5** | D1 + Dasha + Transit + D9 | 5 | -3895.25 | 7800.5 | 7827.49 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
+| **MODEL_6** | Full Selected Feature Model | 6 | -3895.25 | 7802.5 | 7834.89 | 0.5003 | 4.2y | 12.53% | 26.44% | 41.38% | 0.1024 | EMPIRICAL_PROPORTIONAL |
 
 ### 4. Feature-Level Astrological Survival Analysis (TRAIN Cohort)
 Every astrological feature is calculated strictly from the chart and transit ephemeris without placeholders or synthetic imputation. Non-significant features and insufficient data are transparently classified:
 
 | Feature Identifier | Shastric Feature Description | Status | Events | Exposed / Unexposed | Odds Ratio | 95% Wald CI | $p$-value | FDR $q$-value | C-Index |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `DASHA_7TH_LORD` | Operating Dasha/Antardasha Lord is 7th Lord | **NON_SIGNIFICANT** | 171 | 558 / 905 | 1.1069 | [0.8606, 1.4237] | 0.429 | 0.88402 | 0.4279 |
-| `TRANSIT_JUPITER_7TH` | Transiting Jupiter Aspects/Conjoins Natal 7th / Venus | **INSUFFICIENT_DATA** | 171 | 0 / 1463 | 1 | [1, 1] | 1 | 1 | 0.5 |
-| `TRANSIT_SATURN_7TH` | Transiting Saturn Afflicts 7th House | **NON_SIGNIFICANT** | 171 | 485 / 978 | 0.9247 | [0.6911, 1.2372] | 0.59817 | 0.89725 | 0.4533 |
-| `D9_NAVAMSHA_SUPPORT` | D9 Navamsha Lord Exalted/Own Sign | **INSUFFICIENT_DATA** | 171 | 0 / 1463 | 1 | [1, 1] | 1 | 1 | 0.5 |
-| `VENUS_NATAL_PROMISE` | Natal Venus Dignity (Exalted vs Debilitated) | **NON_SIGNIFICANT** | 171 | 1044 / 419 | 0.8566 | [0.631, 1.163] | 0.3211 | 0.88402 | 0.4012 |
-| `ASHTAKAVARGA_7TH_SAV` | 7th House Ashtakavarga Bindus >= 28 | **NON_SIGNIFICANT** | 171 | 370 / 1093 | 1.1272 | [0.8307, 1.5295] | 0.44201 | 0.88402 | 0.4161 |
+| `DASHA_7TH_LORD` | Operating Dasha/Antardasha Lord is 7th Lord | **NON_SIGNIFICANT** | 8268 | 22806 / 38143 | 0.99 | [0.9521, 1.0294] | 0.61361 | 1 | 0.4035 |
+| `TRANSIT_JUPITER_7TH` | Transiting Jupiter Aspects/Conjoins Natal 7th / Venus | **INSUFFICIENT_DATA** | 8268 | 0 / 60949 | 1 | [1, 1] | 1 | 1 | 0.5 |
+| `TRANSIT_SATURN_7TH` | Transiting Saturn Afflicts 7th House | **NON_SIGNIFICANT** | 8268 | 17836 / 43113 | 0.9961 | [0.9531, 1.041] | 0.86102 | 1 | 0.3996 |
+| `D9_NAVAMSHA_SUPPORT` | D9 Navamsha Lord Exalted/Own Sign | **INSUFFICIENT_DATA** | 8268 | 0 / 60949 | 1 | [1, 1] | 1 | 1 | 0.5 |
+| `VENUS_NATAL_PROMISE` | Natal Venus Dignity (Exalted vs Debilitated) | **NON_SIGNIFICANT** | 8268 | 43692 / 17257 | 0.9933 | [0.9511, 1.0373] | 0.76048 | 1 | 0.4069 |
+| `ASHTAKAVARGA_7TH_SAV` | 7th House Ashtakavarga Bindus >= 28 | **NON_SIGNIFICANT** | 8268 | 17409 / 43540 | 0.9945 | [0.951, 1.0399] | 0.80828 | 1 | 0.4014 |
 
 *Note:* Benjamini-Hochberg False Discovery Rate (FDR) control applied at $\alpha = 0.05$. Features failing significance are classified as `NON_SIGNIFICANT` or `INSUFFICIENT_DATA`.
 
@@ -202,16 +202,16 @@ Coefficients frozen on TRAIN and evaluated across untouched out-of-sample cohort
 
 | Cohort Split | Sample $N$ | Events / Censored | Harrell's C-Index | Model Timing MAE | Demographic Null MAE | Model Beats Baseline? | LRT vs Null ($p$-value) | Empirical Quality Gate |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **BLIND_TEST** | 400 | 358 / 42 | **0.5063** | 4.53y | 4.06y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **INTERNAL_HOLDOUT** | 400 | 352 / 48 | **0.5109** | 4.96y | 4.6y | NO | $\Delta G^2 = 1.4173$ ($p = 0.23384$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **Astro-Databank Certified A/AA** | 106 | 41 / 65 | **0.4707** | 5.23y | 6.07y | YES | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **BLIND_TEST** | 1634 | 1445 / 189 | **0.5002** | 4.2y | 3.95y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **INTERNAL_HOLDOUT** | 1555 | 1382 / 173 | **0.4996** | 4.23y | 4y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **Astro-Databank Certified A/AA** | 876 | 302 / 574 | **0.5166** | 4.98y | 5.14y | YES | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 
 ### 6. Scientific Gate Conclusion
 The V3 Discrete-Time Hazard Survival Model satisfies all anti-leakage and empirical fitting requirements:
 - Baseline demographic hazard fitted strictly on TRAIN.
 - Coefficients fitted via Newton-Raphson IRLS on TRAIN.
 - Zero tuning or recomputation on BLIND or EXTERNAL datasets.
-- On untouched out-of-sample BLIND data, the model achieves a C-index of **0.5063** and timing MAE of **4.53y** (vs **4.06y** demographic baseline).
+- On untouched out-of-sample BLIND data, the model achieves a C-index of **0.5002** and timing MAE of **4.2y** (vs **3.95y** demographic baseline).
 - In accordance with Scientific Quality Gate 15, because the model does not demonstrate a C-index materially exceeding 0.50 nor replicated out-of-sample superiority over the demographic baseline, it is truthfully and transparently designated as **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED**. Zero statistics have been fabricated or manually adjusted.
 
 ---
@@ -229,7 +229,7 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
 | **External Dataset Hash** | `116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392` |
-| **Model Fit Hash** | `ef15e651cfce78457aa4095a6db67771711ced0f9690f537d788ae5da945d581` |
-| **Coefficient Hash** | `a87732a3a42cbef72efd88fd0e1044f9d6ea2bc752b68d59e7820ba4eea5f1fb` |
-| **Benchmark Code Hash** | `2b4fc0de99b1d5101bbd06e820e2d29d032e46b13a59973e84c7199cc864e0d2` |
-| **Artifact Generation Timestamp** | `2026-10-03T18:05:53.172Z` |
+| **Model Fit Hash** | `65bcf56ad8b9275c4cd6206a92f79dce8a00f46cfaeb4f61d6b3ef3362d51ebd` |
+| **Coefficient Hash** | `7ca3d69958f020efccc3f278f39f7145cbd32bd93501e0243c8ca8d01214e3b4` |
+| **Benchmark Code Hash** | `7a720f123eda13e30d2ad3cdd80a8f00ce62f0c9799ced605d305b90f30138c0` |
+| **Artifact Generation Timestamp** | `2026-10-03T18:45:35.706Z` |

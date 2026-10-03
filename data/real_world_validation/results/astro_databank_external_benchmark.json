@@ -3,14 +3,14 @@
     "title": "Astro-Databank Independent External Validation Benchmark (V3)",
     "sourceURL": "https://www.astro.com/astro-databank/",
     "exportFormat": "WIKIDUMP_MEDIAWIKI_XML",
-    "generatedAt": "2026-10-03T18:05:53.025Z",
+    "generatedAt": "2026-10-03T18:45:35.479Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
     "predictionEngineHash": "2a043a4e846f8f9e173e1f76f7e506084680d2d93e26c2106a8b2c037663ddf8",
     "calibrationModelHash": "d60e52ff5e137132574e061de9fe4ad121c6f4c771042974f09055c27ee27155",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "benchmarkCodeHash": "2b4fc0de99b1d5101bbd06e820e2d29d032e46b13a59973e84c7199cc864e0d2",
+    "benchmarkCodeHash": "7a720f123eda13e30d2ad3cdd80a8f00ce62f0c9799ced605d305b90f30138c0",
     "totalExportRecords": 6036,
     "totalVedAstroOverlapExcluded": 1238,
     "overlapManifest": {
@@ -37,7 +37,7 @@
   "primaryBenchmark": {
     "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
     "n": 3751,
-    "actualExecutionDurationSec": 0.12,
+    "actualExecutionDurationSec": 0.11,
     "actualPredictionCount": 3751,
     "cacheHits": 0,
     "cacheMisses": 3751,
@@ -45,7 +45,7 @@
     "errors": 0,
     "excludedCount": 556,
     "unknownCount": 25,
-    "elapsedSeconds": 0.12,
+    "elapsedSeconds": 0.11,
     "occurrence": {
       "n": 313,
       "censoringBreakdown": {
@@ -196,41 +196,41 @@
     },
     "commitmentsCount": 3751,
     "discreteHazardModel": {
-      "cohortEvaluatedN": 106,
-      "eventCount": 41,
-      "censoredCount": 65,
+      "cohortEvaluatedN": 876,
+      "eventCount": 302,
+      "censoredCount": 574,
       "likelihood": {
-        "logLikNullModel": -237.29,
-        "logLikAstrologyOnly": -222.59,
-        "logLikCombinedModel": -237.69,
+        "logLikNullModel": -2038.25,
+        "logLikAstrologyOnly": -1760.66,
+        "logLikCombinedModel": -2038.51,
         "likelihoodRatioStatistic": 0,
         "lrtPValue": 1,
         "isAstrologyStatisticallySignificant": false
       },
-      "concordanceIndex": 0.4707,
+      "concordanceIndex": 0.5166,
       "timing": {
-        "evalN": 41,
-        "mae": 5.23,
-        "medianAE": 3.78,
-        "rmse": 7.26,
-        "timingMAEBaseline": 6.07,
-        "within1yPct": 17.07,
-        "within2yPct": 29.27,
-        "within3yPct": 36.59,
+        "evalN": 302,
+        "mae": 4.98,
+        "medianAE": 4.08,
+        "rmse": 6.37,
+        "timingMAEBaseline": 5.14,
+        "within1yPct": 13.25,
+        "within2yPct": 24.5,
+        "within3yPct": 34.11,
         "doesCombinedBeatBaseline": true
       },
       "occurrence": {
-        "evaluatedCount": 106,
-        "tp": 41,
-        "fp": 65,
+        "evaluatedCount": 876,
+        "tp": 302,
+        "fp": 574,
         "tn": 0,
         "fn": 0,
-        "accuracy": 0.3868,
+        "accuracy": 0.3447,
         "sensitivity": 1,
         "specificity": 0,
         "balancedAccuracy": 0.5,
         "mcc": 0,
-        "brierScore": 0.463,
+        "brierScore": 0.5296,
         "hasTrueNegatives": false
       },
       "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
@@ -436,7 +436,7 @@
     "A_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
       "n": 1160,
-      "actualExecutionDurationSec": 0.11,
+      "actualExecutionDurationSec": 0.1,
       "actualPredictionCount": 1160,
       "cacheHits": 0,
       "cacheMisses": 1160,
@@ -444,7 +444,7 @@
       "errors": 0,
       "excludedCount": 294,
       "unknownCount": 22,
-      "elapsedSeconds": 0.11,
+      "elapsedSeconds": 0.1,
       "occurrence": {
         "n": 120,
         "censoringBreakdown": {
@@ -760,7 +760,7 @@
     "ASTRO_DATABANK_REGRESSION_SAMPLE": {
       "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
       "n": 500,
-      "actualExecutionDurationSec": 0.11,
+      "actualExecutionDurationSec": 0.1,
       "actualPredictionCount": 500,
       "cacheHits": 0,
       "cacheMisses": 500,
@@ -768,7 +768,7 @@
       "errors": 0,
       "excludedCount": 68,
       "unknownCount": 3,
-      "elapsedSeconds": 0.11,
+      "elapsedSeconds": 0.1,
       "occurrence": {
         "n": 427,
         "censoringBreakdown": {

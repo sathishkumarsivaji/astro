@@ -194,10 +194,9 @@ export function computeHarrellsCIndex(pairs) {
   let concordant = 0;
   let total = 0;
   const n = pairs.length;
-  const maxPairs = Math.min(n, 500); // Pair sample for fast deterministic evaluation
 
-  for (let i = 0; i < maxPairs; i++) {
-    for (let j = i + 1; j < maxPairs; j++) {
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
       const a = pairs[i];
       const b = pairs[j];
       if (a.eventAge !== b.eventAge) {
@@ -826,8 +825,7 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
  * @returns {Object[]} Array of genuinely calculated feature statistics
  */
 export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, options = {}) {
-  const maxRecords = options.maxRecords ?? Math.min(records.length, 300);
-  const cohort = records.slice(0, maxRecords);
+  const cohort = options.maxRecords ? records.slice(0, options.maxRecords) : records;
   const baselineTable = options.baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD;
 
   // 1. Extract feature person-intervals
@@ -1378,7 +1376,7 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
  */
 export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvider, baselineTable = null, options = {}) {
   const baseTable = baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD;
-  const sampleEval = evalRecords.slice(0, options.maxRecords ?? Math.min(evalRecords.length, 250));
+  const sampleEval = options.maxRecords ? evalRecords.slice(0, options.maxRecords) : evalRecords;
 
   const models = [
     { id: "MODEL_0", name: "Demographic Age-Only Baseline", params: 0, modelType: "DEMOGRAPHIC_AGE_ONLY" },

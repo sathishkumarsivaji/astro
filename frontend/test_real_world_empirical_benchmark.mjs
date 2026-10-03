@@ -493,34 +493,34 @@ console.log("\n" + "=".repeat(75));
 console.log(" ASTROVERSE — V3 DISCRETE-TIME HAZARD SURVIVAL MODEL PIPELINE");
 console.log("=".repeat(75));
 
-// 1. Genuine model fitting strictly on TRAIN (zero leakage)
-console.log("\nFitting V3 Discrete-Time Hazard Survival Model strictly on TRAIN...");
-const v3TrainFit = fitDiscreteHazardModel(trainRecords, getChartForRecord, { maxRecords: 400, modelType: "COMBINED_HAZARD" });
+// 1. Genuine model fitting strictly on FULL TRAIN COHORT (zero leakage)
+console.log(`\nFitting V3 Discrete-Time Hazard Survival Model strictly on FULL TRAIN COHORT (N=${trainRecords.length})...`);
+const v3TrainFit = fitDiscreteHazardModel(trainRecords, getChartForRecord, { modelType: "COMBINED_HAZARD" });
 console.log(`  ✓ TRAIN Baseline Fitted: 16 discrete age intervals [18, 50]`);
 console.log(`  ✓ TRAIN Fitted betaAstro: ${v3TrainFit.coefficients.betaAstro} (SE: ${v3TrainFit.coefficientTable[0].standardError})`);
 console.log(`  ✓ TRAIN Likelihood Ratio Statistic: ${v3TrainFit.likelihood.likelihoodRatioStatistic} (p = ${v3TrainFit.likelihood.lrtPValue})`);
 console.log(`  ✓ TRAIN Model Fit Hash: ${v3TrainFit.sampleProvenance.modelFitHash}`);
 
-// 2. Evaluate frozen model on VAL
-console.log("\nEvaluating Frozen V3 Model on VALIDATION Partition...");
-const v3ValMetrics = evaluateCohortDiscreteHazardSurvival(valRecords.slice(0, 400), getChartForRecord, {
+// 2. Evaluate frozen model on FULL VALIDATION Partition
+console.log(`\nEvaluating Frozen V3 Model on FULL VALIDATION Partition (N=${valRecords.length})...`);
+const v3ValMetrics = evaluateCohortDiscreteHazardSurvival(valRecords, getChartForRecord, {
   betaAstro: v3TrainFit.coefficients.betaAstro,
   baselineTable: v3TrainFit.baselineTable
 });
 console.log(`  ✓ VAL C-index: ${v3ValMetrics.concordanceIndex} | Timing MAE: ${v3ValMetrics.timing.mae}y (Baseline: ${v3ValMetrics.timing.timingMAEBaseline}y)`);
 
-// 3. Evaluate frozen model on BLIND_TEST
-console.log("\nEvaluating Frozen V3 Model on BLIND_TEST (Untouched Data)...");
-const v3BlindMetrics = evaluateCohortDiscreteHazardSurvival(blindRecords.slice(0, 400), getChartForRecord, {
+// 3. Evaluate frozen model on FULL BLIND_TEST (Untouched Data)
+console.log(`\nEvaluating Frozen V3 Model on FULL BLIND_TEST (Untouched Data, N=${blindRecords.length})...`);
+const v3BlindMetrics = evaluateCohortDiscreteHazardSurvival(blindRecords, getChartForRecord, {
   betaAstro: v3TrainFit.coefficients.betaAstro,
   baselineTable: v3TrainFit.baselineTable
 });
 console.log(`  ✓ BLIND C-index: ${v3BlindMetrics.concordanceIndex} | Timing MAE: ${v3BlindMetrics.timing.mae}y (Baseline: ${v3BlindMetrics.timing.timingMAEBaseline}y)`);
 console.log(`  ✓ BLIND Status: ${v3BlindMetrics.validationStatus}`);
 
-// 4. Evaluate frozen model on INTERNAL_HOLDOUT
-console.log("\nEvaluating Frozen V3 Model on INTERNAL_HOLDOUT...");
-const v3HoldoutMetrics = evaluateCohortDiscreteHazardSurvival(internalHoldoutRecords.slice(0, 400), getChartForRecord, {
+// 4. Evaluate frozen model on FULL INTERNAL_HOLDOUT
+console.log(`\nEvaluating Frozen V3 Model on FULL INTERNAL_HOLDOUT (N=${internalHoldoutRecords.length})...`);
+const v3HoldoutMetrics = evaluateCohortDiscreteHazardSurvival(internalHoldoutRecords, getChartForRecord, {
   betaAstro: v3TrainFit.coefficients.betaAstro,
   baselineTable: v3TrainFit.baselineTable
 });
@@ -537,40 +537,40 @@ if (adbRecords.length > 0) {
   const adbAACohort = adbRecords.filter(r => r.birthTimeReliability === "AA");
   const adbACohort = adbRecords.filter(r => r.birthTimeReliability === "A");
 
-  console.log("\nEvaluating Frozen V3 Model on Astro-Databank Certified A/AA External Cohort...");
-  v3AdbCertifiedMetrics = evaluateCohortDiscreteHazardSurvival(adbCertifiedCohort.slice(0, 400), getChartForRecord, {
+  console.log(`\nEvaluating Frozen V3 Model on FULL Astro-Databank Certified A/AA External Cohort (N=${adbCertifiedCohort.length})...`);
+  v3AdbCertifiedMetrics = evaluateCohortDiscreteHazardSurvival(adbCertifiedCohort, getChartForRecord, {
     betaAstro: v3TrainFit.coefficients.betaAstro,
     baselineTable: v3TrainFit.baselineTable
   });
   console.log(`  ✓ ADB Certified A/AA C-index: ${v3AdbCertifiedMetrics.concordanceIndex} | Timing MAE: ${v3AdbCertifiedMetrics.timing.mae}y (Baseline: ${v3AdbCertifiedMetrics.timing.timingMAEBaseline}y)`);
   console.log(`  ✓ ADB Status: ${v3AdbCertifiedMetrics.validationStatus}`);
 
-  v3AdbAAMetrics = evaluateCohortDiscreteHazardSurvival(adbAACohort.slice(0, 250), getChartForRecord, {
+  v3AdbAAMetrics = evaluateCohortDiscreteHazardSurvival(adbAACohort, getChartForRecord, {
     betaAstro: v3TrainFit.coefficients.betaAstro,
     baselineTable: v3TrainFit.baselineTable
   });
-  v3AdbAMetrics = evaluateCohortDiscreteHazardSurvival(adbACohort.slice(0, 250), getChartForRecord, {
+  v3AdbAMetrics = evaluateCohortDiscreteHazardSurvival(adbACohort, getChartForRecord, {
     betaAstro: v3TrainFit.coefficients.betaAstro,
     baselineTable: v3TrainFit.baselineTable
   });
-  v3AdbAllMetrics = evaluateCohortDiscreteHazardSurvival(adbRecords.slice(0, 400), getChartForRecord, {
+  v3AdbAllMetrics = evaluateCohortDiscreteHazardSurvival(adbRecords, getChartForRecord, {
     betaAstro: v3TrainFit.coefficients.betaAstro,
     baselineTable: v3TrainFit.baselineTable
   });
 }
 
-// 6. Feature-Level Survival Analysis on TRAIN (Zero Hardcoded Stats)
-console.log("\nExecuting Feature-Level Survival Analysis on TRAIN (Zero Hardcoded Stats)...");
-const v3FeatureSurvivalAnalysis = runRealDataFeatureLevelSurvivalAnalysis(trainRecords.slice(0, 200), getChartForRecord, {
+// 6. Feature-Level Survival Analysis on FULL TRAIN (Zero Hardcoded Stats)
+console.log(`\nExecuting Feature-Level Survival Analysis on FULL TRAIN (N=${trainRecords.length})...`);
+const v3FeatureSurvivalAnalysis = runRealDataFeatureLevelSurvivalAnalysis(trainRecords, getChartForRecord, {
   baselineTable: v3TrainFit.baselineTable
 });
 for (const f of v3FeatureSurvivalAnalysis) {
   console.log(`  • ${f.featureId}: OR=${f.oddsRatio} [${f.ci95[0]}, ${f.ci95[1]}], p=${f.pValue}, status=${f.status}`);
 }
 
-// 7. 7-Model Feature Ablation Study
-console.log("\nExecuting Real 7-Model Feature Ablation Study...");
-const v3AblationMetrics = runRealDataFeatureAblation(trainRecords, blindRecords, getChartForRecord, v3TrainFit.baselineTable, { maxRecords: 150 });
+// 7. 7-Model Feature Ablation Study on FULL BLIND_TEST
+console.log(`\nExecuting Real 7-Model Feature Ablation Study on FULL BLIND_TEST (N=${blindRecords.length})...`);
+const v3AblationMetrics = runRealDataFeatureAblation(trainRecords, blindRecords, getChartForRecord, v3TrainFit.baselineTable);
 for (const m of v3AblationMetrics) {
   console.log(`  • ${m.modelId} (${m.modelName}): LL=${m.logLikelihood}, AIC=${m.aic}, C-index=${m.cIndex}, MAE=${m.mae}y`);
 }
