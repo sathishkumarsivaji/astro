@@ -121,7 +121,14 @@ export function createTimingWindow({
   startDate = null,
   endDate = null,
   resolution = RESOLUTION.INSUFFICIENT_DATA,
+  astronomicalResolution = null,
+  traditionalTimingResolution = null,
+  empiricalPredictiveResolution = null,
   strength = 0,
+  traditionalRuleConvergence = null,
+  traditionalEvidenceStrength = null,
+  predictiveProbability = null,
+  epistemicStatus = null,
   confidenceType = CONFIDENCE_TYPE.INSUFFICIENT_DATA,
   supportingRuleIds = [],
   evidenceIds = [],
@@ -142,6 +149,25 @@ export function createTimingWindow({
   ruleVersion = "1.0.0",
   ephemerisVersion = "AstronomyEngine/VSOP87"
 } = {}) {
+  const finalAstronomicalResolution = astronomicalResolution || (startDate && endDate ? RESOLUTION.DAY : RESOLUTION.INSUFFICIENT_DATA);
+  const finalTraditionalTimingResolution = traditionalTimingResolution || resolution;
+  const isMarriage = domain === DOMAIN.MARRIAGE || domain === "marriage";
+  const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || (isMarriage ? RESOLUTION.YEAR : "NOT_ESTABLISHED");
+  const finalConvergence = traditionalRuleConvergence ?? strength;
+  const finalEvidenceStrength = traditionalEvidenceStrength ?? strength;
+  const finalPredictiveProbability = predictiveProbability ?? null;
+
+  const finalEpistemicStatus = epistemicStatus || {
+    astronomicalStatus: "CALCULATED",
+    traditionalInterpretationStatus: "RULE_BASED",
+    empiricalValidationStatus: isMarriage
+      ? "CALIBRATED_EMPIRICAL_BENCHMARK_AVAILABLE"
+      : "NOT_ESTABLISHED",
+    traditionalRuleConvergence: finalConvergence,
+    traditionalEvidenceStrength: finalEvidenceStrength,
+    predictiveProbability: finalPredictiveProbability
+  };
+
   return {
     windowId: windowId || generateDeterministicId("win", domain, subPhase, startDate, endDate),
     domain,
@@ -149,8 +175,15 @@ export function createTimingWindow({
     subPhaseStatus,
     startDate,       // ISO string or null
     endDate,         // ISO string or null
-    resolution,
-    strength,        // 0.0–1.0
+    resolution,      // backwards-compatible
+    astronomicalResolution: finalAstronomicalResolution,
+    traditionalTimingResolution: finalTraditionalTimingResolution,
+    empiricalPredictiveResolution: finalEmpiricalPredictiveResolution,
+    strength,        // 0.0–1.0 (backwards-compatible)
+    traditionalRuleConvergence: finalConvergence,
+    traditionalEvidenceStrength: finalEvidenceStrength,
+    predictiveProbability: finalPredictiveProbability,
+    epistemicStatus: finalEpistemicStatus,
     confidenceType,
     supportingRuleIds,
     evidenceIds,
@@ -356,9 +389,45 @@ export function createDomainResult({
   evidenceChain = [],
   independenceGroups = [],
   resolution = RESOLUTION.INSUFFICIENT_DATA,
+  astronomicalResolution = null,
+  traditionalTimingResolution = null,
+  empiricalPredictiveResolution = null,
+  traditionalRuleConvergence = null,
+  traditionalEvidenceStrength = null,
+  predictiveProbability = null,
+  epistemicStatus = null,
+  validationStatus = null,
+  validationBadge = null,
+  validationDisclaimer = null,
+  structuralCapabilities = null,
+  statutoryNotice = null,
   narrative = { en: "", ta: "" },
   meta = {}
 } = {}) {
+  const isMarriage = domain === DOMAIN.MARRIAGE || domain === "marriage";
+  const finalAstronomicalResolution = astronomicalResolution || (primaryWindows.length > 0 ? (primaryWindows[0].astronomicalResolution || RESOLUTION.DAY) : RESOLUTION.DAY);
+  const finalTraditionalTimingResolution = traditionalTimingResolution || resolution;
+  const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || (isMarriage ? RESOLUTION.YEAR : "NOT_ESTABLISHED");
+  const firstWin = primaryWindows[0];
+  const finalConvergence = traditionalRuleConvergence ?? (firstWin ? (firstWin.traditionalRuleConvergence ?? firstWin.strength ?? 0.75) : 0.5);
+  const finalEvidenceStrength = traditionalEvidenceStrength ?? (firstWin ? (firstWin.traditionalEvidenceStrength ?? firstWin.strength ?? 0.75) : 0.5);
+  const finalPredictiveProb = predictiveProbability ?? null;
+
+  const finalEpistemicStatus = epistemicStatus || {
+    astronomicalStatus: "CALCULATED",
+    traditionalInterpretationStatus: "RULE_BASED",
+    empiricalValidationStatus: isMarriage
+      ? "CALIBRATED_EMPIRICAL_BENCHMARK_AVAILABLE"
+      : "NOT_ESTABLISHED",
+    traditionalRuleConvergence: finalConvergence,
+    traditionalEvidenceStrength: finalEvidenceStrength,
+    predictiveProbability: finalPredictiveProb
+  };
+
+  const finalValidationStatus = validationStatus || (isMarriage
+    ? "CALIBRATED_EMPIRICAL_BENCHMARK_AVAILABLE"
+    : "TRADITIONAL_RULE_FRAMEWORK_UNVALIDATED");
+
   return {
     domain,
     domainLabel,
@@ -371,7 +440,19 @@ export function createDomainResult({
     whyNot,
     evidenceChain,
     independenceGroups,
-    resolution,
+    resolution, // backwards-compatible
+    astronomicalResolution: finalAstronomicalResolution,
+    traditionalTimingResolution: finalTraditionalTimingResolution,
+    empiricalPredictiveResolution: finalEmpiricalPredictiveResolution,
+    traditionalRuleConvergence: finalConvergence,
+    traditionalEvidenceStrength: finalEvidenceStrength,
+    predictiveProbability: finalPredictiveProb,
+    epistemicStatus: finalEpistemicStatus,
+    validationStatus: finalValidationStatus,
+    validationBadge,
+    validationDisclaimer,
+    structuralCapabilities,
+    statutoryNotice,
     narrative,
     meta: {
       calculationVersion: meta.calculationVersion || "5.0.0",

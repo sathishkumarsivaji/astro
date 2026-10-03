@@ -123,6 +123,18 @@ export function calculateHealthExpert(chartData, lang = 'en') {
   // 4. Run generic engine
   const domainTiming = runDomainTiming(DOMAIN.WELLNESS, facts, config, lang);
 
+  // Attach explicit non-clinical structural capabilities and statutory notice
+  domainTiming.structuralCapabilities = {
+    diseasePrediction: false,
+    diagnosis: false,
+    lifespanPrediction: false,
+    deathPrediction: false
+  };
+  domainTiming.statutoryNotice = {
+    en: "STATUTORY MEDICAL NOTICE: This analysis represents traditional astrological symbolic correspondences and constitutional archetypes according to classical Jyotisha. It does NOT constitute medical advice, diagnosis, prognosis, disease prediction, or lifespan determination. Always consult a licensed healthcare professional for any medical concerns.",
+    ta: "சட்டபூர்வ மருத்துவ அறிவிப்பு: இந்த ஆய்வு பாரம்பரிய ஜோதிட குறியீட்டு தொடர்புகளை மட்டுமே குறிக்கிறது. இது மருத்துவ ஆலோசனை, நோயறிதல் அல்லது ஆயுட்காலம் கணிப்பு அல்ல. மருத்துவ தேவைகளுக்கு தகுதிவாய்ந்த மருத்துவரை அணுகவும்."
+  };
+
   // 5. Sanitize and validate all text output for medical safety
   try {
     validateHealthOutput(domainTiming);

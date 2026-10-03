@@ -21,6 +21,7 @@ import {
   RESOLUTION, SUB_PHASE_STATUS, CONFIDENCE_TYPE,
   createTimingWindow, createDomainResult, generateDeterministicId
 } from "./expertPredictionSchema.js";
+import { getDomainValidationInfo } from "./domainValidationRegistry.js";
 
 import {
   extractCanonicalFacts, findRelevantDashaPeriods, getHouseLord,
@@ -97,6 +98,7 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
   const allEvidenceNodes = [];
   const allIndependenceGroups = [];
   const subPhases = DOMAIN_SUB_PHASES[domain] || [];
+  const valInfo = getDomainValidationInfo(domain);
 
   // ── Determine relevant lords ──
   const relevantLords = buildRelevantLordsList(canonicalFacts, relevantHouses, relevantKarakas);
@@ -268,7 +270,13 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
       startDate: startDateIso,
       endDate: endDateIso,
       resolution,
+      astronomicalResolution: hasExactDates ? RESOLUTION.DAY : RESOLUTION.INSUFFICIENT_DATA,
+      traditionalTimingResolution: resolution,
+      empiricalPredictiveResolution: valInfo.empiricalPredictiveResolution,
       strength: adjustedStrength,
+      traditionalRuleConvergence: adjustedStrength,
+      traditionalEvidenceStrength: adjustedStrength,
+      predictiveProbability: null,
       confidenceType,
       natalFacts: relevantLords.map(l => ({ planet: l, role: "domain_lord" })),
       dashaFacts: {
@@ -336,6 +344,12 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
     evidenceChain: allEvidenceNodes,
     independenceGroups: allIndependenceGroups,
     resolution: bestResolution || RESOLUTION.INSUFFICIENT_DATA,
+    astronomicalResolution: RESOLUTION.DAY,
+    traditionalTimingResolution: bestResolution || RESOLUTION.INSUFFICIENT_DATA,
+    empiricalPredictiveResolution: valInfo.empiricalPredictiveResolution,
+    validationStatus: valInfo.status,
+    validationBadge: isTamil ? valInfo.badgeTa : valInfo.badgeEn,
+    validationDisclaimer: isTamil ? valInfo.disclaimerTa : valInfo.disclaimerEn,
     meta: {
       dataCompleteness,
       calculationVersion: "5.0.0",
@@ -415,6 +429,7 @@ function checkVargaActivation(vChart, dashaMatch, relevantHouses, domain) {
  */
 function adaptExistingWindow(existingWindow, domain, canonicalFacts, relevantVargas, isTamil) {
   const ew = existingWindow;
+  const valInfo = getDomainValidationInfo(domain);
 
   // Map existing classification to confidence type
   let confidenceType = CONFIDENCE_TYPE.CANDIDATE_WINDOW;
@@ -429,15 +444,26 @@ function adaptExistingWindow(existingWindow, domain, canonicalFacts, relevantVar
     descriptionTamil: f // Already bilingual in existing engine
   }));
 
+  const startDate = ew.startDateIso || ew.localStartDate || null;
+  const endDate = ew.endDateIso || ew.localEndDate || null;
+  const resolution = ew.peakWindow ? RESOLUTION.DATE_RANGE : RESOLUTION.MONTH_RANGE;
+  const strength = confidenceType === CONFIDENCE_TYPE.PEAK_CONVERGENCE ? 0.9 :
+            confidenceType === CONFIDENCE_TYPE.STRONG_CONVERGENCE ? 0.75 :
+            confidenceType === CONFIDENCE_TYPE.PRIMARY_ACTIVATION ? 0.6 : 0.4;
+
   return createTimingWindow({
-    windowId: ew.windowId || generateDeterministicId(`${domain}_existing`, ew.startDateIso || ew.localStartDate, ew.endDateIso || ew.localEndDate, ew.mahadashaLord, ew.antardashaLord),
+    windowId: ew.windowId || generateDeterministicId(`${domain}_existing`, startDate, endDate, ew.mahadashaLord, ew.antardashaLord),
     domain,
-    startDate: ew.startDateIso || ew.localStartDate || null,
-    endDate: ew.endDateIso || ew.localEndDate || null,
-    resolution: ew.peakWindow ? RESOLUTION.DATE_RANGE : RESOLUTION.MONTH_RANGE,
-    strength: confidenceType === CONFIDENCE_TYPE.PEAK_CONVERGENCE ? 0.9 :
-              confidenceType === CONFIDENCE_TYPE.STRONG_CONVERGENCE ? 0.75 :
-              confidenceType === CONFIDENCE_TYPE.PRIMARY_ACTIVATION ? 0.6 : 0.4,
+    startDate,
+    endDate,
+    resolution,
+    astronomicalResolution: (startDate && endDate) ? RESOLUTION.DAY : RESOLUTION.INSUFFICIENT_DATA,
+    traditionalTimingResolution: resolution,
+    empiricalPredictiveResolution: valInfo.empiricalPredictiveResolution,
+    strength,
+    traditionalRuleConvergence: strength,
+    traditionalEvidenceStrength: strength,
+    predictiveProbability: null,
     confidenceType,
     dashaFacts: {
       md: { lord: ew.mahadashaLord, tamil: ew.mahadashaLord },

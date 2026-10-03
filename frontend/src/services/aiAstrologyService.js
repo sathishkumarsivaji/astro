@@ -187,6 +187,7 @@ export async function logoutUser() {
 }
 
 import { getStructuredVargaData, validateAndSanitizeNarrative } from "./astroEngine.js";
+import { verifyAndSanitizeAiNarrative } from "./aiEvidenceGate.js";
 
 function formatStructuredVargas(structuredVargas, divisionalCharts, isTamil) {
   if (structuredVargas && Object.keys(structuredVargas).length > 0) {
@@ -740,7 +741,9 @@ export function cleanAIOutput(text, lang = "en") {
     }
   }
 
-  return validateAndSanitizeNarrative(cleaned, lang);
+  const sanitizedBasic = validateAndSanitizeNarrative(cleaned, lang);
+  const gateResult = verifyAndSanitizeAiNarrative(sanitizedBasic, null, { strictGrounding: false, lang });
+  return gateResult.sanitizedNarrative;
 }
 
 /**

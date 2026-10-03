@@ -157,5 +157,10 @@ export function calculateBusinessExpert(chartData, lang) {
     legacyTiming: []
   };
 
-  return runDomainTiming(domain, facts, domainConfig, isTamil);
+  const result = runDomainTiming(domain, facts, domainConfig, isTamil);
+  result.statutoryNotice = {
+    en: "COMMERCIAL ADVISORY NOTICE: Astrological indications represent symbolic traditional tendencies and cyclical archetypes. They do NOT constitute business, investment, financial, or legal counsel. Consult professional advisors for commercial decisions.",
+    ta: "வணிக ஆலோசனை அறிவிப்பு: ஜோதிட குறிப்புகள் பாரம்பரிய போக்குகளை மட்டுமே குறிக்கின்றன. இது தொழில் அல்லது முதலீட்டு ஆலோசனை அல்ல."
+  };
+  return result;
 }

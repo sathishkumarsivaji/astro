@@ -90,5 +90,9 @@ export function calculateFinanceExpert(chartData, lang) {
     };
 
     const domainTiming = runDomainTiming(facts, config, isTamil);
+    domainTiming.statutoryNotice = {
+        en: "FINANCIAL ADVISORY NOTICE: Astrological indications represent symbolic traditional tendencies and cyclical archetypes. They do NOT constitute financial, investment, accounting, or tax advice. Always consult a licensed financial advisor.",
+        ta: "நிதி ஆலோசனை அறிவிப்பு: ஜோதிட குறிப்புகள் பாரம்பரிய போக்குகளை மட்டுமே குறிக்கின்றன. இது முதலீட்டு அல்லது நிதி ஆலோசனை அல்ல."
+    };
     return domainTiming;
 }

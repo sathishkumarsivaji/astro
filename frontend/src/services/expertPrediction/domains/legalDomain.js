@@ -73,5 +73,10 @@ export function calculateLegalExpert(chartData, lang = 'en') {
     }
   };
 
-  return runDomainTiming(DOMAIN.LEGAL, facts, config, lang);
+  const result = runDomainTiming(DOMAIN.LEGAL, facts, config, lang);
+  result.statutoryNotice = {
+    en: "LEGAL ADVISORY NOTICE: Astrological indications are traditional symbolic assessments of conflict cycles and do NOT constitute legal counsel or judicial outcome guarantees. Always consult a qualified attorney for legal matters.",
+    ta: "சட்ட ஆலோசனை அறிவிப்பு: ஜோதிட குறிப்புகள் வழக்கறிஞர் ஆலோசனை அல்லது நீதிமன்ற தீர்ப்பு உத்தரவாதம் அல்ல. சட்ட விவகாரங்களுக்கு வழக்கறிஞரை அணுகவும்."
+  };
+  return result;
 }

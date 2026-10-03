@@ -34,11 +34,13 @@ import {
   FileText
 } from "lucide-react";
 import { getChapterAvailabilityMatrix } from "../../services/realWorldValidation/chapterAvailabilityMatrix.js";
+import { getAllDomainValidationEntries } from "../../services/expertPrediction/domainValidationRegistry.js";
 import BENCHMARK_DATA from "../../config/latestBenchmarkResults.json";
 
 export default function RealWorldAccuracyDashboard({ isTamil = false, onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
   const chapterMatrix = getChapterAvailabilityMatrix();
+  const domainEntries = getAllDomainValidationEntries();
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
@@ -85,7 +87,8 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
               { id: "marriage", label: isTamil ? "திருமண நிகழ்வு & காலம்" : "Marriage Occurrence & Timing", icon: Activity },
               { id: "baseline", label: isTamil ? "மக்கள்தொகை ஒப்பீடு" : "Baseline Comparison", icon: TrendingUp },
               { id: "ablation", label: isTamil ? "அடுக்கு ஆய்வுகள் (Ablation)" : "Ablation & Survival Model", icon: BarChart3 },
-              { id: "chapters", label: isTamil ? "20 அத்தியாயங்கள் நிலை" : "20-Chapter Matrix", icon: Layers }
+              { id: "chapters", label: isTamil ? "20 அத்தியாயங்கள் நிலை" : "20-Chapter Matrix", icon: Layers },
+              { id: "expertDomains", label: isTamil ? "17-களங்கள் நிலை" : "17-Domain Expert Matrix", icon: Shield }
             ].map(tab => {
               const Icon = tab.icon;
               return (
@@ -518,6 +521,69 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge}`}>
                               {ch.status}
                             </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: 17-DOMAIN EXPERT VALIDATION MATRIX */}
+          {activeTab === "expertDomains" && (
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span>
+                  <strong>Expert Mode Epistemic Standard:</strong> Separation of Astronomical Calculation Resolution (<code>DAY</code> / <code>0.01°</code>), Traditional Interpretive Resolution (<code>DATE_RANGE</code>), and Empirical Predictive Resolution.
+                </span>
+                <span className="font-mono text-[10px] bg-stone-200 px-2.5 py-1 rounded-full font-bold self-start sm:self-auto shrink-0">17/17 Domains Certified</span>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-stone-200 bg-white">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-stone-100 font-mono text-[10px] uppercase text-stone-700 border-b border-stone-200">
+                    <tr>
+                      <th className="p-3">Domain</th>
+                      <th className="p-3">Empirical Validation Status</th>
+                      <th className="p-3">Astronomical Res.</th>
+                      <th className="p-3">Traditional Timing Res.</th>
+                      <th className="p-3">Empirical Predictive Res.</th>
+                      <th className="p-3">Epistemic Standard Notice</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100 font-mono text-[11px]">
+                    {domainEntries.map(dom => {
+                      const isMarriage = dom.domain === "marriage";
+                      const statusBadge = isMarriage
+                        ? "bg-purple-100 text-purple-900 border-purple-300"
+                        : "bg-amber-100 text-amber-900 border-amber-300";
+
+                      return (
+                        <tr key={dom.domain}>
+                          <td className="p-3 font-bold text-stone-900">
+                            <div>{isTamil ? dom.domainLabelTa : dom.domainLabelEn}</div>
+                            <span className="text-[10px] text-stone-400 font-mono">{dom.domain}</span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-block ${statusBadge}`}>
+                              {isTamil ? dom.badgeTa : dom.badgeEn}
+                            </span>
+                          </td>
+                          <td className="p-3 text-stone-600 font-semibold">{dom.astronomicalResolution}</td>
+                          <td className="p-3 text-stone-600 font-semibold">{dom.traditionalTimingResolution}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              dom.empiricalPredictiveResolution === "NOT_ESTABLISHED"
+                                ? "bg-stone-100 text-stone-600 border border-stone-200"
+                                : "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                            }`}>
+                              {dom.empiricalPredictiveResolution}
+                            </span>
+                          </td>
+                          <td className="p-3 font-sans text-[10px] text-stone-600 max-w-xs">
+                            {isTamil ? dom.disclaimerTa : dom.disclaimerEn}
                           </td>
                         </tr>
                       );

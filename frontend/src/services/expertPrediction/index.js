@@ -24,6 +24,15 @@ export {
   HEALTH_FORBIDDEN_TERMS, HEALTH_SAFE_PATTERNS
 } from "./expertPredictionSchema.js";
 
+// Re-export 17-Domain validation registry
+export {
+  DOMAIN_VALIDATION_STATUS,
+  DOMAIN_VALIDATION_REGISTRY,
+  getDomainValidationInfo,
+  getAllDomainValidationEntries,
+  getDomainValidationSummary
+} from "./domainValidationRegistry.js";
+
 // Re-export canonical fact adapter
 export { extractCanonicalFacts } from "./canonicalFactAdapter.js";
 

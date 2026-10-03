@@ -61,6 +61,21 @@ export function rankAndClassifyWindows(windows, domain) {
       mw.startDate = new Date(Math.min(winStart, curStart)).toISOString().slice(0, 10);
       mw.endDate = new Date(Math.max(winEnd, curEnd)).toISOString().slice(0, 10);
       mw.strength = Math.max(mw.strength || 0, win.strength || 0);
+      mw.traditionalRuleConvergence = mw.strength;
+      mw.traditionalEvidenceStrength = mw.strength;
+      if (mw.epistemicStatus) {
+        mw.epistemicStatus.traditionalRuleConvergence = mw.strength;
+        mw.epistemicStatus.traditionalEvidenceStrength = mw.strength;
+      }
+      if (win.astronomicalResolution && (!mw.astronomicalResolution || isResolutionAtLeast(win.astronomicalResolution, mw.astronomicalResolution))) {
+        mw.astronomicalResolution = win.astronomicalResolution;
+      }
+      if (win.traditionalTimingResolution && (!mw.traditionalTimingResolution || isResolutionAtLeast(win.traditionalTimingResolution, mw.traditionalTimingResolution))) {
+        mw.traditionalTimingResolution = win.traditionalTimingResolution;
+      }
+      if (win.empiricalPredictiveResolution && !mw.empiricalPredictiveResolution) {
+        mw.empiricalPredictiveResolution = win.empiricalPredictiveResolution;
+      }
 
       // Preserve rule IDs & evidence IDs
       mw.supportingRuleIds = Array.from(new Set([...(mw.supportingRuleIds || []), ...(win.supportingRuleIds || [])]));
