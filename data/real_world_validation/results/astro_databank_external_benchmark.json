@@ -1,0 +1,890 @@
+{
+  "metadata": {
+    "title": "Astro-Databank Independent External Validation Benchmark (V3)",
+    "sourceURL": "https://www.astro.com/astro-databank/",
+    "exportFormat": "WIKIDUMP_MEDIAWIKI_XML",
+    "generatedAt": "2026-10-03T16:38:58.340Z",
+    "modelVersion": "2.2.0",
+    "schemaVersion": "3.0",
+    "predictionEngineHash": "2a043a4e846f8f9e173e1f76f7e506084680d2d93e26c2106a8b2c037663ddf8",
+    "calibrationModelHash": "d60e52ff5e137132574e061de9fe4ad121c6f4c771042974f09055c27ee27155",
+    "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+    "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
+    "benchmarkCodeHash": "2b8edf6d5022ed4000fd9bd49db813b784de4151a02cedcf7c48a7f776d10c94",
+    "totalExportRecords": 6036,
+    "totalVedAstroOverlapExcluded": 1238,
+    "overlapManifest": {
+      "trainOverlap": 746,
+      "validationOverlap": 249,
+      "blindOverlap": 118,
+      "internalHoldoutOverlap": 125,
+      "totalOverlap": 1238
+    },
+    "trueIndependentCohortCount": 4798,
+    "primaryBenchmarkCohortCount": 3751,
+    "executionMode": "FULL_INDEPENDENT_COHORT_100_PERCENT",
+    "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
+    "cacheProvenance": {
+      "initialCacheEntries": 0,
+      "cacheHits": 9636,
+      "cacheMisses": 7987,
+      "recomputedCount": 7987,
+      "invalidatedEntries": 0,
+      "predictionEngineHash": "2a043a4e846f8f9e173e1f76f7e506084680d2d93e26c2106a8b2c037663ddf8",
+      "calibrationHash": "d60e52ff5e137132574e061de9fe4ad121c6f4c771042974f09055c27ee27155"
+    }
+  },
+  "primaryBenchmark": {
+    "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
+    "n": 3751,
+    "actualExecutionDurationSec": 0.13,
+    "actualPredictionCount": 3751,
+    "cacheHits": 0,
+    "cacheMisses": 3751,
+    "recomputedCount": 3751,
+    "errors": 0,
+    "excludedCount": 556,
+    "unknownCount": 25,
+    "elapsedSeconds": 0.13,
+    "occurrence": {
+      "n": 313,
+      "censoringBreakdown": {
+        "totalRecords": 3751,
+        "evaluatedCount": 313,
+        "eventCount": 302,
+        "noEventCount": 11,
+        "rightCensoredCount": 556,
+        "missingOutcomeCount": 2850,
+        "unknownCount": 25,
+        "eventPreHorizonCount": 7
+      },
+      "prevalence": 0.9649,
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+      "confusionMatrix": {
+        "tp": 302,
+        "fp": 11,
+        "tn": 0,
+        "fn": 0
+      },
+      "accuracy": 0.9649,
+      "precision": 0.9649,
+      "recall": 1,
+      "specificity": 0,
+      "f1": 0.9821,
+      "balancedAccuracy": 0.5,
+      "mcc": 0,
+      "rocAuc": 0.5072,
+      "prAuc": 0.9688,
+      "calibrationSlope": 1,
+      "calibrationIntercept": 0,
+      "brierScore": 0.0407,
+      "ece": 0.0821,
+      "ci95": {
+        "lower": 0.9382,
+        "upper": 0.9803
+      }
+    },
+    "timing": {
+      "n": 320,
+      "precisionDistribution": {
+        "dayPrecisionCount": 320,
+        "monthPrecisionCount": 0,
+        "yearPrecisionCount": 0
+      },
+      "mae": 9.19,
+      "medianAE": 7,
+      "rmse": 12.64,
+      "exactYearCount": 9,
+      "exactYearPct": 2.81,
+      "within1yCount": 29,
+      "within1yPct": 9.06,
+      "within2yPct": 18.44,
+      "within3yPct": 25.31,
+      "meanIntervalWidth": 20,
+      "intervalPenaltyScore": 183.88,
+      "coverage": {
+        "nominal50": 0.5,
+        "observed50": 0.4688,
+        "nominal80": 0.8,
+        "observed80": 0.6906,
+        "nominal90": 0.9,
+        "observed90": 0.825,
+        "nominal95": 0.95,
+        "observed95": 0.9219
+      },
+      "meanWinklerScore80": 46.69,
+      "dayPrecisionMetrics": {
+        "n": 320,
+        "meanDaysError": 3365.7,
+        "medianDaysError": 2572,
+        "exactDatePct": 0,
+        "within7DaysPct": 0,
+        "within30DaysPct": 0.31,
+        "within90DaysPct": 1.56,
+        "within180DaysPct": 2.5,
+        "within365DaysPct": 5.94
+      }
+    },
+    "unionMode": {
+      "status": "NOT_AVAILABLE",
+      "reason": "INSUFFICIENT_LABELED_GROUND_TRUTH_ALL_UNKNOWN",
+      "note": "All ground-truth union types in this cohort are UNKNOWN. Class accuracy and Macro F1 are excluded to prevent misleading metrics.",
+      "totalEvaluated": 320,
+      "confusionMatrix": {
+        "LOVE": {
+          "LOVE": 0,
+          "ARRANGED": 0,
+          "PRAGMATIC": 0,
+          "UNKNOWN": 0
+        },
+        "ARRANGED": {
+          "LOVE": 0,
+          "ARRANGED": 0,
+          "PRAGMATIC": 0,
+          "UNKNOWN": 0
+        },
+        "PRAGMATIC": {
+          "LOVE": 0,
+          "ARRANGED": 0,
+          "PRAGMATIC": 0,
+          "UNKNOWN": 0
+        },
+        "UNKNOWN": {
+          "LOVE": 96,
+          "ARRANGED": 55,
+          "PRAGMATIC": 75,
+          "UNKNOWN": 94
+        }
+      },
+      "perClass": {
+        "LOVE": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "count": 0
+        },
+        "ARRANGED": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "count": 0
+        },
+        "PRAGMATIC": {
+          "precision": 0,
+          "recall": 0,
+          "f1": 0,
+          "count": 0
+        },
+        "UNKNOWN": {
+          "precision": 1,
+          "recall": 0.2938,
+          "f1": 0.4541,
+          "count": 320
+        }
+      },
+      "macroF1": null
+    },
+    "demographicBaseline": {
+      "n": 320,
+      "baselineMedianAge": 26,
+      "baselineMeanAge": 27.8,
+      "mae": 6.41,
+      "rmse": 10.01,
+      "exactYearPct": 7.81,
+      "within1yPct": 19.38,
+      "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
+    },
+    "commitmentsCount": 3751
+  },
+  "primaryBenchmarkMetrics": {
+    "prevalence": 0.9649,
+    "confusionMatrix": {
+      "tp": 302,
+      "fp": 11,
+      "tn": 0,
+      "fn": 0
+    },
+    "occurrenceAccuracy": 0.9649,
+    "occurrencePrecision": 0.9649,
+    "occurrenceRecall": 1,
+    "occurrenceSpecificity": 0,
+    "occurrenceBalancedAccuracy": 0.5,
+    "occurrenceMCC": 0,
+    "occurrenceRocAuc": 0.5072,
+    "occurrencePrAuc": 0.9688,
+    "occurrenceBrierScore": 0.0407,
+    "occurrenceECE": 0.0821,
+    "occurrenceQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "timingMAE": 9.19,
+    "timingWithin1yPct": 9.06,
+    "timingWithin2yPct": 18.44,
+    "timingWithin3yPct": 25.31,
+    "timingQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "conformalCoverage50": 0.4688,
+    "conformalCoverage80": 0.6906,
+    "conformalCoverage90": 0.825,
+    "conformalCoverage95": 0.9219,
+    "meanWinklerScore80": 46.69,
+    "demographicBaselineMAE": 6.41,
+    "demographicBaselineWithin1yPct": 19.38,
+    "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+  },
+  "sensitivityAnalyses": {
+    "AA_ONLY": {
+      "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
+      "n": 2591,
+      "actualExecutionDurationSec": 0.14,
+      "actualPredictionCount": 2591,
+      "cacheHits": 0,
+      "cacheMisses": 2591,
+      "recomputedCount": 2591,
+      "errors": 0,
+      "excludedCount": 262,
+      "unknownCount": 3,
+      "elapsedSeconds": 0.14,
+      "occurrence": {
+        "n": 193,
+        "censoringBreakdown": {
+          "totalRecords": 2591,
+          "evaluatedCount": 193,
+          "eventCount": 189,
+          "noEventCount": 4,
+          "rightCensoredCount": 262,
+          "missingOutcomeCount": 2129,
+          "unknownCount": 3,
+          "eventPreHorizonCount": 4
+        },
+        "prevalence": 0.9793,
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "confusionMatrix": {
+          "tp": 189,
+          "fp": 4,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 0.9793,
+        "precision": 0.9793,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 0.9895,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "rocAuc": 0.2884,
+        "prAuc": 0.9708,
+        "calibrationSlope": 1,
+        "calibrationIntercept": 0,
+        "brierScore": 0.0297,
+        "ece": 0.0963,
+        "ci95": {
+          "lower": 0.9479,
+          "upper": 0.9919
+        }
+      },
+      "timing": {
+        "n": 197,
+        "precisionDistribution": {
+          "dayPrecisionCount": 197,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 8.37,
+        "medianAE": 6,
+        "rmse": 11.51,
+        "exactYearCount": 7,
+        "exactYearPct": 3.55,
+        "within1yCount": 19,
+        "within1yPct": 9.64,
+        "within2yPct": 18.78,
+        "within3yPct": 28.93,
+        "meanIntervalWidth": 20,
+        "intervalPenaltyScore": 167.41,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.5279,
+          "nominal80": 0.8,
+          "observed80": 0.731,
+          "nominal90": 0.9,
+          "observed90": 0.8477,
+          "nominal95": 0.95,
+          "observed95": 0.934
+        },
+        "meanWinklerScore80": 41.98,
+        "dayPrecisionMetrics": {
+          "n": 197,
+          "meanDaysError": 3063.6,
+          "medianDaysError": 2225,
+          "exactDatePct": 0,
+          "within7DaysPct": 0,
+          "within30DaysPct": 0.51,
+          "within90DaysPct": 2.54,
+          "within180DaysPct": 3.55,
+          "within365DaysPct": 7.11
+        }
+      },
+      "unionMode": {
+        "status": "NOT_AVAILABLE",
+        "reason": "INSUFFICIENT_LABELED_GROUND_TRUTH_ALL_UNKNOWN",
+        "note": "All ground-truth union types in this cohort are UNKNOWN. Class accuracy and Macro F1 are excluded to prevent misleading metrics.",
+        "totalEvaluated": 197,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 63,
+            "ARRANGED": 37,
+            "PRAGMATIC": 43,
+            "UNKNOWN": 54
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "PRAGMATIC": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "UNKNOWN": {
+            "precision": 1,
+            "recall": 0.2741,
+            "f1": 0.4303,
+            "count": 197
+          }
+        },
+        "macroF1": null
+      },
+      "demographicBaseline": {
+        "n": 197,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 5.7,
+        "rmse": 8.85,
+        "exactYearPct": 7.11,
+        "within1yPct": 21.83,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
+      },
+      "commitmentsCount": 2591
+    },
+    "A_ONLY": {
+      "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
+      "n": 1160,
+      "actualExecutionDurationSec": 0.13,
+      "actualPredictionCount": 1160,
+      "cacheHits": 0,
+      "cacheMisses": 1160,
+      "recomputedCount": 1160,
+      "errors": 0,
+      "excludedCount": 294,
+      "unknownCount": 22,
+      "elapsedSeconds": 0.13,
+      "occurrence": {
+        "n": 120,
+        "censoringBreakdown": {
+          "totalRecords": 1160,
+          "evaluatedCount": 120,
+          "eventCount": 113,
+          "noEventCount": 7,
+          "rightCensoredCount": 294,
+          "missingOutcomeCount": 721,
+          "unknownCount": 22,
+          "eventPreHorizonCount": 3
+        },
+        "prevalence": 0.9417,
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "confusionMatrix": {
+          "tp": 113,
+          "fp": 7,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 0.9417,
+        "precision": 0.9417,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 0.97,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "rocAuc": 0.6188,
+        "prAuc": 0.9661,
+        "calibrationSlope": 1,
+        "calibrationIntercept": 0,
+        "brierScore": 0.0583,
+        "ece": 0.0592,
+        "ci95": {
+          "lower": 0.8845,
+          "upper": 0.9715
+        }
+      },
+      "timing": {
+        "n": 123,
+        "precisionDistribution": {
+          "dayPrecisionCount": 123,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 10.51,
+        "medianAE": 9,
+        "rmse": 14.27,
+        "exactYearCount": 2,
+        "exactYearPct": 1.63,
+        "within1yCount": 10,
+        "within1yPct": 8.13,
+        "within2yPct": 17.89,
+        "within3yPct": 19.51,
+        "meanIntervalWidth": 20,
+        "intervalPenaltyScore": 210.24,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.374,
+          "nominal80": 0.8,
+          "observed80": 0.626,
+          "nominal90": 0.9,
+          "observed90": 0.7886,
+          "nominal95": 0.95,
+          "observed95": 0.9024
+        },
+        "meanWinklerScore80": 54.23,
+        "dayPrecisionMetrics": {
+          "n": 123,
+          "meanDaysError": 3849.6,
+          "medianDaysError": 3139,
+          "exactDatePct": 0,
+          "within7DaysPct": 0,
+          "within30DaysPct": 0,
+          "within90DaysPct": 0,
+          "within180DaysPct": 0.81,
+          "within365DaysPct": 4.07
+        }
+      },
+      "unionMode": {
+        "status": "NOT_AVAILABLE",
+        "reason": "INSUFFICIENT_LABELED_GROUND_TRUTH_ALL_UNKNOWN",
+        "note": "All ground-truth union types in this cohort are UNKNOWN. Class accuracy and Macro F1 are excluded to prevent misleading metrics.",
+        "totalEvaluated": 123,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 33,
+            "ARRANGED": 18,
+            "PRAGMATIC": 32,
+            "UNKNOWN": 40
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "PRAGMATIC": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "UNKNOWN": {
+            "precision": 1,
+            "recall": 0.3252,
+            "f1": 0.4908,
+            "count": 123
+          }
+        },
+        "macroF1": null
+      },
+      "demographicBaseline": {
+        "n": 123,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 7.54,
+        "rmse": 11.63,
+        "exactYearPct": 8.94,
+        "within1yPct": 15.45,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
+      },
+      "commitmentsCount": 1160
+    },
+    "ALL_INDEPENDENT": {
+      "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
+      "n": 4798,
+      "actualExecutionDurationSec": 3734.11,
+      "actualPredictionCount": 4798,
+      "cacheHits": 0,
+      "cacheMisses": 4798,
+      "recomputedCount": 4798,
+      "errors": 0,
+      "excludedCount": 686,
+      "unknownCount": 28,
+      "elapsedSeconds": 3734.11,
+      "occurrence": {
+        "n": 428,
+        "censoringBreakdown": {
+          "totalRecords": 4798,
+          "evaluatedCount": 428,
+          "eventCount": 412,
+          "noEventCount": 16,
+          "rightCensoredCount": 686,
+          "missingOutcomeCount": 3647,
+          "unknownCount": 28,
+          "eventPreHorizonCount": 9
+        },
+        "prevalence": 0.9626,
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "confusionMatrix": {
+          "tp": 412,
+          "fp": 16,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 0.9626,
+        "precision": 0.9626,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 0.981,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "rocAuc": 0.513,
+        "prAuc": 0.9681,
+        "calibrationSlope": 1,
+        "calibrationIntercept": 0,
+        "brierScore": 0.0424,
+        "ece": 0.0798,
+        "ci95": {
+          "lower": 0.9401,
+          "upper": 0.9769
+        }
+      },
+      "timing": {
+        "n": 437,
+        "precisionDistribution": {
+          "dayPrecisionCount": 437,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 9.06,
+        "medianAE": 7,
+        "rmse": 12.42,
+        "exactYearCount": 13,
+        "exactYearPct": 2.97,
+        "within1yCount": 44,
+        "within1yPct": 10.07,
+        "within2yPct": 19.45,
+        "within3yPct": 25.86,
+        "meanIntervalWidth": 20,
+        "intervalPenaltyScore": 181.19,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.4828,
+          "nominal80": 0.8,
+          "observed80": 0.6979,
+          "nominal90": 0.9,
+          "observed90": 0.8192,
+          "nominal95": 0.95,
+          "observed95": 0.9222
+        },
+        "meanWinklerScore80": 46.36,
+        "dayPrecisionMetrics": {
+          "n": 437,
+          "meanDaysError": 3316,
+          "medianDaysError": 2468,
+          "exactDatePct": 0,
+          "within7DaysPct": 0,
+          "within30DaysPct": 0.46,
+          "within90DaysPct": 1.83,
+          "within180DaysPct": 2.97,
+          "within365DaysPct": 6.41
+        }
+      },
+      "unionMode": {
+        "status": "NOT_AVAILABLE",
+        "reason": "INSUFFICIENT_LABELED_GROUND_TRUTH_ALL_UNKNOWN",
+        "note": "All ground-truth union types in this cohort are UNKNOWN. Class accuracy and Macro F1 are excluded to prevent misleading metrics.",
+        "totalEvaluated": 437,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 131,
+            "ARRANGED": 78,
+            "PRAGMATIC": 93,
+            "UNKNOWN": 135
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "PRAGMATIC": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "UNKNOWN": {
+            "precision": 1,
+            "recall": 0.3089,
+            "f1": 0.472,
+            "count": 437
+          }
+        },
+        "macroF1": null
+      },
+      "demographicBaseline": {
+        "n": 437,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 6.43,
+        "rmse": 9.83,
+        "exactYearPct": 7.55,
+        "within1yPct": 19.68,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
+      },
+      "commitmentsCount": 4798
+    },
+    "ASTRO_DATABANK_REGRESSION_SAMPLE": {
+      "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
+      "n": 500,
+      "actualExecutionDurationSec": 0.12,
+      "actualPredictionCount": 500,
+      "cacheHits": 0,
+      "cacheMisses": 500,
+      "recomputedCount": 500,
+      "errors": 0,
+      "excludedCount": 68,
+      "unknownCount": 3,
+      "elapsedSeconds": 0.12,
+      "occurrence": {
+        "n": 427,
+        "censoringBreakdown": {
+          "totalRecords": 500,
+          "evaluatedCount": 427,
+          "eventCount": 41,
+          "noEventCount": 386,
+          "rightCensoredCount": 68,
+          "missingOutcomeCount": 0,
+          "unknownCount": 3,
+          "eventPreHorizonCount": 2
+        },
+        "prevalence": 0.096,
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "confusionMatrix": {
+          "tp": 41,
+          "fp": 386,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 0.096,
+        "precision": 0.096,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 0.1752,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "rocAuc": 0.5114,
+        "prAuc": 0.1568,
+        "calibrationSlope": 1,
+        "calibrationIntercept": 0,
+        "brierScore": 0.705,
+        "ece": 0.7863,
+        "ci95": {
+          "lower": 0.0716,
+          "upper": 0.1277
+        }
+      },
+      "timing": {
+        "n": 45,
+        "precisionDistribution": {
+          "dayPrecisionCount": 45,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 9.33,
+        "medianAE": 8,
+        "rmse": 12.66,
+        "exactYearCount": 3,
+        "exactYearPct": 6.67,
+        "within1yCount": 6,
+        "within1yPct": 13.33,
+        "within2yPct": 20,
+        "within3yPct": 22.22,
+        "meanIntervalWidth": 20,
+        "intervalPenaltyScore": 186.67,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.4,
+          "nominal80": 0.8,
+          "observed80": 0.7333,
+          "nominal90": 0.9,
+          "observed90": 0.8,
+          "nominal95": 0.95,
+          "observed95": 0.9111
+        },
+        "meanWinklerScore80": 46.67,
+        "dayPrecisionMetrics": {
+          "n": 45,
+          "meanDaysError": 3424.4,
+          "medianDaysError": 2874,
+          "exactDatePct": 0,
+          "within7DaysPct": 0,
+          "within30DaysPct": 0,
+          "within90DaysPct": 2.22,
+          "within180DaysPct": 4.44,
+          "within365DaysPct": 11.11
+        }
+      },
+      "unionMode": {
+        "status": "NOT_AVAILABLE",
+        "reason": "INSUFFICIENT_LABELED_GROUND_TRUTH_ALL_UNKNOWN",
+        "note": "All ground-truth union types in this cohort are UNKNOWN. Class accuracy and Macro F1 are excluded to prevent misleading metrics.",
+        "totalEvaluated": 45,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 15,
+            "ARRANGED": 9,
+            "PRAGMATIC": 8,
+            "UNKNOWN": 13
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "PRAGMATIC": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "UNKNOWN": {
+            "precision": 1,
+            "recall": 0.2889,
+            "f1": 0.4483,
+            "count": 45
+          }
+        },
+        "macroF1": null
+      },
+      "demographicBaseline": {
+        "n": 45,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 6.58,
+        "rmse": 10.12,
+        "exactYearPct": 4.44,
+        "within1yPct": 17.78,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
+      },
+      "commitmentsCount": 500
+    }
+  },
+  "baselineComparison": {
+    "astrologicalTimingMAE": 9.19,
+    "demographicBaselineMAE": 6.41,
+    "astrologicalWithin1yPct": 9.06,
+    "demographicWithin1yPct": 19.38,
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
+  }
+}

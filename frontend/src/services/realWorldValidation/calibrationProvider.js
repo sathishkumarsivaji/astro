@@ -36,19 +36,31 @@ export function clearTestCalibrationFixture() {
  * Resolves the path to calibration_model.json across both CLI and bundler environments.
  */
 function resolveCalibrationModelPath() {
+  let baseDir = null;
   try {
-    let baseDir;
     if (typeof __dirname !== "undefined") {
       baseDir = __dirname;
     } else if (import.meta?.url) {
       baseDir = path.dirname(fileURLToPath(import.meta.url));
-    } else {
-      baseDir = process.cwd();
     }
-    return path.resolve(baseDir, "../../../../data/real_world_validation/results/calibration_model.json");
-  } catch (_err) {
-    return path.resolve(process.cwd(), "data/real_world_validation/results/calibration_model.json");
+  } catch (_e) {
+    // ignore
   }
+
+  const candidates = [
+    baseDir ? path.resolve(baseDir, "../../../../data/real_world_validation/results/calibration_model.json") : null,
+    path.resolve(process.cwd(), "data/real_world_validation/results/calibration_model.json"),
+    path.resolve(process.cwd(), "../data/real_world_validation/results/calibration_model.json")
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Default to candidate 1 if baseDir exists, else candidate 2
+  return candidates[0] || path.resolve(process.cwd(), "data/real_world_validation/results/calibration_model.json");
 }
 
 /**

@@ -405,12 +405,28 @@ export async function ingestAstroDatabankExport() {
           censoringStatus = 'NO_EVENT_WITH_COMPLETE_FOLLOWUP';
         }
       } else {
-        if (followUpAge >= 50) {
+        // No documented marriage in record.
+        // Astro-Databank does not systematically research marital status for every subject.
+        // Missing marriage notes constitute MISSING_OUTCOME, NOT confirmed lifelong non-events,
+        // unless explicit celibacy/unmarried biography text is present.
+        const notes = (sourceNotes || '').toLowerCase();
+        const hasCelibacyProof = (
+          notes.includes('never married') ||
+          notes.includes('unmarried') ||
+          notes.includes('celibate') ||
+          notes.includes('lifelong bachelor') ||
+          notes.includes('roman catholic priest') ||
+          notes.includes('catholic nun')
+        );
+
+        if (hasCelibacyProof && followUpAge >= 50) {
           censoringStatus = 'NO_EVENT_WITH_COMPLETE_FOLLOWUP';
-        } else if (followUpAge >= 18) {
+        } else if (followUpAge < 18) {
+          censoringStatus = 'UNKNOWN';
+        } else if (followUpAge < 50) {
           censoringStatus = 'RIGHT_CENSORED';
         } else {
-          censoringStatus = 'UNKNOWN';
+          censoringStatus = 'MISSING_OUTCOME';
         }
       }
 

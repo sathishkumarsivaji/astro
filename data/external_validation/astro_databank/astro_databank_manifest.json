@@ -8,8 +8,8 @@
   "sourceVersion": "ADB-PUBLIC-2026.09",
   "downloadDate": "2026-10-03T03:34:26Z",
   "rawXmlSha256": "7d42ac78520685b3013e929f3f238989a78c2f1ae1a360248a9b3b459d93549c",
-  "sha256": "65a90414f2fd94ee1697921b4615c44bf0267411c7ae4a6e8f1067472f74c070",
-  "independentHoldoutSha256": "ed662c0130abcaff66106ea95f49594279e9b259a1fb788d6f55be63a2f83dd4",
+  "sha256": "cc59b4f32aeb63e45befd0a8a7d9110a380a0375744d689ebaf08ce057d5b1ff",
+  "independentHoldoutSha256": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
   "totalRecords": 6036,
   "roddenRatingBreakdown": {
     "B": 233,

@@ -162,7 +162,7 @@ function getPredictionsForRecord(record) {
 
     setCachedPrediction(cacheKey, inputHash, compact);
     pendingCacheWrites++;
-    if (pendingCacheWrites >= 100) {
+    if (pendingCacheWrites >= 500) {
       flushPredictionCache();
     }
 
@@ -207,7 +207,7 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort, options =
       console.log(`  [${cohortName}] Processed ${idx}/${cohort.length} (${((idx / cohort.length) * 100).toFixed(0)}%)...`);
     }
 
-    const p = options.predictionsMap?.get(record.sourceRecordId) || getPredictionsForRecord(record);
+    const p = getPredictionsForRecord(record);
     occPreds.push(p.occ);
     timePreds.push(p.timing);
     divPreds.push(p.div);
@@ -220,8 +220,8 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort, options =
 
   const elapsedSec = ((performance.now() - t0) / 1000).toFixed(2);
   const statsAfter = getCacheStats();
-  const cohortCacheHits = options.predictionsMap ? 0 : (statsAfter.hits - statsBefore.hits);
-  const cohortCacheMisses = options.predictionsMap ? cohort.length : (statsAfter.misses - statsBefore.misses);
+  const cohortCacheHits = options.isSubCohort ? 0 : (statsAfter.hits - statsBefore.hits);
+  const cohortCacheMisses = options.isSubCohort ? cohort.length : (statsAfter.misses - statsBefore.misses);
   const cohortErrors = occPreds.filter(p => p?.status === 'ERROR').length;
 
   console.log(`  ✓ Evaluated ${cohort.length} predictions in ${elapsedSec}s (Hits: ${cohortCacheHits}, Misses: ${cohortCacheMisses}, Errors: ${cohortErrors})`);
@@ -248,12 +248,12 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort, options =
     unionMode: modeMetrics,
     demographicBaseline: baseline,
     commitmentsCount: commitments.length,
-    _compactPredictions: { occPreds, timePreds, divPreds, modePreds, commitments }
+    _compactPredictions: options.keepPredictions ? { occPreds, timePreds } : null
   };
 }
 
 // 1. Evaluate full BLIND_TEST (100% of records)
-const blindResults = runCohortEvaluation(blindRecords, "BLIND_TEST", trainRecords);
+const blindResults = runCohortEvaluation(blindRecords, "BLIND_TEST", trainRecords, { keepPredictions: true });
 
 // 2. Evaluate full INTERNAL_HOLDOUT (100% of records)
 const holdoutResults = runCohortEvaluation(internalHoldoutRecords, "INTERNAL_HOLDOUT", trainRecords);
@@ -322,35 +322,24 @@ if (adbRecords.length > 0) {
   console.log(`\nEvaluating Sensitivity Cohort All Independent: ${adbRecords.length} records...`);
   adbAllResults = runCohortEvaluation(adbRecords, "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT", trainRecords);
 
-  const adbPredictionsMap = new Map();
-  for (let i = 0; i < adbRecords.length; i++) {
-    adbPredictionsMap.set(adbRecords[i].sourceRecordId, {
-      occ: adbAllResults._compactPredictions.occPreds[i],
-      timing: adbAllResults._compactPredictions.timePreds[i],
-      div: adbAllResults._compactPredictions.divPreds[i],
-      mode: adbAllResults._compactPredictions.modePreds[i],
-      commitments: adbAllResults._compactPredictions.commitments[i]
-    });
-  }
-
   console.log(`\nEvaluating Primary External Cohort: ${adbCertifiedCohort.length} certified A/AA records...`);
-  adbCertifiedResults = runCohortEvaluation(adbCertifiedCohort, "ASTRO_DATABANK_CERTIFIED_AAA", trainRecords, { predictionsMap: adbPredictionsMap });
+  adbCertifiedResults = runCohortEvaluation(adbCertifiedCohort, "ASTRO_DATABANK_CERTIFIED_AAA", trainRecords, { isSubCohort: true });
 
   // Sensitivity Analysis 1: AA_ONLY
   const adbAACohort = adbRecords.filter(r => r.birthTimeReliability === "AA");
   console.log(`\nEvaluating Sensitivity Cohort AA-Only: ${adbAACohort.length} records...`);
-  adbAAResults = runCohortEvaluation(adbAACohort, "ASTRO_DATABANK_SENSITIVITY_AA_ONLY", trainRecords, { predictionsMap: adbPredictionsMap });
+  adbAAResults = runCohortEvaluation(adbAACohort, "ASTRO_DATABANK_SENSITIVITY_AA_ONLY", trainRecords, { isSubCohort: true });
 
   // Sensitivity Analysis 2: A_ONLY
   const adbACohort = adbRecords.filter(r => r.birthTimeReliability === "A");
   console.log(`\nEvaluating Sensitivity Cohort A-Only: ${adbACohort.length} records...`);
-  adbAResults = runCohortEvaluation(adbACohort, "ASTRO_DATABANK_SENSITIVITY_A_ONLY", trainRecords, { predictionsMap: adbPredictionsMap });
+  adbAResults = runCohortEvaluation(adbACohort, "ASTRO_DATABANK_SENSITIVITY_A_ONLY", trainRecords, { isSubCohort: true });
 
   // Sensitivity Analysis 4: Deterministic Stratified Regression Sample (N=500)
   if (fs.existsSync(REGRESSION_SAMPLE_PATH)) {
     const regSampleRecords = JSON.parse(fs.readFileSync(REGRESSION_SAMPLE_PATH, "utf8"));
     console.log(`\nEvaluating Sensitivity Cohort Deterministic Stratified Sample: ${regSampleRecords.length} records...`);
-    adbRegResults = runCohortEvaluation(regSampleRecords, "ASTRO_DATABANK_REGRESSION_SAMPLE", trainRecords, { predictionsMap: adbPredictionsMap });
+    adbRegResults = runCohortEvaluation(regSampleRecords, "ASTRO_DATABANK_REGRESSION_SAMPLE", trainRecords, { isSubCohort: true });
   }
 }
 
@@ -526,14 +515,24 @@ if (adbCertifiedResults) {
     },
     primaryBenchmark: adbCertifiedResults,
     primaryBenchmarkMetrics: {
+      prevalence: adbCertifiedResults.occurrence.prevalence,
+      confusionMatrix: adbCertifiedResults.occurrence.confusionMatrix,
       occurrenceAccuracy: adbCertifiedResults.occurrence.accuracy,
       occurrencePrecision: adbCertifiedResults.occurrence.precision,
       occurrenceRecall: adbCertifiedResults.occurrence.recall,
       occurrenceSpecificity: adbCertifiedResults.occurrence.specificity,
+      occurrenceBalancedAccuracy: adbCertifiedResults.occurrence.balancedAccuracy,
+      occurrenceMCC: adbCertifiedResults.occurrence.mcc,
+      occurrenceRocAuc: adbCertifiedResults.occurrence.rocAuc,
+      occurrencePrAuc: adbCertifiedResults.occurrence.prAuc,
+      occurrenceBrierScore: adbCertifiedResults.occurrence.brierScore,
+      occurrenceECE: adbCertifiedResults.occurrence.ece,
+      occurrenceQualityGate: adbCertifiedResults.occurrence.validationStatus,
       timingMAE: adbCertifiedResults.timing.mae,
       timingWithin1yPct: adbCertifiedResults.timing.within1yPct,
       timingWithin2yPct: adbCertifiedResults.timing.within2yPct,
       timingWithin3yPct: adbCertifiedResults.timing.within3yPct,
+      timingQualityGate: adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED",
       conformalCoverage50: adbCertifiedResults.timing.coverage?.observed50 ?? null,
       conformalCoverage80: adbCertifiedResults.timing.coverage?.observed80 ?? null,
       conformalCoverage90: adbCertifiedResults.timing.coverage?.observed90 ?? null,
@@ -541,7 +540,10 @@ if (adbCertifiedResults) {
       meanWinklerScore80: adbCertifiedResults.timing.meanWinklerScore80,
       demographicBaselineMAE: adbCertifiedResults.demographicBaseline.mae,
       demographicBaselineWithin1yPct: adbCertifiedResults.demographicBaseline.within1yPct,
-      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
+      overallEmpiricalStatus: (adbCertifiedResults.occurrence.validationStatus === "EMPIRICALLY_VALIDATED" && adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae)
+        ? "EMPIRICALLY_VALIDATED"
+        : "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
     },
     sensitivityAnalyses: {
       AA_ONLY: adbAAResults,
@@ -583,14 +585,24 @@ if (adbCertifiedResults) {
       certifiedAAARecords: adbCertifiedResults.n
     },
     scorecard: {
+      prevalence: adbCertifiedResults.occurrence.prevalence,
+      confusionMatrix: adbCertifiedResults.occurrence.confusionMatrix,
       occurrenceAccuracy: adbCertifiedResults.occurrence.accuracy,
       occurrencePrecision: adbCertifiedResults.occurrence.precision,
       occurrenceRecall: adbCertifiedResults.occurrence.recall,
       occurrenceSpecificity: adbCertifiedResults.occurrence.specificity,
+      occurrenceBalancedAccuracy: adbCertifiedResults.occurrence.balancedAccuracy,
+      occurrenceMCC: adbCertifiedResults.occurrence.mcc,
+      occurrenceRocAuc: adbCertifiedResults.occurrence.rocAuc,
+      occurrencePrAuc: adbCertifiedResults.occurrence.prAuc,
+      occurrenceBrierScore: adbCertifiedResults.occurrence.brierScore,
+      occurrenceECE: adbCertifiedResults.occurrence.ece,
+      occurrenceQualityGate: adbCertifiedResults.occurrence.validationStatus,
       timingMAE: adbCertifiedResults.timing.mae,
       timingWithin1yPct: adbCertifiedResults.timing.within1yPct,
       timingWithin2yPct: adbCertifiedResults.timing.within2yPct,
       timingWithin3yPct: adbCertifiedResults.timing.within3yPct,
+      timingQualityGate: adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED",
       conformalCoverage50: adbCertifiedResults.timing.coverage?.observed50 ?? null,
       conformalCoverage80: adbCertifiedResults.timing.coverage?.observed80 ?? null,
       conformalCoverage90: adbCertifiedResults.timing.coverage?.observed90 ?? null,
@@ -598,7 +610,10 @@ if (adbCertifiedResults) {
       meanWinklerScore80: adbCertifiedResults.timing.meanWinklerScore80,
       demographicBaselineMAE: adbCertifiedResults.demographicBaseline.mae,
       demographicBaselineWithin1yPct: adbCertifiedResults.demographicBaseline.within1yPct,
-      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
+      overallEmpiricalStatus: (adbCertifiedResults.occurrence.validationStatus === "EMPIRICALLY_VALIDATED" && adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae)
+        ? "EMPIRICALLY_VALIDATED"
+        : "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
     },
     conclusion: "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
   };
@@ -682,9 +697,14 @@ console.log(`  Timing MAE: ${holdoutResults.timing.mae} years | Within ±1 Year:
 
 if (adbCertifiedResults) {
   console.log(`\nINDEPENDENT ASTRO-DATABANK PRIMARY EXTERNAL VALIDATION (A/AA Cohort N=${adbCertifiedResults.n}):`);
-  console.log(`  Occurrence Accuracy: ${(adbCertifiedResults.occurrence.accuracy * 100).toFixed(2)}% | Precision: ${(adbCertifiedResults.occurrence.precision * 100).toFixed(2)}% | Recall: ${(adbCertifiedResults.occurrence.recall * 100).toFixed(2)}%`);
+  console.log(`  Occurrence Prevalence: ${(adbCertifiedResults.occurrence.prevalence * 100).toFixed(2)}% | Confusion Matrix: TP=${adbCertifiedResults.occurrence.confusionMatrix.tp}, FP=${adbCertifiedResults.occurrence.confusionMatrix.fp}, TN=${adbCertifiedResults.occurrence.confusionMatrix.tn}, FN=${adbCertifiedResults.occurrence.confusionMatrix.fn}`);
+  console.log(`  Accuracy: ${(adbCertifiedResults.occurrence.accuracy * 100).toFixed(2)}% | Precision: ${(adbCertifiedResults.occurrence.precision * 100).toFixed(2)}% | Recall: ${(adbCertifiedResults.occurrence.recall * 100).toFixed(2)}% | Specificity: ${(adbCertifiedResults.occurrence.specificity * 100).toFixed(2)}%`);
+  console.log(`  Balanced Acc: ${(adbCertifiedResults.occurrence.balancedAccuracy * 100).toFixed(2)}% | MCC: ${adbCertifiedResults.occurrence.mcc} | ROC-AUC: ${adbCertifiedResults.occurrence.rocAuc} | PR-AUC: ${adbCertifiedResults.occurrence.prAuc}`);
+  console.log(`  Occurrence Quality Gate: ${adbCertifiedResults.occurrence.validationStatus}`);
   console.log(`  Timing MAE: ${adbCertifiedResults.timing.mae} years | Within ±1 Year: ${adbCertifiedResults.timing.within1yPct}%`);
   console.log(`  Demographic Baseline MAE: ${adbCertifiedResults.demographicBaseline.mae} years (Within ±1y: ${adbCertifiedResults.demographicBaseline.within1yPct}%)`);
+  console.log(`  Timing Quality Gate: ${adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED"}`);
+  console.log(`  Overall Scientific Status: ${(adbCertifiedResults.occurrence.validationStatus === "EMPIRICALLY_VALIDATED" && adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae) ? "EMPIRICALLY_VALIDATED" : "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"}`);
   console.log(`  Conformal Nominal 80% Coverage vs Observed: ${(adbCertifiedResults.timing.coverage.observed80 * 100).toFixed(2)}%`);
   console.log(`  Union Mode Evaluation Status: ${adbCertifiedResults.unionMode.status} (${adbCertifiedResults.unionMode.reason || "EVALUATED"})`);
 

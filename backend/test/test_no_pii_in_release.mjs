@@ -48,6 +48,25 @@ for (const file of jsonFiles) {
     continue;
   }
 
+  // Check if file is tracked in git. Git-ignored runtime database files that are not tracked
+  // are never included in git-based release archives or clean checkouts.
+  const isRuntimeData = file.includes(path.normalize('/data/')) || file.includes('\\data\\');
+  let isTracked = false;
+  try {
+    const { execSync } = await import('child_process');
+    const rootDir = path.resolve(backendDir, '..');
+    const relPath = path.relative(rootDir, file).replace(/\\/g, '/');
+    const out = execSync(`git ls-files "${relPath}"`, { cwd: rootDir, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+    isTracked = out.length > 0;
+  } catch (_e) {
+    isTracked = false;
+  }
+
+  if (isRuntimeData && !isTracked) {
+    console.log(`PASS: ${file} (Git-ignored untracked local runtime file, excluded from release)`);
+    continue;
+  }
+
   let fileFailed = false;
   let parsed;
   try {

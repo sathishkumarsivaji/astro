@@ -8,9 +8,9 @@
   "status": "CALIBRATION_FITTED_READY_FOR_BENCHMARK",
   "authoritativeHashes": {
     "astroEngineHash": "b9268ca758f2acfa55cb34563a351ec1044bac6abe01c5b53420b939e807e364",
-    "empiricalEvaluationEngineHash": "7c9dcf58c702dfd06511484b2240ab344587aa71aca5a344fd4027ea032ffd7e",
-    "predictionEngineHash": "a93b2e8ec606b9a3dc317503b6fe68857ed7dd6569788d2483dfec6fc3a67ba0",
-    "calibrationModelHash": "3bb0552d6e1506b80e876251434cdb52cece2fbf3754c6c0a84e4c08f0c6cc38"
+    "empiricalEvaluationEngineHash": "b90821daef4943e28cc5ed2db978e4e1e2d98b9c18d4f3d5e2d8bc8766524d5e",
+    "predictionEngineHash": "2a043a4e846f8f9e173e1f76f7e506084680d2d93e26c2106a8b2c037663ddf8",
+    "calibrationModelHash": "d60e52ff5e137132574e061de9fe4ad121c6f4c771042974f09055c27ee27155"
   },
   "datasetHashes": {
     "trainSplitHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
@@ -20,5 +20,5 @@
     "astroDatabankTrueIndependentHash": "ed662c0130abcaff66106ea95f49594279e9b259a1fb788d6f55be63a2f83dd4",
     "overlapManifestHash": "6ae3033dc56c8a7d9fba94028eae829dc7a9d33b05c19d79a794250988d80582"
   },
-  "updatedAt": "2026-10-03T11:42:15.997Z"
+  "updatedAt": "2026-10-03T15:15:44.414Z"
 }

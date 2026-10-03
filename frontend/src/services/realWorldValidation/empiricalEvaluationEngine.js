@@ -132,6 +132,10 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
   const result = {
     target: "MARRIAGE_WITHIN_HORIZON_V2",
     legacyTarget: "MARRIAGE_OCCURRED_V1",
+    targetDefinition: "MARRIAGE_WITHIN_HORIZON_18_50",
+    observationWindow: `[${horizonMinAge}, ${horizonMaxAge}]`,
+    sourceDataset: cleanRecord.sourceDataset || "VEDASTRO_TRAIN",
+    modelVersion: "2.2.0",
     recordId: cleanRecord.sourceRecordId,
     rawRuleScore: Number(rawRuleScore.toFixed(4)),
     calibratedProbability: Number(calibratedProbability.toFixed(4)),
@@ -403,7 +407,9 @@ export function evaluateOccurrence(predictions, groundTruths) {
   let eventCount = 0;
   let noEventCount = 0;
   let rightCensoredCount = 0;
+  let missingOutcomeCount = 0;
   let unknownCount = 0;
+  let eventPreHorizonCount = 0;
   let evaluatedCount = 0;
 
   for (let i = 0; i < predictions.length; i++) {
@@ -419,13 +425,22 @@ export function evaluateOccurrence(predictions, groundTruths) {
     if (censoring === "RIGHT_CENSORED") {
       rightCensoredCount++;
       continue; // NEVER convert right-censored to negative!
+    } else if (censoring === "MISSING_OUTCOME") {
+      missingOutcomeCount++;
+      continue;
     } else if (censoring === "UNKNOWN") {
       unknownCount++;
+      continue;
+    } else if (censoring === "EVENT_PRE_HORIZON") {
+      eventPreHorizonCount++;
       continue;
     } else if (censoring === "EVENT") {
       eventCount++;
     } else if (censoring === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || censoring === "NO_EVENT") {
       noEventCount++;
+    } else {
+      unknownCount++;
+      continue;
     }
 
     evaluatedCount++;
@@ -450,6 +465,7 @@ export function evaluateOccurrence(predictions, groundTruths) {
   }
 
   const n = evaluatedCount;
+  const prevalence = n > 0 ? Number((eventCount / n).toFixed(4)) : 0;
   const accuracy = n > 0 ? (tp + tn) / n : 0;
   const precision = (tp + fp) > 0 ? tp / (tp + fp) : 0;
   const recall = (tp + fn) > 0 ? tp / (tp + fn) : 0;
@@ -468,7 +484,7 @@ export function evaluateOccurrence(predictions, groundTruths) {
     const gt = groundTruths[i];
     if (!gt) continue;
     const censoring = gt.censoringStatus || (gt.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
-    if (censoring === "RIGHT_CENSORED" || censoring === "UNKNOWN") continue;
+    if (censoring === "RIGHT_CENSORED" || censoring === "UNKNOWN" || censoring === "MISSING_OUTCOME" || censoring === "EVENT_PRE_HORIZON") continue;
     const actualTrue = (censoring === "EVENT");
     const pProb = pred.pMarriage ?? pred.calibratedProbability ?? 0.5;
     probPairs.push({ prob: pProb, actual: actualTrue ? 1 : 0 });
@@ -544,6 +560,17 @@ export function evaluateOccurrence(predictions, groundTruths) {
     upper: Math.min(1, Number((center + margin).toFixed(4)))
   };
 
+  // Quality gate (Part A Req 11 & Part L)
+  const isOccurrenceValidated = (
+    evaluatedCount > 0 &&
+    noEventCount > 0 &&
+    specificity > 0 &&
+    mcc > 0 &&
+    rocAuc > 0.50 &&
+    balancedAccuracy > 0.50
+  );
+  const validationStatus = isOccurrenceValidated ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED";
+
   return {
     n,
     censoringBreakdown: {
@@ -552,8 +579,12 @@ export function evaluateOccurrence(predictions, groundTruths) {
       eventCount,
       noEventCount,
       rightCensoredCount,
-      unknownCount
+      missingOutcomeCount,
+      unknownCount,
+      eventPreHorizonCount
     },
+    prevalence,
+    validationStatus,
     confusionMatrix: { tp, fp, tn, fn },
     accuracy: Number(accuracy.toFixed(4)),
     precision: Number(precision.toFixed(4)),

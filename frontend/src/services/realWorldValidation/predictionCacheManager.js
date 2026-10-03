@@ -150,7 +150,7 @@ export function setCachedPrediction(recordId, inputHash, prediction) {
 export function flushCache() {
   if (cacheFilePath) {
     fs.mkdirSync(path.dirname(cacheFilePath), { recursive: true });
-    fs.writeFileSync(cacheFilePath, JSON.stringify(predictionCache, null, 2));
+    fs.writeFileSync(cacheFilePath, JSON.stringify(predictionCache));
   }
 }
 
