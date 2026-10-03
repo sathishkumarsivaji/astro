@@ -21,19 +21,19 @@ const VERIFIED_FALLBACK_MODEL = Object.freeze({
   calibratorType: "PLATT_LOGISTIC_SCALING_V2",
   modelVersion: "2.2.0-actual-model-fitted",
   parameters: {
-    slope: 1.6212,
-    intercept: 0.8145,
+    slope: 0.4189,
+    intercept: 1.6736,
     classificationThreshold: 0.50
   },
   conformalIntervalQuantiles: {
-    q50: 5.0,
+    q50: 6.0,
     q80: 10.0,
     q90: 14.0,
-    q95: 18.0
+    q95: 19.0
   },
   demographicBaseline: {
     medianMarriageAge: 26.0,
-    trainingSampleCount: 8268
+    trainingSampleCount: 8458
   },
   provenanceNotice: "FALLBACK_CALIBRATION_SPECIFICATION_VERIFIED"
 });
