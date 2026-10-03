@@ -1,6 +1,356 @@
 [
   {
     "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Alain2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.840Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "AlainJeanAssailly2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.842Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "AnneWaldman2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.866Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "BennyLynch2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.874Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "BiceVanzetta2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.876Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "BrunoWerntgen2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.882Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "CharlesT.R.Wilson2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.891Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "ChrisCostnerSizemore2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.893Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "DavidEwingOtt2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.906Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "DavidWottle2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.907Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "Donald'Buzz'Lukens2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.914Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "EdmeFelixVulpian2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.919Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "ElsaSophiavonKamphoevener2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.924Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "EmilRudolfWeiss2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.924Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
     "sourceRecordId": "Empty0001",
     "reasonCode": "PLACEHOLDER_PERSON_RECORD",
     "rawValue": {
@@ -9,7 +359,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.624Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -22,7 +372,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -35,7 +385,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -48,7 +398,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -61,7 +411,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -74,7 +424,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -87,7 +437,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -100,7 +450,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -113,7 +463,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -126,7 +476,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -139,7 +489,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -152,7 +502,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -165,7 +515,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -178,7 +528,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -191,7 +541,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -204,7 +554,7 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
     "version": "2.0.0-audited"
   },
   {
@@ -217,7 +567,657 @@
     },
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.625Z",
+    "exclusionTimestamp": "2026-10-02T22:10:02.926Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "EugeneLeGoff2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.931Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "FabienneMoreau2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.933Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "FabrianW.Bruskewitz2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.933Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "FranziskaTiburtius2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.943Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "FredBuscaglione2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.945Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "FrederickBlancke2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.946Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "FulvioValbusa2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.947Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "GaeAulenti2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.948Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "GerardZerbi2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.955Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "GerardoBianco2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.955Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "GillesSavary2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.958Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "GiuseppeDossetti2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.961Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "GraziellaFranchini2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.963Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "HannesMessemer2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.967Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "HansAlbrechtMoser2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.967Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "HeriwentaMaeFaggs2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.974Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "HugoBlack2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.976Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JacquesCapelovici2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:02.993Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JeanBalladur2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.005Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JeremyRoenick2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.012Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JerryAugustine2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.012Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JohnClarenceButler2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.019Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JohnStephanLekson2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.023Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "JosephBaena2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.025Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "KarlTheodorvonPiloty2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.033Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "KellyTripucka2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.034Z",
     "version": "2.0.0-audited"
   },
   {
@@ -227,7 +1227,32 @@
     "rawValue": 1491,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.668Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.036Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "KristaLeaHarrison2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.037Z",
     "version": "2.0.0-audited"
   },
   {
@@ -237,7 +1262,82 @@
     "rawValue": 1452,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.671Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.042Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "LorenzoBozano2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.045Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MarioBonomi2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.062Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MarshallApplewhite2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.064Z",
     "version": "2.0.0-audited"
   },
   {
@@ -247,7 +1347,32 @@
     "rawValue": 1483,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.680Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.065Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MaryBellVincent2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.065Z",
     "version": "2.0.0-audited"
   },
   {
@@ -257,7 +1382,82 @@
     "rawValue": 1475,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.685Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.077Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MiguelTorga2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.078Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MildredCaroonBailey2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.079Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "MoyaMariaMagnani2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.081Z",
     "version": "2.0.0-audited"
   },
   {
@@ -267,7 +1467,82 @@
     "rawValue": 1473,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.688Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.086Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "NoreenCorcoran2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.087Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "PaoloCamossi2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.091Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "PaulBarril2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.095Z",
     "version": "2.0.0-audited"
   },
   {
@@ -277,7 +1552,7 @@
     "rawValue": 1462,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.694Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.104Z",
     "version": "2.0.0-audited"
   },
   {
@@ -287,7 +1562,307 @@
     "rawValue": 1475,
     "normalizedValue": null,
     "source": "VedAstro 15000-Famous-People",
-    "exclusionTimestamp": "2026-10-02T19:24:40.696Z",
+    "exclusionTimestamp": "2026-10-02T22:10:03.109Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "RalphClanton2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.110Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "RaymondF.Shaffer2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.111Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "RemoBrindisi2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.112Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "RobleyCookWilliams2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.124Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "SarahBarrettMoulton2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.133Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "StephaneBohain2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.140Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "TheodoreR.Milton2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.149Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "ThomasBouhail2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.150Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "ThomasCallender2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.150Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "WendieJoSperber2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.164Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "WilhelmBauer2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.165Z",
+    "version": "2.0.0-audited"
+  },
+  {
+    "DATA_QUALITY_EXCLUDED": true,
+    "sourceRecordId": "WilliamHiltner2000",
+    "reasonCode": "SUSPICIOUS_PLACEHOLDER_DATE",
+    "rawValue": {
+      "parsedTime": {
+        "birthTime": "00:00",
+        "birthDate": "2000-01-01",
+        "birthYear": 2000,
+        "birthMonth": 1,
+        "birthDay": 1,
+        "sourceUtcOffset": 8,
+        "sourceUtcOffsetStr": "+08:00"
+      },
+      "location": {
+        "Name": "Empty",
+        "Longitude": 101,
+        "Latitude": 4.59
+      }
+    },
+    "normalizedValue": null,
+    "source": "VedAstro 15000-Famous-People",
+    "exclusionTimestamp": "2026-10-02T22:10:03.167Z",
     "version": "2.0.0-audited"
   }
 ]

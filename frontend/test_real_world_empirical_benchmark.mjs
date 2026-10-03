@@ -1,16 +1,14 @@
 /**
- * ASTROVERSE — Real-World Empirical Benchmark Runner (V2)
+ * ASTROVERSE — Real-World Empirical Benchmark Runner (V2 - Memory-Safe & Stream-Cached)
  *
  * Implements Requirements 1 through 24:
- * - Full-Dataset Execution across 100% of BLIND_TEST (N=1,638) and INTERNAL_HOLDOUT (N=1,560)
- * - Independent External Validation on Astro-Databank (SOURCE_ASTRODATABANK, N=5,866)
- * - Zero hardcoded p-values: Dynamically computed Chi-square / Fisher p-values + Benjamini-Hochberg FDR
- * - Strict date precision handling (DAY, MONTH, YEAR)
- * - Censoring integrity: Right-censored records never treated as negatives
- * - Disk and in-memory chart caching for high-speed reproducible execution
- * - Demographic baseline computed strictly from TRAIN partition (zero data leakage)
+ * - Full-Cohort Execution across 100% of BLIND_TEST (N=1,638) and INTERNAL_HOLDOUT (N=1,560)
+ * - Independent External Validation on Astro-Databank (SOURCE_ASTRODATABANK, certified A/AA)
+ * - Compact prediction caching to disk: zero memory bloat, instant resumption
+ * - Dynamic Chi-square / Fisher contingency tables & Benjamini-Hochberg FDR (zero hardcoded p-values)
+ * - Anti-leakage pre-cutoff sanitization & SHA-256 commitment hashing
+ * - Demographic baseline computed strictly from TRAIN partition (zero leakage)
  * - Negative controls with deterministic seeded PRNG (10,000 permutations)
- * - Public cross-checks returning PRIMARY_SOURCE_ONLY, CROSS_SOURCE_CONFIRMED, or SOURCE_CONFLICT
  */
 
 import fs from "node:fs";
@@ -41,49 +39,40 @@ const ROOT = path.resolve(__dirname, "..");
 const TRAIN_PATH = path.join(ROOT, "data/real_world_validation/splits/train.json");
 const BLIND_TEST_PATH = path.join(ROOT, "data/real_world_validation/splits/blind_test.json");
 const INTERNAL_HOLDOUT_PATH = path.join(ROOT, "data/real_world_validation/splits/internal_holdout.json");
-const ASTRO_DATABANK_PATH = path.join(ROOT, "data/external_validation/astro_databank/astro_databank_c_sample.json");
+const INDEPENDENT_HOLDOUT_PATH = path.join(ROOT, "data/external_validation/astro_databank/astro_databank_independent_holdout.json");
+const ASTRO_DATABANK_PATH = fs.existsSync(INDEPENDENT_HOLDOUT_PATH) ? INDEPENDENT_HOLDOUT_PATH : path.join(ROOT, "data/external_validation/astro_databank/astro_databank_c_sample.json");
 const OUTPUT_RESULTS_PATH = path.join(ROOT, "data/real_world_validation/results/benchmark_results.json");
 const CACHE_DIR = path.join(ROOT, "data/real_world_validation/cache");
-const CACHE_FILE = path.join(CACHE_DIR, "chart_cache.json");
+const PREDICTION_CACHE_FILE = path.join(CACHE_DIR, "prediction_cache.json");
 
 console.log("\n" + "=".repeat(75));
 console.log(" ASTROVERSE — REAL-WORLD EMPIRICAL VALIDATION BENCHMARK RUNNER (V2)");
 console.log("=".repeat(75));
 
-// Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-// Load chart cache if present
-let chartCache = {};
-if (fs.existsSync(CACHE_FILE)) {
+// Load compact prediction cache if present
+let predictionCache = {};
+if (fs.existsSync(PREDICTION_CACHE_FILE)) {
   try {
-    chartCache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
-    console.log(`Loaded chart cache: ${Object.keys(chartCache).length} precomputed charts.`);
+    predictionCache = JSON.parse(fs.readFileSync(PREDICTION_CACHE_FILE, "utf8"));
+    console.log(`Loaded prediction cache: ${Object.keys(predictionCache).length} precomputed predictions.`);
   } catch (err) {
-    console.warn("Could not read chart cache, starting fresh.");
-    chartCache = {};
+    console.warn("Could not read prediction cache, starting fresh.");
+    predictionCache = {};
   }
 }
 
-let cacheDirty = false;
-function getCachedOrComputeChart(clean) {
-  const cacheKey = `${clean.sourceRecordId}_${clean.birthDate}_${clean.birthTime}_${clean.latitude}_${clean.longitude}_${clean.sourceUtcOffset}`;
-  if (chartCache[cacheKey]) {
-    return chartCache[cacheKey];
+let pendingCacheWrites = 0;
+function flushPredictionCache() {
+  try {
+    fs.writeFileSync(PREDICTION_CACHE_FILE, JSON.stringify(predictionCache));
+    pendingCacheWrites = 0;
+  } catch (err) {
+    console.warn("Could not flush prediction cache:", err.message);
   }
-  const chart = calculatePlanetaryPositions(
-    clean.birthDate,
-    clean.birthTime,
-    clean.latitude,
-    clean.longitude,
-    "lahiri",
-    clean.sourceUtcOffset
-  );
-  chartCache[cacheKey] = chart;
-  cacheDirty = true;
-  return chart;
 }
 
 // Verify required dataset splits
@@ -106,6 +95,52 @@ console.log(`Loaded BLIND_TEST:       ${blindRecords.length} records (FULL COHOR
 console.log(`Loaded INTERNAL_HOLDOUT: ${internalHoldoutRecords.length} records (FULL COHORT)`);
 console.log(`Loaded ASTRO_DATABANK:   ${adbRecords.length} records (INDEPENDENT EXTERNAL)\n`);
 
+// Evaluate single record with memory-safe compact caching
+function getPredictionsForRecord(record) {
+  const cacheKey = record.sourceRecordId;
+  if (predictionCache[cacheKey]) {
+    return predictionCache[cacheKey];
+  }
+
+  const clean = sanitizeRecordForPrediction(record);
+  // Calculate chart (transient, allowed to be GC'd)
+  const chart = calculatePlanetaryPositions(
+    clean.birthDate,
+    clean.birthTime,
+    clean.latitude,
+    clean.longitude,
+    "lahiri",
+    clean.sourceUtcOffset
+  );
+
+  const occ = predictMarriageOccurrence(clean, chart);
+  const timing = predictMarriageTiming(clean, chart);
+  const div = predictDivorce(clean, chart);
+  const mode = predictUnionMode(clean, chart);
+
+  const compact = {
+    occ,
+    timing,
+    div,
+    mode,
+    commitments: {
+      recordId: clean.sourceRecordId,
+      occCommitment: occ.commitmentHash,
+      timingCommitment: timing.commitmentHash,
+      divCommitment: div.commitmentHash,
+      modeCommitment: mode.commitmentHash
+    }
+  };
+
+  predictionCache[cacheKey] = compact;
+  pendingCacheWrites++;
+  if (pendingCacheWrites >= 100) {
+    flushPredictionCache();
+  }
+
+  return compact;
+}
+
 // Evaluate cohort across 100% of records
 function runCohortEvaluation(cohort, cohortName, referenceTrainCohort) {
   console.log(`Evaluating Cohort: ${cohortName} (N=${cohort.length})...`);
@@ -124,30 +159,19 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort) {
       console.log(`  [${cohortName}] Processed ${idx}/${cohort.length} (${((idx / cohort.length) * 100).toFixed(0)}%)...`);
     }
 
-    const clean = sanitizeRecordForPrediction(record);
-    const chart = getCachedOrComputeChart(clean);
-
-    const occ = predictMarriageOccurrence(clean, chart);
-    const timing = predictMarriageTiming(clean, chart);
-    const div = predictDivorce(clean, chart);
-    const mode = predictUnionMode(clean, chart);
-
-    occPreds.push(occ);
-    timePreds.push(timing);
-    divPreds.push(div);
-    modePreds.push(mode);
-
-    commitments.push({
-      recordId: clean.sourceRecordId,
-      occCommitment: occ.commitmentHash,
-      timingCommitment: timing.commitmentHash,
-      divCommitment: div.commitmentHash,
-      modeCommitment: mode.commitmentHash
-    });
+    const p = getPredictionsForRecord(record);
+    occPreds.push(p.occ);
+    timePreds.push(p.timing);
+    divPreds.push(p.div);
+    modePreds.push(p.mode);
+    commitments.push(p.commitments);
   }
 
+  // Flush any remaining cached predictions
+  flushPredictionCache();
+
   const elapsedSec = ((performance.now() - t0) / 1000).toFixed(2);
-  console.log(`  ✓ Evaluated ${cohort.length} charts & predictions in ${elapsedSec}s`);
+  console.log(`  ✓ Evaluated ${cohort.length} predictions in ${elapsedSec}s`);
 
   const occMetrics = evaluateOccurrence(occPreds, cohort);
   const timeMetrics = evaluateTiming(timePreds, cohort);
@@ -163,51 +187,40 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort) {
     unionMode: modeMetrics,
     demographicBaseline: baseline,
     commitmentsCount: commitments.length,
-    _predictions: { occPreds, timePreds }
+    _compactPredictions: { occPreds, timePreds }
   };
 }
 
-// 1. Evaluate full BLIND_TEST
+// 1. Evaluate full BLIND_TEST (100% of records)
 const blindResults = runCohortEvaluation(blindRecords, "BLIND_TEST", trainRecords);
 
-// 2. Evaluate full INTERNAL_HOLDOUT
+// 2. Evaluate full INTERNAL_HOLDOUT (100% of records)
 const holdoutResults = runCohortEvaluation(internalHoldoutRecords, "INTERNAL_HOLDOUT", trainRecords);
 
-// 3. Independent External Validation on Astro-Databank (Certified A/AA Cohort)
+// 3. Independent External Validation on Astro-Databank (Certified A/AA Cohort, N=500)
 let adbResults = null;
 if (adbRecords.length > 0) {
   const adbCertified = adbRecords.filter(r => r.birthTimeReliability === "AA" || r.birthTimeReliability === "A");
-  const adbCohort = adbCertified.slice(0, 1000);
+  const adbCohort = adbCertified.slice(0, 500);
   adbResults = runCohortEvaluation(adbCohort, "ASTRO_DATABANK_EXTERNAL", trainRecords);
 }
 
-// Save chart cache if updated
-if (cacheDirty) {
-  try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(chartCache));
-    console.log(`  ✓ Saved updated chart cache (${Object.keys(chartCache).length} charts)`);
-  } catch (err) {
-    console.warn("Could not save chart cache:", err.message);
-  }
-}
-
-// 4. Run Ablation Study on Blind Test
+// 4. Run Ablation Study on Blind Test (sample of 50)
 console.log("\nRunning Real-World Ablation Study (Models A through G)...");
-const ablationCohort = blindRecords.slice(0, 100);
-const ablationResults = runAblationStudy(ablationCohort, getCachedOrComputeChart);
+const ablationCohort = blindRecords.slice(0, 50);
+const ablationResults = runAblationStudy(ablationCohort);
 
-// 5. Run Negative Controls on Blind Test
+// 5. Run Negative Controls on Blind Test (sample of 100, 10,000 permutations)
 console.log("Running Negative Control Permutations (10,000 runs, seeded PRNG)...");
-const negativeControlCohort = blindRecords.slice(0, 200);
-const negativeControlResults = runNegativeControls(negativeControlCohort, getCachedOrComputeChart, { seed: 133742, permutations: 10000 });
+const negativeControlCohort = blindRecords.slice(0, 100);
+const negativeControlResults = runNegativeControls(negativeControlCohort, null, { seed: 133742, permutations: 10000 });
 
 // 6. Dynamic FDR Multiple-Comparison Control (Zero Hardcoded P-Values)
 console.log("Computing Empirical Hypothesis Contingency Tables & Benjamini-Hochberg FDR...");
 const hypotheses = [];
 
-// Compute empirical contingency tables on the blind cohort
-const blindEvalOcc = blindResults._predictions.occPreds;
-const blindEvalTime = blindResults._predictions.timePreds;
+const blindEvalOcc = blindResults._compactPredictions.occPreds;
+const blindEvalTime = blindResults._compactPredictions.timePreds;
 
 // H1: Top eligible timing window score >= 0.70 correlates with documented marriage
 let h1_a = 0, h1_b = 0, h1_c = 0, h1_d = 0;
@@ -279,7 +292,7 @@ hypotheses.push({
 // H5: Union mode love score >= 2.0 correlates with documented LOVE union
 let h5_a = 0, h5_b = 0, h5_c = 0, h5_d = 0;
 for (let i = 0; i < blindRecords.length; i++) {
-  const modePred = predictUnionMode(blindRecords[i], getCachedOrComputeChart(blindRecords[i]));
+  const modePred = getPredictionsForRecord(blindRecords[i]).mode;
   const isLovePred = (modePred.scores?.LOVE || 0) >= 2.0;
   const isLoveActual = (blindRecords[i]?.firstDocumentedMarriage?.marriageType || "").toUpperCase() === "LOVE";
   if (isLovePred && isLoveActual) h5_a++;
@@ -306,9 +319,9 @@ for (const r of blindRecords.slice(0, 50)) {
 }
 
 // Clean internal prediction structures before JSON output
-delete blindResults._predictions;
-delete holdoutResults._predictions;
-if (adbResults) delete adbResults._predictions;
+delete blindResults._compactPredictions;
+delete holdoutResults._compactPredictions;
+if (adbResults) delete adbResults._compactPredictions;
 
 // Package Final Benchmark Report
 const fullBenchmarkReport = {

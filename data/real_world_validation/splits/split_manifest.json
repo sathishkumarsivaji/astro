@@ -1,7 +1,7 @@
 {
   "manifestVersion": "2.0.0",
-  "generatedAt": "2026-10-02T19:25:08.451Z",
-  "totalRecords": 15773,
+  "generatedAt": "2026-10-02T22:10:11.939Z",
+  "totalRecords": 15710,
   "splitPolicy": "PERSON_AND_SPOUSE_CLUSTER_HASH_SHA256",
   "ratios": {
     "train": 0.6,
@@ -11,29 +11,29 @@
   },
   "splits": {
     "TRAIN": {
-      "recordCount": 9398,
+      "recordCount": 9366,
       "file": "train.json",
-      "sha256": "547d16dbf43b0e6c69da75796783a83bd9d8872d10dcfff14d51e3013792bd26"
+      "sha256": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849"
     },
     "VALIDATION": {
-      "recordCount": 3177,
+      "recordCount": 3155,
       "file": "val.json",
-      "sha256": "e99a7c0a66569bb1b97502b27e543c8cea0e06f4aee497954094fc29df2b50b2"
+      "sha256": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a"
     },
     "BLIND_TEST": {
-      "recordCount": 1638,
+      "recordCount": 1634,
       "file": "blind_test.json",
-      "sha256": "54b7188e2f7b60fcbdabe99fc6510c3d6798abd3c66d267a1ccf3e91ed85a75e"
+      "sha256": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2"
     },
     "INTERNAL_HOLDOUT": {
-      "recordCount": 1560,
+      "recordCount": 1555,
       "file": "internal_holdout.json",
-      "sha256": "9682db8b7efec432ec3c886ed8ca1ddf108fc892f69b8975970d7d4fc68793c7"
+      "sha256": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff"
     },
     "EXTERNAL_HOLDOUT_ALIAS": {
-      "recordCount": 1560,
+      "recordCount": 1555,
       "file": "external_holdout.json",
-      "sha256": "9682db8b7efec432ec3c886ed8ca1ddf108fc892f69b8975970d7d4fc68793c7",
+      "sha256": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
       "note": "Alias of INTERNAL_HOLDOUT for backwards compatibility; true external dataset is Astro-Databank in data/external_validation/astro_databank/"
     }
   }

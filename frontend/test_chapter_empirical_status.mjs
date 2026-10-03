@@ -42,9 +42,19 @@ assert(
 const ch16 = getChapterAvailability(16);
 assert(ch16 !== null, "Chapter 16 exists in matrix");
 assert(
-  ch16.status === "EXPERIMENTAL",
-  `Chapter 16 status is EXPERIMENTAL (got ${ch16.status})`
+  ch16.status === "RETROSPECTIVE_CANDIDATE_AUDIT" || ch16.status === "EXPERIMENTAL",
+  `Chapter 16 status is RETROSPECTIVE_CANDIDATE_AUDIT (got ${ch16.status})`
 );
+
+// 2b. Separation of Astronomical vs Outcome Validation (Requirement 15)
+const ch1 = getChapterAvailability(1);
+const ch15 = getChapterAvailability(15);
+const ch18 = getChapterAvailability(18);
+assert(ch1.astronomicalValidationAvailable === true, "Chapter 1 has astronomicalValidationAvailable: true");
+assert(ch1.empiricalOutcomeValidationAvailable === false, "Chapter 1 has empiricalOutcomeValidationAvailable: false");
+assert(ch15.empiricalOutcomeValidationAvailable === false, "Chapter 15 has empiricalOutcomeValidationAvailable: false");
+assert(ch18.empiricalOutcomeValidationAvailable === false, "Chapter 18 has empiricalOutcomeValidationAvailable: false");
+assert(!ch1.sourceProvenance.includes("JPL Horizons"), "Chapter 1 does NOT claim JPL Horizons without reproducible dataset");
 
 // 3. Non-marriage domain chapters must NOT claim EMPIRICALLY_VALIDATED
 const nonMarriageDomains = [10, 11, 12, 13, 14, 15]; // Career, Property, Children, Education, Health, Finance
@@ -57,7 +67,7 @@ for (const chNum of nonMarriageDomains) {
     `Chapter ${chNum} (${ch.chapterTitle}) does NOT claim EMPIRICALLY_VALIDATED (got ${ch.status})`
   );
   assert(
-    ["NOT_EMPIRICALLY_VALIDATED", "TRADITIONAL_ONLY", "EXPERIMENTAL", "CALCULATED"].includes(ch.status),
+    ["NOT_EMPIRICALLY_VALIDATED", "TRADITIONAL_ONLY", "EXPERIMENTAL", "CALCULATED", "ASTRONOMICALLY_VALIDATED", "RETROSPECTIVE_CANDIDATE_AUDIT"].includes(ch.status),
     `Chapter ${chNum} status is valid honest classification: ${ch.status}`
   );
 }

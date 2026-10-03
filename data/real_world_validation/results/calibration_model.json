@@ -1,0 +1,27 @@
+{
+  "calibratorType": "PLATT_LOGISTIC_SCALING_V2",
+  "modelVersion": "2.1.0-fitted-conformal",
+  "fitTimestamp": "2026-10-02T22:10:33.600Z",
+  "trainingDataset": "TRAIN_SPLIT_VEDASTRO_15K",
+  "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+  "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
+  "trainingN": 9366,
+  "validationN": 3155,
+  "trainingOutcomeDefinition": "MARRIAGE_WITHIN_HORIZON_18_50",
+  "parameters": {
+    "slope": 1.7284,
+    "intercept": 0.8661,
+    "classificationThreshold": 0.5
+  },
+  "conformalIntervalQuantiles": {
+    "q50": 3,
+    "q80": 6,
+    "q90": 10,
+    "q95": 14
+  },
+  "demographicBaseline": {
+    "medianMarriageAge": 26,
+    "trainingSampleCount": 8458
+  },
+  "provenanceNotice": "Parameters strictly fitted on TRAIN partition. Zero BLIND or HOLDOUT data used in fitting."
+}

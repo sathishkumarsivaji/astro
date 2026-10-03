@@ -1,227 +1,440 @@
 {
   "metadata": {
-    "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results",
-    "generatedAt": "2026-10-02T17:13:15.941Z",
-    "evalCohortSizePerSplit": 100,
+    "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results (V2)",
+    "generatedAt": "2026-10-02T21:59:19.650Z",
+    "cohortExecution": "FULL_COHORT_100_PERCENT",
+    "blindCohortSize": 1638,
+    "internalHoldoutSize": 1560,
+    "astroDatabankSize": 500,
     "antiLeakageStatus": "VERIFIED_PRE_CUTOFF_COMMITMENT_HASHING",
-    "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions are evaluated against independently documented public historical datasets."
+    "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes."
   },
   "splits": {
     "BLIND_TEST": {
       "cohortName": "BLIND_TEST",
-      "n": 100,
-      "elapsedSeconds": 25.19,
+      "n": 1638,
+      "elapsedSeconds": 244.79,
       "occurrence": {
-        "n": 100,
+        "n": 1614,
+        "censoringBreakdown": {
+          "totalRecords": 1638,
+          "evaluatedCount": 1614,
+          "eventCount": 1449,
+          "noEventCount": 139,
+          "rightCensoredCount": 24,
+          "unknownCount": 0
+        },
         "confusionMatrix": {
-          "tp": 92,
-          "fp": 8,
+          "tp": 1449,
+          "fp": 165,
           "tn": 0,
           "fn": 0
         },
-        "accuracy": 0.92,
-        "precision": 0.92,
+        "accuracy": 0.8978,
+        "precision": 0.8978,
         "recall": 1,
         "specificity": 0,
-        "f1": 0.9583,
+        "f1": 0.9461,
         "balancedAccuracy": 0.5,
-        "brierScore": 0.0896,
-        "ece": 0.1205,
+        "brierScore": 0.1371,
+        "ece": 0.2119,
         "ci95": {
-          "lower": 0.85,
-          "upper": 0.9589
+          "lower": 0.882,
+          "upper": 0.9116
         }
       },
       "timing": {
-        "n": 92,
-        "mae": 7.68,
+        "n": 1488,
+        "precisionDistribution": {
+          "dayPrecisionCount": 1488,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 6.89,
         "medianAE": 6,
-        "rmse": 10.3,
-        "exactYearCount": 4,
-        "exactYearPct": 4.35,
-        "within3mPct": 4.35,
-        "within6mPct": 4.35,
-        "within1yCount": 13,
-        "within1yPct": 14.13,
-        "within2yPct": 20.65,
-        "within3yPct": 26.09,
+        "rmse": 9.06,
+        "exactYearCount": 61,
+        "exactYearPct": 4.1,
+        "within1yCount": 194,
+        "within1yPct": 13.04,
+        "within2yPct": 22.78,
+        "within3yPct": 32.39,
         "meanIntervalWidth": 1.89,
-        "intervalPenaltyScore": 14.51
+        "intervalPenaltyScore": 13.01,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.041,
+          "nominal80": 0.8,
+          "observed80": 0.0934,
+          "nominal90": 0.9,
+          "observed90": 0.1055,
+          "nominal95": 0.95,
+          "observed95": 0.1364
+        },
+        "meanWinklerScore80": 61.93,
+        "dayPrecisionMetrics": {
+          "n": 1485,
+          "meanDaysError": 2506.5,
+          "medianDaysError": 2027,
+          "exactDatePct": 0,
+          "within7DaysPct": 0,
+          "within30DaysPct": 0.74,
+          "within90DaysPct": 1.75,
+          "within180DaysPct": 4.11,
+          "within365DaysPct": 9.02
+        }
       },
       "unionMode": {
-        "totalEvaluated": 99,
+        "totalEvaluated": 1628,
         "confusionMatrix": {
           "LOVE": {
-            "LOVE": 35,
-            "ARRANGED": 17,
-            "PRAGMATIC": 15,
-            "UNKNOWN": 28
+            "LOVE": 511,
+            "ARRANGED": 280,
+            "PRAGMATIC": 311,
+            "UNKNOWN": 395
           },
           "ARRANGED": {
-            "LOVE": 0,
-            "ARRANGED": 0,
-            "PRAGMATIC": 0,
-            "UNKNOWN": 0
+            "LOVE": 21,
+            "ARRANGED": 5,
+            "PRAGMATIC": 10,
+            "UNKNOWN": 8
           },
           "PRAGMATIC": {
-            "LOVE": 0,
-            "ARRANGED": 0,
-            "PRAGMATIC": 0,
-            "UNKNOWN": 0
+            "LOVE": 4,
+            "ARRANGED": 3,
+            "PRAGMATIC": 4,
+            "UNKNOWN": 1
           },
           "UNKNOWN": {
-            "LOVE": 1,
-            "ARRANGED": 0,
-            "PRAGMATIC": 1,
-            "UNKNOWN": 2
+            "LOVE": 26,
+            "ARRANGED": 11,
+            "PRAGMATIC": 17,
+            "UNKNOWN": 21
           }
         },
         "perClass": {
           "LOVE": {
-            "precision": 0.9722,
-            "recall": 0.3684,
-            "f1": 0.5344,
-            "count": 95
+            "precision": 0.9093,
+            "recall": 0.3413,
+            "f1": 0.4964,
+            "count": 1497
           },
           "ARRANGED": {
-            "precision": 0,
-            "recall": 0,
-            "f1": 0,
-            "count": 0
+            "precision": 0.0167,
+            "recall": 0.1136,
+            "f1": 0.0292,
+            "count": 44
           },
           "PRAGMATIC": {
-            "precision": 0,
-            "recall": 0,
-            "f1": 0,
-            "count": 0
+            "precision": 0.0117,
+            "recall": 0.3333,
+            "f1": 0.0226,
+            "count": 12
           },
           "UNKNOWN": {
-            "precision": 0.0667,
-            "recall": 0.5,
-            "f1": 0.1176,
-            "count": 4
+            "precision": 0.0494,
+            "recall": 0.28,
+            "f1": 0.084,
+            "count": 75
           }
         },
-        "macroF1": 0.163
+        "macroF1": 0.158
       },
       "demographicBaseline": {
-        "n": 92,
-        "baselineMedianAge": 27,
-        "baselineMeanAge": 28.4,
-        "mae": 4.57,
-        "rmse": 6.98,
-        "exactYearPct": 6.52,
-        "within1yPct": 20.65
+        "n": 1488,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 4.27,
+        "rmse": 6.34,
+        "exactYearPct": 10.28,
+        "within1yPct": 28.83,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
       },
-      "commitmentsCount": 100
+      "commitmentsCount": 1638
     },
-    "EXTERNAL_HOLDOUT": {
-      "cohortName": "EXTERNAL_HOLDOUT",
-      "n": 100,
-      "elapsedSeconds": 25.51,
+    "INTERNAL_HOLDOUT": {
+      "cohortName": "INTERNAL_HOLDOUT",
+      "n": 1560,
+      "elapsedSeconds": 7205.88,
       "occurrence": {
-        "n": 100,
+        "n": 1531,
+        "censoringBreakdown": {
+          "totalRecords": 1560,
+          "evaluatedCount": 1531,
+          "eventCount": 1384,
+          "noEventCount": 127,
+          "rightCensoredCount": 29,
+          "unknownCount": 0
+        },
         "confusionMatrix": {
-          "tp": 89,
-          "fp": 11,
+          "tp": 1384,
+          "fp": 147,
           "tn": 0,
           "fn": 0
         },
-        "accuracy": 0.89,
-        "precision": 0.89,
+        "accuracy": 0.904,
+        "precision": 0.904,
         "recall": 1,
         "specificity": 0,
-        "f1": 0.9418,
+        "f1": 0.9496,
         "balancedAccuracy": 0.5,
-        "brierScore": 0.1126,
-        "ece": 0.1403,
+        "brierScore": 0.1339,
+        "ece": 0.2156,
         "ci95": {
-          "lower": 0.8137,
-          "upper": 0.9375
+          "lower": 0.8882,
+          "upper": 0.9177
         }
       },
       "timing": {
-        "n": 89,
-        "mae": 7.43,
+        "n": 1421,
+        "precisionDistribution": {
+          "dayPrecisionCount": 1421,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 7.1,
         "medianAE": 6,
-        "rmse": 9.91,
-        "exactYearCount": 4,
-        "exactYearPct": 4.49,
-        "within3mPct": 4.49,
-        "within6mPct": 4.49,
-        "within1yCount": 11,
-        "within1yPct": 12.36,
-        "within2yPct": 19.1,
-        "within3yPct": 33.71,
-        "meanIntervalWidth": 1.91,
-        "intervalPenaltyScore": 14.17
+        "rmse": 9.53,
+        "exactYearCount": 54,
+        "exactYearPct": 3.8,
+        "within1yCount": 166,
+        "within1yPct": 11.68,
+        "within2yPct": 20.9,
+        "within3yPct": 30.47,
+        "meanIntervalWidth": 1.88,
+        "intervalPenaltyScore": 13.34,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.038,
+          "nominal80": 0.8,
+          "observed80": 0.0823,
+          "nominal90": 0.9,
+          "observed90": 0.0901,
+          "nominal95": 0.95,
+          "observed95": 0.1203
+        },
+        "meanWinklerScore80": 63.97,
+        "dayPrecisionMetrics": {
+          "n": 1420,
+          "meanDaysError": 2585,
+          "medianDaysError": 2024,
+          "exactDatePct": 0.07,
+          "within7DaysPct": 0.14,
+          "within30DaysPct": 0.49,
+          "within90DaysPct": 1.83,
+          "within180DaysPct": 3.73,
+          "within365DaysPct": 8.1
+        }
       },
       "unionMode": {
-        "totalEvaluated": 99,
+        "totalEvaluated": 1546,
         "confusionMatrix": {
           "LOVE": {
-            "LOVE": 22,
-            "ARRANGED": 19,
-            "PRAGMATIC": 22,
-            "UNKNOWN": 31
+            "LOVE": 446,
+            "ARRANGED": 255,
+            "PRAGMATIC": 287,
+            "UNKNOWN": 433
           },
           "ARRANGED": {
-            "LOVE": 0,
-            "ARRANGED": 0,
-            "PRAGMATIC": 1,
-            "UNKNOWN": 0
+            "LOVE": 24,
+            "ARRANGED": 9,
+            "PRAGMATIC": 13,
+            "UNKNOWN": 20
           },
           "PRAGMATIC": {
-            "LOVE": 0,
-            "ARRANGED": 0,
-            "PRAGMATIC": 0,
-            "UNKNOWN": 0
-          },
-          "UNKNOWN": {
             "LOVE": 1,
             "ARRANGED": 1,
             "PRAGMATIC": 0,
-            "UNKNOWN": 2
+            "UNKNOWN": 0
+          },
+          "UNKNOWN": {
+            "LOVE": 22,
+            "ARRANGED": 10,
+            "PRAGMATIC": 11,
+            "UNKNOWN": 14
           }
         },
         "perClass": {
           "LOVE": {
-            "precision": 0.9565,
-            "recall": 0.234,
-            "f1": 0.3761,
-            "count": 94
+            "precision": 0.9047,
+            "recall": 0.3139,
+            "f1": 0.466,
+            "count": 1421
           },
           "ARRANGED": {
-            "precision": 0,
-            "recall": 0,
-            "f1": 0,
-            "count": 1
+            "precision": 0.0327,
+            "recall": 0.1364,
+            "f1": 0.0528,
+            "count": 66
           },
           "PRAGMATIC": {
             "precision": 0,
             "recall": 0,
             "f1": 0,
-            "count": 0
+            "count": 2
           },
           "UNKNOWN": {
-            "precision": 0.0606,
-            "recall": 0.5,
-            "f1": 0.1081,
-            "count": 4
+            "precision": 0.03,
+            "recall": 0.2456,
+            "f1": 0.0534,
+            "count": 57
           }
         },
-        "macroF1": 0.121
+        "macroF1": 0.1431
       },
       "demographicBaseline": {
-        "n": 89,
-        "baselineMedianAge": 27,
-        "baselineMeanAge": 28.6,
-        "mae": 4.2,
-        "rmse": 6.41,
-        "exactYearPct": 13.48,
-        "within1yPct": 37.08
+        "n": 1421,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 4.42,
+        "rmse": 6.84,
+        "exactYearPct": 9.01,
+        "within1yPct": 27.73,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
       },
-      "commitmentsCount": 100
+      "commitmentsCount": 1560
+    },
+    "EXTERNAL_ASTRO_DATABANK": {
+      "cohortName": "ASTRO_DATABANK_EXTERNAL",
+      "n": 500,
+      "elapsedSeconds": 205.99,
+      "occurrence": {
+        "n": 353,
+        "censoringBreakdown": {
+          "totalRecords": 500,
+          "evaluatedCount": 353,
+          "eventCount": 353,
+          "noEventCount": 0,
+          "rightCensoredCount": 0,
+          "unknownCount": 147
+        },
+        "confusionMatrix": {
+          "tp": 353,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0
+        },
+        "accuracy": 1,
+        "precision": 1,
+        "recall": 1,
+        "specificity": 0,
+        "f1": 1,
+        "balancedAccuracy": 0.5,
+        "brierScore": 0.0987,
+        "ece": 0.3118,
+        "ci95": {
+          "lower": 0.9892,
+          "upper": 1
+        }
+      },
+      "timing": {
+        "n": 353,
+        "precisionDistribution": {
+          "dayPrecisionCount": 353,
+          "monthPrecisionCount": 0,
+          "yearPrecisionCount": 0
+        },
+        "mae": 6.03,
+        "medianAE": 6,
+        "rmse": 7.36,
+        "exactYearCount": 23,
+        "exactYearPct": 6.52,
+        "within1yCount": 62,
+        "within1yPct": 17.56,
+        "within2yPct": 26.91,
+        "within3yPct": 35.41,
+        "meanIntervalWidth": 1.94,
+        "intervalPenaltyScore": 11.67,
+        "coverage": {
+          "nominal50": 0.5,
+          "observed50": 0.0652,
+          "nominal80": 0.8,
+          "observed80": 0.119,
+          "nominal90": 0.9,
+          "observed90": 0.1331,
+          "nominal95": 0.95,
+          "observed95": 0.1558
+        },
+        "meanWinklerScore80": 53.46,
+        "dayPrecisionMetrics": {
+          "n": 353,
+          "meanDaysError": 2194.2,
+          "medianDaysError": 2045,
+          "exactDatePct": 0,
+          "within7DaysPct": 0.28,
+          "within30DaysPct": 1.42,
+          "within90DaysPct": 3.12,
+          "within180DaysPct": 5.95,
+          "within365DaysPct": 12.18
+        }
+      },
+      "unionMode": {
+        "totalEvaluated": 353,
+        "confusionMatrix": {
+          "LOVE": {
+            "LOVE": 94,
+            "ARRANGED": 37,
+            "PRAGMATIC": 54,
+            "UNKNOWN": 70
+          },
+          "ARRANGED": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          },
+          "PRAGMATIC": {
+            "LOVE": 29,
+            "ARRANGED": 13,
+            "PRAGMATIC": 17,
+            "UNKNOWN": 39
+          },
+          "UNKNOWN": {
+            "LOVE": 0,
+            "ARRANGED": 0,
+            "PRAGMATIC": 0,
+            "UNKNOWN": 0
+          }
+        },
+        "perClass": {
+          "LOVE": {
+            "precision": 0.7642,
+            "recall": 0.3686,
+            "f1": 0.4974,
+            "count": 255
+          },
+          "ARRANGED": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          },
+          "PRAGMATIC": {
+            "precision": 0.2394,
+            "recall": 0.1735,
+            "f1": 0.2012,
+            "count": 98
+          },
+          "UNKNOWN": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "count": 0
+          }
+        },
+        "macroF1": 0.1746
+      },
+      "demographicBaseline": {
+        "n": 353,
+        "baselineMedianAge": 26,
+        "baselineMeanAge": 27.8,
+        "mae": 3.79,
+        "rmse": 4.45,
+        "exactYearPct": 9.07,
+        "within1yPct": 23.51,
+        "leakageFreeProvenance": "ESTIMATED_STRICTLY_FROM_TRAIN"
+      },
+      "commitmentsCount": 500
     }
   },
   "ablationStudy": [
@@ -232,10 +445,10 @@
         "D1"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
+        "accuracy": 0.9167,
+        "f1": 0.9565,
         "brier": 0.25,
-        "ece": 0.46
+        "ece": 0.4167
       },
       "timing": {
         "mae": null,
@@ -252,16 +465,16 @@
         "Dasha"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
-        "brier": 0.0604,
-        "ece": 0.1335
+        "accuracy": 0.9167,
+        "f1": 0.9565,
+        "brier": 0.1178,
+        "ece": 0.212
       },
       "timing": {
-        "mae": 7.96,
-        "within1yPct": 12.5,
-        "exactYearPct": 0,
-        "intervalPenalty": 39.79
+        "mae": 6.54,
+        "within1yPct": 10.87,
+        "exactYearPct": 2.17,
+        "intervalPenalty": 32.72
       }
     },
     {
@@ -273,16 +486,16 @@
         "Transit"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
-        "brier": 0.0604,
-        "ece": 0.1335
+        "accuracy": 0.9167,
+        "f1": 0.9565,
+        "brier": 0.1178,
+        "ece": 0.212
       },
       "timing": {
-        "mae": 7.96,
-        "within1yPct": 12.5,
-        "exactYearPct": 0,
-        "intervalPenalty": 16.01
+        "mae": 6.54,
+        "within1yPct": 10.87,
+        "exactYearPct": 2.17,
+        "intervalPenalty": 12.92
       }
     },
     {
@@ -294,16 +507,16 @@
         "D9"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
-        "brier": 0.0604,
-        "ece": 0.1335
+        "accuracy": 0.9167,
+        "f1": 0.9565,
+        "brier": 0.1178,
+        "ece": 0.212
       },
       "timing": {
-        "mae": 7.96,
-        "within1yPct": 12.5,
-        "exactYearPct": 0,
-        "intervalPenalty": 16.01
+        "mae": 6.54,
+        "within1yPct": 10.87,
+        "exactYearPct": 2.17,
+        "intervalPenalty": 12.92
       }
     },
     {
@@ -316,16 +529,16 @@
         "D10"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
-        "brier": 0.0604,
-        "ece": 0.1335
+        "accuracy": 0.9167,
+        "f1": 0.9565,
+        "brier": 0.1178,
+        "ece": 0.212
       },
       "timing": {
-        "mae": 7.96,
-        "within1yPct": 12.5,
-        "exactYearPct": 0,
-        "intervalPenalty": 16.01
+        "mae": 6.54,
+        "within1yPct": 10.87,
+        "exactYearPct": 2.17,
+        "intervalPenalty": 12.92
       }
     },
     {
@@ -339,16 +552,16 @@
         "Jaimini"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
-        "brier": 0.0604,
-        "ece": 0.1335
+        "accuracy": 0.9167,
+        "f1": 0.9565,
+        "brier": 0.1178,
+        "ece": 0.212
       },
       "timing": {
-        "mae": 7.96,
-        "within1yPct": 12.5,
-        "exactYearPct": 0,
-        "intervalPenalty": 16.01
+        "mae": 6.54,
+        "within1yPct": 10.87,
+        "exactYearPct": 2.17,
+        "intervalPenalty": 12.92
       }
     },
     {
@@ -358,28 +571,30 @@
         "Full"
       ],
       "occurrence": {
-        "accuracy": 0.96,
-        "f1": 0.9796,
-        "brier": 0.0604,
-        "ece": 0.1335
+        "accuracy": 0.9167,
+        "f1": 0.9565,
+        "brier": 0.1178,
+        "ece": 0.212
       },
       "timing": {
-        "mae": 7.96,
-        "within1yPct": 12.5,
-        "exactYearPct": 0,
-        "intervalPenalty": 16.01
+        "mae": 6.54,
+        "within1yPct": 10.87,
+        "exactYearPct": 2.17,
+        "intervalPenalty": 12.92
       }
     }
   ],
   "negativeControls": {
+    "seed": 133742,
+    "numPermutations": 10000,
     "controls": [
       {
         "controlId": "OUTCOME_PERMUTATION",
         "name": "Shuffled Historical Outcome Permutation",
         "expectedBehavior": "Performance drops to chance / high MAE",
-        "observedMAE": 38,
-        "observedWithin1yPct": 0,
-        "observedF1": 0.9474,
+        "observedMAE": 44.77,
+        "observedWithin1yPct": 1.09,
+        "observedF1": 0.9519,
         "passesNullCheck": true
       },
       {
@@ -387,79 +602,51 @@
         "name": "Randomized Occurrence Label Test",
         "expectedBehavior": "Balanced accuracy ~ 0.50",
         "observedBalancedAccuracy": 0.5,
-        "observedBrier": 0.3772,
+        "observedBrier": 0.092,
+        "passesNullCheck": true
+      },
+      {
+        "controlId": "10K_PERMUTATION_DISTRIBUTION",
+        "name": "10,000 Run Permutation Baseline Distribution",
+        "expectedChanceRatePct": 10,
+        "observedSimulatedPct": 10.62,
         "passesNullCheck": true
       }
     ]
   },
   "fdrMultipleComparisons": [
     {
-      "ruleId": "R01_7TH_LORD_DASHA",
-      "pValue": 0.0034,
+      "ruleId": "R03_NARROW_INTERVAL_ACCURACY",
+      "pValue": 0.0017305,
       "rank": 1,
-      "bhCriticalValue": 0.005,
+      "bhCriticalValue": 0.01,
       "isSignificantFDR": true
     },
     {
-      "ruleId": "R02_VENUS_JUPITER_TRANSIT",
-      "pValue": 0.012,
+      "ruleId": "R04_CALIBRATED_PROBABILITY_THRESHOLD",
+      "pValue": 0.31436,
       "rank": 2,
-      "bhCriticalValue": 0.01,
-      "isSignificantFDR": false
-    },
-    {
-      "ruleId": "R03_D9_NAVAMSHA_HARMONIC",
-      "pValue": 0.021,
-      "rank": 3,
-      "bhCriticalValue": 0.015,
-      "isSignificantFDR": false
-    },
-    {
-      "ruleId": "R04_ASHTAKAVARGA_HIGH_BINDU",
-      "pValue": 0.048,
-      "rank": 4,
       "bhCriticalValue": 0.02,
       "isSignificantFDR": false
     },
     {
-      "ruleId": "R05_2ND_11TH_LORD_CONVERGENCE",
-      "pValue": 0.065,
-      "rank": 5,
-      "bhCriticalValue": 0.025,
-      "isSignificantFDR": false
-    },
-    {
-      "ruleId": "R06_MARS_AFFLICTION_DELAY",
-      "pValue": 0.082,
-      "rank": 6,
+      "ruleId": "R05_UNION_MODE_ROMANTIC_INDICATOR",
+      "pValue": 0.41761,
+      "rank": 3,
       "bhCriticalValue": 0.03,
       "isSignificantFDR": false
     },
     {
-      "ruleId": "R07_SATURN_DELAY_INDICATOR",
-      "pValue": 0.115,
-      "rank": 7,
-      "bhCriticalValue": 0.035,
-      "isSignificantFDR": false
-    },
-    {
-      "ruleId": "R08_RAHU_KETU_AXIS",
-      "pValue": 0.18,
-      "rank": 8,
+      "ruleId": "R01_TOP_WINDOW_CONVERGENCE",
+      "pValue": 0.93789,
+      "rank": 4,
       "bhCriticalValue": 0.04,
       "isSignificantFDR": false
     },
     {
-      "ruleId": "R09_COMBUSTION_WEAKNESS",
-      "pValue": 0.24,
-      "rank": 9,
-      "bhCriticalValue": 0.045,
-      "isSignificantFDR": false
-    },
-    {
-      "ruleId": "R10_D10_STATUS_CONCURRENCE",
-      "pValue": 0.35,
-      "rank": 10,
+      "ruleId": "R02_MULTI_WINDOW_ACTIVATION",
+      "pValue": 1,
+      "rank": 5,
       "bhCriticalValue": 0.05,
       "isSignificantFDR": false
     }
@@ -467,61 +654,351 @@
   "publicCrossChecks": [
     {
       "recordId": "A.J.Antoon1944",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AartVanderLeeuw1876",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "Abdulrahmanal1995",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AbigailGustafson1979",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AbigailVoska1996",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AchilleOcchetto1936",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AchilleVanAcker1898",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AdolpheJaureguy1898",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AdrianoBuzzati1913",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     },
     {
       "recordId": "AdrianoSofri1942",
-      "status": "SINGLE_SOURCE_VERIFIED",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AdrienFainsilber1932",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AduaPavarotti1936",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "FrancaRavedone1945",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "LucianoPavarotti1935",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "NicolettaMantovani1969",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "Afro1912",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AiméClariond1894",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlBano1943",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "RominaPower1951",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlainBaran1951",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlainBlondel1962",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "HeikeDrechsler1964",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlainCarpentier1933",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlainDelon1935",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "ArnauddeRosnay1946",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "ElisabethGuignot1941",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "GenevièveFontanel1936",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "JeanMigueres1940",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "MichèleMercier1939",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "NathalieDelon1941",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "NicoleCalfan1947",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlainFinkielkraut1949",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlainJeanAssailly2000",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlanBilzerian1944",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlanWilson1943",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlastairGeorgeSharp1911",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbaParietta1961",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbanMoga1923",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbanPréaubert1985",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertBrooks1947",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertCamus1913",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "ZeizaHalimi1927",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertFrey1913",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertKahn1860",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertLonde1858",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertMockel1866",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertMérat1840",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertoBertuzzi1913",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertoBonucci1918",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
+      "conflict": false,
+      "discrepancyDetails": null
+    },
+    {
+      "recordId": "AlbertoFujimori1938",
+      "status": "PRIMARY_SOURCE_ONLY",
+      "provenanceClass": "PRIMARY_SOURCE_ONLY",
       "conflict": false,
       "discrepancyDetails": null
     }

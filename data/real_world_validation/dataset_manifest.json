@@ -2,7 +2,7 @@
   "manifestVersion": "2.0.0",
   "schemaVersion": "REAL_WORLD_VALIDATION_SCHEMA_V2",
   "parserVersion": "2.0.0-vedastro-canonical-audited",
-  "importDate": "2026-10-02T19:24:41.276Z",
+  "importDate": "2026-10-02T22:10:04.480Z",
   "sourceDatasets": [
     {
       "name": "VedAstro 15000-Famous-People-Birth-Date-Location",
@@ -19,23 +19,23 @@
   ],
   "processedDataset": {
     "fileName": "real_world_validation_dataset.json",
-    "sha256": "672734d4abbf1958d692506a28f70e3cc937cc1da9c53fb82518097952fb25bf",
-    "recordCount": 15773
+    "sha256": "55ed7c2d7bc6e6d16ace517aa2dd6bbdcff114acbe6bb32eb9b65ee376ca8fea",
+    "recordCount": 15710
   },
   "statistics": {
     "totalRawRows": 15807,
-    "validBirthRecords": 15783,
-    "canonicalIngestedPersons": 15773,
-    "excludedRecords": 24,
+    "validBirthRecords": 15720,
+    "canonicalIngestedPersons": 15710,
+    "excludedRecords": 87,
     "unknownFollowupRecords": 10,
     "duplicatePersons": 0,
     "duplicateEvents": 0,
-    "highCredibility": 15542,
-    "mediumCredibility": 1667,
-    "lowCredibility": 915,
-    "exactDateCount": 11074,
-    "yearOnlyCount": 5716,
-    "missingDateCount": 1346
+    "highCredibility": 15508,
+    "mediumCredibility": 1660,
+    "lowCredibility": 900,
+    "exactDateCount": 11036,
+    "yearOnlyCount": 5714,
+    "missingDateCount": 1330
   },
   "exclusionReasonCounts": {
     "MISSING_RECORD_IDENTIFIER": 0,
@@ -43,9 +43,26 @@
     "MISSING_BIRTH_TIME_OR_COORDINATES": 0,
     "INVALID_COORDINATES": 0,
     "INVALID_BIRTH_YEAR": 7,
-    "SUSPICIOUS_PLACEHOLDER_DATE": 0,
+    "SUSPICIOUS_PLACEHOLDER_DATE": 63,
     "PLACEHOLDER_PERSON_RECORD": 17,
     "DUPLICATE_PERSON_FINGERPRINT": 0
+  },
+  "suspiciousDateAudit": {
+    "year2000Total": 65,
+    "exact2000_01_01_Quarantined": 63,
+    "year2000Confirmed": 2,
+    "exact1900_01_01_Confirmed": 2,
+    "confirmedRecords": [
+      "AvaNeely2000",
+      "WillowSmith2000",
+      "PaolaBorboni1900",
+      "XavierCugat1900"
+    ]
+  },
+  "marriageAgeOutlierAudit": {
+    "earlyHistoricalThreshold": "<15 years (pre-1950)",
+    "lateHistoricalThreshold": ">70 years",
+    "dataErrorThreshold": "<12 or >100 years"
   },
   "eligibilityRules": {
     "birthData": "Valid birth date (YYYY-MM-DD), birth time (HH:mm), non-null latitude and longitude coordinates.",
