@@ -1,12 +1,15 @@
 /**
  * ASTROVERSE — Calibration Parameter Provider (Single Source of Truth)
  *
- * Implements Requirement 10:
+ * Implements Requirements 6 & 10:
  * 1. Single source of truth for all calibration parameters (Platt scaling slope/intercept,
  *    conformal interval quantiles, classification thresholds).
  * 2. Loads parameters directly from data/real_world_validation/results/calibration_model.json.
- * 3. Never duplicates constants or uses unverified fallbacks.
- * 4. Provides verified runtime parameter accessors for evaluation engines.
+ * 3. Never duplicates constants or uses unverified fallbacks. Fail-closed on missing/invalid artifact.
+ * 4. Production and empirical benchmark paths must fail closed:
+ *    - Throws CALIBRATION_ARTIFACT_MISSING if calibration_model.json does not exist.
+ *    - Throws CALIBRATION_ARTIFACT_INVALID if calibration_model.json is malformed or invalid.
+ * 5. Clearly isolated test fixtures may be injected exclusively via setTestCalibrationFixture() for isolated unit tests.
  */
 
 import fs from "fs";
@@ -14,29 +17,20 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 let cachedModel = null;
+let testFixtureOverride = null;
 
-// Documented fallback values (only used if running in non-filesystem environments or artifact missing)
-// These MUST match calibration_model.json exactly.
-const VERIFIED_FALLBACK_MODEL = Object.freeze({
-  calibratorType: "PLATT_LOGISTIC_SCALING_V2",
-  modelVersion: "2.2.0-actual-model-fitted",
-  parameters: {
-    slope: 0.4189,
-    intercept: 1.6736,
-    classificationThreshold: 0.50
-  },
-  conformalIntervalQuantiles: {
-    q50: 6.0,
-    q80: 10.0,
-    q90: 14.0,
-    q95: 19.0
-  },
-  demographicBaseline: {
-    medianMarriageAge: 26.0,
-    trainingSampleCount: 8458
-  },
-  provenanceNotice: "FALLBACK_CALIBRATION_SPECIFICATION_VERIFIED"
-});
+/**
+ * Isolated test fixture injection for unit tests ONLY.
+ */
+export function setTestCalibrationFixture(fixture) {
+  testFixtureOverride = fixture;
+  cachedModel = fixture;
+}
+
+export function clearTestCalibrationFixture() {
+  testFixtureOverride = null;
+  cachedModel = null;
+}
 
 /**
  * Resolves the path to calibration_model.json across both CLI and bundler environments.
@@ -60,27 +54,45 @@ function resolveCalibrationModelPath() {
 /**
  * Loads the calibration model artifact from disk, caching it in memory.
  * If forceReload is true, clears cache and re-reads from disk.
+ * FAILS CLOSED: Never silently substitutes embedded constants.
  */
 export function loadCalibrationModel(forceReload = false) {
+  if (testFixtureOverride) {
+    return testFixtureOverride;
+  }
   if (cachedModel && !forceReload) {
     return cachedModel;
   }
 
   const modelPath = resolveCalibrationModelPath();
 
-  try {
-    if (fs.existsSync(modelPath)) {
-      const raw = fs.readFileSync(modelPath, "utf8");
-      cachedModel = JSON.parse(raw);
-      return cachedModel;
-    }
-  } catch (err) {
-    console.warn(`[calibrationProvider] Could not load calibration_model.json from ${modelPath}: ${err.message}. Using verified fallback specification.`);
+  if (!fs.existsSync(modelPath)) {
+    throw new Error(`CALIBRATION_ARTIFACT_MISSING: calibration_model.json does not exist at ${modelPath}. Calibration must be fitted on TRAIN partition before production/benchmark execution.`);
   }
 
-  // Fallback if file does not exist on disk
-  cachedModel = VERIFIED_FALLBACK_MODEL;
-  return cachedModel;
+  try {
+    const raw = fs.readFileSync(modelPath, "utf8");
+    const parsed = JSON.parse(raw);
+
+    // Fail-closed schema validation
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("CALIBRATION_ARTIFACT_INVALID: Model file is not an object.");
+    }
+    if (!parsed.parameters || typeof parsed.parameters.slope !== "number" || typeof parsed.parameters.intercept !== "number") {
+      throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing required numeric parameters (slope, intercept).");
+    }
+    if (!parsed.conformalIntervalQuantiles || typeof parsed.conformalIntervalQuantiles.q80 !== "number") {
+      throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing conformal interval quantiles (q80).");
+    }
+
+    cachedModel = parsed;
+    return cachedModel;
+  } catch (err) {
+    if (err.message.startsWith("CALIBRATION_ARTIFACT_")) {
+      throw err;
+    }
+    throw new Error(`CALIBRATION_ARTIFACT_INVALID: Failed to parse calibration artifact: ${err.message}`);
+  }
 }
 
 /**
@@ -90,10 +102,10 @@ export function loadCalibrationModel(forceReload = false) {
 export function getCalibrationParameters() {
   const model = loadCalibrationModel();
   return {
-    slope: model.parameters?.slope ?? VERIFIED_FALLBACK_MODEL.parameters.slope,
-    intercept: model.parameters?.intercept ?? VERIFIED_FALLBACK_MODEL.parameters.intercept,
-    threshold: model.parameters?.classificationThreshold ?? VERIFIED_FALLBACK_MODEL.parameters.classificationThreshold,
-    classificationThreshold: model.parameters?.classificationThreshold ?? VERIFIED_FALLBACK_MODEL.parameters.classificationThreshold,
+    slope: model.parameters.slope,
+    intercept: model.parameters.intercept,
+    threshold: model.parameters.classificationThreshold ?? 0.50,
+    classificationThreshold: model.parameters.classificationThreshold ?? 0.50,
     calibratorType: model.calibratorType,
     modelVersion: model.modelVersion
   };
@@ -109,12 +121,12 @@ export function getCalibrationParameters() {
  */
 export function getConformalQuantiles() {
   const model = loadCalibrationModel();
-  const q = model.conformalIntervalQuantiles || VERIFIED_FALLBACK_MODEL.conformalIntervalQuantiles;
+  const q = model.conformalIntervalQuantiles;
   return {
-    q50: q.q50 ?? VERIFIED_FALLBACK_MODEL.conformalIntervalQuantiles.q50,
-    q80: q.q80 ?? VERIFIED_FALLBACK_MODEL.conformalIntervalQuantiles.q80,
-    q90: q.q90 ?? VERIFIED_FALLBACK_MODEL.conformalIntervalQuantiles.q90,
-    q95: q.q95 ?? VERIFIED_FALLBACK_MODEL.conformalIntervalQuantiles.q95
+    q50: q.q50,
+    q80: q.q80,
+    q90: q.q90,
+    q95: q.q95
   };
 }
 
@@ -124,8 +136,8 @@ export function getConformalQuantiles() {
 export function getDemographicBaselineMetadata() {
   const model = loadCalibrationModel();
   return {
-    medianMarriageAge: model.demographicBaseline?.medianMarriageAge ?? VERIFIED_FALLBACK_MODEL.demographicBaseline.medianMarriageAge,
-    trainingSampleCount: model.demographicBaseline?.trainingSampleCount ?? VERIFIED_FALLBACK_MODEL.demographicBaseline.trainingSampleCount
+    medianMarriageAge: model.demographicBaseline?.medianMarriageAge ?? null,
+    trainingSampleCount: model.demographicBaseline?.trainingSampleCount ?? 0
   };
 }
 

@@ -34,6 +34,20 @@ import {
   getEarliestDocumentedMarriage,
   createSeededPRNG
 } from '../frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js';
+import {
+  initCacheManager,
+  loadCache,
+  getCachedPrediction,
+  setCachedPrediction,
+  flushCache,
+  computeInputHash,
+  getCurrentHashes,
+  invalidateAll
+} from '../frontend/src/services/realWorldValidation/predictionCacheManager.js';
+import {
+  setTestCalibrationFixture,
+  clearTestCalibrationFixture
+} from '../frontend/src/services/realWorldValidation/calibrationProvider.js';
 
 const ROOT = path.resolve(import.meta.dirname || '.', '..');
 const TRAIN_PATH = path.join(ROOT, 'data/real_world_validation/splits/train.json');
@@ -65,6 +79,14 @@ export function fitCalibrationModel(sampleSize = 2500) {
   console.log('ASTROVERSE — CALIBRATION MODEL FITTER (ACTUAL PRODUCTION OUTPUTS)');
   console.log('============================================================\n');
 
+  // Set bootstrap fixture so uncalibrated raw model scores can be extracted without disk artifact
+  setTestCalibrationFixture({
+    calibratorType: 'BOOTSTRAP_FITTING_PASS',
+    modelVersion: 'bootstrap',
+    parameters: { slope: 1.0, intercept: 0.0, classificationThreshold: 0.50 },
+    conformalIntervalQuantiles: { q50: 5.0, q80: 10.0, q90: 14.0, q95: 19.0 }
+  });
+
   const trainSha256 = computeFileSha256(TRAIN_PATH);
   const valSha256 = computeFileSha256(VAL_PATH);
   const trainRecords = JSON.parse(fs.readFileSync(TRAIN_PATH, 'utf8'));
@@ -72,16 +94,10 @@ export function fitCalibrationModel(sampleSize = 2500) {
 
   console.log(`1. Loaded TRAIN (N=${trainRecords.length}) & VAL (N=${valRecords.length})`);
 
-  // Load prediction cache if available to speed up execution
-  let predictionCache = {};
-  if (fs.existsSync(PREDICTION_CACHE_FILE)) {
-    try {
-      predictionCache = JSON.parse(fs.readFileSync(PREDICTION_CACHE_FILE, 'utf8'));
-      console.log(`   Found existing prediction cache with ${Object.keys(predictionCache).length} records.`);
-    } catch (_err) {
-      predictionCache = {};
-    }
-  }
+  // Initialize prediction cache manager with clean empty cache (Requirement 4)
+  initCacheManager();
+  invalidateAll();
+  loadCache(PREDICTION_CACHE_FILE);
 
   // 1. Select reproducible stratified sample of TRAIN (minimum N >= 2,000 per Req 8)
   const prng = createSeededPRNG(133742);
@@ -145,11 +161,14 @@ export function fitCalibrationModel(sampleSize = 2500) {
   for (let i = 0; i < finalSample.length; i++) {
     const r = finalSample[i];
     const cacheKey = r.sourceRecordId;
+    const inputHash = computeInputHash(r);
 
     let occ, timing;
-    if (predictionCache[cacheKey]) {
-      occ = predictionCache[cacheKey].occ;
-      timing = predictionCache[cacheKey].timing;
+    const cached = getCachedPrediction(cacheKey, inputHash);
+    
+    if (cached) {
+      occ = cached.occ;
+      timing = cached.timing;
       cacheHits++;
     } else {
       const clean = sanitizeRecordForPrediction(r);
@@ -164,7 +183,7 @@ export function fitCalibrationModel(sampleSize = 2500) {
       occ = predictMarriageOccurrence(clean, chart);
       timing = predictMarriageTiming(clean, chart);
 
-      predictionCache[cacheKey] = {
+      setCachedPrediction(cacheKey, inputHash, {
         occ,
         timing,
         commitments: {
@@ -172,12 +191,11 @@ export function fitCalibrationModel(sampleSize = 2500) {
           occCommitment: occ.commitmentHash,
           timingCommitment: timing.commitmentHash
         }
-      };
+      });
       cacheMisses++;
       pendingWrites++;
       if (pendingWrites >= 100) {
-        fs.mkdirSync(CACHE_DIR, { recursive: true });
-        fs.writeFileSync(PREDICTION_CACHE_FILE, JSON.stringify(predictionCache));
+        flushCache();
         pendingWrites = 0;
       }
     }
@@ -205,8 +223,7 @@ export function fitCalibrationModel(sampleSize = 2500) {
   }
 
   if (pendingWrites > 0) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-    fs.writeFileSync(PREDICTION_CACHE_FILE, JSON.stringify(predictionCache));
+    flushCache();
   }
 
   const elapsedSec = ((Date.now() - t0) / 1000).toFixed(1);
@@ -280,7 +297,15 @@ export function fitCalibrationModel(sampleSize = 2500) {
   const model = {
     calibratorType: 'PLATT_LOGISTIC_SCALING_V2',
     modelVersion: '2.2.0-actual-model-fitted',
+    predictionEngineVersion: '4.2.0',
+    predictionEngineHash: getCurrentHashes().predictionEngineHash,
+    calibrationInputHash: crypto.createHash('sha256').update(trainSha256 + valSha256).digest('hex'),
+    trainingSampleHash: crypto.createHash('sha256').update(JSON.stringify(finalSample.map(s => s.sourceRecordId))).digest('hex'),
     fitTimestamp: new Date().toISOString(),
+    fitSeed: 133742,
+    fitMethod: 'NEWTON_RAPHSON_IRLS',
+    rawScoreDefinition: 'rawRuleScore_from_predictMarriageOccurrence',
+    timingPredictionDefinition: 'centralEstimateYear_from_predictMarriageTiming',
     trainingDataset: 'TRAIN_SPLIT_VEDASTRO_15K',
     trainingDatasetHash: trainSha256,
     validationDatasetHash: valSha256,
@@ -314,6 +339,7 @@ export function fitCalibrationModel(sampleSize = 2500) {
 
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(model, null, 2));
+  clearTestCalibrationFixture();
   console.log(`\n✓ Calibration model saved to: ${OUTPUT_PATH}`);
 
   return model;

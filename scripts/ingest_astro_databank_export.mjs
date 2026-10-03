@@ -177,15 +177,27 @@ function resolveTimezoneContext(attrs, lat, lng, birthDate, birthTime, birthPlac
     }
   }
 
-  // 4. Default fallback
-  const lmtFallback = parseFloat(((lng || 0) / 15.0).toFixed(4));
+  // 4. Default fallback: Only LOCAL_MEAN_TIME may use longitude / 15.0
+  if (sourceTimeType === 'LOCAL_MEAN_TIME') {
+    const lmtOffset = parseFloat(((lng || 0) / 15.0).toFixed(4));
+    return {
+      sourceTimeType: 'LOCAL_MEAN_TIME',
+      sourceUtcOffset: lmtOffset,
+      resolvedUtcOffset: lmtOffset,
+      timezoneId: zn || 'LMT',
+      timezoneResolutionMethod: 'SOURCE_LMT',
+      timezoneConfidence: 'HIGH'
+    };
+  }
+
+  // STANDARD_TIME where civil timezone cannot be resolved: FAIL-CLOSED (Requirement 15)
   return {
     sourceTimeType: sourceTimeType || 'STANDARD_TIME',
-    sourceUtcOffset: lmtFallback,
-    resolvedUtcOffset: lmtFallback,
+    sourceUtcOffset: null,
+    resolvedUtcOffset: null,
     timezoneId: zn || 'UNKNOWN',
-    timezoneResolutionMethod: 'FALLBACK_LONGITUDE_ESTIMATE',
-    timezoneConfidence: 'LOW'
+    timezoneResolutionMethod: 'TIME_STANDARD_UNRESOLVED',
+    timezoneConfidence: 'UNRESOLVED'
   };
 }
 

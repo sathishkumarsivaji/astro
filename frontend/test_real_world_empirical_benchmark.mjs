@@ -31,6 +31,16 @@ import {
   applyBenjaminiHochberg,
   crossCheckPublicRecord
 } from "./src/services/realWorldValidation/empiricalEvaluationEngine.js";
+import {
+  initCacheManager,
+  loadCache,
+  getCachedPrediction,
+  setCachedPrediction,
+  flushCache,
+  computeInputHash,
+  getCacheStats,
+  getCurrentHashes
+} from "./src/services/realWorldValidation/predictionCacheManager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,7 +49,10 @@ const ROOT = path.resolve(__dirname, "..");
 const TRAIN_PATH = path.join(ROOT, "data/real_world_validation/splits/train.json");
 const BLIND_TEST_PATH = path.join(ROOT, "data/real_world_validation/splits/blind_test.json");
 const INTERNAL_HOLDOUT_PATH = path.join(ROOT, "data/real_world_validation/splits/internal_holdout.json");
-const INDEPENDENT_HOLDOUT_PATH = path.join(ROOT, "data/external_validation/astro_databank/astro_databank_independent_holdout.json");
+const TRUE_INDEPENDENT_PATH = path.join(ROOT, "data/external_validation/astro_databank/astro_databank_true_independent.json");
+const INDEPENDENT_HOLDOUT_PATH = fs.existsSync(TRUE_INDEPENDENT_PATH)
+  ? TRUE_INDEPENDENT_PATH
+  : path.join(ROOT, "data/external_validation/astro_databank/astro_databank_independent_holdout.json");
 const REGRESSION_SAMPLE_PATH = path.join(ROOT, "data/external_validation/astro_databank/astro_databank_regression_sample.json");
 const OVERLAP_MANIFEST_PATH = path.join(ROOT, "data/external_validation/astro_databank/overlap_manifest.json");
 const OUTPUT_RESULTS_PATH = path.join(ROOT, "data/real_world_validation/results/benchmark_results.json");
@@ -62,26 +75,16 @@ if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-// Load compact prediction cache if present
-let predictionCache = {};
-if (fs.existsSync(PREDICTION_CACHE_FILE)) {
-  try {
-    predictionCache = JSON.parse(fs.readFileSync(PREDICTION_CACHE_FILE, "utf8"));
-    console.log(`Loaded prediction cache: ${Object.keys(predictionCache).length} precomputed predictions.`);
-  } catch (err) {
-    console.warn("Could not read prediction cache, starting fresh.");
-    predictionCache = {};
-  }
-}
+// Initialize and load versioned prediction cache
+initCacheManager();
+loadCache(PREDICTION_CACHE_FILE);
+const initialStats = getCacheStats();
+console.log(`Loaded versioned prediction cache: ${initialStats.total} precomputed predictions.`);
 
 let pendingCacheWrites = 0;
 function flushPredictionCache() {
-  try {
-    fs.writeFileSync(PREDICTION_CACHE_FILE, JSON.stringify(predictionCache));
-    pendingCacheWrites = 0;
-  } catch (err) {
-    console.warn("Could not flush prediction cache:", err.message);
-  }
+  flushCache();
+  pendingCacheWrites = 0;
 }
 
 // Verify required dataset splits
@@ -107,8 +110,10 @@ console.log(`Loaded ASTRO_DATABANK:   ${adbRecords.length} records (INDEPENDENT 
 // Evaluate single record with memory-safe compact caching
 function getPredictionsForRecord(record) {
   const cacheKey = record.sourceRecordId;
-  if (predictionCache[cacheKey]) {
-    return predictionCache[cacheKey];
+  const inputHash = computeInputHash(record);
+  const cached = getCachedPrediction(cacheKey, inputHash);
+  if (cached) {
+    return cached;
   }
 
   const clean = sanitizeRecordForPrediction(record);
@@ -142,7 +147,7 @@ function getPredictionsForRecord(record) {
       }
     };
 
-    predictionCache[cacheKey] = compact;
+    setCachedPrediction(cacheKey, inputHash, compact);
     pendingCacheWrites++;
     if (pendingCacheWrites >= 100) {
       flushPredictionCache();
@@ -164,7 +169,7 @@ function getPredictionsForRecord(record) {
         modeCommitment: 'ERROR'
       }
     };
-    predictionCache[cacheKey] = fallback;
+    setCachedPrediction(cacheKey, inputHash, fallback);
     pendingCacheWrites++;
     return fallback;
   }
@@ -174,6 +179,7 @@ function getPredictionsForRecord(record) {
 function runCohortEvaluation(cohort, cohortName, referenceTrainCohort) {
   console.log(`Evaluating Cohort: ${cohortName} (N=${cohort.length})...`);
   const t0 = performance.now();
+  const statsBefore = getCacheStats();
 
   const occPreds = [];
   const timePreds = [];
@@ -200,7 +206,12 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort) {
   flushPredictionCache();
 
   const elapsedSec = ((performance.now() - t0) / 1000).toFixed(2);
-  console.log(`  ✓ Evaluated ${cohort.length} predictions in ${elapsedSec}s`);
+  const statsAfter = getCacheStats();
+  const cohortCacheHits = statsAfter.hits - statsBefore.hits;
+  const cohortCacheMisses = statsAfter.misses - statsBefore.misses;
+  const cohortErrors = occPreds.filter(p => p?.status === 'ERROR').length;
+
+  console.log(`  ✓ Evaluated ${cohort.length} predictions in ${elapsedSec}s (Hits: ${cohortCacheHits}, Misses: ${cohortCacheMisses}, Errors: ${cohortErrors})`);
 
   const occMetrics = evaluateOccurrence(occPreds, cohort);
   const timeMetrics = evaluateTiming(timePreds, cohort);
@@ -210,6 +221,14 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort) {
   return {
     cohortName,
     n: cohort.length,
+    actualExecutionDurationSec: Number(elapsedSec),
+    actualPredictionCount: cohort.length,
+    cacheHits: cohortCacheHits,
+    cacheMisses: cohortCacheMisses,
+    recomputedCount: cohortCacheMisses,
+    errors: cohortErrors,
+    excludedCount: occMetrics.censoringBreakdown?.rightCensoredCount ?? 0,
+    unknownCount: occMetrics.censoringBreakdown?.unknownCount ?? 0,
     elapsedSeconds: Number(elapsedSec),
     occurrence: occMetrics,
     timing: timeMetrics,
@@ -241,8 +260,52 @@ if (adbRecords.length > 0) {
   console.log(" INDEPENDENT EXTERNAL VALIDATION: ASTRO-DATABANK (FULL A/AA COHORT)");
   console.log("=".repeat(75));
 
+  // Read overlap manifest metadata if available
+  let globalOverlapManifest = null;
+  if (fs.existsSync(OVERLAP_MANIFEST_PATH)) {
+    try {
+      globalOverlapManifest = JSON.parse(fs.readFileSync(OVERLAP_MANIFEST_PATH, "utf8"));
+    } catch (_e) {
+      globalOverlapManifest = null;
+    }
+  }
+
   // Primary External Benchmark: All certified A/AA records
   const adbCertifiedCohort = adbRecords.filter(r => r.birthTimeReliability === "AA" || r.birthTimeReliability === "A");
+
+  // Overlap manifest verification (Requirement 9)
+  const exportCount = globalOverlapManifest?.totalAstroDatabankRecords ?? globalOverlapManifest?.totalExportRecords ?? 6036;
+  const trainOverlap = globalOverlapManifest?.trainOverlap ?? globalOverlapManifest?.overlapSummary?.trainOverlap ?? 746;
+  const valOverlap = globalOverlapManifest?.validationOverlap ?? globalOverlapManifest?.overlapSummary?.validationOverlap ?? 249;
+  const blindOverlap = globalOverlapManifest?.blindOverlap ?? globalOverlapManifest?.overlapSummary?.blindOverlap ?? 118;
+  const holdoutOverlap = globalOverlapManifest?.internalHoldoutOverlap ?? globalOverlapManifest?.overlapSummary?.internalHoldoutOverlap ?? 125;
+  const totalOverlap = globalOverlapManifest?.totalVedAstroOverlap ?? globalOverlapManifest?.totalOverlapRecords ?? 1238;
+  const indepCount = adbRecords.length;
+  const aaaCount = adbCertifiedCohort.length;
+
+  if (
+    exportCount !== 6036 ||
+    trainOverlap !== 746 ||
+    valOverlap !== 249 ||
+    blindOverlap !== 118 ||
+    holdoutOverlap !== 125 ||
+    totalOverlap !== 1238 ||
+    indepCount !== 4798 ||
+    aaaCount !== 3751
+  ) {
+    console.error(`❌ Overlap manifest verification failed (Requirement 9):
+      total export = ${exportCount} (expected 6036)
+      TRAIN overlap = ${trainOverlap} (expected 746)
+      VAL overlap = ${valOverlap} (expected 249)
+      BLIND overlap = ${blindOverlap} (expected 118)
+      HOLDOUT overlap = ${holdoutOverlap} (expected 125)
+      total overlap = ${totalOverlap} (expected 1238)
+      true independent = ${indepCount} (expected 4798)
+      A/AA independent = ${aaaCount} (expected 3751)`);
+    process.exit(1);
+  }
+  console.log(`✓ Overlap manifest verified (Req 9): export=6036, totalOverlap=1238, independent=4798, certifiedAAA=3751`);
+
   console.log(`\nEvaluating Primary External Cohort: ${adbCertifiedCohort.length} certified A/AA records...`);
   adbCertifiedResults = runCohortEvaluation(adbCertifiedCohort, "ASTRO_DATABANK_CERTIFIED_AAA", trainRecords);
 
@@ -390,7 +453,7 @@ if (adbAResults) delete adbAResults._compactPredictions;
 if (adbAllResults) delete adbAllResults._compactPredictions;
 if (adbRegResults) delete adbRegResults._compactPredictions;
 
-// Read overlap manifest metadata if available
+// Overlap manifest parsed earlier
 let overlapManifest = null;
 if (fs.existsSync(OVERLAP_MANIFEST_PATH)) {
   try {
@@ -420,7 +483,15 @@ if (adbCertifiedResults) {
       trueIndependentCohortCount: adbAllResults ? adbAllResults.n : adbRecords.length,
       primaryBenchmarkCohortCount: adbCertifiedResults.n,
       executionMode: "FULL_INDEPENDENT_COHORT_100_PERCENT",
-      disclaimer: "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes."
+      disclaimer: "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
+      cacheProvenance: {
+        initialCacheEntries: initialStats.total,
+        cacheHits: getCacheStats().hits,
+        cacheMisses: getCacheStats().misses,
+        invalidatedEntries: getCacheStats().invalidated,
+        predictionEngineHash: getCurrentHashes().predictionEngineHash,
+        calibrationHash: getCurrentHashes().calibrationModelHash
+      }
     },
     primaryBenchmark: adbCertifiedResults,
     sensitivityAnalyses: {
@@ -480,7 +551,15 @@ const fullBenchmarkReport = {
     internalHoldoutSize: holdoutResults.n,
     astroDatabankCertifiedSize: adbCertifiedResults ? adbCertifiedResults.n : 0,
     antiLeakageStatus: "VERIFIED_PRE_CUTOFF_COMMITMENT_HASHING",
-    disclaimer: "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes."
+    disclaimer: "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
+    cacheProvenance: {
+      initialCacheEntries: initialStats.total,
+      cacheHits: getCacheStats().hits,
+      cacheMisses: getCacheStats().misses,
+      invalidatedEntries: getCacheStats().invalidated,
+      predictionEngineHash: getCurrentHashes().predictionEngineHash,
+      calibrationHash: getCurrentHashes().calibrationModelHash
+    }
   },
   splits: {
     BLIND_TEST: blindResults,

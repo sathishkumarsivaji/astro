@@ -66,6 +66,13 @@ check("Timing residual sample size > 0", rawModel.timingResidualSampleN > 0);
 check("Fitted slope is finite positive number", Number.isFinite(rawModel.parameters?.slope) && rawModel.parameters.slope > 0);
 check("Fitted intercept is finite number", Number.isFinite(rawModel.parameters?.intercept));
 check("Classification threshold is 0.50", rawModel.parameters?.classificationThreshold === 0.50);
+check("Model specifies predictionEngineHash", typeof rawModel.predictionEngineHash === "string" && rawModel.predictionEngineHash.length === 64);
+check("Model specifies calibrationInputHash", typeof rawModel.calibrationInputHash === "string" && rawModel.calibrationInputHash.length === 64);
+check("Model specifies trainingSampleHash", typeof rawModel.trainingSampleHash === "string" && rawModel.trainingSampleHash.length === 64);
+check("Model specifies fitSeed 133742", rawModel.fitSeed === 133742);
+check("Model specifies fitMethod NEWTON_RAPHSON_IRLS", rawModel.fitMethod === "NEWTON_RAPHSON_IRLS");
+check("Model specifies rawScoreDefinition", typeof rawModel.rawScoreDefinition === "string" && rawModel.rawScoreDefinition.length > 0);
+check("Model specifies timingPredictionDefinition", typeof rawModel.timingPredictionDefinition === "string" && rawModel.timingPredictionDefinition.length > 0);
 
 // 3. Validate conformal prediction quantiles
 const q = rawModel.conformalIntervalQuantiles;
