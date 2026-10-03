@@ -474,7 +474,41 @@ export const TRAIN_DEMOGRAPHIC_BASELINE_HAZARD = Object.freeze([
  */
 export function extractIntervalAstrologicalFeatures(chartData, candidateWindows = [], options = {}) {
   const planets = chartData?.planets || [];
-  const ascLong = chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? 0;
+  const ascLong = chartData?.ascendantLong ?? chartData?.ascendant?.longitude;
+  if (!Number.isFinite(ascLong)) {
+    return SURVIVAL_AGE_BINS.map(bin => ({
+      binIndex: bin.index,
+      label: bin.label,
+      startAge: bin.startAge,
+      endAge: bin.endAge,
+      midpoint: bin.midpoint,
+      compositeScore: 0.0,
+      topScore: 0.0,
+      dashaScore: 0.0,
+      transitScore: 0.0,
+      d9Score: 0.0,
+      promiseScore: 0.0,
+      matchingWindowCount: 0,
+      features: {
+        DASHA_7TH_LORD: 0.0,
+        TRANSIT_JUPITER_7TH: 0.0,
+        TRANSIT_SATURN_7TH: 0.0,
+        D9_NAVAMSHA_SUPPORT: 0.0,
+        VENUS_NATAL_PROMISE: 0.0,
+        ASHTAKAVARGA_7TH_SAV: 0.0
+      },
+      provenance: {
+        status: "INSUFFICIENT_DATA",
+        reason: "Ascendant longitude not available",
+        chartHash: null,
+        ageInterval: bin.label,
+        lord7Name: null,
+        sav7Bindus: null,
+        sourceCalculation: "PARASHARI_V3_CANONICAL"
+      }
+    }));
+  }
+
   const lagnaSignIdx = Math.floor(ascLong / 30) % 12;
   const h7SignIdx = (lagnaSignIdx + 6) % 12;
   const lord7Name = SIGN_LORDS[h7SignIdx];
@@ -505,22 +539,22 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
   }
   promiseScore = Math.max(0.05, Math.min(0.95, promiseScore));
 
-  // Ashtakavarga 7th House Bindus
-  let sav7Bindus = 28;
+  // Ashtakavarga 7th House Bindus — Strictly calculated, zero fabricated fallbacks
+  let sav7Bindus = null;
   try {
-    if (chartData.ashtakavarga?.savByHouse) {
-      sav7Bindus = chartData.ashtakavarga.savByHouse[6] ?? 28;
-    } else if (planets.length >= 7) {
+    if (chartData?.ashtakavarga?.savByHouse) {
+      sav7Bindus = chartData.ashtakavarga.savByHouse[6] ?? null;
+    } else if (planets.length >= 7 && Number.isFinite(ascLong)) {
       const savCalc = calculateClassicalAshtakavarga(planets, ascLong);
-      sav7Bindus = savCalc?.savByHouse ? savCalc.savByHouse[6] : 28;
+      sav7Bindus = savCalc?.savByHouse ? (savCalc.savByHouse[6] ?? null) : null;
     }
   } catch {
-    sav7Bindus = 28;
+    sav7Bindus = null;
   }
-  const isSavSupportive = sav7Bindus >= 28 ? 1.0 : 0.0;
+  const isSavSupportive = (typeof sav7Bindus === "number" && sav7Bindus >= 28) ? 1.0 : 0.0;
 
   // Dasha table hierarchy from chart
-  const dashaTable = chartData.dashaTable || [];
+  const dashaTable = chartData?.dashaTable || [];
 
   return SURVIVAL_AGE_BINS.map(bin => {
     let topScore = 0;
@@ -528,6 +562,9 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
     let transitScore = 0;
     let d9Score = 0;
     let matchingWindowCount = 0;
+    let hasJupiterTransit = false;
+    let hasSaturnTransitAffliction = false;
+    let hasD9Support = false;
 
     // Check Candidate Windows overlap
     for (const w of candidateWindows) {
@@ -537,14 +574,38 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
         matchingWindowCount++;
         const rawScore = (w.peakWindow?.score ?? w.score ?? 5) / 10;
         if (rawScore > topScore) topScore = rawScore;
-        if (w.dashaLord || w.bukthiLord) {
+        if (w.dashaLord || w.bukthiLord || w.mahadashaLord || w.antardashaLord) {
           dashaScore = Math.max(dashaScore, rawScore * 0.85);
         }
-        if (w.transitSupport?.jupiterSupports || w.shastricFactors?.some(f => f.includes("Transit") || f.includes("Jupiter"))) {
-          transitScore = Math.max(transitScore, 0.75);
+
+        // Authentic Jupiter transit support check
+        const jupInTransit = (Array.isArray(w.transitConcurrence) && w.transitConcurrence.some(t => {
+          const text = typeof t === "string" ? t : (t.description || t.event || t.planet || "");
+          return /jupiter|guru|வியாழன்/i.test(text);
+        })) || (Array.isArray(w.supportingFactors) && w.supportingFactors.some(f => /jupiter|guru|வியாழன்/i.test(f)))
+           || Boolean(w.transitSupport?.jupiterSupports);
+        if (jupInTransit) {
+          hasJupiterTransit = true;
+          transitScore = Math.max(transitScore, 0.80);
         }
-        if (w.shastricFactors?.some(f => f.includes("Navamsha") || f.includes("D9"))) {
-          d9Score = Math.max(d9Score, 0.70);
+
+        // Authentic Saturn transit affliction check
+        const satInTransit = (Array.isArray(w.counterIndicators) && w.counterIndicators.some(c => /saturn|shani|சனி/i.test(c)))
+          || (Array.isArray(w.transitConcurrence) && w.transitConcurrence.some(t => {
+            const text = typeof t === "string" ? t : (t.description || t.event || t.planet || "");
+            return /saturn|shani|சனி/i.test(text) && /afflict|aspect|7th|retrograde|malefic/i.test(text);
+          }));
+        if (satInTransit) {
+          hasSaturnTransitAffliction = true;
+        }
+
+        // Authentic D9 Navamsha support check
+        const d9Active = Boolean(w.vargaActivation)
+          || (typeof w.vargaConfirmation === "string" && /confirmed|உறுதி|support|promised/i.test(w.vargaConfirmation))
+          || (Array.isArray(w.supportingFactors) && w.supportingFactors.some(f => /navamsha|d9|நவாம்ச/i.test(f)));
+        if (d9Active) {
+          hasD9Support = true;
+          d9Score = Math.max(d9Score, 0.75);
         }
       }
     }
@@ -571,9 +632,9 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
 
     // Individual binary/continuous features
     const featDasha7th = isDasha7thActive > 0 ? 1.0 : (dashaScore >= 0.6 ? 1.0 : 0.0);
-    const featTransitJup = transitScore >= 0.7 ? 1.0 : 0.0;
-    const featTransitSat = maleficsIn7.length > 0 ? 1.0 : 0.0;
-    const featD9Support = d9Score >= 0.65 ? 1.0 : 0.0;
+    const featTransitJup = (hasJupiterTransit || transitScore >= 0.7) ? 1.0 : 0.0;
+    const featTransitSat = hasSaturnTransitAffliction ? 1.0 : (maleficsIn7.length > 0 ? 0.5 : 0.0);
+    const featD9Support = (hasD9Support || d9Score >= 0.65) ? 1.0 : 0.0;
     const featVenusPromise = promiseScore >= 0.6 ? 1.0 : (promiseScore <= 0.4 ? 0.0 : 0.5);
     const featSav7 = isSavSupportive;
 

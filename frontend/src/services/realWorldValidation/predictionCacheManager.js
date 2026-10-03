@@ -13,7 +13,7 @@ let currentTrainingDatasetHash = null;
 const predictionSchemaVersion = '3.0';
 const modelVersion = '2.2.0';
 const astronomyEngineVersion = '4.2.0';
-const historicalTimeEngineVersion = '1.0.0';
+const historicalTimeEngineVersion = '2.1.0';
 
 let predictionCache = {};
 let cacheStats = { hits: 0, misses: 0, invalidated: 0, total: 0 };
@@ -22,6 +22,10 @@ let cacheFilePath = null;
 function computeFileHash(filePath) {
   if (!fs.existsSync(filePath)) return null;
   const content = fs.readFileSync(filePath);
+  if (/\.(js|jsx|mjs|json|md|txt)$/i.test(filePath)) {
+    const text = content.toString('utf8').replace(/\r\n/g, '\n');
+    return crypto.createHash('sha256').update(text, 'utf8').digest('hex');
+  }
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
@@ -57,7 +61,14 @@ export function computeInputHash(record) {
     record.latitude || '',
     record.longitude || '',
     record.sourceUtcOffset ?? record.utcOffset ?? '',
-    record.ayanamsha || 'lahiri'
+    record.ayanamsha || 'lahiri',
+    record.calendar || 'gregorian',
+    record.nodeModel || 'true',
+    record.houseSystem || 'placidus',
+    record.system || 'vedic',
+    record.historicalTimeStandard || 'STANDARD_TIME',
+    record.calculationVersion || '4.2.0',
+    record.ruleVersion || '3.0.0'
   ].join('|');
   return crypto.createHash('sha256').update(payload).digest('hex');
 }

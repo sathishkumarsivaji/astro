@@ -2509,7 +2509,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
     lunarNodeConvention: {
       model: nodeModel === "true" ? "TRUE_OSCULATING" : "MEAN_ASTRONOMICAL",
       definition: nodeModel === "true"
-        ? "Instantaneous osculating node with Jean Meeus Ch. 47 periodic perturbations"
+        ? "Instantaneous Lunar Orbital Angular Momentum State Vector (h = r x v) with Jean Meeus Ch. 47 fallback"
         : "Chapront 2002 / IAU Standard Polynomial (125.04455° anchor)",
       referenceFrame: "Geocentric True Ecliptic of Date"
     },

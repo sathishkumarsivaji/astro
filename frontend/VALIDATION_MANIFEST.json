@@ -67,7 +67,7 @@
   "astronomyEngine": {
     "version": "4.2.0-Universal",
     "planetaryModel": "VSOP87 / NOVAS geocentric true ecliptic of date via astronomy-engine 2.1.19",
-    "lunarNodeEngine": "Instantaneous Lunar Orbital Angular Momentum State Vector (h = r x v)",
+    "lunarNodeEngine": "Instantaneous Lunar Orbital Angular Momentum State Vector (h = r x v) with Jean Meeus Ch. 47 fallback",
     "meanNodePolynomial": "Chapront 2002 / IAU Standard with J2000.0 anchor 125.04455°",
     "crossSystemConsistency": "Verified identical tropical coordinates (0.0000\" residual) across Lahiri, KP, Raman, and Tropical systems"
   },
@@ -182,7 +182,7 @@
   "securityAndPrivacy": {
     "vapidSafeguard": "Enforced fatal error at startup if VAPID keys missing in production; dynamic ephemeral keypairs in dev/test",
     "authTokens": "Stateless HMAC session tokens & HttpOnly cookies; zero authentication secrets in localStorage",
-    "userDataErasure": "Full GDPR/CCPA user data erasure verified",
+    "userDataErasure": "Privacy controls designed to support GDPR/DPDP data-rights workflows verified",
     "databaseResilience": "Fail-closed PostgreSQL transactional persistence in production with write-through store",
     "pushSubscriptions": "Persistent push_subscriptions table with user-scoped multi-tenant isolation",
     "ciSecurityGate": "Blocking npm audit --omit=dev --audit-level=high release gate"

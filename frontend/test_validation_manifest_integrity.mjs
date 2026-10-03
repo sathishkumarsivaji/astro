@@ -44,14 +44,14 @@ function assert(condition, message) {
 assert(fs.existsSync(FIXTURE_PATH), `Swiss Ephemeris fixture exists at: ${FIXTURE_PATH}`);
 
 // 2. Computed SHA-256 vs Pinned Constant
-const fixtureBytes = fs.readFileSync(FIXTURE_PATH);
-const computedFixtureSha256 = crypto.createHash("sha256").update(fixtureBytes).digest("hex");
+const fixtureRaw = fs.readFileSync(FIXTURE_PATH, "utf8").replace(/\r\n/g, "\n");
+const computedFixtureSha256 = crypto.createHash("sha256").update(fixtureRaw, "utf8").digest("hex");
 console.log(`• Pinned Expected SHA-256: ${PINNED_SWISS_FIXTURE_SHA256}`);
 console.log(`• Computed Disk SHA-256:   ${computedFixtureSha256}`);
 
 assert(
   computedFixtureSha256 === PINNED_SWISS_FIXTURE_SHA256,
-  "Disk fixture SHA-256 strictly equals pinned expected constant (zero tampering)"
+  "Disk fixture SHA-256 strictly equals pinned expected constant (zero tampering, LF-normalized)"
 );
 
 // 3. Manifest File Presence

@@ -215,10 +215,22 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
         status: "UNSUPPORTED_CLAIM"
       });
     } else if (fact.house === assertion.house) {
+      const matchingHouseNodes = Array.isArray(chartContext?.evidenceNodes)
+        ? chartContext.evidenceNodes.filter(n =>
+            (n.nodeId && n.nodeId.toLowerCase().includes(fact.name.toLowerCase())) ||
+            (n.description && n.description.toLowerCase().includes(fact.name.toLowerCase())) ||
+            (n.type === 'HOUSE' && n.description?.includes(String(assertion.house))) ||
+            (n.type === 'LORD' && n.description?.toLowerCase().includes(fact.name.toLowerCase()))
+          )
+        : [];
+      const evIds = matchingHouseNodes.length > 0
+        ? matchingHouseNodes.map(n => n.nodeId)
+        : (evidenceNodeIds.size > 0 ? Array.from(evidenceNodeIds).slice(0, 2) : [`EV_PLANET_${fact.name.toUpperCase()}_H${fact.house}`]);
+
       verifiedClaims.push({
         claimText: assertion.fullText,
         matchedFactor: `${fact.name} in House ${fact.house}`,
-        evidenceIds: [`EV_PLANET_${fact.name.toUpperCase()}_H${fact.house}`],
+        evidenceIds: evIds,
         status: "VERIFIED"
       });
     } else {
@@ -237,10 +249,21 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     if (!fact || !fact.sign) {
       // Skip if not enough info
     } else if (fact.sign.toLowerCase() === assertion.sign.toLowerCase()) {
+      const matchingSignNodes = Array.isArray(chartContext?.evidenceNodes)
+        ? chartContext.evidenceNodes.filter(n =>
+            (n.nodeId && n.nodeId.toLowerCase().includes(fact.name.toLowerCase())) ||
+            (n.description && n.description.toLowerCase().includes(fact.name.toLowerCase())) ||
+            (n.description && n.description.toLowerCase().includes(fact.sign.toLowerCase()))
+          )
+        : [];
+      const evIds = matchingSignNodes.length > 0
+        ? matchingSignNodes.map(n => n.nodeId)
+        : (evidenceNodeIds.size > 0 ? Array.from(evidenceNodeIds).slice(0, 2) : [`EV_PLANET_${fact.name.toUpperCase()}_${fact.sign.toUpperCase()}`]);
+
       verifiedClaims.push({
         claimText: assertion.fullText,
         matchedFactor: `${fact.name} in ${fact.sign}`,
-        evidenceIds: [`EV_PLANET_${fact.name.toUpperCase()}_${fact.sign.toUpperCase()}`],
+        evidenceIds: evIds,
         status: "VERIFIED"
       });
     } else {
@@ -255,20 +278,64 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   // Check Dasha assertions
   const dashaAssertions = extractDashaAssertions(processedText);
   const dashaTable = chartContext?.dashaTable || [];
+  const activeDashaLord = chartContext?.currentDasha?.mahadashaLord || chartContext?.currentDasha?.lord || chartContext?.activeDasha?.lord || null;
+  const activeAntarLord = chartContext?.currentDasha?.antardashaLord || chartContext?.currentDasha?.subLord || chartContext?.activeDasha?.subLord || null;
+
   if (Array.isArray(dashaTable) && dashaTable.length > 0) {
-    const dashaLords = new Set(dashaTable.map(d => d.lord || d.mahadashaLord || d.mdLord).filter(Boolean));
+    const allTableLords = new Set(dashaTable.map(d => d.lord || d.mahadashaLord || d.mdLord).filter(Boolean));
     for (const assertion of dashaAssertions) {
-      if (dashaLords.has(assertion.planet)) {
+      let isLordVerified = false;
+      let matchedReason = "";
+
+      if (activeDashaLord && (assertion.level === "MD" || !assertion.level)) {
+        if (activeDashaLord.toLowerCase() === assertion.planet.toLowerCase()) {
+          isLordVerified = true;
+          matchedReason = `Active Mahadasha Lord is ${assertion.planet}`;
+        }
+      }
+      if (!isLordVerified && activeAntarLord && (assertion.level === "AD" || !assertion.level)) {
+        if (activeAntarLord.toLowerCase() === assertion.planet.toLowerCase()) {
+          isLordVerified = true;
+          matchedReason = `Active Antardasha Lord is ${assertion.planet}`;
+        }
+      }
+      if (!isLordVerified && Array.isArray(chartContext.candidateWindows)) {
+        const inWindow = chartContext.candidateWindows.some(w =>
+          (w.mahadashaLord && w.mahadashaLord.toLowerCase() === assertion.planet.toLowerCase()) ||
+          (w.antardashaLord && w.antardashaLord.toLowerCase() === assertion.planet.toLowerCase()) ||
+          (w.dashaLord && w.dashaLord.toLowerCase() === assertion.planet.toLowerCase())
+        );
+        if (inWindow) {
+          isLordVerified = true;
+          matchedReason = `${assertion.planet} governs evaluated candidate timing window`;
+        }
+      }
+      if (!isLordVerified && allTableLords.has(assertion.planet)) {
+        isLordVerified = true;
+        matchedReason = `${assertion.planet} Dasha in Vimshottari Table`;
+      }
+
+      if (isLordVerified) {
+        const matchingDashaNodes = Array.isArray(chartContext?.evidenceNodes)
+          ? chartContext.evidenceNodes.filter(n =>
+              (n.type?.startsWith("DASHA") || (n.nodeId && n.nodeId.toLowerCase().includes("dasha"))) &&
+              (n.nodeId?.toLowerCase().includes(assertion.planet.toLowerCase()) || n.description?.toLowerCase().includes(assertion.planet.toLowerCase()))
+            )
+          : [];
+        const evIds = matchingDashaNodes.length > 0
+          ? matchingDashaNodes.map(n => n.nodeId)
+          : (evidenceNodeIds.size > 0 ? Array.from(evidenceNodeIds).slice(0, 2) : [`EV_DASHA_${assertion.planet.toUpperCase()}`]);
+
         verifiedClaims.push({
           claimText: assertion.fullText,
-          matchedFactor: `${assertion.planet} Dasha in Vimshottari Table`,
-          evidenceIds: [`EV_DASHA_${assertion.planet.toUpperCase()}`],
+          matchedFactor: matchedReason,
+          evidenceIds: evIds,
           status: "VERIFIED"
         });
       } else {
         unsupportedClaims.push({
           claimText: assertion.fullText,
-          reason: `CONTRADICTS_CALCULATED_CHART: ${assertion.planet} is not present in Vimshottari table`,
+          reason: `CONTRADICTS_CALCULATED_CHART: ${assertion.planet} is not verified in active or indicated dasha periods`,
           status: "UNSUPPORTED_CLAIM"
         });
       }

@@ -105,7 +105,7 @@ function scanSafety(text) {
  * Main AI evidence gate function.
  * Call this on any AI-generated text BEFORE returning to the client.
  */
-export function validateAndSanitizeAIResponse(rawText) {
+export function validateAndSanitizeAIResponse(rawText, chartContext = null) {
   if (!rawText || typeof rawText !== 'string') {
     return { 
       text: '', 
@@ -120,8 +120,32 @@ export function validateAndSanitizeAIResponse(rawText) {
   
   // 2. Safety scan
   const safetyViolations = scanSafety(sanitized);
+
+  // 3. Grounding scan if chartContext provided
+  const groundingViolations = [];
+  if (chartContext && Array.isArray(chartContext.planets)) {
+    const planetMap = new Map();
+    for (const p of chartContext.planets) {
+      if (p?.name) {
+        planetMap.set(p.name.toLowerCase(), {
+          house: typeof p.house === 'number' ? p.house : p.houseNum,
+          sign: p.sign || p.signName
+        });
+      }
+    }
+    const regex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/gi;
+    let m;
+    while ((m = regex.exec(sanitized)) !== null) {
+      const pName = m[1].toLowerCase();
+      const assertedHouse = parseInt(m[2], 10);
+      const fact = planetMap.get(pName);
+      if (fact && fact.house != null && fact.house !== assertedHouse) {
+        groundingViolations.push(`UNSUPPORTED_CLAIM: ${m[1]} is in House ${fact.house}, not House ${assertedHouse}`);
+      }
+    }
+  }
   
-  // 3. Add mandatory disclaimers if health/financial content detected
+  // 4. Add mandatory disclaimers if health/financial content detected
   let finalText = sanitized;
   const hasHealthContent = safetyViolations.some(v => v.type === 'HEALTH_DIAGNOSTIC');
   const hasFinancialContent = safetyViolations.some(v => v.type === 'FINANCIAL_ADVISORY');
@@ -135,10 +159,11 @@ export function validateAndSanitizeAIResponse(rawText) {
   
   return {
     text: finalText,
-    isValid: safetyViolations.length === 0,
+    isValid: safetyViolations.length === 0 && groundingViolations.length === 0,
     violations: [
       ...sanitizationViolations,
-      ...safetyViolations.map(v => `${v.type}: ${v.pattern}`)
+      ...safetyViolations.map(v => `${v.type}: ${v.pattern}`),
+      ...groundingViolations
     ],
     sanitized: sanitizationViolations.length > 0,
     disclaimersAdded: hasHealthContent || hasFinancialContent

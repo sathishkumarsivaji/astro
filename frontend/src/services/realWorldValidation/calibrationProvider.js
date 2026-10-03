@@ -68,11 +68,11 @@ function resolveCalibrationModelPath() {
  * If forceReload is true, clears cache and re-reads from disk.
  * FAILS CLOSED: Never silently substitutes embedded constants.
  */
-export function loadCalibrationModel(forceReload = false) {
+export function loadCalibrationModel(forceReload = false, options = {}) {
   if (testFixtureOverride) {
     return testFixtureOverride;
   }
-  if (cachedModel && !forceReload) {
+  if (cachedModel && !forceReload && !options.expectedPredictionEngineHash && !options.expectedTrainingDatasetHash) {
     return cachedModel;
   }
 
@@ -97,6 +97,14 @@ export function loadCalibrationModel(forceReload = false) {
       throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing conformal interval quantiles (q80).");
     }
 
+    // Fail-closed staleness verification if expected hashes are supplied
+    if (options.expectedPredictionEngineHash && parsed.predictionEngineHash && parsed.predictionEngineHash !== options.expectedPredictionEngineHash) {
+      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model predictionEngineHash (${parsed.predictionEngineHash}) does not match runtime engine hash (${options.expectedPredictionEngineHash}). Re-fit calibration model.`);
+    }
+    if (options.expectedTrainingDatasetHash && parsed.trainingDatasetHash && parsed.trainingDatasetHash !== options.expectedTrainingDatasetHash) {
+      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model trainingDatasetHash (${parsed.trainingDatasetHash}) does not match current dataset hash (${options.expectedTrainingDatasetHash}). Re-fit calibration model.`);
+    }
+
     cachedModel = parsed;
     return cachedModel;
   } catch (err) {
@@ -104,6 +112,26 @@ export function loadCalibrationModel(forceReload = false) {
       throw err;
     }
     throw new Error(`CALIBRATION_ARTIFACT_INVALID: Failed to parse calibration artifact: ${err.message}`);
+  }
+}
+
+/**
+ * Verifies calibration model freshness against expected runtime and dataset hashes.
+ * Returns { isFresh: boolean, status: string, error?: string, model?: object }
+ */
+export function verifyCalibrationModelFreshness(expectedPredictionEngineHash, expectedTrainingDatasetHash) {
+  try {
+    const model = loadCalibrationModel(true, {
+      expectedPredictionEngineHash,
+      expectedTrainingDatasetHash
+    });
+    return { isFresh: true, status: "CALIBRATION_ARTIFACT_CURRENT", model };
+  } catch (err) {
+    return {
+      isFresh: false,
+      status: err.message.startsWith("CALIBRATION_ARTIFACT_STALE") ? "CALIBRATION_ARTIFACT_STALE" : "CALIBRATION_ARTIFACT_INVALID",
+      error: err.message
+    };
   }
 }
 

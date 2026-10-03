@@ -58,6 +58,10 @@ const PREDICTION_CACHE_FILE = path.join(CACHE_DIR, 'prediction_cache.json');
 
 function computeFileSha256(filePath) {
   const content = fs.readFileSync(filePath);
+  if (/\.(js|jsx|mjs|json|md|txt)$/i.test(filePath)) {
+    const text = content.toString('utf8').replace(/\r\n/g, '\n');
+    return crypto.createHash('sha256').update(text, 'utf8').digest('hex');
+  }
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 

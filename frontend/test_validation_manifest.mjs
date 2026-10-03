@@ -44,6 +44,10 @@ function collectFiles(dir, extensions, ignore = ['node_modules', '.git', 'dist',
  */
 function hashFile(filePath) {
   const content = readFileSync(filePath);
+  if (/\.(js|jsx|mjs|json|md|txt)$/i.test(filePath)) {
+    const text = content.toString('utf8').replace(/\r\n/g, '\n');
+    return createHash('sha256').update(text, 'utf8').digest('hex');
+  }
   return createHash('sha256').update(content).digest('hex');
 }
 

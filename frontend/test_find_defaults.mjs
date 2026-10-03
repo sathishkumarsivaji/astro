@@ -84,7 +84,8 @@ assertCheck(
 // 6. Check DetailedReportModal.jsx chapters guard against cross-system leakage
 const modalContent = fs.readFileSync(resolveSrc('./src/components/Horoscope/DetailedReportModal.jsx'), 'utf8');
 assertCheck(
-  modalContent.includes('const isChapterApplicable = (id) => systemChapterIds.has(id);'),
+  modalContent.includes('const isChapterApplicable = (id) => systemChapterIds.has(id);') ||
+  modalContent.includes('const isChapterApplicable = (id) => id === "expertPredictions" || systemChapterIds.has(id);'),
   'DetailedReportModal must define isChapterApplicable checking systemChapterIds'
 );
 assertCheck(

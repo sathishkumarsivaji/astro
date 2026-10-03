@@ -6,7 +6,7 @@
  * 2. Cryptographic HMAC session authority with HttpOnly cookies & forgery rejection
  * 3. Authoritative Geocoding Proxy with cache, rate throttling & global IANA timezone resolution
  * 4. Production Payment Orders & HMAC Webhook Processing with strict replay protection
- * 5. GDPR Article 20 / DPDP 2023 Data Governance: Durable Export & Permanent Erasure
+ * 5. Privacy controls designed to support GDPR Article 20 / DPDP 2023 data-rights workflows: Durable Export & Permanent Erasure
  * 6. Secured System Observability & Metrics (Admin key protected)
  */
 
