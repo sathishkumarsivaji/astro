@@ -1,7 +1,7 @@
 # ASTROVERSE: Comprehensive Real-World Validation & Scientific Audit Report
 
-**Document Version:** `2.1.0-empirical`  
-**Evaluation Date:** October 2, 2026  
+**Document Version:** `2.2.0-empirical`  
+**Evaluation Date:** October 4, 2026  
 **Auditing Framework:** ASTROVERSE Research & Empirical Validation Lab  
 **Evaluation Dataset:** VedAstro 15,000+ Famous People Benchmark  
 **Core Principle:**  
@@ -15,7 +15,7 @@ This report establishes the empirical foundation, astronomical parity, and scien
 
 In strict adherence to scientific integrity, ASTROVERSE explicitly rejects the practice of conflating mathematical ephemeris accuracy with real-world predictive validity. While astronomical positions can be computed to sub-arcsecond precision against international standards (Swiss Ephemeris / JPL Horizons), traditional astrological rules regarding life milestones (marriage, career, wealth, health) represent interpretive symbolic frameworks that require independent empirical validation before any predictive claims can be substantiated.
 
-This audit evaluates the core predictive models against a frozen, deduplicated corpus of **15,791 unique historical individuals** encompassing **16,797 validated marriage records** and **5,060 dissolution records**, benchmarked against rigorous demographic baselines, negative permutation controls, and multiple-comparison false discovery rate (FDR) corrections.
+This audit evaluates the core predictive models against a frozen, deduplicated corpus of **15,710 eligible historical individuals** (87 quarantined records with coordinate ambiguity and 10 incomplete records isolated under fail-closed data governance) encompassing validated life milestone records, benchmarked against rigorous demographic baselines, negative permutation controls, and multiple-comparison false discovery rate (FDR) corrections.
 
 ---
 

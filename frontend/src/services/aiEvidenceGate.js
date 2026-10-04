@@ -198,10 +198,36 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   const unsupportedClaims = [];
 
   const planetFacts = buildPlanetFactMap(chartContext);
+
+  // Populate effective evidence nodes: respect provided nodes or build from calculated chart
+  let effectiveNodes = Array.isArray(chartContext?.evidenceNodes)
+    ? chartContext.evidenceNodes
+    : (Array.isArray(chartContext?.evidenceIds) ? chartContext.evidenceIds.map(id => ({ nodeId: id })) : []);
+
+  if (effectiveNodes.length === 0 && Array.isArray(chartContext?.planets)) {
+    const autoNodes = [];
+    for (const p of chartContext.planets) {
+      if (p && p.name) {
+        if (p.house != null) {
+          autoNodes.push({ nodeId: `EV_PLANET_${p.name.toUpperCase()}_H${p.house}`, type: 'HOUSE', description: `${p.name} in House ${p.house}` });
+        }
+        if (p.sign) {
+          autoNodes.push({ nodeId: `EV_PLANET_${p.name.toUpperCase()}_${p.sign.toUpperCase()}`, type: 'SIGN', description: `${p.name} in ${p.sign}` });
+        }
+      }
+    }
+    if (chartContext?.currentDasha?.lord) {
+      autoNodes.push({ nodeId: `EV_DASHA_${chartContext.currentDasha.lord.toUpperCase()}`, type: 'DASHA_MD', description: `Active Mahadasha: ${chartContext.currentDasha.lord}` });
+    }
+    if (chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha) {
+      const antar = chartContext.currentDasha.subLord || chartContext.currentDasha.antarDasha;
+      autoNodes.push({ nodeId: `EV_DASHA_${antar.toUpperCase()}`, type: 'DASHA_AD', description: `Active Antardasha: ${antar}` });
+    }
+    effectiveNodes = autoNodes;
+  }
+
   const evidenceNodeIds = new Set(
-    Array.isArray(chartContext?.evidenceNodes)
-      ? chartContext.evidenceNodes.map(n => n.nodeId || n.evidenceId)
-      : (Array.isArray(chartContext?.evidenceIds) ? chartContext.evidenceIds : [])
+    effectiveNodes.map(n => n.nodeId || n.evidenceId || n.id).filter(Boolean)
   );
 
   // Check Planet-in-House assertions
@@ -215,24 +241,30 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
         status: "UNSUPPORTED_CLAIM"
       });
     } else if (fact.house === assertion.house) {
-      const matchingHouseNodes = Array.isArray(chartContext?.evidenceNodes)
-        ? chartContext.evidenceNodes.filter(n =>
-            (n.nodeId && n.nodeId.toLowerCase().includes(fact.name.toLowerCase())) ||
-            (n.description && n.description.toLowerCase().includes(fact.name.toLowerCase())) ||
-            (n.type === 'HOUSE' && n.description?.includes(String(assertion.house))) ||
-            (n.type === 'LORD' && n.description?.toLowerCase().includes(fact.name.toLowerCase()))
-          )
-        : [];
+      const matchingHouseNodes = effectiveNodes.filter(n =>
+        (n.nodeId && n.nodeId.toLowerCase().includes(fact.name.toLowerCase())) ||
+        (n.description && n.description.toLowerCase().includes(fact.name.toLowerCase())) ||
+        (n.type === 'HOUSE' && n.description?.includes(String(assertion.house))) ||
+        (n.type === 'LORD' && n.description?.toLowerCase().includes(fact.name.toLowerCase()))
+      );
       const evIds = matchingHouseNodes.length > 0
         ? matchingHouseNodes.map(n => n.nodeId)
-        : (evidenceNodeIds.size > 0 ? Array.from(evidenceNodeIds).slice(0, 2) : [`EV_PLANET_${fact.name.toUpperCase()}_H${fact.house}`]);
+        : Array.from(evidenceNodeIds).filter(id => id.toLowerCase().includes(fact.name.toLowerCase())).slice(0, 2);
 
-      verifiedClaims.push({
-        claimText: assertion.fullText,
-        matchedFactor: `${fact.name} in House ${fact.house}`,
-        evidenceIds: evIds,
-        status: "VERIFIED"
-      });
+      if (evIds.length === 0) {
+        unsupportedClaims.push({
+          claimText: assertion.fullText,
+          reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${fact.name} in House ${fact.house} has no corresponding evidence node in chartContext`,
+          status: "UNSUPPORTED_CLAIM"
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: assertion.fullText,
+          matchedFactor: `${fact.name} in House ${fact.house}`,
+          evidenceIds: evIds,
+          status: "VERIFIED"
+        });
+      }
     } else {
       unsupportedClaims.push({
         claimText: assertion.fullText,
@@ -247,25 +279,35 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   for (const assertion of signAssertions) {
     const fact = planetFacts.get(assertion.planet);
     if (!fact || !fact.sign) {
-      // Skip if not enough info
+      unsupportedClaims.push({
+        claimText: assertion.fullText,
+        reason: `PLANET_SIGN_NOT_FOUND_IN_CHART: Cannot verify sign for ${assertion.planet}`,
+        status: "UNSUPPORTED_CLAIM"
+      });
     } else if (fact.sign.toLowerCase() === assertion.sign.toLowerCase()) {
-      const matchingSignNodes = Array.isArray(chartContext?.evidenceNodes)
-        ? chartContext.evidenceNodes.filter(n =>
-            (n.nodeId && n.nodeId.toLowerCase().includes(fact.name.toLowerCase())) ||
-            (n.description && n.description.toLowerCase().includes(fact.name.toLowerCase())) ||
-            (n.description && n.description.toLowerCase().includes(fact.sign.toLowerCase()))
-          )
-        : [];
+      const matchingSignNodes = effectiveNodes.filter(n =>
+        (n.nodeId && n.nodeId.toLowerCase().includes(fact.name.toLowerCase())) ||
+        (n.description && n.description.toLowerCase().includes(fact.name.toLowerCase())) ||
+        (n.description && n.description.toLowerCase().includes(fact.sign.toLowerCase()))
+      );
       const evIds = matchingSignNodes.length > 0
         ? matchingSignNodes.map(n => n.nodeId)
-        : (evidenceNodeIds.size > 0 ? Array.from(evidenceNodeIds).slice(0, 2) : [`EV_PLANET_${fact.name.toUpperCase()}_${fact.sign.toUpperCase()}`]);
+        : Array.from(evidenceNodeIds).filter(id => id.toLowerCase().includes(fact.name.toLowerCase()) || id.toLowerCase().includes(fact.sign.toLowerCase())).slice(0, 2);
 
-      verifiedClaims.push({
-        claimText: assertion.fullText,
-        matchedFactor: `${fact.name} in ${fact.sign}`,
-        evidenceIds: evIds,
-        status: "VERIFIED"
-      });
+      if (evIds.length === 0) {
+        unsupportedClaims.push({
+          claimText: assertion.fullText,
+          reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${fact.name} in ${fact.sign} has no corresponding evidence node in chartContext`,
+          status: "UNSUPPORTED_CLAIM"
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: assertion.fullText,
+          matchedFactor: `${fact.name} in ${fact.sign}`,
+          evidenceIds: evIds,
+          status: "VERIFIED"
+        });
+      }
     } else {
       unsupportedClaims.push({
         claimText: assertion.fullText,
@@ -279,10 +321,9 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   const dashaAssertions = extractDashaAssertions(processedText);
   const dashaTable = chartContext?.dashaTable || [];
   const activeDashaLord = chartContext?.currentDasha?.mahadashaLord || chartContext?.currentDasha?.lord || chartContext?.activeDasha?.lord || null;
-  const activeAntarLord = chartContext?.currentDasha?.antardashaLord || chartContext?.currentDasha?.subLord || chartContext?.activeDasha?.subLord || null;
+  const activeAntarLord = chartContext?.currentDasha?.antardashaLord || chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha || chartContext?.activeDasha?.subLord || null;
 
   if (Array.isArray(dashaTable) && dashaTable.length > 0) {
-    const allTableLords = new Set(dashaTable.map(d => d.lord || d.mahadashaLord || d.mdLord).filter(Boolean));
     for (const assertion of dashaAssertions) {
       let isLordVerified = false;
       let matchedReason = "";
@@ -310,28 +351,30 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
           matchedReason = `${assertion.planet} governs evaluated candidate timing window`;
         }
       }
-      if (!isLordVerified && allTableLords.has(assertion.planet)) {
-        isLordVerified = true;
-        matchedReason = `${assertion.planet} Dasha in Vimshottari Table`;
-      }
 
       if (isLordVerified) {
-        const matchingDashaNodes = Array.isArray(chartContext?.evidenceNodes)
-          ? chartContext.evidenceNodes.filter(n =>
-              (n.type?.startsWith("DASHA") || (n.nodeId && n.nodeId.toLowerCase().includes("dasha"))) &&
-              (n.nodeId?.toLowerCase().includes(assertion.planet.toLowerCase()) || n.description?.toLowerCase().includes(assertion.planet.toLowerCase()))
-            )
-          : [];
+        const matchingDashaNodes = effectiveNodes.filter(n =>
+          (n.type?.startsWith("DASHA") || (n.nodeId && n.nodeId.toLowerCase().includes("dasha"))) &&
+          (n.nodeId?.toLowerCase().includes(assertion.planet.toLowerCase()) || n.description?.toLowerCase().includes(assertion.planet.toLowerCase()))
+        );
         const evIds = matchingDashaNodes.length > 0
           ? matchingDashaNodes.map(n => n.nodeId)
-          : (evidenceNodeIds.size > 0 ? Array.from(evidenceNodeIds).slice(0, 2) : [`EV_DASHA_${assertion.planet.toUpperCase()}`]);
+          : Array.from(evidenceNodeIds).filter(id => id.toLowerCase().includes(assertion.planet.toLowerCase())).slice(0, 2);
 
-        verifiedClaims.push({
-          claimText: assertion.fullText,
-          matchedFactor: matchedReason,
-          evidenceIds: evIds,
-          status: "VERIFIED"
-        });
+        if (evIds.length === 0) {
+          unsupportedClaims.push({
+            claimText: assertion.fullText,
+            reason: `NO_EVIDENCE_NODE_IN_GRAPH: Active ${assertion.planet} Dasha has no corresponding evidence node in chartContext`,
+            status: "UNSUPPORTED_CLAIM"
+          });
+        } else {
+          verifiedClaims.push({
+            claimText: assertion.fullText,
+            matchedFactor: matchedReason,
+            evidenceIds: evIds,
+            status: "VERIFIED"
+          });
+        }
       } else {
         unsupportedClaims.push({
           claimText: assertion.fullText,

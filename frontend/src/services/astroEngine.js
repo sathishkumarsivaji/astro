@@ -8630,9 +8630,10 @@ export function calculateKalaBala(p, isDayBirth = true, moonLng = 0, sunLong = 0
     pakshaBala = Math.round((1 - shuklaProgress) * 60);
   } else if (p.name === "Mercury") {
     // Dynamically evaluate Mercury's benefic/malefic status by association
-    const mercLong = p.longitude || 0;
-    const maleficConjunction = (allPlanets || []).some(other =>
+    const mercLong = Number.isFinite(p.longitude) ? p.longitude : null;
+    const maleficConjunction = mercLong !== null && (allPlanets || []).some(other =>
       ["Sun", "Mars", "Saturn", "Rahu", "Ketu"].includes(other.name) &&
+      Number.isFinite(other.longitude) &&
       angularDistance(other.longitude, mercLong) <= 12
     );
     pakshaBala = maleficConjunction ? Math.round((1 - shuklaProgress) * 60) : Math.round(shuklaProgress * 60);
@@ -8803,7 +8804,8 @@ export function calculateKalaBala(p, isDayBirth = true, moonLng = 0, sunLong = 0
   // 3h. Classical Astronomical Ayana Bala with True 3D Spherical Declination (0 to 60 virupas)
   // Ayanamsha epoch evaluated at local noon (12:00) on the 15th of birth month under birth timezone.
   const ayanamshaVal = getLahiriAyanamsha(getJulianDate(birthY, birthM, 15, 12, 0, timezoneOffsetHours));
-  const tropLong = p.tropicalLongitude !== undefined ? norm360(p.tropicalLongitude) : norm360((p.longitude || 0) + ayanamshaVal);
+  const pLongFinite = Number.isFinite(p.longitude) ? p.longitude : 0;
+  const tropLong = p.tropicalLongitude !== undefined ? norm360(p.tropicalLongitude) : norm360(pLongFinite + ayanamshaVal);
   const eclipticLatDeg = p.eclipticLat !== undefined ? p.eclipticLat : 0;
   const epsRad = 23.439291 * DEG2RAD;
   const lambdaRad = tropLong * DEG2RAD;
@@ -8843,7 +8845,7 @@ export function calculateCheshtaBala(p, pakshaBala = 30, ayanaBala = 30, sunLong
   }
 
   // Classical BPHS Chapter 27: Cheshta Kendra Calculation
-  const trueLong = norm360(p.longitude || 0);
+  const trueLong = norm360(Number.isFinite(p.longitude) ? p.longitude : 0);
   const meanLong = p.meanLongitude !== undefined ? norm360(p.meanLongitude) : trueLong;
 
   // Average of Mean and True Longitudes (handling 360° circular boundary)

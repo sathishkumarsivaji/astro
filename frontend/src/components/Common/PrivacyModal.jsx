@@ -113,8 +113,8 @@ export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErase
           </h2>
           <p className="text-xs text-stone-600">
             {isTamil
-              ? "AstroVerse உங்கள் தனியுரிமையை மதிக்கிறது. GDPR Article 20 மற்றும் இந்திய DPDP சட்டம் 2023-ன் படி உங்கள் தரவுகளை முழுமையாக ஏற்றுமதி செய்யவோ அல்லது நிரந்தரமாக நீக்கவோ முடியும்."
-              : "AstroVerse enforces zero-knowledge ephemeris privacy. Compliant with GDPR Article 20 Data Portability and India DPDP Act 2023 Right to Erasure."}
+              ? "கிளையண்ட் பக்க தனியுரிமை கட்டுப்பாடுகள் மற்றும் GDPR/DPDP தேவைகளுக்கு உதவும் வகையில் வடிவமைக்கப்பட்ட தரவு உரிமை நடைமுறைகள்."
+              : "Client-side privacy controls and data-rights workflows designed to support GDPR/DPDP requirements."}
           </p>
         </div>
 

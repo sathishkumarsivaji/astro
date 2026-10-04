@@ -55,6 +55,8 @@ const TEST_SUITES = [
   { name: "Harrell's C Censoring", cwd: FRONTEND_DIR, cmd: "node test_harrells_c_censoring.mjs" },
   { name: "P0 Negative Data Matrix", cwd: FRONTEND_DIR, cmd: "node test_negative_data_matrix.mjs" },
   { name: "Backend Security & Push", cwd: BACKEND_DIR, cmd: "node test_backend.mjs" },
+  { name: "Epistemic Architecture Mandates", cwd: FRONTEND_DIR, cmd: "node test_epistemic_architecture_mandates.mjs" },
+  { name: "Current Release Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_current_release_manifest.mjs" },
   { name: "Validation Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_validation_manifest_integrity.mjs" }
 ];
 
@@ -76,7 +78,7 @@ for (const suite of TEST_SUITES) {
 
     const lines = stdout.split(/\r?\n/).reverse();
     for (const line of lines) {
-      const bannerMatch = line.match(/ALL\s+(\d+)\s+[^!]*?PASSED/i) || line.match(/(\d+)\/(\d+)\s+passed/i) || line.match(/(\d+)\s+PASSED/i);
+      const bannerMatch = line.match(/ALL\s+(\d+)\s+[^!]*?PASSED/i) || line.match(/(\d+)\/(\d+)\s+passed/i) || line.match(/(\d+)\s+checks?\s+passed/i) || line.match(/(\d+)\s+PASSED/i);
       if (bannerMatch) {
         passedCount = parseInt(bannerMatch[1], 10);
         break;

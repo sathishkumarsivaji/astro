@@ -745,7 +745,8 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
 
     const maleficsIn7 = planets.filter(p =>
       ["Saturn", "Mars", "Rahu", "Ketu"].includes(p.name) &&
-      Math.floor((p.longitude || 0) / 30) === h7SignIdx
+      Number.isFinite(p.longitude) &&
+      Math.floor(p.longitude / 30) === h7SignIdx
     );
     if (maleficsIn7.length > 0) {
       promiseScore -= 0.15 * maleficsIn7.length;
@@ -817,8 +818,7 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
 
         // Authentic D9 Navamsha support check (strict type validation: never treat generic object truthiness as evidence)
         const d9Active = (w.vargaActivation === true || (w.vargaActivation && typeof w.vargaActivation === "object" && (w.vargaActivation.status === "CONFIRMED" || w.vargaActivation.isActivated === true)))
-          || (typeof w.vargaConfirmation === "string" && (/confirmed|உறுதி|support/i.test(w.vargaConfirmation) && !/not|இல்லை|unconfirmed/i.test(w.vargaConfirmation)))
-          || (Array.isArray(w.supportingFactors) && w.supportingFactors.some(f => /navamsha|d9|நவாம்ச/i.test(f)));
+          || (typeof w.vargaConfirmation === "string" && (/confirmed|உறுதி|support/i.test(w.vargaConfirmation) && !/not|இல்லை|unconfirmed/i.test(w.vargaConfirmation)));
         if (d9Active) {
           hasD9Support = true;
           d9Score = Math.max(d9Score, 0.75);

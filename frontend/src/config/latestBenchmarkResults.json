@@ -13,8 +13,8 @@
     "independentAstroDatabank": 4798,
     "certifiedAstroDatabankAAA": 3751,
     "antiLeakageProtocol": "SHA-256 Pre-Cutoff Commitment Hashing",
-    "predictionEngineHash": "88474581da9e7966279abd3ede8018dd7c6c214aeb1104f59bd781f099bb8c44",
-    "calibrationModelHash": "78b9d61130ed0ae589dd5db5e4ae72fa89d88360a191bf2f8cb1282d051daef1",
+    "predictionEngineHash": "8e283227a3cda953376d19317b5f2e292a9c0871ce90e0878cf9a315f7ea86fc",
+    "calibrationModelHash": "15427005c3f738180841656dfffafa8853a9fc46b4e2c80665e9ae0613c5686b",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
@@ -22,7 +22,7 @@
     "modelFitHash": "a75f895f01cbb9516de3d1e1c0bebb24b888eb70119be47463fc99c6e1ecf725",
     "coefficientHash": "7ca1123a63df070a35b28ed8d065fbf317a330a2b24a05d51b70ca97aa6e878e",
     "benchmarkCodeHash": "74844d455f7f5020aab29c8c1c6a5350cf491dd6e4583a74339adedc0c6d2794",
-    "generationTimestamp": "2026-10-04T09:48:15.428Z",
+    "generationTimestamp": "2026-10-04T10:48:11.344Z",
     "predictionVersion": "v3.0.0-audited",
     "rulesVersion": "Parashari-v3.0-discrete-hazard"
   },
@@ -783,7 +783,7 @@
           "nAvailable": 9366,
           "selectionHash": "FULL_COHORT"
         },
-        "fittedAt": "2026-10-04T09:44:52.125Z"
+        "fittedAt": "2026-10-04T10:44:32.821Z"
       }
     },
     "validationMetrics": {

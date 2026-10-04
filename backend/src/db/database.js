@@ -67,7 +67,7 @@ class AstroDatabase {
             user: process.env.PGUSER || "postgres",
             host: process.env.PGHOST || "localhost",
             database: process.env.PGDATABASE || "astroverse",
-            password: process.env.PGPASSWORD || "postgres",
+            password: process.env.PGPASSWORD || undefined,
             port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : 5432,
             connectionTimeoutMillis: 3000,
             idleTimeoutMillis: 30000
