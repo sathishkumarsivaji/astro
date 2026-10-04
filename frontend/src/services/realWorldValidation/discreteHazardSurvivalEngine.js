@@ -1207,7 +1207,24 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
 
   // Coefficients (fitted on TRAIN)
   const coefs = options.coefficients || options.modelFit?.coefficients || {};
-  const betaAstro = options.betaAstro ?? coefs.betaAstro ?? 0.0;
+  const rawBeta = options.betaAstro ?? coefs.betaAstro;
+  if ((rawBeta === undefined || rawBeta === null) && modelType === "COMBINED_HAZARD") {
+    return {
+      status: "MODEL_ARTIFACT_MISSING",
+      error: "Missing required fitted beta coefficients (betaAstro)",
+      modelType,
+      betaAstro: null,
+      occurrenceProbability: null,
+      occurrencePrediction: null,
+      survivalAt50: null,
+      expectedTimingAge: null,
+      peakTimingAge: null,
+      interval80: null,
+      interval50: null,
+      intervals: []
+    };
+  }
+  const betaAstro = (rawBeta !== undefined && rawBeta !== null) ? Number(rawBeta) : 0.0;
   const betaDasha = options.betaDasha ?? coefs.betaDasha ?? 0.0;
   const betaTransitJup = options.betaTransitJup ?? coefs.betaTransitJup ?? 0.0;
   const betaTransitSat = options.betaTransitSat ?? coefs.betaTransitSat ?? 0.0;
@@ -1216,6 +1233,22 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
   const betaSav = options.betaSav ?? coefs.betaSav ?? 0.0;
 
   const intervalFeatures = extractIntervalAstrologicalFeatures(chartData, candidateWindows, options);
+  if (!intervalFeatures || intervalFeatures.length === 0) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      error: "No interval astrological features could be extracted",
+      modelType,
+      betaAstro,
+      occurrenceProbability: null,
+      occurrencePrediction: null,
+      survivalAt50: null,
+      expectedTimingAge: null,
+      peakTimingAge: null,
+      interval80: null,
+      interval50: null,
+      intervals: []
+    };
+  }
   const meanComposite = intervalFeatures.reduce((acc, f) => acc + f.compositeScore, 0) / intervalFeatures.length;
 
   const intervalHazards = [];
@@ -1272,41 +1305,42 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
 
   // Expected Timing (Conditional expectation given event in [18, 50])
   const sumEventProbs = eventProbabilities.reduce((a, b) => a + b, 0);
-  let expectedTimingAge = 26.0;
-  if (sumEventProbs > 1e-5) {
+  let expectedTimingAge = null;
+  let peakTimingAge = null;
+  let q10Age = null;
+  let q25Age = null;
+  let q75Age = null;
+  let q90Age = null;
+
+  if (sumEventProbs > 1e-4) {
     let weightedSum = 0;
     for (let k = 0; k < SURVIVAL_AGE_BINS.length; k++) {
       weightedSum += SURVIVAL_AGE_BINS[k].midpoint * eventProbabilities[k];
     }
     expectedTimingAge = weightedSum / sumEventProbs;
-  }
 
-  // Peak hazard age bin (mode of the distribution)
-  let maxDensity = -1;
-  let peakBinIndex = 4;
-  for (let k = 0; k < eventProbabilities.length; k++) {
-    if (eventProbabilities[k] > maxDensity) {
-      maxDensity = eventProbabilities[k];
-      peakBinIndex = k;
+    // Peak hazard age bin (mode of the distribution)
+    let maxDensity = -1;
+    let peakBinIndex = 0;
+    for (let k = 0; k < eventProbabilities.length; k++) {
+      if (eventProbabilities[k] > maxDensity) {
+        maxDensity = eventProbabilities[k];
+        peakBinIndex = k;
+      }
     }
-  }
-  const peakTimingAge = SURVIVAL_AGE_BINS[peakBinIndex].midpoint;
+    peakTimingAge = SURVIVAL_AGE_BINS[peakBinIndex].midpoint;
 
-  // Quantile-based intervals
-  let cumF = 0;
-  let q10Age = 21.0;
-  let q25Age = 23.5;
-  let q75Age = 31.0;
-  let q90Age = 36.5;
-
-  for (let k = 0; k < eventProbabilities.length; k++) {
-    const prevCumF = cumF;
-    cumF += eventProbabilities[k] / sumEventProbs;
-    const mid = SURVIVAL_AGE_BINS[k].midpoint;
-    if (prevCumF < 0.10 && cumF >= 0.10) q10Age = mid;
-    if (prevCumF < 0.25 && cumF >= 0.25) q25Age = mid;
-    if (prevCumF < 0.75 && cumF >= 0.75) q75Age = mid;
-    if (prevCumF < 0.90 && cumF >= 0.90) q90Age = mid;
+    // Quantile-based intervals
+    let cumF = 0;
+    for (let k = 0; k < eventProbabilities.length; k++) {
+      const prevCumF = cumF;
+      cumF += eventProbabilities[k] / sumEventProbs;
+      const mid = SURVIVAL_AGE_BINS[k].midpoint;
+      if (prevCumF < 0.10 && cumF >= 0.10 && q10Age === null) q10Age = mid;
+      if (prevCumF < 0.25 && cumF >= 0.25 && q25Age === null) q25Age = mid;
+      if (prevCumF < 0.75 && cumF >= 0.75 && q75Age === null) q75Age = mid;
+      if (prevCumF < 0.90 && cumF >= 0.90 && q90Age === null) q90Age = mid;
+    }
   }
 
   return {
@@ -1315,18 +1349,18 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
     occurrenceProbability: Number(occurrenceProbability.toFixed(4)),
     occurrencePrediction: isMarriagePredicted ? "MARRIAGE_PREDICTED" : "NO_EVENT_PREDICTED",
     survivalAt50: Number(cumulativeSurvival.toFixed(4)),
-    expectedTimingAge: Number(expectedTimingAge.toFixed(2)),
-    peakTimingAge: Number(peakTimingAge.toFixed(2)),
-    interval80: {
+    expectedTimingAge: expectedTimingAge != null ? Number(expectedTimingAge.toFixed(2)) : null,
+    peakTimingAge: peakTimingAge != null ? Number(peakTimingAge.toFixed(2)) : null,
+    interval80: (q10Age != null && q90Age != null) ? {
       lowerAge: Number(q10Age.toFixed(1)),
       upperAge: Number(q90Age.toFixed(1)),
       widthYears: Number((q90Age - q10Age).toFixed(1))
-    },
-    interval50: {
+    } : null,
+    interval50: (q25Age != null && q75Age != null) ? {
       lowerAge: Number(q25Age.toFixed(1)),
       upperAge: Number(q75Age.toFixed(1)),
       widthYears: Number((q75Age - q25Age).toFixed(1))
-    },
+    } : null,
     intervals: intervalHazards
   };
 }
@@ -1348,9 +1382,22 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   const classificationThreshold = options.classificationThreshold ?? 0.50;
   const baselineTable = options.baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD;
 
-  // Use TRAIN-fitted model if provided, or default fitted beta
+  // Use TRAIN-fitted model if provided
   const modelFit = options.modelFit || null;
-  const betaAstro = options.betaAstro ?? modelFit?.coefficients?.betaAstro ?? options.coefficients?.betaAstro ?? 0.0;
+  const rawBeta = options.betaAstro ?? modelFit?.coefficients?.betaAstro ?? options.coefficients?.betaAstro;
+  if (rawBeta === undefined || rawBeta === null) {
+    return {
+      status: "MODEL_ARTIFACT_MISSING",
+      error: "Missing required fitted beta coefficients (betaAstro)",
+      validationStatus: "NOT_EMPIRICALLY_VALIDATED",
+      n: records.length,
+      coefficients: null,
+      concordanceIndex: null,
+      timing: null,
+      occurrence: null
+    };
+  }
+  const betaAstro = Number(rawBeta);
 
   let logLikNull = 0.0;
   let logLikCombined = 0.0;
@@ -1450,14 +1497,20 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
       for (let j = 0; j < kTarget; j++) cumSurvLog += Math.log(Math.max(1e-7, 1 - predCombined.intervals[j].hazardRate));
       logLikCombined += Math.log(Math.max(1e-7, hk)) + cumSurvLog;
 
-      timingErrorsCombined.push(Math.abs(predCombined.expectedTimingAge - eventAge));
-      timingErrorsBaseline.push(Math.abs(26.0 - eventAge));
-      concordanceCases.push({ time: eventAge, isEvent: true, riskScore: -predCombined.expectedTimingAge });
+      if (predCombined.expectedTimingAge != null) {
+        timingErrorsCombined.push(Math.abs(predCombined.expectedTimingAge - eventAge));
+        concordanceCases.push({ time: eventAge, isEvent: true, riskScore: -predCombined.expectedTimingAge });
+      }
+      if (predNull.expectedTimingAge != null) {
+        timingErrorsBaseline.push(Math.abs(predNull.expectedTimingAge - eventAge));
+      }
     } else {
       let cumSurvLog = 0;
       for (let j = 0; j <= kTarget; j++) cumSurvLog += Math.log(Math.max(1e-7, 1 - predCombined.intervals[j].hazardRate));
       logLikCombined += cumSurvLog;
-      concordanceCases.push({ time: censorAge, isEvent: false, riskScore: -predCombined.expectedTimingAge });
+      if (predCombined.expectedTimingAge != null) {
+        concordanceCases.push({ time: censorAge, isEvent: false, riskScore: -predCombined.expectedTimingAge });
+      }
     }
 
     // Astrology Only
@@ -1594,7 +1647,7 @@ export const ABLATION_MODEL_DEFINITIONS = Object.freeze([
 export function fitAllAblationModels(trainRecords, chartProvider, baselineTable = null, options = {}) {
   const baseTable = baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD;
   const lambda = options.lambda ?? 0.05;
-  const maxRecords = options.maxRecords ?? Math.min(trainRecords.length, 2500);
+  const maxRecords = options.maxRecords ?? trainRecords.length;
   const sampleTrain = trainRecords.slice(0, maxRecords);
 
   const trainSubjects = [];
@@ -1851,8 +1904,8 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
 
       // Expected Timing
       const sumEv = eventProbs.reduce((a, b) => a + b, 0);
-      let expectedAge = 26.0;
-      if (sumEv > 1e-5) {
+      let expectedAge = null;
+      if (sumEv > 1e-4) {
         let wSum = 0;
         for (let k = 0; k < SURVIVAL_AGE_BINS.length; k++) {
           wSum += SURVIVAL_AGE_BINS[k].midpoint * eventProbs[k];
@@ -1860,11 +1913,13 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
         expectedAge = wSum / sumEv;
       }
 
-      if (sub.isEvent) {
-        timingErrors.push(Math.abs(expectedAge - sub.eventAge));
-        concordanceCases.push({ time: sub.eventAge, isEvent: true, riskScore: -expectedAge });
-      } else {
-        concordanceCases.push({ time: sub.exitAge, isEvent: false, riskScore: -expectedAge });
+      if (expectedAge !== null) {
+        if (sub.isEvent) {
+          timingErrors.push(Math.abs(expectedAge - sub.eventAge));
+          concordanceCases.push({ time: sub.eventAge, isEvent: true, riskScore: -expectedAge });
+        } else {
+          concordanceCases.push({ time: sub.exitAge, isEvent: false, riskScore: -expectedAge });
+        }
       }
 
       // Occurrence Metrics
@@ -1885,11 +1940,26 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
     }
 
     // Likelihood Ratio Test vs Model 0
-    let lrtStat = 0;
-    let lrtPVal = 1.0;
-    if (mDef.id !== "MODEL_0" && mDef.params > 0) {
+    let lrtStat = null;
+    let lrtPVal = null;
+    let lrtStatus = "VALID_NESTED";
+    let lrtNote = "Nested likelihood ratio test vs MODEL_0.";
+
+    if (mDef.id === "MODEL_0") {
+      lrtStat = null;
+      lrtPVal = null;
+      lrtStatus = "REFERENCE_MODEL";
+      lrtNote = "Baseline demographic reference model.";
+    } else if (mDef.id === "MODEL_1") {
+      lrtStat = null;
+      lrtPVal = null;
+      lrtStatus = "NOT_APPLICABLE_NON_NESTED";
+      lrtNote = "MODEL_1 (astrology only) and MODEL_0 (demographic only) are non-nested; LRT is statistically invalid. Compare via AIC/BIC.";
+    } else if (mDef.params > 0) {
       lrtStat = Math.max(0, 2.0 * (logLik - model0LogLik));
       lrtPVal = chiSquareSurvival(lrtStat, mDef.params);
+      lrtStatus = "VALID_NESTED";
+      lrtNote = `Nested likelihood ratio test vs MODEL_0 (df=${mDef.params}).`;
     }
 
     // Information criteria
@@ -1939,8 +2009,10 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
       logLikelihood: Number(logLik.toFixed(2)),
       aic: Number(aic.toFixed(2)),
       bic: Number(bic.toFixed(2)),
-      lrtStatistic: Number(lrtStat.toFixed(4)),
-      lrtPValue: Number(lrtPVal.toExponential(4)),
+      lrtStatistic: lrtStat != null ? Number(lrtStat.toFixed(4)) : null,
+      lrtPValue: lrtPVal != null ? Number(lrtPVal.toExponential(4)) : null,
+      lrtStatus,
+      lrtNote,
       cIndex: cIndex != null ? Number(cIndex.toFixed(4)) : null,
       cIndexCi95: cIndexBoot?.ci95 || null,
       mae: mae != null ? Number(mae.toFixed(2)) : null,

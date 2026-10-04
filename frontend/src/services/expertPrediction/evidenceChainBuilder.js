@@ -42,7 +42,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
   const independenceGroups = [];
 
   const mdLord = dashaMatch?.mdLord || dashaMatch?.lord || null;
-  const adLord = dashaMatch?.adLord || dashaMatch?.lord || mdLord;
+  const adLord = dashaMatch?.adLord || null;
   const pdLord = options.pdRanking?.peakPD?.lord || dashaMatch?.pdLord || null;
 
   const lagnaSign = canonicalFacts?.ascendant?.sign || null;
@@ -106,7 +106,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
       label: 'Varga Divisional Alignment',
       labelTamil: 'வர்க்க சக்கர அமைப்பு',
       evidenceNodeIds: vargaNodeIds,
-      independenceScore: 0.85
+      dependencyClass: 'PARTIALLY_DEPENDENT'
     });
     validateIndependenceGroup(vargaGroup);
     independenceGroups.push(vargaGroup);
@@ -189,11 +189,11 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     descriptionTamil: pdLord
       ? `பிரத்யந்தர்தசா நாதன் ${pdLord} மிகத் துல்லியமான கால அளவை பிரிக்கிறார்.`
       : `மூன்றாம் நிலை தசா கால இடைவெளி மதிப்பீடு செய்யப்பட்டது.`,
-    value: pdLord ? 0.85 : (mdLord ? 0.6 : null),
-    source: 'VIMSHOTTARI_PD',
-    independenceGroupId: mdLord ? dashaGroupId : null
+    value: pdLord ? 0.85 : null,
+    source: pdLord ? 'VIMSHOTTARI_PD' : 'MISSING_REQUIRED_INPUT',
+    independenceGroupId: (mdLord && pdLord) ? dashaGroupId : null
   });
-  if (!mdLord) {
+  if (!pdLord) {
     node9.status = 'INSUFFICIENT_DATA';
     node9.contribution = 0;
   }
@@ -206,7 +206,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
       label: 'Vimshottari Dasha Hierarchy',
       labelTamil: 'விம்சோத்தரி தசா படிநிலை',
       evidenceNodeIds: [node7Id, node8Id, node9Id],
-      independenceScore: 1.0
+      dependencyClass: 'CONDITIONALLY_INDEPENDENT'
     });
     validateIndependenceGroup(dashaGroup);
     independenceGroups.push(dashaGroup);
@@ -241,7 +241,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
       label: 'Planetary Transit Concurrence',
       labelTamil: 'கோட்சார ஒருங்கிணைப்பு',
       evidenceNodeIds: transitNodeIds,
-      independenceScore: 1.0
+      dependencyClass: 'INDEPENDENT'
     });
     validateIndependenceGroup(transitGroup);
     independenceGroups.push(transitGroup);
@@ -480,7 +480,7 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
       label: 'Natal Chart Foundation',
       labelTamil: 'மூல ஜாதக அடிப்படை',
       evidenceNodeIds: [node1Id, node2Id, node3Id, node4Id, node5Id],
-      independenceScore: 1.0
+      dependencyClass: 'CONDITIONALLY_INDEPENDENT'
     });
     validateIndependenceGroup(natalGroup);
     independenceGroups.unshift(natalGroup);

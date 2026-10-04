@@ -162,8 +162,22 @@ export function setCachedPrediction(recordId, inputHash, prediction) {
 
 export function flushCache() {
   if (cacheFilePath) {
-    fs.mkdirSync(path.dirname(cacheFilePath), { recursive: true });
-    fs.writeFileSync(cacheFilePath, JSON.stringify(predictionCache));
+    try {
+      fs.mkdirSync(path.dirname(cacheFilePath), { recursive: true });
+      const tempPath = `${cacheFilePath}.tmp`;
+      fs.writeFileSync(tempPath, JSON.stringify(predictionCache));
+      try {
+        if (fs.existsSync(cacheFilePath)) {
+          fs.unlinkSync(cacheFilePath);
+        }
+        fs.renameSync(tempPath, cacheFilePath);
+      } catch {
+        fs.writeFileSync(cacheFilePath, JSON.stringify(predictionCache));
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      }
+    } catch (err) {
+      console.warn(`Warning: Could not flush cache: ${err.message}`);
+    }
   }
 }
 

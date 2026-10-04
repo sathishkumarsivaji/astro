@@ -318,19 +318,41 @@ export function validateEvidenceNode(node) {
  *   Group C: "Varga confirmation" — D9 7th lord activation
  *            (partially independent from A, fully independent from B)
  */
+export const DEPENDENCY_CLASS = Object.freeze({
+  INDEPENDENT: 'INDEPENDENT',
+  CONDITIONALLY_INDEPENDENT: 'CONDITIONALLY_INDEPENDENT',
+  PARTIALLY_DEPENDENT: 'PARTIALLY_DEPENDENT',
+  DEPENDENT: 'DEPENDENT'
+});
+
+export const DEPENDENCY_CLASS_WEIGHTS = Object.freeze({
+  INDEPENDENT: 1.0,
+  CONDITIONALLY_INDEPENDENT: 0.85,
+  PARTIALLY_DEPENDENT: 0.50,
+  DEPENDENT: 0.20
+});
+
+/**
+ * Creates an independence group node with categorical dependency classification.
+ */
 export function createIndependenceGroup({
   groupId,
   label,
   labelTamil = null,
   evidenceNodeIds = [],
-  independenceScore = 1.0  // 0.0 = fully correlated with another, 1.0 = fully independent
+  dependencyClass = 'INDEPENDENT',
+  independenceScore = null
 } = {}) {
+  const depClass = DEPENDENCY_CLASS[dependencyClass] || DEPENDENCY_CLASS.INDEPENDENT;
+  const score = independenceScore != null ? independenceScore : (DEPENDENCY_CLASS_WEIGHTS[depClass] ?? 1.0);
+
   return {
     groupId: groupId || generateDeterministicId("ig", label, ...evidenceNodeIds),
     label,
     labelTamil,
     evidenceNodeIds,
-    independenceScore
+    dependencyClass: depClass,
+    independenceScore: score
   };
 }
 

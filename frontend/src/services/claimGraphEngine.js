@@ -105,7 +105,9 @@ export function buildStructuredClaimGraph(domain = "career", context = null) {
       premises,
       supportingEvidence: supporting,
       counterIndicators: counters,
+      traditionalRuleConvergenceLevel: convergence,
       convergenceLevel: convergence,
+      traditionalRuleConvergenceScore: clampedScore,
       convergenceScore: clampedScore,
       birthTimeSensitivity: d10 ? "MEDIUM" : "LOW",
       traditionalCitations: ["Brihat Parasara Hora Sastra (Dasamsha Phala)", "Phaladeepika (Bhava Phala)"]
@@ -150,7 +152,9 @@ export function buildStructuredClaimGraph(domain = "career", context = null) {
       premises,
       supportingEvidence: supporting,
       counterIndicators: counters,
+      traditionalRuleConvergenceLevel: convergence,
       convergenceLevel: convergence,
+      traditionalRuleConvergenceScore: clampedScore,
       convergenceScore: clampedScore,
       birthTimeSensitivity: "HIGH",
       traditionalCitations: ["Jataka Parijata (D9 Navamsha Adhyaya)", "Brihat Parasara Hora Sastra (Stri Jataka)"]
@@ -165,7 +169,9 @@ export function buildStructuredClaimGraph(domain = "career", context = null) {
     domain,
     status: "GRAPH_RESOLVED",
     claimsCount: claims.length,
+    traditionalRuleConvergenceLevel: overallScore >= 0.75 ? "HIGH" : overallScore >= 0.5 ? "MODERATE" : "SPECULATIVE",
     overallConvergence: overallScore >= 0.75 ? "HIGH" : overallScore >= 0.5 ? "MODERATE" : "SPECULATIVE",
+    traditionalRuleConvergenceScore: Number(overallScore.toFixed(2)),
     overallConvergenceScore: Number(overallScore.toFixed(2)),
     claims
   };
@@ -185,9 +191,10 @@ export function synthesizeExplanationFromGraph(claimGraph, lang = "en") {
   const lines = [];
 
   for (const claim of claimGraph.claims) {
+    const convLevel = claim.traditionalRuleConvergenceLevel || claim.convergenceLevel;
     if (isTamil) {
       lines.push(`### 📌 பலன் கணிப்பு: ${claim.assertion}`);
-      lines.push(`**ஆதார ஒருமைப்பாடு (Convergence):** ${claim.convergenceLevel} (Score: ${(claim.convergenceScore * 100).toFixed(0)}%)`);
+      lines.push(`**ஆதார ஒருமைப்பாடு (Evidence Convergence):** ${convLevel} [பாரம்பரிய விதி ஒருமைப்பாடு; நிகழ்தகவு அல்ல]`);
       lines.push(`**ஜாதக ஆதாரங்கள் (Premises):**`);
       claim.premises.forEach(p => lines.push(`- ${p.factor} [${p.role}]`));
       if (claim.counterIndicators.length > 0) {
@@ -197,7 +204,7 @@ export function synthesizeExplanationFromGraph(claimGraph, lang = "en") {
       lines.push(`**பாரம்பரிய நூல்கள்:** ${claim.traditionalCitations.join(", ")}`);
     } else {
       lines.push(`### 📌 Prediction Claim: ${claim.assertion}`);
-      lines.push(`**Evidence Convergence:** ${claim.convergenceLevel} (Score: ${(claim.convergenceScore * 100).toFixed(0)}%)`);
+      lines.push(`**Evidence Convergence:** ${convLevel} [Traditional Rule Convergence; qualitative assessment, not an empirical probability]`);
       lines.push(`**Calculated Chart Premises:**`);
       claim.premises.forEach(p => lines.push(`- ${p.factor} [${p.role}]`));
       if (claim.counterIndicators.length > 0) {

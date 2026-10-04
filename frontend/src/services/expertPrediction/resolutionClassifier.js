@@ -6,7 +6,7 @@ import { RESOLUTION, RESOLUTION_RANK } from './expertPredictionSchema.js';
  * @returns {string} The finest supported resolution from the RESOLUTION enum.
  */
 export function classifyResolution(windowData) {
-  const { startDate, endDate, dashaFacts, transitFacts, vargaFacts } = windowData;
+  const { startDate, endDate, dashaFacts, transitFacts, vargaFacts, hasIndependentCorroboration } = windowData;
 
   if (!startDate || !endDate) {
     return RESOLUTION.INSUFFICIENT_DATA;
@@ -22,9 +22,17 @@ export function classifyResolution(windowData) {
 
   let resolution = RESOLUTION.YEAR;
 
+  // Cross-corroboration requirement:
+  // Fine resolutions (DAY, DATE_RANGE) require independent corroboration.
+  // If explicitly hasIndependentCorroboration === false, resolution cannot be finer than MONTH_RANGE.
+  const hasTransits = Array.isArray(transitFacts) && transitFacts.length > 0;
+  const hasVargas = Array.isArray(vargaFacts) && vargaFacts.length > 0;
+  const isCorroborated = hasIndependentCorroboration !== false &&
+    (hasIndependentCorroboration === true || hasTransits || hasVargas || (!transitFacts && !vargaFacts && !dashaFacts));
+
   // Narrowing based on duration (from Dasha levels)
   if (durationDays <= 30) {
-    resolution = RESOLUTION.DATE_RANGE;
+    resolution = isCorroborated ? RESOLUTION.DATE_RANGE : RESOLUTION.MONTH_RANGE;
   } else if (durationDays <= 65) {
     resolution = RESOLUTION.MONTH_RANGE;
   } else if (durationDays <= 150) {
@@ -33,11 +41,12 @@ export function classifyResolution(windowData) {
     resolution = RESOLUTION.YEAR;
   }
 
-  // Cross-confirmation narrowing
-  if (transitFacts && transitFacts.length > 0) {
-    if (durationDays <= 10) {
-      resolution = RESOLUTION.DAY;
-    } else if (resolution === RESOLUTION.MONTH_RANGE || resolution === RESOLUTION.SEASON) {
+  // Cross-confirmation narrowing: DAY precision strictly requires narrow window (<= 10 days)
+  // AND active transit concurrence AND independent corroboration
+  if (hasTransits && durationDays <= 10 && hasIndependentCorroboration !== false) {
+    resolution = RESOLUTION.DAY;
+  } else if (hasTransits && (resolution === RESOLUTION.MONTH_RANGE || resolution === RESOLUTION.SEASON)) {
+    if (isCorroborated) {
       resolution = RESOLUTION.DATE_RANGE;
     }
   }

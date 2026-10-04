@@ -19,12 +19,12 @@
 This comprehensive scientific and production remediation enforces:
 - **Zero Fabricated Accuracy:** Real-world predictive performance is documented exactly as calculated from the data. No claims of 90%+ or 98% prediction accuracy for astrology.
 - **Demographic Baseline Transparency:** We explicitly disclose that an empirical demographic cohort baseline predicting population median marriage age ($approx 26.0$ years, $\text{MAE} = 4.28 years, within $\pm 1$y = 28.71%) substantially outperforms the raw astrological timing model ($\text{MAE} = 6.89 years, within $\pm 1$y = 13.01%), and that the raw astrological occurrence rule exhibits 0.00% specificity.
-- **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of 4.2y (vs demographic baseline 3.95y, C-index 0.4839) on untouched BLIND_TEST, properly classifying out-of-sample performance as `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
+- **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of 4.2y (vs demographic baseline 4.2y, C-index 0.4839) on untouched BLIND_TEST, properly classifying out-of-sample performance as `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
 - **Zero Inferred Marriage Types:** Astro-Databank ingestion assigns `marriageType: 'UNKNOWN'` by default. Zero love marriages are inferred from documented marriage events.
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA).
 - **Actual Production Model Calibration:** Platt scaling and conformal prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`d419d7cd38a6610b6863e099907947df23a8c0359d624516243168784197a2ba`) and calibration model SHA-256 hash (`f66c7a5079b7cdd52281b7481db2ce408aa407aa62a8f170b5df16cf75db5d31`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`a67085885254f10c0044fb8404cad36a5fd813b59ab77bcb1612213df0927da1`) and calibration model SHA-256 hash (`64179958af55185320efb135ed0bfba8aaed3e655c67babd1ec6b969f08ad7e3`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -96,8 +96,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "d419d7cd38a6610b6863e099907947df23a8c0359d624516243168784197a2ba",
-  "calibrationModelHash": "f66c7a5079b7cdd52281b7481db2ce408aa407aa62a8f170b5df16cf75db5d31",
+  "predictionEngineHash": "a67085885254f10c0044fb8404cad36a5fd813b59ab77bcb1612213df0927da1",
+  "calibrationModelHash": "64179958af55185320efb135ed0bfba8aaed3e655c67babd1ec6b969f08ad7e3",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "1.0.0",
   "predictionSchemaVersion": "3.0",
@@ -105,9 +105,9 @@ Every cached prediction entry contains:
 }
 ```
 - Initial cache entries: `10487`
-- Cache hits: `17623`
-- Cache misses / recomputed: `0`
-- Invalidated entries: `0`
+- Cache hits: `9636`
+- Cache misses / recomputed: `7987`
+- Invalidated entries: `7987`
 
 ---
 
@@ -176,12 +176,12 @@ Real TRAIN → Out-of-sample ablation across 7 model specifications:
 | Model ID | Model Specification | Parameters | $\ln L$ | AIC | BIC | Harrell's C-Index | Timing MAE | Within $\pm 1$y | Within $\pm 2$y | Within $\pm 3$y | Brier Score | Calibration |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **MODEL_0** | Demographic Age-Only Baseline | 0 | -3836.35 | 7672.71 | 7672.71 | 0.5 | 4.2y | 12.53% | 26.44% | 41.38% | 0.0911 | undefined |
-| **MODEL_1** | Astrology-Only (No Age Baseline) | 1 | -4287.74 | 8577.47 | 8582.85 | 0.4697 | 3.97y | 18.96% | 35.78% | 50.45% | 0.0949 | undefined |
-| **MODEL_2** | D1 Natal Promise | 1 | -3836.39 | 7674.78 | 7680.16 | 0.4892 | 4.2y | 13.29% | 26.92% | 43.74% | 0.0911 | undefined |
-| **MODEL_3** | D1 + Dasha | 2 | -3838.68 | 7681.36 | 7692.12 | 0.4795 | 4.22y | 13.08% | 26.85% | 43.04% | 0.0911 | undefined |
-| **MODEL_4** | D1 + Dasha + Transit | 4 | -3838.68 | 7685.36 | 7706.89 | 0.4795 | 4.22y | 13.08% | 26.85% | 43.04% | 0.0911 | undefined |
-| **MODEL_5** | D1 + Dasha + Transit + D9 | 5 | -3838.68 | 7687.36 | 7714.27 | 0.4795 | 4.22y | 13.08% | 26.85% | 43.04% | 0.0911 | undefined |
-| **MODEL_6** | Full Selected Feature Model | 6 | -3838.97 | 7689.93 | 7722.23 | 0.4791 | 4.22y | 13.29% | 26.92% | 43.11% | 0.0911 | undefined |
+| **MODEL_1** | Astrology-Only (No Age Baseline) | 1 | -4287.23 | 8576.47 | 8581.85 | 0.4698 | 3.97y | 18.96% | 35.78% | 50.45% | 0.0949 | undefined |
+| **MODEL_2** | D1 Natal Promise | 1 | -3836.14 | 7674.27 | 7679.66 | 0.4892 | 4.2y | 12.53% | 26.44% | 41.38% | 0.0911 | undefined |
+| **MODEL_3** | D1 + Dasha | 2 | -3836.64 | 7677.28 | 7688.04 | 0.4793 | 4.21y | 12.53% | 26.44% | 41.38% | 0.0911 | undefined |
+| **MODEL_4** | D1 + Dasha + Transit | 4 | -3836.64 | 7681.28 | 7702.81 | 0.4793 | 4.21y | 12.53% | 26.44% | 41.38% | 0.0911 | undefined |
+| **MODEL_5** | D1 + Dasha + Transit + D9 | 5 | -3836.64 | 7683.28 | 7710.19 | 0.4793 | 4.21y | 12.53% | 26.44% | 41.38% | 0.0911 | undefined |
+| **MODEL_6** | Full Selected Feature Model | 6 | -3836.75 | 7685.49 | 7717.79 | 0.4793 | 4.2y | 12.53% | 26.44% | 41.52% | 0.0911 | undefined |
 
 ### 4. Feature-Level Astrological Survival Analysis (TRAIN Cohort)
 Every astrological feature is calculated strictly from the chart and transit ephemeris without placeholders or synthetic imputation. Non-significant features and insufficient data are transparently classified:
@@ -202,16 +202,16 @@ Coefficients frozen on TRAIN and evaluated across untouched out-of-sample cohort
 
 | Cohort Split | Sample $N$ | Events / Censored | Harrell's C-Index | Model Timing MAE | Demographic Null MAE | Model Beats Baseline? | LRT vs Null ($p$-value) | Empirical Quality Gate |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **BLIND_TEST** | 1634 | 1445 / 189 | **0.4839** | 4.2y | 3.95y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **INTERNAL_HOLDOUT** | 1555 | 1382 / 173 | **0.4855** | 4.23y | 4y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **Astro-Databank Certified A/AA** | 876 | 302 / 574 | **0.4948** | 4.98y | 5.14y | YES | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **BLIND_TEST** | 1634 | 1445 / 189 | **0.4839** | 4.2y | 4.2y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **INTERNAL_HOLDOUT** | 1555 | 1382 / 173 | **0.4855** | 4.23y | 4.23y | YES | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **Astro-Databank Certified A/AA** | 876 | 302 / 574 | **0.4948** | 4.98y | 4.98y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 
 ### 6. Scientific Gate Conclusion
 The V3 Discrete-Time Hazard Survival Model satisfies all anti-leakage and empirical fitting requirements:
 - Baseline demographic hazard fitted strictly on TRAIN.
 - Coefficients fitted via Newton-Raphson IRLS on TRAIN.
 - Zero tuning or recomputation on BLIND or EXTERNAL datasets.
-- On untouched out-of-sample BLIND data, the model achieves a C-index of **0.4839** and timing MAE of **4.2y** (vs **3.95y** demographic baseline).
+- On untouched out-of-sample BLIND data, the model achieves a C-index of **0.4839** and timing MAE of **4.2y** (vs **4.2y** demographic baseline).
 - In accordance with Scientific Quality Gate 15, because the model does not demonstrate a C-index materially exceeding 0.50 nor replicated out-of-sample superiority over the demographic baseline, it is truthfully and transparently designated as **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED**. Zero statistics have been fabricated or manually adjusted.
 
 ---
@@ -223,8 +223,8 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `d419d7cd38a6610b6863e099907947df23a8c0359d624516243168784197a2ba` |
-| **Calibration Model Hash** | `f66c7a5079b7cdd52281b7481db2ce408aa407aa62a8f170b5df16cf75db5d31` |
+| **Prediction Engine Hash** | `a67085885254f10c0044fb8404cad36a5fd813b59ab77bcb1612213df0927da1` |
+| **Calibration Model Hash** | `64179958af55185320efb135ed0bfba8aaed3e655c67babd1ec6b969f08ad7e3` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
@@ -232,4 +232,4 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | **Model Fit Hash** | `d4ed1189657035873853d0ed71a0e17250c36114e1227225a9ff22992f23cc59` |
 | **Coefficient Hash** | `20f6dafe6601638d3e39ac44b81a524a71fbfa09e65b8a37694bb8a9a82d9898` |
 | **Benchmark Code Hash** | `74844d455f7f5020aab29c8c1c6a5350cf491dd6e4583a74339adedc0c6d2794` |
-| **Artifact Generation Timestamp** | `2026-10-04T07:28:38.261Z` |
+| **Artifact Generation Timestamp** | `2026-10-04T08:32:06.707Z` |

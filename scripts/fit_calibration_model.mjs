@@ -196,10 +196,6 @@ export function fitCalibrationModel(sampleSize = 2500) {
       });
       cacheMisses++;
       pendingWrites++;
-      if (pendingWrites >= 100) {
-        flushCache();
-        pendingWrites = 0;
-      }
     }
 
     if ((i + 1) % 500 === 0 || i + 1 === finalSample.length) {

@@ -47,7 +47,15 @@ export function calculateIndependentEvidence(evidenceNodes = [], independenceGro
     nodes.sort((a, b) => b.strength - a.strength);
 
     const groupDef = groupDefMap.get(groupId);
-    const indepScore = typeof groupDef?.independenceScore === 'number' ? groupDef.independenceScore : 1.0;
+    const classWeights = {
+      INDEPENDENT: 1.0,
+      CONDITIONALLY_INDEPENDENT: 0.85,
+      PARTIALLY_DEPENDENT: 0.50,
+      DEPENDENT: 0.20
+    };
+    const indepScore = typeof groupDef?.independenceScore === 'number'
+      ? groupDef.independenceScore
+      : (groupDef?.dependencyClass ? (classWeights[groupDef.dependencyClass] ?? 1.0) : 1.0);
 
     let groupStrength = 0;
     nodes.forEach((node, index) => {

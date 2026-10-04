@@ -3,11 +3,11 @@
     "title": "Astro-Databank Independent External Validation Benchmark (V3)",
     "sourceURL": "https://www.astro.com/astro-databank/",
     "exportFormat": "WIKIDUMP_MEDIAWIKI_XML",
-    "generatedAt": "2026-10-04T07:28:38.081Z",
+    "generatedAt": "2026-10-04T08:32:06.453Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "d419d7cd38a6610b6863e099907947df23a8c0359d624516243168784197a2ba",
-    "calibrationModelHash": "f66c7a5079b7cdd52281b7481db2ce408aa407aa62a8f170b5df16cf75db5d31",
+    "predictionEngineHash": "a67085885254f10c0044fb8404cad36a5fd813b59ab77bcb1612213df0927da1",
+    "calibrationModelHash": "64179958af55185320efb135ed0bfba8aaed3e655c67babd1ec6b969f08ad7e3",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "74844d455f7f5020aab29c8c1c6a5350cf491dd6e4583a74339adedc0c6d2794",
@@ -26,18 +26,18 @@
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
       "initialCacheEntries": 10487,
-      "cacheHits": 17623,
+      "cacheHits": 9636,
       "cacheMisses": 0,
-      "recomputedCount": 0,
-      "invalidatedEntries": 0,
-      "predictionEngineHash": "d419d7cd38a6610b6863e099907947df23a8c0359d624516243168784197a2ba",
-      "calibrationHash": "f66c7a5079b7cdd52281b7481db2ce408aa407aa62a8f170b5df16cf75db5d31"
+      "recomputedCount": 7987,
+      "invalidatedEntries": 7987,
+      "predictionEngineHash": "a67085885254f10c0044fb8404cad36a5fd813b59ab77bcb1612213df0927da1",
+      "calibrationHash": "64179958af55185320efb135ed0bfba8aaed3e655c67babd1ec6b969f08ad7e3"
     }
   },
   "primaryBenchmark": {
     "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
     "n": 3751,
-    "actualExecutionDurationSec": 0.13,
+    "actualExecutionDurationSec": 0.18,
     "actualPredictionCount": 3751,
     "cacheHits": 0,
     "cacheMisses": 3751,
@@ -45,7 +45,7 @@
     "errors": 0,
     "excludedCount": 556,
     "unknownCount": 25,
-    "elapsedSeconds": 0.13,
+    "elapsedSeconds": 0.18,
     "occurrence": {
       "n": 313,
       "censoringBreakdown": {
@@ -217,11 +217,11 @@
         "mae": 4.98,
         "medianAE": 4.08,
         "rmse": 6.37,
-        "timingMAEBaseline": 5.14,
+        "timingMAEBaseline": 4.98,
         "within1yPct": 13.25,
         "within2yPct": 24.17,
         "within3yPct": 34.11,
-        "doesCombinedBeatBaseline": true
+        "doesCombinedBeatBaseline": false
       },
       "occurrence": {
         "evaluatedCount": 876,
@@ -278,7 +278,7 @@
     "AA_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
       "n": 2591,
-      "actualExecutionDurationSec": 0.13,
+      "actualExecutionDurationSec": 0.27,
       "actualPredictionCount": 2591,
       "cacheHits": 0,
       "cacheMisses": 2591,
@@ -286,7 +286,7 @@
       "errors": 0,
       "excludedCount": 262,
       "unknownCount": 3,
-      "elapsedSeconds": 0.13,
+      "elapsedSeconds": 0.27,
       "occurrence": {
         "n": 193,
         "censoringBreakdown": {
@@ -440,7 +440,7 @@
     "A_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
       "n": 1160,
-      "actualExecutionDurationSec": 0.12,
+      "actualExecutionDurationSec": 0.17,
       "actualPredictionCount": 1160,
       "cacheHits": 0,
       "cacheMisses": 1160,
@@ -448,7 +448,7 @@
       "errors": 0,
       "excludedCount": 294,
       "unknownCount": 22,
-      "elapsedSeconds": 0.12,
+      "elapsedSeconds": 0.17,
       "occurrence": {
         "n": 120,
         "censoringBreakdown": {
@@ -602,15 +602,15 @@
     "ALL_INDEPENDENT": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
       "n": 4798,
-      "actualExecutionDurationSec": 0.13,
+      "actualExecutionDurationSec": 612.02,
       "actualPredictionCount": 4798,
-      "cacheHits": 4798,
+      "cacheHits": 0,
       "cacheMisses": 0,
       "recomputedCount": 0,
       "errors": 0,
       "excludedCount": 686,
       "unknownCount": 28,
-      "elapsedSeconds": 0.13,
+      "elapsedSeconds": 612.02,
       "occurrence": {
         "n": 428,
         "censoringBreakdown": {
@@ -764,7 +764,7 @@
     "ASTRO_DATABANK_REGRESSION_SAMPLE": {
       "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
       "n": 500,
-      "actualExecutionDurationSec": 0.12,
+      "actualExecutionDurationSec": 0.16,
       "actualPredictionCount": 500,
       "cacheHits": 0,
       "cacheMisses": 500,
@@ -772,7 +772,7 @@
       "errors": 0,
       "excludedCount": 68,
       "unknownCount": 3,
-      "elapsedSeconds": 0.12,
+      "elapsedSeconds": 0.16,
       "occurrence": {
         "n": 427,
         "censoringBreakdown": {
