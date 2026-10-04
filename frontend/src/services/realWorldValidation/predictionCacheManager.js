@@ -102,7 +102,9 @@ export function getCachedPrediction(recordId, inputHash) {
     cached.calibrationInputHash === currentCalibrationInputHash &&
     cached.trainingDatasetHash === currentTrainingDatasetHash &&
     cached.astronomyEngineVersion === astronomyEngineVersion &&
-    cached.predictionSchemaVersion === predictionSchemaVersion;
+    cached.historicalTimeEngineVersion === historicalTimeEngineVersion &&
+    cached.predictionSchemaVersion === predictionSchemaVersion &&
+    cached.modelVersion === modelVersion;
     
   if (!isValid) {
     cacheStats.invalidated++;

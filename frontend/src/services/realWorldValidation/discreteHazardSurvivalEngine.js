@@ -599,9 +599,9 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
           hasSaturnTransitAffliction = true;
         }
 
-        // Authentic D9 Navamsha support check
-        const d9Active = Boolean(w.vargaActivation)
-          || (typeof w.vargaConfirmation === "string" && /confirmed|உறுதி|support|promised/i.test(w.vargaConfirmation))
+        // Authentic D9 Navamsha support check (strict type validation: never treat generic object truthiness as evidence)
+        const d9Active = (w.vargaActivation === true || (w.vargaActivation && typeof w.vargaActivation === "object" && (w.vargaActivation.status === "CONFIRMED" || w.vargaActivation.isActivated === true)))
+          || (typeof w.vargaConfirmation === "string" && (/confirmed|உறுதி|support/i.test(w.vargaConfirmation) && !/not|இல்லை|unconfirmed/i.test(w.vargaConfirmation)))
           || (Array.isArray(w.supportingFactors) && w.supportingFactors.some(f => /navamsha|d9|நவாம்ச/i.test(f)));
         if (d9Active) {
           hasD9Support = true;
@@ -633,7 +633,8 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
     // Individual binary/continuous features
     const featDasha7th = isDasha7thActive > 0 ? 1.0 : (dashaScore >= 0.6 ? 1.0 : 0.0);
     const featTransitJup = (hasJupiterTransit || transitScore >= 0.7) ? 1.0 : 0.0;
-    const featTransitSat = hasSaturnTransitAffliction ? 1.0 : (maleficsIn7.length > 0 ? 0.5 : 0.0);
+    // Semantic purity: TRANSIT_SATURN_7TH reflects actual transit evidence only (zero natal malefic contamination)
+    const featTransitSat = hasSaturnTransitAffliction ? 1.0 : 0.0;
     const featD9Support = (hasD9Support || d9Score >= 0.65) ? 1.0 : 0.0;
     const featVenusPromise = promiseScore >= 0.6 ? 1.0 : (promiseScore <= 0.4 ? 0.0 : 0.5);
     const featSav7 = isSavSupportive;

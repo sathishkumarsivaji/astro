@@ -4,13 +4,13 @@
   "schemaVersion": "3.0",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
-  "generatedAt": "2026-10-03T11:19:38.030Z",
-  "status": "CALIBRATION_FITTED_READY_FOR_BENCHMARK",
+  "generatedAt": "2026-10-04T06:05:00.000Z",
+  "status": "FINAL_VALIDATED",
   "authoritativeHashes": {
     "astroEngineHash": "13a8c886169302cc49fd32380d7d1978d0578b9a224ee5137ab9a4eb477361f8",
-    "empiricalEvaluationEngineHash": "b90821daef4943e28cc5ed2db978e4e1e2d98b9c18d4f3d5e2d8bc8766524d5e",
-    "predictionEngineHash": "70f42f996bffa010d060578c8069f50158c76575345c5969211ababb1815b3f0",
-    "calibrationModelHash": "eb7a59f4e71f68696a0e85cb42a38f270a103fd42e0bde99d87916b3de5c0e1a"
+    "empiricalEvaluationEngineHash": "98681e8e071e0c91c8d541fb0436b55db7c47b61376eb2706d34748eb266b1ba",
+    "predictionEngineHash": "d7c65fb614ce59fbbabe20d906d470ece6669f109d09b39e397d7291f25ac1de",
+    "calibrationModelHash": "85433edcf3242d6b5418f0e3c29aa9d839af06e1e4e2ef064e2f0a2dba2d3e3a"
   },
   "datasetHashes": {
     "trainSplitHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
@@ -20,5 +20,5 @@
     "astroDatabankTrueIndependentHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "overlapManifestHash": "1c557f4c90bfdc6b7fee438751eb99527e0e50bf83ba9f277f68c12ebb19f2df"
   },
-  "updatedAt": "2026-10-04T02:08:00.000Z"
+  "updatedAt": "2026-10-04T06:05:00.000Z"
 }

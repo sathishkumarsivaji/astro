@@ -128,19 +128,28 @@ console.log(`Loaded INTERNAL_HOLDOUT: ${internalHoldoutRecords.length} records (
 console.log(`Loaded ASTRO_DATABANK:   ${adbRecords.length} records (INDEPENDENT EXTERNAL)\n`);
 
 const v3ChartCache = new Map();
+const MAX_V3_CHART_CACHE = 100;
 function getChartForRecord(record) {
   if (v3ChartCache.has(record.sourceRecordId)) return v3ChartCache.get(record.sourceRecordId);
-  const clean = sanitizeRecordForPrediction(record);
-  const chart = calculatePlanetaryPositions(
-    clean.birthDate,
-    clean.birthTime || "12:00",
-    clean.latitude || 13.0,
-    clean.longitude || 80.0,
-    "lahiri",
-    clean.sourceUtcOffset || 5.5
-  );
-  v3ChartCache.set(record.sourceRecordId, chart);
-  return chart;
+  try {
+    const clean = sanitizeRecordForPrediction(record);
+    const chart = calculatePlanetaryPositions(
+      clean.birthDate,
+      clean.birthTime,
+      clean.latitude,
+      clean.longitude,
+      "lahiri",
+      clean.sourceUtcOffset
+    );
+    if (v3ChartCache.size >= MAX_V3_CHART_CACHE) {
+      const firstKey = v3ChartCache.keys().next().value;
+      v3ChartCache.delete(firstKey);
+    }
+    v3ChartCache.set(record.sourceRecordId, chart);
+    return chart;
+  } catch (_err) {
+    return null;
+  }
 }
 
 // Evaluate single record with memory-safe compact caching
@@ -152,8 +161,8 @@ function getPredictionsForRecord(record) {
     return cached;
   }
 
-  const clean = sanitizeRecordForPrediction(record);
   try {
+    const clean = sanitizeRecordForPrediction(record);
     // Calculate chart (transient, allowed to be GC'd)
     const chart = calculatePlanetaryPositions(
       clean.birthDate,
@@ -198,18 +207,20 @@ function getPredictionsForRecord(record) {
 
     return compact;
   } catch (err) {
-    console.warn(`[WARN] Calculation exception on ${record.sourceRecordId}: ${err.message}`);
+    const isInsufficient = err.message && err.message.includes('INSUFFICIENT_DATA');
+    const fallbackStatus = isInsufficient ? 'INSUFFICIENT_DATA' : 'ERROR';
+    const fallbackPred = isInsufficient ? 'INSUFFICIENT_DATA' : 'UNRESOLVED';
     const fallback = {
-      occ: { predictedOccurrence: 'UNRESOLVED', calibratedProbability: 0.5, rawRuleScore: 0, status: 'ERROR', reason: err.message },
-      timing: { predictedYear: null, primaryWindow: null, status: 'ERROR', reason: err.message },
-      div: { predictedDivorce: 'UNRESOLVED', status: 'ERROR', reason: err.message },
-      mode: { predictedUnionMode: 'UNKNOWN', status: 'ERROR', reason: err.message },
+      occ: { predictedOccurrence: fallbackPred, prediction: fallbackPred, calibratedProbability: 0.5, rawRuleScore: 0, status: fallbackStatus, reason: err.message },
+      timing: { predictedYear: null, primaryWindow: null, hasTimingPrediction: false, status: fallbackStatus, reason: err.message },
+      div: { predictedDivorce: fallbackPred, prediction: fallbackPred, status: fallbackStatus, reason: err.message },
+      mode: { predictedUnionMode: 'UNKNOWN', prediction: 'UNKNOWN', status: fallbackStatus, reason: err.message },
       commitments: {
-        recordId: clean.sourceRecordId,
-        occCommitment: 'ERROR',
-        timingCommitment: 'ERROR',
-        divCommitment: 'ERROR',
-        modeCommitment: 'ERROR'
+        recordId: record.sourceRecordId,
+        occCommitment: crypto.createHash('sha256').update(`${fallbackStatus}_${record.sourceRecordId}`).digest('hex'),
+        timingCommitment: crypto.createHash('sha256').update(`${fallbackStatus}_${record.sourceRecordId}`).digest('hex'),
+        divCommitment: crypto.createHash('sha256').update(`${fallbackStatus}_${record.sourceRecordId}`).digest('hex'),
+        modeCommitment: crypto.createHash('sha256').update(`${fallbackStatus}_${record.sourceRecordId}`).digest('hex')
       }
     };
     setCachedPrediction(cacheKey, inputHash, fallback);

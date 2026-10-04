@@ -46,13 +46,21 @@ export function createSeededPRNG(seed = 133742) {
  */
 export function sanitizeRecordForPrediction(personRecord) {
   if (!personRecord) throw new Error("INSUFFICIENT_DATA: Missing person record for prediction.");
-  let cleanTime = personRecord.birthTime || "12:00:00";
-  const tm = String(cleanTime).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (tm) {
-    cleanTime = `${tm[1].padStart(2, '0')}:${tm[2]}:${tm[3] || '00'}`;
-  } else {
-    cleanTime = "12:00:00";
+  if (!personRecord.birthTime) {
+    throw new Error("INSUFFICIENT_DATA: Missing required birthTime for astronomical/predictive calculation.");
   }
+  const tm = String(personRecord.birthTime).match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!tm) {
+    throw new Error(`INSUFFICIENT_DATA: Invalid birthTime format '${personRecord.birthTime}'.`);
+  }
+  const cleanTime = `${tm[1].padStart(2, '0')}:${tm[2]}:${tm[3] || '00'}`;
+
+  const rawOffset = personRecord.sourceUtcOffset ?? personRecord.utcOffset;
+  if (rawOffset === undefined || rawOffset === null || !Number.isFinite(Number(rawOffset))) {
+    throw new Error("INSUFFICIENT_DATA: Missing required sourceUtcOffset / timezone offset for astronomical calculation.");
+  }
+  const cleanUtcOffset = Number(rawOffset);
+
   return Object.freeze({
     sourceRecordId: personRecord.sourceRecordId,
     birthDate: personRecord.birthDate,
@@ -64,7 +72,7 @@ export function sanitizeRecordForPrediction(personRecord) {
     latitude: personRecord.latitude,
     longitude: personRecord.longitude,
     historicalTimeStandard: personRecord.historicalTimeStandard || "STANDARD_TIME",
-    sourceUtcOffset: personRecord.sourceUtcOffset ?? 0,
+    sourceUtcOffset: cleanUtcOffset,
     gender: personRecord.gender || "Unknown"
   });
 }
@@ -90,6 +98,30 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
   const horizonMinAge = options.horizonMinAge ?? 18;
   const horizonMaxAge = options.horizonMaxAge ?? 50;
   const threshold = options.threshold ?? 0.50;
+
+  const ascLong = chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? (chartData?.ascendantSign?.index !== undefined ? chartData.ascendantSign.index * 30 : null);
+  if (ascLong === null || ascLong === undefined || !Number.isFinite(ascLong)) {
+    const noData = {
+      target: "MARRIAGE_WITHIN_HORIZON_V2",
+      legacyTarget: "MARRIAGE_OCCURRED_V1",
+      targetDefinition: "MARRIAGE_WITHIN_HORIZON_18_50",
+      observationWindow: `[${horizonMinAge}, ${horizonMaxAge}]`,
+      sourceDataset: cleanRecord?.sourceDataset || "VEDASTRO_TRAIN",
+      modelVersion: "2.2.0",
+      recordId: cleanRecord?.sourceRecordId,
+      status: "INSUFFICIENT_DATA",
+      reason: "MISSING_ASCENDANT_LONGITUDE",
+      rawRuleScore: null,
+      calibratedProbability: null,
+      pMarriage: null,
+      prediction: "INSUFFICIENT_DATA",
+      eligibleWindowCount: 0,
+      horizon: { minAge: horizonMinAge, maxAge: horizonMaxAge },
+      topScore: null
+    };
+    noData.commitmentHash = commitPredictionHash(noData);
+    return noData;
+  }
 
   const timingEvents = chartData?._marriageTimingEvents || (chartData._marriageTimingEvents = calculateMarriageTimingEvents(chartData));
   const windows = timingEvents?.candidateWindows || [];
@@ -184,6 +216,25 @@ export function getEarliestDocumentedMarriage(record) {
 export function predictMarriageTiming(cleanRecord, chartData, options = {}) {
   const horizonMinAge = options.horizonMinAge ?? 18;
   const horizonMaxAge = options.horizonMaxAge ?? 50;
+
+  const ascLong = chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? (chartData?.ascendantSign?.index !== undefined ? chartData.ascendantSign.index * 30 : null);
+  if (ascLong === null || ascLong === undefined || !Number.isFinite(ascLong)) {
+    const noEvent = {
+      target: "MARRIAGE_TIMING_V2",
+      legacyTarget: "MARRIAGE_TIMING_V1",
+      recordId: cleanRecord?.sourceRecordId,
+      status: "INSUFFICIENT_DATA",
+      reason: "MISSING_ASCENDANT_LONGITUDE",
+      hasTimingPrediction: false,
+      centralEstimateYear: null,
+      centralEstimateDate: null,
+      predictedIntervalYears: 0,
+      predictedInterval: null,
+      candidateWindows: []
+    };
+    noEvent.commitmentHash = commitPredictionHash(noEvent);
+    return noEvent;
+  }
 
   const timingEvents = chartData?._marriageTimingEvents || (chartData._marriageTimingEvents = calculateMarriageTimingEvents(chartData));
   const windows = timingEvents?.candidateWindows || [];
@@ -284,8 +335,25 @@ export function predictMarriageTiming(cleanRecord, chartData, options = {}) {
 // ============================================================================
 
 export function predictDivorce(cleanRecord, chartData, options = {}) {
+  const ascLong = chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? (chartData?.ascendantSign?.index !== undefined ? chartData.ascendantSign.index * 30 : null);
+  if (ascLong === null || ascLong === undefined || !Number.isFinite(ascLong)) {
+    const noData = {
+      target: "DIVORCE_OCCURRED_V2",
+      timingTarget: "DIVORCE_TIMING_V2",
+      dissolutionTarget: "TIME_TO_DISSOLUTION_V2",
+      recordId: cleanRecord?.sourceRecordId,
+      status: "INSUFFICIENT_DATA",
+      reason: "MISSING_ASCENDANT_LONGITUDE",
+      pDivorce: null,
+      prediction: "INSUFFICIENT_DATA",
+      afflictionScore: null,
+      centralEstimateDivorceYear: null
+    };
+    noData.commitmentHash = commitPredictionHash(noData);
+    return noData;
+  }
+
   const planets = chartData.planets || [];
-  const ascLong = chartData.ascendantLong ?? chartData.ascendant?.longitude ?? (chartData.ascendantSign?.index ? chartData.ascendantSign.index * 30 : 0);
   const h7SignIdx = (Math.floor(ascLong / 30) + 6) % 12;
 
   const malefics = planets.filter(p => ["Mars", "Saturn", "Rahu", "Ketu"].includes(p.name));
@@ -334,8 +402,22 @@ export function predictDivorce(cleanRecord, chartData, options = {}) {
 // ============================================================================
 
 export function predictUnionMode(cleanRecord, chartData, options = {}) {
+  const ascLong = chartData?.ascendantLong ?? chartData?.ascendant?.longitude ?? (chartData?.ascendantSign?.index !== undefined ? chartData.ascendantSign.index * 30 : null);
+  if (ascLong === null || ascLong === undefined || !Number.isFinite(ascLong)) {
+    const noData = {
+      target: "UNION_MODE_V2",
+      recordId: cleanRecord?.sourceRecordId,
+      status: "INSUFFICIENT_DATA",
+      reason: "MISSING_ASCENDANT_LONGITUDE",
+      prediction: "UNKNOWN",
+      probabilities: { LOVE: 0, ARRANGED: 0, PRAGMATIC: 0, UNKNOWN: 1.0 },
+      evidenceScores: { loveEvidence: 0, arrangedEvidence: 0, pragmaticEvidence: 0 }
+    };
+    noData.commitmentHash = commitPredictionHash(noData);
+    return noData;
+  }
+
   const planets = chartData.planets || [];
-  const ascLong = chartData.ascendantLong ?? chartData.ascendant?.longitude ?? (chartData.ascendantSign?.index ? chartData.ascendantSign.index * 30 : 0);
   const lagnaIdx = Math.floor(ascLong / 30);
   const h5Idx = (lagnaIdx + 4) % 12;
   const h7Idx = (lagnaIdx + 6) % 12;

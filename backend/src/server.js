@@ -687,7 +687,7 @@ app.post('/api/payment/webhook', requireDatabaseReady, (req, res) => {
 // 7. Secure AI Generation with Atomic Credit Lock & Rollback (Audit Point 25)
 // ---------------------------------------------------------------------------
 async function handleGenerateAstrology(req, res) {
-  const { prompt, lang = 'en' } = req.body;
+  const { prompt, lang = 'en', chartContext = null } = req.body;
 
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'Valid astrological prompt string is required.' });
@@ -785,15 +785,18 @@ async function handleGenerateAstrology(req, res) {
     db.saveUser(req.user.userId, entitlements);
 
     metrics.aiRequestsSuccess++;
-    const gateResult = validateAndSanitizeAIResponse(generatedText);
+    const gateResult = validateAndSanitizeAIResponse(generatedText, chartContext, { lang });
     return res.json({
       success: true,
       text: gateResult.text,
       transactionId: txId,
       remainingCredits: entitlements.availableCredits - entitlements.lockedCredits,
       _evidenceGate: {
+        isValid: gateResult.isValid,
         sanitized: gateResult.sanitized,
         violationCount: gateResult.violations.length,
+        verifiedCount: gateResult.verifiedClaims.length,
+        unsupportedCount: gateResult.unsupportedClaims.length + gateResult.contradictoryClaims.length,
         disclaimersAdded: gateResult.disclaimersAdded
       }
     });

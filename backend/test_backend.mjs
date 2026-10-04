@@ -27,6 +27,7 @@ import {
 } from './src/services/privacyService.js';
 import { PRICING_PLANS } from './src/config/pricing.js';
 import { db } from './src/db/database.js';
+import { validateAndSanitizeAIResponse } from './src/middleware/aiEvidenceGate.js';
 
 let passed = 0;
 let failed = 0;
@@ -399,6 +400,61 @@ try {
     }
   } catch (e) {}
 }
+
+// 10. AI Evidence Verification & Grounding Gate Tests
+console.log("\n10. Testing AI Evidence Grounding, Safety & Fabrication Redaction Gate...");
+const mockChartContext = {
+  planets: [
+    { name: "Sun", house: 1, sign: "Aries", longitude: 15.5 },
+    { name: "Jupiter", house: 9, sign: "Sagittarius", longitude: 245.2 },
+    { name: "Mars", house: 4, sign: "Cancer", longitude: 102.1 }
+  ],
+  dashaTable: [
+    { lord: "Sun" },
+    { lord: "Moon" },
+    { lord: "Mars" },
+    { lord: "Rahu" },
+    { lord: "Jupiter" }
+  ],
+  evidenceNodes: [
+    { nodeId: "EV_PLANET_SUN_H1", description: "Sun in 1st house" },
+    { nodeId: "EV_PLANET_JUPITER_H9", description: "Jupiter in 9th house" }
+  ]
+};
+
+// 10A. Grounded narrative matching chart facts
+const validAiText = "Native has Sun placed in the 1st house and Jupiter in Sagittarius.";
+const validGateRes = validateAndSanitizeAIResponse(validAiText, mockChartContext);
+assert(validGateRes.isValid === true, "Valid grounded AI claims pass gate validation");
+assert(validGateRes.verifiedClaims.length >= 2, "Both Sun house and Jupiter sign claims verified");
+assert(validGateRes.contradictoryClaims.length === 0, "Zero contradictory claims detected");
+
+// 10B. Contradictory placement assertion redaction
+const contradictoryAiText = "Native has Mars in house 10 and Sun in House 1.";
+const contradicRes = validateAndSanitizeAIResponse(contradictoryAiText, mockChartContext);
+assert(contradicRes.isValid === false, "Contradictory AI placement fails isValid gate check");
+assert(contradicRes.contradictoryClaims.length === 1, "Mars house contradiction detected");
+assert(contradicRes.text.includes("[REMOVED: CONTRADICTORY CLAIM"), "Contradictory claim is removed/redacted from returned narrative");
+assert(!contradicRes.text.includes("Mars in house 10"), "False astrological claim is purged from response text");
+
+// 10C. Fabricated high-precision astronomical coordinate detection & redaction
+const fabricatedAiText = "Sun is placed at exact degree 23° 45' 12.3\" and longitude: 123.45678.";
+const fabRes = validateAndSanitizeAIResponse(fabricatedAiText, mockChartContext);
+assert(fabRes.isValid === false, "Fabricated astronomical values fail gate check");
+assert(fabRes.violations.some(v => v.includes("FABRICATED_ASTRONOMICAL_VALUE")), "Fabricated values flagged in violation ledger");
+assert(fabRes.text.includes("[UNVERIFIED_COORDINATE_REDACTED]"), "Fabricated coordinates redacted in text");
+
+// 10D. Statutory Legal, Health, and Financial Advisory Detection
+const legalAiText = "You should file a lawsuit against your employer and court will rule in your favor.";
+const legalRes = validateAndSanitizeAIResponse(legalAiText, mockChartContext);
+assert(legalRes.isValid === false, "Legal advisory language fails safety validation");
+assert(legalRes.disclaimersAdded === true, "Statutory disclaimer flag set");
+assert(legalRes.text.includes("Statutory Notice: Traditional astrological interpretation only. This does NOT constitute legal advice"), "Statutory legal notice appended to output");
+
+const healthAiText = "You will have Cancer disease and should take Medicine.";
+const healthRes = validateAndSanitizeAIResponse(healthAiText, mockChartContext);
+assert(healthRes.isValid === false, "Health diagnostic language fails safety validation");
+assert(healthRes.text.includes("does NOT constitute medical diagnosis"), "Statutory medical notice appended to output");
 
 console.log("\n==============================================================");
 if (failed === 0) {
