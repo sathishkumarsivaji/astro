@@ -576,7 +576,8 @@ const v3FeatureSurvivalAnalysis = runRealDataFeatureLevelSurvivalAnalysis(trainR
   baselineTable: v3TrainFit.baselineTable
 });
 for (const f of v3FeatureSurvivalAnalysis) {
-  console.log(`  • ${f.featureId}: OR=${f.oddsRatio} [${f.ci95[0]}, ${f.ci95[1]}], p=${f.pValue}, status=${f.status}`);
+  const ciStr = Array.isArray(f.ci95) ? `[${f.ci95[0]}, ${f.ci95[1]}]` : "[N/A, N/A]";
+  console.log(`  • ${f.featureId}: OR=${f.oddsRatio ?? "N/A"} ${ciStr}, p=${f.pValue ?? "N/A"}, status=${f.status}`);
 }
 
 // 7. 7-Model Feature Ablation Study on FULL BLIND_TEST

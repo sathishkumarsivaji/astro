@@ -128,8 +128,8 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
 
   // Filter windows falling within valid adult marital horizon
   const eligibleWindows = windows.filter(w => {
-    const age = w.startAge ?? 25;
-    return age >= horizonMinAge && age <= horizonMaxAge;
+    const age = typeof w.startAge === "number" && Number.isFinite(w.startAge) ? w.startAge : null;
+    return age !== null && age >= horizonMinAge && age <= horizonMaxAge;
   });
 
   // Score natal promise + top eligible window
@@ -240,8 +240,8 @@ export function predictMarriageTiming(cleanRecord, chartData, options = {}) {
   const windows = timingEvents?.candidateWindows || [];
 
   const eligibleWindows = windows.filter(w => {
-    const age = w.startAge ?? 25;
-    return age >= horizonMinAge && age <= horizonMaxAge;
+    const age = typeof w.startAge === "number" && Number.isFinite(w.startAge) ? w.startAge : null;
+    return age !== null && age >= horizonMinAge && age <= horizonMaxAge;
   });
 
   if (eligibleWindows.length === 0) {
@@ -525,9 +525,16 @@ export function evaluateOccurrence(predictions, groundTruths) {
       continue;
     }
 
-    evaluatedCount++;
     const actualTrue = (censoring === "EVENT");
-    const pProb = pred.pMarriage ?? pred.calibratedProbability ?? 0.5;
+    const rawProb = typeof pred.pMarriage === "number" && Number.isFinite(pred.pMarriage)
+      ? pred.pMarriage
+      : (typeof pred.calibratedProbability === "number" && Number.isFinite(pred.calibratedProbability) ? pred.calibratedProbability : null);
+    if (rawProb === null) {
+      unknownCount++;
+      continue;
+    }
+    const pProb = rawProb;
+    evaluatedCount++;
 
     // Calibration binning
     const binIdx = Math.min(Math.floor(pProb * 10), 9);
@@ -568,11 +575,14 @@ export function evaluateOccurrence(predictions, groundTruths) {
     const censoring = gt.censoringStatus || (gt.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
     if (censoring === "RIGHT_CENSORED" || censoring === "UNKNOWN" || censoring === "MISSING_OUTCOME" || censoring === "EVENT_PRE_HORIZON") continue;
     const actualTrue = (censoring === "EVENT");
-    const pProb = pred.pMarriage ?? pred.calibratedProbability ?? 0.5;
+    const pProb = typeof pred.pMarriage === "number" && Number.isFinite(pred.pMarriage)
+      ? pred.pMarriage
+      : (typeof pred.calibratedProbability === "number" && Number.isFinite(pred.calibratedProbability) ? pred.calibratedProbability : null);
+    if (pProb === null) continue;
     probPairs.push({ prob: pProb, actual: actualTrue ? 1 : 0 });
   }
 
-  let rocAuc = 0.5;
+  let rocAuc = null;
   let prAuc = precision;
   if (probPairs.length > 0) {
     const sorted = [...probPairs].sort((a, b) => b.prob - a.prob);

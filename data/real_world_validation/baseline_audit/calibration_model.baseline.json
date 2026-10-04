@@ -1,0 +1,42 @@
+{
+  "calibratorType": "PLATT_LOGISTIC_SCALING_V2",
+  "modelVersion": "2.2.0-actual-model-fitted",
+  "predictionEngineVersion": "4.2.0",
+  "predictionEngineHash": "d7c65fb614ce59fbbabe20d906d470ece6669f109d09b39e397d7291f25ac1de",
+  "calibrationInputHash": "58c1c3b7bb8defa059bc58e11cf1382dad418f216a423a6e8e94dce2b5516db4",
+  "trainingSampleHash": "83a97b8b775723f88b5f43b3501b61efc5f24a040b4b066b70e500f6f4ab2357",
+  "fitTimestamp": "2026-10-03T21:24:12.962Z",
+  "fitSeed": 133742,
+  "fitMethod": "NEWTON_RAPHSON_IRLS",
+  "rawScoreDefinition": "rawRuleScore_from_predictMarriageOccurrence",
+  "timingPredictionDefinition": "centralEstimateYear_from_predictMarriageTiming",
+  "trainingDataset": "TRAIN_SPLIT_VEDASTRO_15K",
+  "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+  "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
+  "trainingTotalN": 9366,
+  "trainingSampleN": 2500,
+  "trainingSampleMethod": "DETERMINISTIC_STRATIFIED_PRNG_SEED_133742",
+  "timingResidualSampleN": 2250,
+  "trainingOutcomeDefinition": "MARRIAGE_WITHIN_HORIZON_18_50",
+  "parameters": {
+    "slope": 0.4189,
+    "intercept": 1.6736,
+    "classificationThreshold": 0.5
+  },
+  "conformalIntervalQuantiles": {
+    "q50": 6,
+    "q80": 10,
+    "q90": 14,
+    "q95": 19
+  },
+  "demographicBaseline": {
+    "medianMarriageAge": 26,
+    "trainingSampleCount": 8458
+  },
+  "astrologicalTimingStats": {
+    "meanAbsoluteError": 6.88,
+    "medianAbsoluteError": 6,
+    "rootMeanSquaredError": 9.06
+  },
+  "provenanceNotice": "Parameters strictly fitted on actual production model outputs (rawRuleScore and centralEstimateYear) from TRAIN partition. Zero BLIND or HOLDOUT data used in fitting."
+}

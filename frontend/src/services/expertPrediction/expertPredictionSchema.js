@@ -409,8 +409,8 @@ export function createDomainResult({
   const finalTraditionalTimingResolution = traditionalTimingResolution || resolution;
   const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || (isMarriage ? RESOLUTION.YEAR : "NOT_ESTABLISHED");
   const firstWin = primaryWindows[0];
-  const finalConvergence = traditionalRuleConvergence ?? (firstWin ? (firstWin.traditionalRuleConvergence ?? firstWin.strength ?? 0.75) : 0.5);
-  const finalEvidenceStrength = traditionalEvidenceStrength ?? (firstWin ? (firstWin.traditionalEvidenceStrength ?? firstWin.strength ?? 0.75) : 0.5);
+  const finalConvergence = traditionalRuleConvergence ?? (firstWin ? (firstWin.traditionalRuleConvergence ?? firstWin.strength ?? 0.0) : 0.0);
+  const finalEvidenceStrength = traditionalEvidenceStrength ?? (firstWin ? (firstWin.traditionalEvidenceStrength ?? firstWin.strength ?? 0.0) : 0.0);
   const finalPredictiveProb = predictiveProbability ?? null;
 
   const finalEpistemicStatus = epistemicStatus || {

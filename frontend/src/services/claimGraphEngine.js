@@ -59,41 +59,44 @@ export function buildStructuredClaimGraph(domain = "career", context = null) {
     const premises = [];
     const supporting = [];
     const counters = [];
-    let score = 0.5;
+    let positiveSupport = 0.0;
+    let counterPenalty = 0.0;
 
     // Evaluate D1 Factors
     if (sun && (sun.house === 10 || sun.house === 1)) {
       premises.push({ factor: `Sun placed in House ${sun.house} (${sun.sign})`, varga: "D1", role: "Digbala / Authority Signifier" });
       supporting.push("SURYA_10TH_DIGBALA");
-      score += 0.2;
+      positiveSupport += 0.25;
     }
     if (jupiter && (jupiter.house === 10 || jupiter.house === 1 || jupiter.house === 5 || jupiter.house === 9)) {
       premises.push({ factor: `Jupiter in House ${jupiter.house} (${jupiter.sign})`, varga: "D1", role: "Benefic Expansion & Wisdom" });
       supporting.push("GURU_TRIKONA_BENEFIC");
-      score += 0.2;
+      positiveSupport += 0.25;
     }
     if (saturn && (saturn.house === 10 || saturn.house === 6)) {
       premises.push({ factor: `Saturn in House ${saturn.house} (${saturn.sign})`, varga: "D1", role: "Karma Longevity & Structured Discipline" });
       counters.push("SATURN_STRUCTURAL_DELAY");
-      score += 0.1;
+      positiveSupport += 0.15;
     }
 
     // Evaluate D10 Factors
     if (d10 && d10.ascendant) {
       premises.push({ factor: `D10 Dashamsha Lagna in ${d10.ascendant}`, varga: "D10", role: "Harmonic Vocational Foundation" });
       supporting.push("D10_VOCATIONAL_HARMONIC");
-      score += 0.15;
+      positiveSupport += 0.20;
     }
 
     // Evaluate Dasha Timing
     if (dasha && dasha.lord) {
       premises.push({ factor: `Active Mahadasha of ${dasha.lord}`, role: "Temporal Awakening Cycle" });
       supporting.push("VIMSHOTTARI_ACTIVE_PERIOD");
-      score += 0.15;
+      positiveSupport += 0.20;
     }
 
-    const clampedScore = Math.min(0.98, Math.max(0.2, score));
-    const convergence = clampedScore >= 0.75 ? "HIGH" : clampedScore >= 0.5 ? "MODERATE" : "SPECULATIVE";
+    const clampedScore = premises.length > 0
+      ? Number(Math.min(0.98, Math.max(0.1, positiveSupport - counterPenalty)).toFixed(2))
+      : 0.0;
+    const convergence = clampedScore >= 0.70 ? "HIGH" : clampedScore >= 0.40 ? "MODERATE" : "SPECULATIVE";
 
     claims.push({
       claimId: "CLM_CAR_001",
@@ -117,25 +120,28 @@ export function buildStructuredClaimGraph(domain = "career", context = null) {
     const premises = [];
     const supporting = [];
     const counters = [];
-    let score = 0.5;
+    let positiveSupport = 0.0;
+    let counterPenalty = 0.0;
 
     if (venus && (venus.house === 7 || venus.house === 1 || venus.house === 4)) {
       premises.push({ factor: `Venus placed in House ${venus.house} (${venus.sign})`, varga: "D1", role: "Kalatra Karaka & Aesthetic Harmony" });
       supporting.push("VENUS_HARMONIC_PLACEMENT");
-      score += 0.2;
+      positiveSupport += 0.35;
     }
     if (d9 && d9.ascendant) {
       premises.push({ factor: `D9 Navamsha Lagna in ${d9.ascendant}`, varga: "D9", role: "Dharmic Inner Partner Alignment" });
       supporting.push("D9_NAVAMSHA_CONFIRMATION");
-      score += 0.2;
+      positiveSupport += 0.35;
     }
     if (mars && (mars.house === 1 || mars.house === 4 || mars.house === 7 || mars.house === 8 || mars.house === 12)) {
       counters.push(`Mars in House ${mars.house} creates traditional Manglik dynamic requiring temperamental patience.`);
-      score -= 0.1;
+      counterPenalty += 0.15;
     }
 
-    const clampedScore = Math.min(0.98, Math.max(0.2, score));
-    const convergence = clampedScore >= 0.75 ? "HIGH" : clampedScore >= 0.5 ? "MODERATE" : "SPECULATIVE";
+    const clampedScore = premises.length > 0
+      ? Number(Math.min(0.98, Math.max(0.1, positiveSupport - counterPenalty)).toFixed(2))
+      : 0.0;
+    const convergence = clampedScore >= 0.70 ? "HIGH" : clampedScore >= 0.40 ? "MODERATE" : "SPECULATIVE";
 
     claims.push({
       claimId: "CLM_REL_001",
@@ -153,7 +159,7 @@ export function buildStructuredClaimGraph(domain = "career", context = null) {
 
   const overallScore = claims.length > 0
     ? claims.reduce((acc, c) => acc + c.convergenceScore, 0) / claims.length
-    : 0.5;
+    : 0.0;
 
   return {
     domain,

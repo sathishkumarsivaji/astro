@@ -358,7 +358,9 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
     }
   });
   result.timingWindows = primaryWindows;
-  result.score = primaryWindows.length > 0 ? (primaryWindows[0].strength ? Math.round(primaryWindows[0].strength * 100) : 75) : 50;
+  result.score = (primaryWindows.length > 0 && typeof primaryWindows[0].strength === "number")
+    ? Math.round(primaryWindows[0].strength * 100)
+    : null;
   return result;
 }
 
@@ -447,9 +449,13 @@ function adaptExistingWindow(existingWindow, domain, canonicalFacts, relevantVar
   const startDate = ew.startDateIso || ew.localStartDate || null;
   const endDate = ew.endDateIso || ew.localEndDate || null;
   const resolution = ew.peakWindow ? RESOLUTION.DATE_RANGE : RESOLUTION.MONTH_RANGE;
-  const strength = confidenceType === CONFIDENCE_TYPE.PEAK_CONVERGENCE ? 0.9 :
-            confidenceType === CONFIDENCE_TYPE.STRONG_CONVERGENCE ? 0.75 :
-            confidenceType === CONFIDENCE_TYPE.PRIMARY_ACTIVATION ? 0.6 : 0.4;
+  const strength = (typeof ew.strength === "number" && Number.isFinite(ew.strength))
+    ? ew.strength
+    : ((typeof ew.traditionalRuleConvergence === "number" && Number.isFinite(ew.traditionalRuleConvergence))
+        ? ew.traditionalRuleConvergence
+        : ((typeof ew.score === "number" && Number.isFinite(ew.score))
+            ? (ew.score > 1 ? ew.score / 100 : ew.score)
+            : null));
 
   return createTimingWindow({
     windowId: ew.windowId || generateDeterministicId(`${domain}_existing`, startDate, endDate, ew.mahadashaLord, ew.antardashaLord),
@@ -649,7 +655,7 @@ function evaluateSubPhases(subPhases, subPhaseRules, primaryWindows, canonicalFa
       window = evaluation.window || (status === SUB_PHASE_STATUS.SUPPORTED ? parentWindow : null);
       label = evaluation.label || label;
       labelTamil = evaluation.labelTamil || labelTamil;
-      strength = evaluation.strength != null ? evaluation.strength : (status === SUB_PHASE_STATUS.SUPPORTED ? (parentWindow?.strength || 0.75) : 0);
+      strength = evaluation.strength != null ? evaluation.strength : (status === SUB_PHASE_STATUS.SUPPORTED ? (parentWindow?.strength ?? null) : 0);
       resolution = evaluation.resolution || (window?.resolution || resolution);
       
       const rawWhy = evaluation.why || evaluation.whySupported || evaluation.evidence;

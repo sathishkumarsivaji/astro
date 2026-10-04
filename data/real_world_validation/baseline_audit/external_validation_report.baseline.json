@@ -1,0 +1,56 @@
+{
+  "reportTitle": "Astro-Databank External Validation Summary Report",
+  "metadata": {
+    "predictionEngineHash": "d7c65fb614ce59fbbabe20d906d470ece6669f109d09b39e397d7291f25ac1de",
+    "calibrationModelHash": "85433edcf3242d6b5418f0e3c29aa9d839af06e1e4e2ef064e2f0a2dba2d3e3a",
+    "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+    "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
+    "benchmarkCodeHash": "ee6f0c2823ca58cfb877222dd57f07059943558cbe9d72b18312f05f4616746e",
+    "generatedAt": "2026-10-04T06:03:11.282Z",
+    "modelVersion": "2.2.0",
+    "schemaVersion": "3.0"
+  },
+  "evaluationDate": "2026-10-04T06:03:11.282Z",
+  "independenceVerification": {
+    "status": "VERIFIED_INDEPENDENT",
+    "totalExportRecords": 6036,
+    "vedAstroOverlapExcluded": 1238,
+    "independentRecords": 4798,
+    "certifiedAAARecords": 3751
+  },
+  "scorecard": {
+    "prevalence": 0.9649,
+    "confusionMatrix": {
+      "tp": 302,
+      "fp": 11,
+      "tn": 0,
+      "fn": 0
+    },
+    "occurrenceAccuracy": 0.9649,
+    "occurrencePrecision": 0.9649,
+    "occurrenceRecall": 1,
+    "occurrenceSpecificity": 0,
+    "occurrenceBalancedAccuracy": 0.5,
+    "occurrenceMCC": 0,
+    "occurrenceRocAuc": 0.5072,
+    "occurrencePrAuc": 0.9688,
+    "occurrenceBrierScore": 0.0407,
+    "occurrenceECE": 0.0821,
+    "occurrenceQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "timingMAE": 9.19,
+    "timingWithin1yPct": 9.06,
+    "timingWithin2yPct": 18.44,
+    "timingWithin3yPct": 25.31,
+    "timingQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "conformalCoverage50": 0.4688,
+    "conformalCoverage80": 0.6906,
+    "conformalCoverage90": 0.825,
+    "conformalCoverage95": 0.9219,
+    "meanWinklerScore80": 46.69,
+    "demographicBaselineMAE": 6.41,
+    "demographicBaselineWithin1yPct": 19.38,
+    "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+  },
+  "conclusion": "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
+}

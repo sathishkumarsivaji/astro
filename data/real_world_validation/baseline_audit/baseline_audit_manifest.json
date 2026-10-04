@@ -1,0 +1,117 @@
+{
+  "manifestVersion": "1.0.0",
+  "phase": "PHASE_1_BASELINE_FREEZE",
+  "timestamp": "2026-10-04T06:33:15.795Z",
+  "gitCommit": "28f32e52d27c022e66ca734c4352672d65333d82",
+  "sourceTree": {
+    "frontendSrcHash": "c774ae68d73cc2ed69edd57bab1ca3bfbabb93e26515740bac4f592361f53bec",
+    "frontendSrcFiles": 110,
+    "frontendTestHash": "da40a4fcd1af3261371cb20dd9247c0abef211d56b98bcb593717e766b139c62",
+    "frontendTestFiles": 82,
+    "backendSrcHash": "9b38c285be9117306e132e7e7de95c7c5c8f7f0498456998f2e9f5112a2c4d02",
+    "backendSrcFiles": 7
+  },
+  "fileHashes": {
+    "astroEngine": {
+      "path": "frontend/src/services/astroEngine.js",
+      "exists": true,
+      "sha256": "13a8c886169302cc49fd32380d7d1978d0578b9a224ee5137ab9a4eb477361f8",
+      "bytes": 807289
+    },
+    "empiricalEvaluationEngine": {
+      "path": "frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js",
+      "exists": true,
+      "sha256": "98681e8e071e0c91c8d541fb0436b55db7c47b61376eb2706d34748eb266b1ba",
+      "bytes": 50786
+    },
+    "discreteHazardSurvivalEngine": {
+      "path": "frontend/src/services/realWorldValidation/discreteHazardSurvivalEngine.js",
+      "exists": true,
+      "sha256": "9ab21449c44ee2357501d485a6d61a66ef3ceec37f2b3650fa340b6ab4eadcfd",
+      "bytes": 58693
+    },
+    "calibrationProvider": {
+      "path": "frontend/src/services/realWorldValidation/calibrationProvider.js",
+      "exists": true,
+      "sha256": "b2a797100b6c5ddc5d3078a5321153228b566747370149a7d9f0b2db06a48337",
+      "bytes": 7019
+    },
+    "predictionCacheManager": {
+      "path": "frontend/src/services/realWorldValidation/predictionCacheManager.js",
+      "exists": true,
+      "sha256": "e568c1a6bcb36d42b2f6673bfad52d67279eb03af0923e83ad3571541353bfbe",
+      "bytes": 6669
+    },
+    "calibrationModel": {
+      "path": "data/real_world_validation/results/calibration_model.json",
+      "exists": true,
+      "sha256": "85433edcf3242d6b5418f0e3c29aa9d839af06e1e4e2ef064e2f0a2dba2d3e3a",
+      "bytes": 1748
+    },
+    "benchmarkResults": {
+      "path": "data/real_world_validation/results/benchmark_results.json",
+      "exists": true,
+      "sha256": "6fd91b21c0badddcd790a5e29f814895898d773272b020fef5586fb0635e4d4b",
+      "bytes": 72421
+    },
+    "astroDatabankExternalBenchmark": {
+      "path": "data/real_world_validation/results/astro_databank_external_benchmark.json",
+      "exists": true,
+      "sha256": "d55a14c0490ad1e26082e3ea3dad8500837ef00daf4486067e2a1ff24833ecfa",
+      "bytes": 26086
+    },
+    "externalValidationReport": {
+      "path": "data/real_world_validation/results/external_validation_report.json",
+      "exists": true,
+      "sha256": "13f00935877fc277eb1303a293faff5422fa2c6d8e61c58fa239132b21cacf57",
+      "bytes": 2465
+    },
+    "trainSplit": {
+      "path": "data/real_world_validation/splits/train_split.json",
+      "exists": false,
+      "sha256": null,
+      "bytes": 0
+    },
+    "valSplit": {
+      "path": "data/real_world_validation/splits/val_split.json",
+      "exists": false,
+      "sha256": null,
+      "bytes": 0
+    },
+    "blindTestSplit": {
+      "path": "data/real_world_validation/splits/blind_test_split.json",
+      "exists": false,
+      "sha256": null,
+      "bytes": 0
+    },
+    "internalHoldoutSplit": {
+      "path": "data/real_world_validation/splits/internal_holdout_split.json",
+      "exists": false,
+      "sha256": null,
+      "bytes": 0
+    },
+    "astroDatabankTrueIndependent": {
+      "path": "data/real_world_validation/processed/astro_databank_true_independent.json",
+      "exists": false,
+      "sha256": null,
+      "bytes": 0
+    },
+    "datasetOverlapManifest": {
+      "path": "data/real_world_validation/processed/dataset_overlap_manifest.json",
+      "exists": false,
+      "sha256": null,
+      "bytes": 0
+    }
+  },
+  "archivedFiles": [
+    "ASTROVERSE_FINAL_VALIDATION_REPORT.baseline.md",
+    "ASTROVERSE_REAL_WORLD_VALIDATION_REPORT.baseline.md",
+    "benchmark_results.baseline.json",
+    "calibration_model.baseline.json",
+    "astro_databank_external_benchmark.baseline.json",
+    "external_validation_report.baseline.json"
+  ],
+  "recordedBaselineMetrics": {
+    "v3DiscreteHazardModel": null
+  }
+}
