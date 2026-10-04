@@ -151,8 +151,7 @@ export function createTimingWindow({
 } = {}) {
   const finalAstronomicalResolution = astronomicalResolution || (startDate && endDate ? RESOLUTION.DAY : RESOLUTION.INSUFFICIENT_DATA);
   const finalTraditionalTimingResolution = traditionalTimingResolution || resolution;
-  const isMarriage = domain === DOMAIN.MARRIAGE || domain === "marriage";
-  const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || (isMarriage ? RESOLUTION.YEAR : "NOT_ESTABLISHED");
+  const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || "NOT_ESTABLISHED";
   const finalConvergence = traditionalRuleConvergence ?? strength;
   const finalEvidenceStrength = traditionalEvidenceStrength ?? strength;
   const finalPredictiveProbability = predictiveProbability ?? null;
@@ -160,7 +159,7 @@ export function createTimingWindow({
   const finalEpistemicStatus = epistemicStatus || {
     astronomicalStatus: "CALCULATED",
     traditionalInterpretationStatus: "RULE_BASED",
-    empiricalValidationStatus: isMarriage
+    empiricalValidationStatus: (finalEmpiricalPredictiveResolution && finalEmpiricalPredictiveResolution !== "NOT_ESTABLISHED")
       ? "CALIBRATED_EMPIRICAL_BENCHMARK_AVAILABLE"
       : "NOT_ESTABLISHED",
     traditionalRuleConvergence: finalConvergence,
@@ -245,6 +244,12 @@ export function createEvidenceNode({
   source = null,  // which calculation produced this
   sourceClass = null,
   calculationStatus = null,
+  calculationConfidence = null,
+  traditionalRuleWeight = null,
+  ruleWeight = null,
+  traditionalEvidenceStrength = null,
+  empiricalEvidenceStrength = null,
+  predictiveProbability = null,
   confidence = null,
   provenance = null,
   childNodeIds = [],
@@ -255,7 +260,13 @@ export function createEvidenceNode({
   const finalId = evidenceId || nodeId || generateDeterministicId("ev", level, type, description);
   const finalSourceClass = sourceClass || (type === "ASTRONOMICAL" || type === "NATAL" ? "CALCULATED" : "TRADITIONAL_RULE");
   const finalStatus = calculationStatus || (value !== null ? "CALCULATED" : "INSUFFICIENT_DATA");
-  const finalConfidence = confidence ?? (value !== null ? 1.0 : 0.0);
+  const finalCalcConfidence = calculationConfidence ?? (finalStatus === "CALCULATED" ? 1.0 : 0.0);
+  const finalTradWeight = traditionalRuleWeight ?? ruleWeight ?? (typeof value === "number" ? value : (value !== null ? 1.0 : null));
+  const finalTradStrength = traditionalEvidenceStrength ?? finalTradWeight;
+  const finalEmpStrength = empiricalEvidenceStrength ?? null;
+  const finalPredProb = predictiveProbability ?? null;
+  // Backwards-compatible confidence: reflects calculation deterministic confidence, NOT empirical prediction probability
+  const finalConfidence = confidence ?? finalCalcConfidence;
   const finalProvenance = provenance || source || "EPHEMERIS_OR_SHASTRA";
   const finalGroup = independenceGroup || independenceGroupId || null;
   const finalContribution = contribution ?? (value !== null ? (typeof value === "number" ? value : 1.0) : 0.0);
@@ -271,6 +282,11 @@ export function createEvidenceNode({
     source,
     sourceClass: finalSourceClass,
     calculationStatus: finalStatus,
+    calculationConfidence: finalCalcConfidence,
+    traditionalRuleWeight: finalTradWeight,
+    traditionalEvidenceStrength: finalTradStrength,
+    empiricalEvidenceStrength: finalEmpStrength,
+    predictiveProbability: finalPredProb,
     confidence: finalConfidence,
     provenance: finalProvenance,
     independenceGroup: finalGroup,

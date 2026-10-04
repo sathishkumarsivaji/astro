@@ -11254,7 +11254,7 @@ export function calculateEducationTimingEvents(chartOrPlanets, maybeAscLong, may
     for (const md of ctx.dashaTable) {
       if (Array.isArray(md.bukthis)) {
         for (const bk of md.bukthis) {
-          const bkLord = bk.subLord || bk.lord || md.lord;
+          const bkLord = bk.subLord || bk.lord || null;
           const bkTa = bk.subTamil || bk.tamil || bkLord;
           const isMdKey = keyEduLords.includes(md.lord);
           const isBkKey = keyEduLords.includes(bkLord);
@@ -11464,7 +11464,7 @@ export function calculateProgenyTimingEvents(chartOrPlanets, maybeAscLong, maybe
     for (const md of ctx.dashaTable) {
       if (Array.isArray(md.bukthis)) {
         for (const bk of md.bukthis) {
-          const bkLord = bk.subLord || bk.lord || md.lord;
+          const bkLord = bk.subLord || bk.lord || null;
           const bkTa = bk.subTamil || bk.tamil || bkLord;
           const isMdKey = keyProgenyLords.includes(md.lord);
           const isBkKey = keyProgenyLords.includes(bkLord);
@@ -11683,7 +11683,7 @@ export function calculateHealthVulnerabilityEvents(chartOrPlanets, maybeAscLong,
     for (const md of ctx.dashaTable) {
       if (Array.isArray(md.bukthis)) {
         for (const bk of md.bukthis) {
-          const bkLord = bk.subLord || bk.lord || md.lord;
+          const bkLord = bk.subLord || bk.lord || null;
           const bkTa = bk.subTamil || bk.tamil || bkLord;
           const isMdDusthana = keyDusthanaLords.includes(md.lord);
           const isBkDusthana = keyDusthanaLords.includes(bkLord);
@@ -12183,9 +12183,9 @@ export function calculateComprehensiveRiskMatrix(planets = [], ascendantLong = 0
               startAge: md.startAge,
               endAge: md.endAge,
               mdLord: md.lord,
-              bkLord: md.lord,
+              bkLord: null,
               mdTamil: md.tamil || getLordTamil(md.lord),
-              bkTamil: md.tamil || getLordTamil(md.lord),
+              bkTamil: null,
               isCurrentOrUpcoming: md.endAge >= currentAge - 0.5
             });
           }

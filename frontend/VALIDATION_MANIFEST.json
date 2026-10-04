@@ -1,6 +1,6 @@
 {
   "manifestVersion": "2.3.0",
-  "generatedAt": "2026-10-04T08:36:54.671Z",
+  "generatedAt": "2026-10-04T09:49:44.313Z",
   "application": {
     "name": "AstroVerse",
     "version": "4.2.0-Scientific",
@@ -200,8 +200,8 @@
     "releaseGateStatus": "PASS"
   },
   "testSuiteSummary": {
-    "totalChecks": 1534,
-    "passed": 1534,
+    "totalChecks": 1621,
+    "passed": 1621,
     "failed": 0,
     "status": "ALL_PASSED",
     "suites": [
@@ -212,7 +212,7 @@
         "passed": 180,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 440
+        "durationMs": 439
       },
       {
         "name": "True Node Independent Benchmark",
@@ -221,7 +221,7 @@
         "passed": 24,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 367
+        "durationMs": 389
       },
       {
         "name": "Cross-System Consistency",
@@ -230,7 +230,7 @@
         "passed": 90,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 525
+        "durationMs": 526
       },
       {
         "name": "Prediction Lab & Backtesting",
@@ -239,7 +239,7 @@
         "passed": 77,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 837
+        "durationMs": 834
       },
       {
         "name": "Consultation Engine",
@@ -248,7 +248,7 @@
         "passed": 51,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 181
+        "durationMs": 172
       },
       {
         "name": "Multi-Turn QA Router",
@@ -257,7 +257,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2562
+        "durationMs": 2515
       },
       {
         "name": "PDF & Fingerprint Integrity",
@@ -266,7 +266,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1527
+        "durationMs": 1502
       },
       {
         "name": "Tamil Purity & Localization",
@@ -275,7 +275,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2142
+        "durationMs": 2061
       },
       {
         "name": "Detailed Report Anti-Fabrication",
@@ -284,7 +284,7 @@
         "passed": 104,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1539
+        "durationMs": 1494
       },
       {
         "name": "Convention Fixtures",
@@ -293,7 +293,7 @@
         "passed": 67,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 79
+        "durationMs": 77
       },
       {
         "name": "Golden Astronomy",
@@ -302,7 +302,7 @@
         "passed": 780,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1890
+        "durationMs": 1841
       },
       {
         "name": "Claim Graph",
@@ -311,7 +311,7 @@
         "passed": 15,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 146
+        "durationMs": 147
       },
       {
         "name": "Calendar Engine",
@@ -320,7 +320,7 @@
         "passed": 13,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 85
+        "durationMs": 86
       },
       {
         "name": "Differential Prediction Integrity",
@@ -329,7 +329,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 346
+        "durationMs": 339
       },
       {
         "name": "No Fabricated Calculated Values",
@@ -338,7 +338,52 @@
         "passed": 7,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1509
+        "durationMs": 1458
+      },
+      {
+        "name": "Behavioral Anti-Fabrication Invariants",
+        "command": "node test_behavioral_anti_fabrication.mjs",
+        "checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 162
+      },
+      {
+        "name": "V3 Statistical Integrity",
+        "command": "node test_v3_statistical_integrity.mjs",
+        "checks": 46,
+        "passed": 46,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 4572
+      },
+      {
+        "name": "V3 Full Cohort Execution",
+        "command": "node test_v3_full_cohort_execution.mjs",
+        "checks": 17,
+        "passed": 17,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 58
+      },
+      {
+        "name": "Harrell's C Censoring",
+        "command": "node test_harrells_c_censoring.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 83
+      },
+      {
+        "name": "P0 Negative Data Matrix",
+        "command": "node test_negative_data_matrix.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 111
       },
       {
         "name": "Backend Security & Push",
@@ -347,7 +392,7 @@
         "passed": 82,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 725
+        "durationMs": 906
       },
       {
         "name": "Validation Manifest Integrity",
@@ -356,7 +401,7 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 64
+        "durationMs": 62
       }
     ]
   }

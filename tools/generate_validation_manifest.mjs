@@ -49,6 +49,11 @@ const TEST_SUITES = [
   { name: "Calendar Engine", cwd: FRONTEND_DIR, cmd: "node test_calendar_engine.mjs" },
   { name: "Differential Prediction Integrity", cwd: FRONTEND_DIR, cmd: "node test_differential_prediction_integrity.mjs" },
   { name: "No Fabricated Calculated Values", cwd: FRONTEND_DIR, cmd: "node test_no_fabricated_calculated_values.mjs" },
+  { name: "Behavioral Anti-Fabrication Invariants", cwd: FRONTEND_DIR, cmd: "node test_behavioral_anti_fabrication.mjs" },
+  { name: "V3 Statistical Integrity", cwd: FRONTEND_DIR, cmd: "node test_v3_statistical_integrity.mjs" },
+  { name: "V3 Full Cohort Execution", cwd: FRONTEND_DIR, cmd: "node test_v3_full_cohort_execution.mjs" },
+  { name: "Harrell's C Censoring", cwd: FRONTEND_DIR, cmd: "node test_harrells_c_censoring.mjs" },
+  { name: "P0 Negative Data Matrix", cwd: FRONTEND_DIR, cmd: "node test_negative_data_matrix.mjs" },
   { name: "Backend Security & Push", cwd: BACKEND_DIR, cmd: "node test_backend.mjs" },
   { name: "Validation Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_validation_manifest_integrity.mjs" }
 ];

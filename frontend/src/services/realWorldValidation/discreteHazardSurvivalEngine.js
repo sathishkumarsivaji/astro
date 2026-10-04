@@ -64,6 +64,104 @@ export const ASTROLOGICAL_FEATURE_DEFINITIONS = Object.freeze([
   { id: "ASHTAKAVARGA_7TH_SAV", name: "7th House Ashtakavarga Bindus >= 28" }
 ]);
 
+export const FEATURE_STATE = Object.freeze({
+  CALCULATED_ZERO: "CALCULATED_ZERO",       // Evaluated and confirmed absent/zero
+  CALCULATED_NONZERO: "CALCULATED_NONZERO", // Evaluated and present (> 0)
+  MISSING: "MISSING",                       // Required underlying data was absent
+  NOT_APPLICABLE: "NOT_APPLICABLE",         // Construct not applicable for subject/period
+  CALCULATION_ERROR: "CALCULATION_ERROR"    // Computation threw error or invalid state
+});
+
+export function getFeatureValueWithState(features, featureId) {
+  if (!features || !(featureId in features)) {
+    return { value: null, state: FEATURE_STATE.NOT_APPLICABLE };
+  }
+  const raw = features[featureId];
+  if (raw === "NOT_APPLICABLE") {
+    return { value: null, state: FEATURE_STATE.NOT_APPLICABLE };
+  }
+  if (raw === null || raw === undefined) {
+    return { value: null, state: FEATURE_STATE.MISSING };
+  }
+  if (typeof raw !== "number" || !Number.isFinite(raw)) {
+    return { value: null, state: FEATURE_STATE.CALCULATION_ERROR };
+  }
+  if (raw === 0.0) {
+    return { value: 0.0, state: FEATURE_STATE.CALCULATED_ZERO };
+  }
+  return { value: raw, state: FEATURE_STATE.CALCULATED_NONZERO };
+}
+
+export function mulberry32(s) {
+  let t = s;
+  return function() {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), t | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Computes exact decimal event/censor age from record ground truth.
+ * Preserves groundTruthPrecision: 'DAY' when exact dates exist, 'YEAR' when only years are available.
+ *
+ * @param {Object} rec - Dataset record
+ * @returns {Object} { eventAge, censorAge, isEvent, groundTruthPrecision }
+ */
+export function extractSubjectEventTime(rec) {
+  const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
+  if (!bYear) {
+    return { eventAge: null, censorAge: null, isEvent: false, groundTruthPrecision: null };
+  }
+
+  const m = rec.firstDocumentedMarriage;
+  const isMarriageEvent = Boolean(m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT");
+
+  if (isMarriageEvent) {
+    const bDateStr = rec.birthDate;
+    const mDateStr = m.marriageDate || m.rawMarriageDate;
+    const hasExact = Boolean(m.hasExactMarriageDate || m.marriageDatePrecision === "DAY" || (mDateStr && /^\d{4}-\d{2}-\d{2}/.test(mDateStr)));
+
+    if (hasExact && bDateStr && mDateStr && /^\d{4}-\d{2}-\d{2}/.test(bDateStr) && /^\d{4}-\d{2}-\d{2}/.test(mDateStr)) {
+      const bTime = new Date(bDateStr).getTime();
+      const mTime = new Date(mDateStr).getTime();
+      if (!isNaN(bTime) && !isNaN(mTime) && mTime > bTime) {
+        const exactAge = (mTime - bTime) / (365.2425 * 24 * 60 * 60 * 1000);
+        if (exactAge >= 18 && exactAge <= 50) {
+          return { eventAge: Number(exactAge.toFixed(4)), censorAge: null, isEvent: true, groundTruthPrecision: "DAY" };
+        } else if (exactAge < 18) {
+          return { eventAge: null, censorAge: null, isEvent: false, groundTruthPrecision: null };
+        } else {
+          return { eventAge: null, censorAge: 50.0, isEvent: false, groundTruthPrecision: "DAY" };
+        }
+      }
+    }
+
+    const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
+    if (mYear && mYear >= bYear) {
+      const yearAge = mYear - bYear;
+      if (yearAge >= 18 && yearAge <= 50) {
+        return { eventAge: yearAge, censorAge: null, isEvent: true, groundTruthPrecision: "YEAR" };
+      } else if (yearAge < 18) {
+        return { eventAge: null, censorAge: null, isEvent: false, groundTruthPrecision: null };
+      } else {
+        return { eventAge: null, censorAge: 50.0, isEvent: false, groundTruthPrecision: "YEAR" };
+      }
+    }
+  }
+
+  if (rec.censoringStatus === "RIGHT_CENSORED") {
+    const cAge = rec.currentAge || 45.0;
+    return { eventAge: null, censorAge: cAge, isEvent: false, groundTruthPrecision: rec.currentAge ? "YEAR" : "ESTIMATED" };
+  }
+  if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
+    return { eventAge: null, censorAge: 50.0, isEvent: false, groundTruthPrecision: "STUDY_HORIZON" };
+  }
+
+  return { eventAge: null, censorAge: null, isEvent: false, groundTruthPrecision: null };
+}
+
 const SIGN_LORDS = Object.freeze([
   "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
   "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"
@@ -493,33 +591,12 @@ export function fitDemographicBaselineHazard(records, options = {}) {
   let totalCensoredCount = 0;
 
   for (const rec of records) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
 
-    let eventAge = null;
-    let isEvent = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) {
-          isEvent = true;
-        } else if (eventAge < 18) {
-          continue; // Pre-horizon event
-        } else {
-          censorAge = 50.0;
-        }
-      }
-    } else if (rec.censoringStatus === "RIGHT_CENSORED") {
-      censorAge = rec.currentAge || 45.0;
-    } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-      censorAge = 50.0;
-    } else {
-      continue; // Skip unknown or missing outcomes
-    }
+    const isEvent = timeInfo.isEvent;
+    const eventAge = timeInfo.eventAge;
+    const censorAge = timeInfo.censorAge;
 
     validSubjectsCount++;
     if (isEvent) totalEventsCount++; else totalCensoredCount++;
@@ -838,7 +915,40 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
   const modelType = options.modelType || "COMBINED_HAZARD"; // "COMBINED_HAZARD" or "MULTI_FACTOR"
   const lambda = options.lambda ?? 0.05;
   const maxRecords = options.maxRecords ?? trainRecords.length;
-  const recordsToFit = trainRecords.slice(0, maxRecords);
+
+  const sampleSeed = options.seed ?? 133742;
+  let recordsToFit;
+  let samplingMetadata;
+  if (maxRecords < trainRecords.length) {
+    const rng = mulberry32(sampleSeed);
+    const indices = Array.from({ length: trainRecords.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = indices[i];
+      indices[i] = indices[j];
+      indices[j] = t;
+    }
+    const selectedIndices = indices.slice(0, maxRecords).sort((a, b) => a - b);
+    recordsToFit = selectedIndices.map(i => trainRecords[i]);
+    const selectionHasher = crypto.createHash("sha256");
+    for (const idx of selectedIndices) selectionHasher.update(String(idx) + ",");
+    samplingMetadata = {
+      method: "DETERMINISTIC_RANDOM_SAMPLING",
+      seed: sampleSeed,
+      nSelected: maxRecords,
+      nAvailable: trainRecords.length,
+      selectionHash: selectionHasher.digest("hex")
+    };
+  } else {
+    recordsToFit = trainRecords;
+    samplingMetadata = {
+      method: "FULL_COHORT_NO_SAMPLING",
+      seed: null,
+      nSelected: trainRecords.length,
+      nAvailable: trainRecords.length,
+      selectionHash: "FULL_COHORT"
+    };
+  }
 
   // 1. Fit Demographic Baseline Hazard from TRAIN
   const baselineFit = fitDemographicBaselineHazard(recordsToFit);
@@ -850,29 +960,12 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
   let totalEvents = 0;
 
   for (const rec of recordsToFit) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
 
-    let eventAge = null;
-    let isEvent = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) isEvent = true;
-        else if (eventAge < 18) continue;
-        else censorAge = 50.0;
-      }
-    } else if (rec.censoringStatus === "RIGHT_CENSORED") {
-      censorAge = rec.currentAge || 45.0;
-    } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-      censorAge = 50.0;
-    } else {
-      continue;
-    }
+    const isEvent = timeInfo.isEvent;
+    const eventAge = timeInfo.eventAge;
+    const censorAge = timeInfo.censorAge;
 
     evaluatedSubjects++;
     if (isEvent) totalEvents++;
@@ -1009,6 +1102,7 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
       trainingDatasetHash,
       coefficientHash,
       modelFitHash,
+      samplingMetadata,
       fittedAt: new Date().toISOString()
     }
   };
@@ -1041,33 +1135,25 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
     ASHTAKAVARGA_7TH_SAV: []
   };
 
+  const featureMissingCounts = {
+    DASHA_7TH_LORD: 0,
+    TRANSIT_JUPITER_7TH: 0,
+    TRANSIT_SATURN_7TH: 0,
+    D9_NAVAMSHA_SUPPORT: 0,
+    VENUS_NATAL_PROMISE: 0,
+    ASHTAKAVARGA_7TH_SAV: 0
+  };
+
   const cohortSubjects = [];
   let totalEventsInCohort = 0;
 
   for (const rec of cohort) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
 
-    let eventAge = null;
-    let isEvent = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) isEvent = true;
-        else if (eventAge < 18) continue;
-        else censorAge = 50.0;
-      }
-    } else if (rec.censoringStatus === "RIGHT_CENSORED") {
-      censorAge = rec.currentAge || 45.0;
-    } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-      censorAge = 50.0;
-    } else {
-      continue;
-    }
+    const isEvent = timeInfo.isEvent;
+    const eventAge = timeInfo.eventAge;
+    const censorAge = timeInfo.censorAge;
 
     if (isEvent) totalEventsInCohort++;
 
@@ -1095,10 +1181,13 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
 
         for (const def of ASTROLOGICAL_FEATURE_DEFINITIONS) {
           const rawVal = feat.features[def.id];
-          const val = typeof rawVal === "number" && Number.isFinite(rawVal) ? rawVal : 0.0;
+          if (rawVal === null || rawVal === undefined || !Number.isFinite(rawVal)) {
+            featureMissingCounts[def.id]++;
+            continue; // Complete case: do not impute zero
+          }
           featureData[def.id].push({
             y: isBinEvent ? 1 : 0,
-            x: [val],
+            x: [rawVal],
             offset
           });
         }
@@ -1116,6 +1205,9 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
     const exposedPoints = points.filter(p => p.x[0] > 0);
     const unexposedPoints = points.filter(p => p.x[0] === 0);
     const exposedEvents = exposedPoints.filter(p => p.y === 1).length;
+    const missingCount = featureMissingCounts[def.id] || 0;
+    const totalPotential = points.length + missingCount;
+    const missingness = totalPotential > 0 ? Number((missingCount / totalPotential).toFixed(4)) : 0;
 
     if (points.length < 20 || exposedEvents < 2) {
       return {
@@ -1127,7 +1219,9 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
         unexposedCount: unexposedPoints.length,
         personTime: points.length,
         effectiveSampleSize: points.length,
-        missingness: 0,
+        missingness,
+        missingCount,
+        handlingProtocol: "COMPLETE_CASE_ANALYSIS_NO_ZERO_IMPUTATION",
         oddsRatio: null,
         coefficient: null,
         standardError: null,
@@ -1152,9 +1246,12 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
     // Compute Harrell's C-index using fitted beta on subject risk scores with right censoring
     const subjectRiskCases = [];
     for (const sub of cohortSubjects) {
-      const featVal = sub.intervalFeatures[sub.exitK]?.features?.[def.id] ?? 0.0;
+      const rawFeatVal = sub.intervalFeatures[sub.exitK]?.features?.[def.id];
+      if (rawFeatVal === null || rawFeatVal === undefined || !Number.isFinite(rawFeatVal)) {
+        continue;
+      }
       const offset = baselineTable[sub.exitK]?.logit ?? 0.0;
-      const riskScore = offset + (beta * featVal);
+      const riskScore = offset + (beta * rawFeatVal);
       subjectRiskCases.push({
         time: sub.exitAge,
         isEvent: sub.isEvent,
@@ -1204,14 +1301,10 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
   const modelType = options.modelType || "COMBINED_HAZARD";
   const classificationThreshold = options.classificationThreshold ?? 0.50;
   const baselineTable = options.baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD;
-
-  // Coefficients (fitted on TRAIN)
-  const coefs = options.coefficients || options.modelFit?.coefficients || {};
-  const rawBeta = options.betaAstro ?? coefs.betaAstro;
-  if ((rawBeta === undefined || rawBeta === null) && modelType === "COMBINED_HAZARD") {
+  if (!Array.isArray(baselineTable) || baselineTable.length !== SURVIVAL_AGE_BINS.length) {
     return {
       status: "MODEL_ARTIFACT_MISSING",
-      error: "Missing required fitted beta coefficients (betaAstro)",
+      error: "Missing or invalid demographic baseline hazard table",
       modelType,
       betaAstro: null,
       occurrenceProbability: null,
@@ -1224,13 +1317,89 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
       intervals: []
     };
   }
-  const betaAstro = (rawBeta !== undefined && rawBeta !== null) ? Number(rawBeta) : 0.0;
-  const betaDasha = options.betaDasha ?? coefs.betaDasha ?? 0.0;
-  const betaTransitJup = options.betaTransitJup ?? coefs.betaTransitJup ?? 0.0;
-  const betaTransitSat = options.betaTransitSat ?? coefs.betaTransitSat ?? 0.0;
-  const betaD9 = options.betaD9 ?? coefs.betaD9 ?? 0.0;
-  const betaPromise = options.betaPromise ?? coefs.betaPromise ?? 0.0;
-  const betaSav = options.betaSav ?? coefs.betaSav ?? 0.0;
+
+  // Coefficients (fitted on TRAIN)
+  const coefs = options.coefficients || options.modelFit?.coefficients || {};
+  let betaAstro = null;
+  let betaDasha = null, betaTransitJup = null, betaTransitSat = null, betaD9 = null, betaPromise = null, betaSav = null;
+
+  if (modelType === "COMBINED_HAZARD") {
+    const rawBeta = options.betaAstro ?? coefs.betaAstro;
+    if (rawBeta === undefined || rawBeta === null || !Number.isFinite(Number(rawBeta))) {
+      return {
+        status: "MODEL_ARTIFACT_MISSING",
+        error: "Missing required fitted beta coefficients (betaAstro)",
+        modelType,
+        betaAstro: null,
+        occurrenceProbability: null,
+        occurrencePrediction: null,
+        survivalAt50: null,
+        expectedTimingAge: null,
+        peakTimingAge: null,
+        interval80: null,
+        interval50: null,
+        intervals: []
+      };
+    }
+    betaAstro = Number(rawBeta);
+  } else if (modelType === "MULTI_FACTOR") {
+    const rawDasha = options.betaDasha ?? coefs.betaDasha;
+    const rawTJup = options.betaTransitJup ?? coefs.betaTransitJup;
+    const rawTSat = options.betaTransitSat ?? coefs.betaTransitSat;
+    const rawD9 = options.betaD9 ?? coefs.betaD9;
+    const rawPromise = options.betaPromise ?? coefs.betaPromise;
+    const rawSav = options.betaSav ?? coefs.betaSav;
+
+    const mfCoefs = [
+      ["betaDasha", rawDasha],
+      ["betaTransitJup", rawTJup],
+      ["betaTransitSat", rawTSat],
+      ["betaD9", rawD9],
+      ["betaPromise", rawPromise],
+      ["betaSav", rawSav]
+    ];
+
+    for (const [name, val] of mfCoefs) {
+      if (val === undefined || val === null || !Number.isFinite(Number(val))) {
+        return {
+          status: "MODEL_ARTIFACT_MISSING",
+          error: `Missing required fitted multi-factor coefficient (${name})`,
+          modelType,
+          betaAstro: null,
+          occurrenceProbability: null,
+          occurrencePrediction: null,
+          survivalAt50: null,
+          expectedTimingAge: null,
+          peakTimingAge: null,
+          interval80: null,
+          interval50: null,
+          intervals: []
+        };
+      }
+    }
+
+    betaDasha = Number(rawDasha);
+    betaTransitJup = Number(rawTJup);
+    betaTransitSat = Number(rawTSat);
+    betaD9 = Number(rawD9);
+    betaPromise = Number(rawPromise);
+    betaSav = Number(rawSav);
+  } else if (modelType !== "DEMOGRAPHIC_AGE_ONLY" && modelType !== "ASTROLOGY_ONLY") {
+    return {
+      status: "MODEL_ARTIFACT_INVALID",
+      error: `Unrecognized modelType: ${modelType}`,
+      modelType,
+      betaAstro: null,
+      occurrenceProbability: null,
+      occurrencePrediction: null,
+      survivalAt50: null,
+      expectedTimingAge: null,
+      peakTimingAge: null,
+      interval80: null,
+      interval50: null,
+      intervals: []
+    };
+  }
 
   const intervalFeatures = extractIntervalAstrologicalFeatures(chartData, candidateWindows, options);
   if (!intervalFeatures || intervalFeatures.length === 0) {
@@ -1268,13 +1437,37 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
     } else if (modelType === "ASTROLOGY_ONLY") {
       logitH = -1.5 + (1.5 * (feat.compositeScore - 0.5));
     } else if (modelType === "MULTI_FACTOR") {
+      const sDasha = getFeatureValueWithState(feat.features, "DASHA_7TH_LORD");
+      const sJup = getFeatureValueWithState(feat.features, "TRANSIT_JUPITER_7TH");
+      const sSat = getFeatureValueWithState(feat.features, "TRANSIT_SATURN_7TH");
+      const sD9 = getFeatureValueWithState(feat.features, "D9_NAVAMSHA_SUPPORT");
+      const sPromise = getFeatureValueWithState(feat.features, "VENUS_NATAL_PROMISE");
+      const sSav = getFeatureValueWithState(feat.features, "ASHTAKAVARGA_7TH_SAV");
+
+      if (sPromise.state === FEATURE_STATE.MISSING || sSav.state === FEATURE_STATE.MISSING) {
+        return {
+          status: "INSUFFICIENT_DATA",
+          error: "Required natal astrological features (Venus or SAV) missing for multi-factor model",
+          modelType,
+          betaAstro,
+          occurrenceProbability: null,
+          occurrencePrediction: null,
+          survivalAt50: null,
+          expectedTimingAge: null,
+          peakTimingAge: null,
+          interval80: null,
+          interval50: null,
+          intervals: []
+        };
+      }
+
       logitH = baseLogit +
-        (betaDasha * feat.features.DASHA_7TH_LORD) +
-        (betaTransitJup * feat.features.TRANSIT_JUPITER_7TH) +
-        (betaTransitSat * feat.features.TRANSIT_SATURN_7TH) +
-        (betaD9 * feat.features.D9_NAVAMSHA_SUPPORT) +
-        (betaPromise * (feat.features.VENUS_NATAL_PROMISE - 0.5)) +
-        (betaSav * feat.features.ASHTAKAVARGA_7TH_SAV);
+        (betaDasha * sDasha.value) +
+        (betaTransitJup * sJup.value) +
+        (betaTransitSat * sSat.value) +
+        (betaD9 * sD9.value) +
+        (betaPromise * (sPromise.value - 0.5)) +
+        (betaSav * sSav.value);
     } else {
       // COMBINED_HAZARD (Standard V3)
       logitH = baseLogit + (betaAstro * (feat.compositeScore - meanComposite));
@@ -1419,43 +1612,17 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   const brierScores = [];
 
   for (const rec of records) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
-
-    let eventAge = null;
-    let isEvent = false;
-    let isCensored = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) {
-          isEvent = true;
-        } else if (eventAge < 18) {
-          continue; // Pre-horizon event
-        } else {
-          isCensored = true;
-          censorAge = 50.0;
-        }
-      }
-    }
-
-    if (!isEvent && !isCensored) {
-      if (rec.censoringStatus === "RIGHT_CENSORED" || (rec.currentAge && rec.currentAge < 50)) {
-        isCensored = true;
-        censorAge = rec.currentAge || 45.0;
-      } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-        isCensored = true;
-        censorAge = 50.0;
-      }
-    }
-
     if (rec.censoringStatus === "MISSING_OUTCOME" || rec.censoringStatus === "UNKNOWN") {
       continue;
     }
+
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
+
+    const isEvent = timeInfo.isEvent;
+    const isCensored = !isEvent;
+    const eventAge = timeInfo.eventAge;
+    const censorAge = timeInfo.censorAge;
 
     totalSubjects++;
     if (isEvent) eventSubjects++; else censoredSubjects++;
@@ -1648,36 +1815,52 @@ export function fitAllAblationModels(trainRecords, chartProvider, baselineTable 
   const baseTable = baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD;
   const lambda = options.lambda ?? 0.05;
   const maxRecords = options.maxRecords ?? trainRecords.length;
-  const sampleTrain = trainRecords.slice(0, maxRecords);
+
+  const sampleSeed = options.seed ?? 133742;
+  let sampleTrain;
+  let samplingMetadata;
+  if (maxRecords < trainRecords.length) {
+    const rng = mulberry32(sampleSeed);
+    const indices = Array.from({ length: trainRecords.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = indices[i];
+      indices[i] = indices[j];
+      indices[j] = t;
+    }
+    const selectedIndices = indices.slice(0, maxRecords).sort((a, b) => a - b);
+    sampleTrain = selectedIndices.map(i => trainRecords[i]);
+    const selectionHasher = crypto.createHash("sha256");
+    for (const idx of selectedIndices) selectionHasher.update(String(idx) + ",");
+    samplingMetadata = {
+      method: "DETERMINISTIC_RANDOM_SAMPLING",
+      seed: sampleSeed,
+      nSelected: maxRecords,
+      nAvailable: trainRecords.length,
+      selectionHash: selectionHasher.digest("hex")
+    };
+  } else {
+    sampleTrain = trainRecords;
+    samplingMetadata = {
+      method: "FULL_COHORT_NO_SAMPLING",
+      seed: null,
+      nSelected: trainRecords.length,
+      nAvailable: trainRecords.length,
+      selectionHash: "FULL_COHORT"
+    };
+  }
 
   const trainSubjects = [];
   let meanCompSum = 0;
   let meanCompN = 0;
 
   for (const rec of sampleTrain) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
 
-    let eventAge = null;
-    let isEvent = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) isEvent = true;
-        else if (eventAge < 18) continue;
-        else censorAge = 50.0;
-      }
-    } else if (rec.censoringStatus === "RIGHT_CENSORED") {
-      censorAge = rec.currentAge || 45.0;
-    } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-      censorAge = 50.0;
-    } else {
-      continue;
-    }
+    const isEvent = timeInfo.isEvent;
+    const eventAge = timeInfo.eventAge;
+    const censorAge = timeInfo.censorAge;
 
     const chart = chartProvider(rec);
     const windows = chart?._marriageTimingEvents?.candidateWindows || [];
@@ -1687,7 +1870,7 @@ export function fitAllAblationModels(trainRecords, chartProvider, baselineTable 
     meanCompN++;
 
     const exitAge = isEvent ? eventAge : censorAge;
-    trainSubjects.push({ isEvent, exitAge, intervalFeatures, meanComp });
+    trainSubjects.push({ isEvent, eventAge, exitAge, intervalFeatures, meanComp });
   }
 
   const overallMeanComp = meanCompN > 0 ? meanCompSum / meanCompN : 0.5;
@@ -1703,6 +1886,9 @@ export function fitAllAblationModels(trainRecords, chartProvider, baselineTable 
           const feat = sub.intervalFeatures[k];
           const offset = offsetFn(k);
           const x = extractor(feat, sub);
+          if (!x || !Array.isArray(x) || x.some(v => v === null || v === undefined || !Number.isFinite(v))) {
+            continue;
+          }
           points.push({ y: isBinEvent ? 1 : 0, x, offset });
           if (isBinEvent) break;
         } else {
@@ -1710,6 +1896,7 @@ export function fitAllAblationModels(trainRecords, chartProvider, baselineTable 
         }
       }
     }
+    if (points.length === 0) return { beta: new Array(pCount).fill(0.0), se: new Array(pCount).fill(1.0) };
     const fitRes = solveRegularizedLogisticHazard(points, pCount, lambda);
     return { beta: fitRes.beta, se: fitRes.standardErrors };
   }
@@ -1780,29 +1967,12 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
   // Extract features for eval cohort once
   const evalSubjects = [];
   for (const rec of sampleEval) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
 
-    let eventAge = null;
-    let isEvent = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) isEvent = true;
-        else if (eventAge < 18) continue;
-        else censorAge = 50.0;
-      }
-    } else if (rec.censoringStatus === "RIGHT_CENSORED") {
-      censorAge = rec.currentAge || 45.0;
-    } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-      censorAge = 50.0;
-    } else {
-      continue;
-    }
+    const isEvent = timeInfo.isEvent;
+    const eventAge = timeInfo.eventAge;
+    const censorAge = timeInfo.censorAge;
 
     const chart = chartProvider(rec);
     const windows = chart?._marriageTimingEvents?.candidateWindows || [];
@@ -1825,9 +1995,12 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
   // Evaluate each model
   let model0LogLik = 0;
 
-  return ABLATION_MODEL_DEFINITIONS.map(mDef => {
-    const fit = modelFits[mDef.id] || { beta: [] };
-    const beta = fit.beta || [];
+  const modelResults = ABLATION_MODEL_DEFINITIONS.map(mDef => {
+    const fit = modelFits[mDef.id];
+    if (mDef.params > 0 && (!fit || !Array.isArray(fit.beta) || fit.beta.length < mDef.params)) {
+      throw new Error(`MODEL_ARTIFACT_MISSING: Model fit for ${mDef.id} is missing required ${mDef.params} parameters`);
+    }
+    const beta = fit?.beta || [];
     let logLik = 0;
     const timingErrors = [];
     const concordanceCases = [];
@@ -1849,37 +2022,43 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
           logitH = baseTable[k].logit;
         } else if (mDef.id === "MODEL_1") {
           const compDiff = feat.compositeScore - (Number.isFinite(modelFits.overallMeanComp) ? modelFits.overallMeanComp : 0.0);
-          logitH = -1.5 + (beta[0] ?? 0.0) * compDiff;
+          logitH = -1.5 + beta[0] * compDiff;
         } else {
           const pDiff = (typeof feat.features.VENUS_NATAL_PROMISE === "number" && Number.isFinite(feat.features.VENUS_NATAL_PROMISE))
             ? feat.features.VENUS_NATAL_PROMISE - 0.5
             : 0.0;
+          const dashaVal = feat.features.DASHA_7TH_LORD !== null && feat.features.DASHA_7TH_LORD !== undefined ? feat.features.DASHA_7TH_LORD : 0.0;
+          const jupVal = feat.features.TRANSIT_JUPITER_7TH !== null && feat.features.TRANSIT_JUPITER_7TH !== undefined ? feat.features.TRANSIT_JUPITER_7TH : 0.0;
+          const satVal = feat.features.TRANSIT_SATURN_7TH !== null && feat.features.TRANSIT_SATURN_7TH !== undefined ? feat.features.TRANSIT_SATURN_7TH : 0.0;
+          const d9Val = feat.features.D9_NAVAMSHA_SUPPORT !== null && feat.features.D9_NAVAMSHA_SUPPORT !== undefined ? feat.features.D9_NAVAMSHA_SUPPORT : 0.0;
+          const savVal = typeof feat.features.ASHTAKAVARGA_7TH_SAV === "number" ? feat.features.ASHTAKAVARGA_7TH_SAV : 0.0;
+
           if (mDef.id === "MODEL_2") {
-            logitH = baseTable[k].logit + (beta[0] ?? 0.0) * pDiff;
+            logitH = baseTable[k].logit + beta[0] * pDiff;
           } else if (mDef.id === "MODEL_3") {
-            logitH = baseTable[k].logit + (beta[0] ?? 0.0) * pDiff + (beta[1] ?? 0.0) * (feat.features.DASHA_7TH_LORD ?? 0.0);
+            logitH = baseTable[k].logit + beta[0] * pDiff + beta[1] * dashaVal;
           } else if (mDef.id === "MODEL_4") {
             logitH = baseTable[k].logit +
-              (beta[0] ?? 0.0) * pDiff +
-              (beta[1] ?? 0.0) * (feat.features.DASHA_7TH_LORD ?? 0.0) +
-              (beta[2] ?? 0.0) * (feat.features.TRANSIT_JUPITER_7TH ?? 0.0) +
-              (beta[3] ?? 0.0) * (feat.features.TRANSIT_SATURN_7TH ?? 0.0);
+              beta[0] * pDiff +
+              beta[1] * dashaVal +
+              beta[2] * jupVal +
+              beta[3] * satVal;
           } else if (mDef.id === "MODEL_5") {
             logitH = baseTable[k].logit +
-              (beta[0] ?? 0.0) * pDiff +
-              (beta[1] ?? 0.0) * (feat.features.DASHA_7TH_LORD ?? 0.0) +
-              (beta[2] ?? 0.0) * (feat.features.TRANSIT_JUPITER_7TH ?? 0.0) +
-              (beta[3] ?? 0.0) * (feat.features.TRANSIT_SATURN_7TH ?? 0.0) +
-              (beta[4] ?? 0.0) * (feat.features.D9_NAVAMSHA_SUPPORT ?? 0.0);
+              beta[0] * pDiff +
+              beta[1] * dashaVal +
+              beta[2] * jupVal +
+              beta[3] * satVal +
+              beta[4] * d9Val;
           } else {
             // MODEL_6
             logitH = baseTable[k].logit +
-              (beta[0] ?? 0.0) * pDiff +
-              (beta[1] ?? 0.0) * (feat.features.DASHA_7TH_LORD ?? 0.0) +
-              (beta[2] ?? 0.0) * (feat.features.TRANSIT_JUPITER_7TH ?? 0.0) +
-              (beta[3] ?? 0.0) * (feat.features.TRANSIT_SATURN_7TH ?? 0.0) +
-              (beta[4] ?? 0.0) * (feat.features.D9_NAVAMSHA_SUPPORT ?? 0.0) +
-              (beta[5] ?? 0.0) * (feat.features.ASHTAKAVARGA_7TH_SAV ?? 0.0);
+              beta[0] * pDiff +
+              beta[1] * dashaVal +
+              beta[2] * jupVal +
+              beta[3] * satVal +
+              beta[4] * d9Val +
+              beta[5] * savVal;
           }
         }
 
@@ -2031,6 +2210,49 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
       calibrationStatus: "EMPIRICAL_PROPORTIONAL"
     };
   });
+
+  const modelMap = {};
+  for (const res of modelResults) {
+    modelMap[res.modelId] = res;
+  }
+
+  const pairDefinitions = [
+    { target: "MODEL_2", base: "MODEL_0", hypothesis: "D1 Promise adds predictive signal beyond demographic baseline" },
+    { target: "MODEL_3", base: "MODEL_2", hypothesis: "Dasha timing improves resolution beyond natal promise" },
+    { target: "MODEL_4", base: "MODEL_3", hypothesis: "Transits provide incremental precision beyond Dasha" },
+    { target: "MODEL_5", base: "MODEL_4", hypothesis: "D9 Navamsha support refines transit windows" },
+    { target: "MODEL_6", base: "MODEL_5", hypothesis: "Ashtakavarga SAV bindus refine strength" },
+    { target: "MODEL_1", base: "MODEL_0", hypothesis: "Astrology-only vs Demographic-only non-nested comparison" },
+    { target: "MODEL_6", base: "MODEL_0", hypothesis: "Full astrological specification vs pure demographic baseline" }
+  ];
+
+  const pairedComparisons = pairDefinitions.map(pd => {
+    const t = modelMap[pd.target];
+    const b = modelMap[pd.base];
+    if (!t || !b) return null;
+    const deltaCIndex = (t.cIndex !== null && b.cIndex !== null) ? Number((t.cIndex - b.cIndex).toFixed(4)) : null;
+    const deltaMAE = (t.mae !== null && b.mae !== null) ? Number((t.mae - b.mae).toFixed(2)) : null;
+    const deltaAIC = (t.aic !== null && b.aic !== null) ? Number((t.aic - b.aic).toFixed(2)) : null;
+    const deltaBIC = (t.bic !== null && b.bic !== null) ? Number((t.bic - b.bic).toFixed(2)) : null;
+    const deltaLogLik = (t.logLikelihood !== null && b.logLikelihood !== null) ? Number((t.logLikelihood - b.logLikelihood).toFixed(2)) : null;
+
+    return {
+      targetModel: pd.target,
+      baseModel: pd.base,
+      hypothesis: pd.hypothesis,
+      deltaCIndex,
+      deltaMAE,
+      deltaAIC,
+      deltaBIC,
+      deltaLogLik,
+      cIndexImproved: deltaCIndex !== null ? deltaCIndex > 0 : false,
+      maeImproved: deltaMAE !== null ? deltaMAE < 0 : false,
+      aicFavored: deltaAIC !== null ? deltaAIC < 0 : false
+    };
+  }).filter(Boolean);
+
+  modelResults.pairedComparisons = pairedComparisons;
+  return modelResults;
 }
 
 // ---------------------------------------------------------------------------
@@ -2048,54 +2270,29 @@ export function runDiscreteHazardPermutationTest(cohort, chartProvider, options 
     ? cohort.slice(0, options.maxRecords)
     : cohort;
 
-  // Deterministic Mulberry32 PRNG
-  function createPrng(s) {
-    let t = s;
-    return function() {
-      t += 0x6D2B79F5;
-      let r = Math.imul(t ^ (t >>> 15), t | 1);
-      r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  const prng = createPrng(seed);
+  const prng = mulberry32(seed);
 
   // 1. Extract subject risk scores and actual outcome labels
   const subjectRisks = [];
   const actualOutcomes = [];
 
   for (const rec of sample) {
-    const bYear = rec.birthYear || (rec.birthDate ? parseInt(rec.birthDate.slice(0, 4), 10) : null);
-    if (!bYear) continue;
+    const timeInfo = extractSubjectEventTime(rec);
+    if (!timeInfo.isEvent && timeInfo.censorAge === null) continue;
 
-    let eventAge = null;
-    let isEvent = false;
-    let censorAge = 50.0;
-
-    const m = rec.firstDocumentedMarriage;
-    if (m && rec.hasDocumentedMarriage !== false && rec.censoringStatus === "EVENT") {
-      const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
-      if (mYear && mYear >= bYear) {
-        eventAge = mYear - bYear;
-        if (eventAge >= 18 && eventAge <= 50) isEvent = true;
-        else if (eventAge < 18) continue;
-        else censorAge = 50.0;
-      }
-    } else if (rec.censoringStatus === "RIGHT_CENSORED") {
-      censorAge = rec.currentAge || 45.0;
-    } else if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
-      censorAge = 50.0;
-    } else {
-      continue;
-    }
+    const isEvent = timeInfo.isEvent;
+    const time = isEvent ? timeInfo.eventAge : timeInfo.censorAge;
 
     const chart = chartProvider(rec);
     const windows = chart?._marriageTimingEvents?.candidateWindows || [];
-    const pred = predictDiscreteHazardSurvival(chart, windows);
+    const pred = predictDiscreteHazardSurvival(chart, windows, {
+      modelType: options.modelType || "COMBINED_HAZARD",
+      betaAstro: options.betaAstro ?? options.modelFit?.coefficients?.betaAstro ?? 0.05,
+      classificationThreshold: options.classificationThreshold ?? 0.50,
+      baselineTable: options.baselineTable || TRAIN_DEMOGRAPHIC_BASELINE_HAZARD
+    });
 
-    const time = isEvent ? eventAge : censorAge;
-    const riskScore = -pred.expectedTimingAge;
+    const riskScore = pred.expectedTimingAge !== null ? -pred.expectedTimingAge : -35.0;
 
     subjectRisks.push(riskScore);
     actualOutcomes.push({ time, isEvent });
@@ -2125,7 +2322,7 @@ export function runDiscreteHazardPermutationTest(cohort, chartProvider, options 
 
   // 3. Genuine outcome permutation test: shuffle actual outcomes across subjects
   const nullDistCIndex = [];
-  const permsToRun = Math.min(numPermutations, 2000);
+  const permsToRun = numPermutations;
 
   for (let p = 0; p < permsToRun; p++) {
     // Fisher-Yates shuffle of actual outcome pairs
@@ -2161,7 +2358,7 @@ export function runDiscreteHazardPermutationTest(cohort, chartProvider, options 
   const empiricalPValue = (extremeCount + 1) / (nullDistCIndex.length + 1);
 
   return {
-    numPermutations,
+    numPermutations: permsToRun,
     seed,
     observedStatistic: Number(observedCIndex.toFixed(4)),
     nullMean: Number(nullMean.toFixed(4)),

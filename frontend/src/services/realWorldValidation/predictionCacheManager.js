@@ -6,14 +6,22 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let currentAstroEngineHash = null;
 let currentPredictionEngineHash = null;
 let currentCalibrationModelHash = null;
 let currentCalibrationInputHash = null;
 let currentTrainingDatasetHash = null;
+let currentModelCoefficientsHash = null;
+
 const predictionSchemaVersion = '3.0';
 const modelVersion = '2.2.0';
 const astronomyEngineVersion = '4.2.0';
 const historicalTimeEngineVersion = '2.1.0';
+const featureSchemaVersion = '3.0';
+const ruleVersion = '3.0.0';
+const ephemerisVersion = 'AstronomyEngine/VSOP87';
+const dashaEngineVersion = '2.2.0';
+const resolutionClassifierVersion = '2.0.0';
 
 let predictionCache = {};
 let cacheStats = { hits: 0, misses: 0, invalidated: 0, total: 0 };
@@ -32,15 +40,27 @@ function computeFileHash(filePath) {
 export function initCacheManager(options = {}) {
   const astroEnginePath = options.astroEnginePath || path.resolve(__dirname, '../astroEngine.js');
   const evalEnginePath = options.evalEnginePath || path.resolve(__dirname, './empiricalEvaluationEngine.js');
+  const hazardEnginePath = options.hazardEnginePath || path.resolve(__dirname, './discreteHazardSurvivalEngine.js');
   const calibrationModelPath = options.calibrationModelPath || path.resolve(__dirname, '../../../../data/real_world_validation/results/calibration_model.json');
   const trainingDatasetPath = options.trainingDatasetPath || path.resolve(__dirname, '../../../../data/real_world_validation/splits/train.json');
+  const benchmarkResultsPath = options.benchmarkResultsPath || path.resolve(__dirname, '../../config/latestBenchmarkResults.json');
 
-  const h1 = computeFileHash(astroEnginePath) || '';
+  currentAstroEngineHash = computeFileHash(astroEnginePath) || '';
   const h2 = computeFileHash(evalEnginePath) || '';
-  currentPredictionEngineHash = crypto.createHash('sha256').update(h1 + h2).digest('hex');
+  const h3 = computeFileHash(hazardEnginePath) || '';
+  currentPredictionEngineHash = crypto.createHash('sha256').update(currentAstroEngineHash + h2 + h3).digest('hex');
   
   currentCalibrationModelHash = computeFileHash(calibrationModelPath);
   currentTrainingDatasetHash = computeFileHash(trainingDatasetPath);
+
+  if (fs.existsSync(benchmarkResultsPath)) {
+    try {
+      const benchData = JSON.parse(fs.readFileSync(benchmarkResultsPath, 'utf8'));
+      currentModelCoefficientsHash = benchData.discreteHazardModelV3?.coefficientHash || benchData.discreteHazardModelV3?.modelFitHash || null;
+    } catch {
+      currentModelCoefficientsHash = null;
+    }
+  }
 
   if (fs.existsSync(calibrationModelPath)) {
     try {
@@ -67,8 +87,12 @@ export function computeInputHash(record) {
     record.houseSystem || 'placidus',
     record.system || 'vedic',
     record.historicalTimeStandard || 'STANDARD_TIME',
-    record.calculationVersion || '4.2.0',
-    record.ruleVersion || '3.0.0'
+    record.calculationVersion || astronomyEngineVersion,
+    record.ruleVersion || ruleVersion,
+    featureSchemaVersion,
+    dashaEngineVersion,
+    resolutionClassifierVersion,
+    ephemerisVersion
   ].join('|');
   return crypto.createHash('sha256').update(payload).digest('hex');
 }
@@ -97,13 +121,20 @@ export function getCachedPrediction(recordId, inputHash) {
   
   const isValid = 
     cached.inputHash === inputHash &&
+    (!currentAstroEngineHash || cached.astroEngineHash === currentAstroEngineHash) &&
     cached.predictionEngineHash === currentPredictionEngineHash &&
     cached.calibrationModelHash === currentCalibrationModelHash &&
     cached.calibrationInputHash === currentCalibrationInputHash &&
     cached.trainingDatasetHash === currentTrainingDatasetHash &&
+    (!currentModelCoefficientsHash || cached.modelCoefficientsHash === currentModelCoefficientsHash) &&
     cached.astronomyEngineVersion === astronomyEngineVersion &&
     cached.historicalTimeEngineVersion === historicalTimeEngineVersion &&
     cached.predictionSchemaVersion === predictionSchemaVersion &&
+    cached.featureSchemaVersion === featureSchemaVersion &&
+    cached.ruleVersion === ruleVersion &&
+    cached.ephemerisVersion === ephemerisVersion &&
+    cached.dashaEngineVersion === dashaEngineVersion &&
+    cached.resolutionClassifierVersion === resolutionClassifierVersion &&
     cached.modelVersion === modelVersion;
     
   if (!isValid) {
@@ -132,13 +163,20 @@ export function setCachedPrediction(recordId, inputHash, prediction) {
   predictionCache[recordId] = {
     recordId,
     inputHash,
+    astroEngineHash: currentAstroEngineHash,
     predictionEngineHash: currentPredictionEngineHash,
     calibrationModelHash: currentCalibrationModelHash,
     calibrationInputHash: currentCalibrationInputHash,
     trainingDatasetHash: currentTrainingDatasetHash,
+    modelCoefficientsHash: currentModelCoefficientsHash,
     astronomyEngineVersion,
     historicalTimeEngineVersion,
     predictionSchemaVersion,
+    featureSchemaVersion,
+    ruleVersion,
+    ephemerisVersion,
+    dashaEngineVersion,
+    resolutionClassifierVersion,
     modelVersion,
     generatedAt: new Date().toISOString(),
     occCommitment,
@@ -201,3 +239,25 @@ export function invalidateAll() {
   predictionCache = {};
   cacheStats = { hits: 0, misses: 0, invalidated: 0, total: 0 };
 }
+
+export function computeSystemFingerprint(overrides = {}) {
+  const parts = [
+    overrides.astroEngineHash ?? currentAstroEngineHash ?? '',
+    overrides.predictionEngineHash ?? currentPredictionEngineHash ?? '',
+    overrides.calibrationModelHash ?? currentCalibrationModelHash ?? '',
+    overrides.calibrationInputHash ?? currentCalibrationInputHash ?? '',
+    overrides.trainingDatasetHash ?? currentTrainingDatasetHash ?? '',
+    overrides.modelCoefficientsHash ?? currentModelCoefficientsHash ?? '',
+    overrides.astronomyEngineVersion ?? astronomyEngineVersion,
+    overrides.historicalTimeEngineVersion ?? historicalTimeEngineVersion,
+    overrides.predictionSchemaVersion ?? predictionSchemaVersion,
+    overrides.featureSchemaVersion ?? featureSchemaVersion,
+    overrides.ruleVersion ?? ruleVersion,
+    overrides.ephemerisVersion ?? ephemerisVersion,
+    overrides.dashaEngineVersion ?? dashaEngineVersion,
+    overrides.resolutionClassifierVersion ?? resolutionClassifierVersion,
+    overrides.modelVersion ?? modelVersion
+  ];
+  return crypto.createHash('sha256').update(parts.join('|')).digest('hex');
+}
+

@@ -308,8 +308,8 @@ export function getActiveDashaAtAge(dashaTable, targetAge) {
       return {
         mdLord: md.lord,
         mdTamil: md.tamil || md.lord,
-        adLord: activeBk ? (activeBk.subLord || activeBk.lord || md.lord) : md.lord,
-        adTamil: activeBk ? (activeBk.subTamil || activeBk.tamil || activeBk.lord) : md.tamil,
+        adLord: activeBk ? (activeBk.subLord || activeBk.lord || null) : null,
+        adTamil: activeBk ? (activeBk.subTamil || activeBk.tamil || activeBk.lord || null) : null,
         startAge: activeBk?.startAge ?? md.startAge,
         endAge: activeBk?.endAge ?? md.endAge
       };
