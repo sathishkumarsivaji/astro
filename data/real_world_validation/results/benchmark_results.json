@@ -4,8 +4,8 @@
     "generatedAt": "2026-10-06T02:21:21.733Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
-    "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
+    "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
+    "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff:116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
@@ -21,8 +21,8 @@
       "cacheMisses": 0,
       "recomputedCount": 0,
       "invalidatedEntries": 0,
-      "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
-      "calibrationHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc"
+      "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
+      "calibrationHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59"
     }
   },
   "splits": {
@@ -81,54 +81,71 @@
           {
             "modelId": "MODEL_0_NULL",
             "modelName": "Null Intercept-Only Baseline",
-            "accuracy": 0.9168,
+            "accuracy": 0.9122,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
             "rocAuc": 0.5,
-            "brierScore": 0.0763,
+            "brierScore": 0.0801,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.2915,
+              "slope": 0
+            }
           },
           {
             "modelId": "MODEL_1_DEMOGRAPHIC",
             "modelName": "Demographic Baseline Model",
-            "accuracy": 0.9168,
+            "accuracy": 0.9122,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.5215,
-            "brierScore": 0.0765,
+            "rocAuc": 0.4841,
+            "brierScore": 0.0798,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.4486,
+              "betaCohort": 0.2773
+            }
           },
           {
             "modelId": "MODEL_2_ASTROLOGY",
             "modelName": "Astrology-Only Model",
-            "accuracy": 0.9168,
+            "accuracy": 0.9122,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.5,
-            "brierScore": 0.0794,
+            "rocAuc": 0.5569,
+            "brierScore": 0.08,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.1631,
+              "slope": 0.3938
+            }
           },
           {
             "modelId": "MODEL_3_COMBINED",
             "modelName": "Combined Demographic + Astrology Model",
-            "accuracy": 0.9168,
+            "accuracy": 0.9122,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.5215,
-            "brierScore": 0.0808,
+            "rocAuc": 0.4944,
+            "brierScore": 0.0797,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.3253,
+              "betaDemographic": 0.277,
+              "betaAstrology": 0.3775
+            }
           }
         ]
       },
@@ -171,7 +188,11 @@
           "within90DaysPct": 1.76,
           "within180DaysPct": 4.12,
           "within365DaysPct": 8.98
-        }
+        },
+        "historicalRecordGranularity": "DAY",
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
       },
       "unionMode": {
         "status": "EVALUATED",
@@ -341,54 +362,71 @@
           {
             "modelId": "MODEL_0_NULL",
             "modelName": "Null Intercept-Only Baseline",
-            "accuracy": 0.9168,
+            "accuracy": 0.9158,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
             "rocAuc": 0.5,
-            "brierScore": 0.0763,
+            "brierScore": 0.0771,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.2915,
+              "slope": 0
+            }
           },
           {
             "modelId": "MODEL_1_DEMOGRAPHIC",
             "modelName": "Demographic Baseline Model",
-            "accuracy": 0.9168,
-            "recall": 1,
-            "specificity": 0,
-            "mcc": 0,
-            "balancedAccuracy": 0.5,
-            "rocAuc": 0.5545,
-            "brierScore": 0.0765,
-            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
-          },
-          {
-            "modelId": "MODEL_2_ASTROLOGY",
-            "modelName": "Astrology-Only Model",
-            "accuracy": 0.9168,
+            "accuracy": 0.9158,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
             "rocAuc": 0.5,
-            "brierScore": 0.0794,
+            "brierScore": 0.0766,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.4486,
+              "betaCohort": 0.2773
+            }
           },
           {
-            "modelId": "MODEL_3_COMBINED",
-            "modelName": "Combined Demographic + Astrology Model",
-            "accuracy": 0.9168,
+            "modelId": "MODEL_2_ASTROLOGY",
+            "modelName": "Astrology-Only Model",
+            "accuracy": 0.9158,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.5545,
-            "brierScore": 0.0807,
+            "rocAuc": 0.5419,
+            "brierScore": 0.0771,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.1631,
+              "slope": 0.3938
+            }
+          },
+          {
+            "modelId": "MODEL_3_COMBINED",
+            "modelName": "Combined Demographic + Astrology Model",
+            "accuracy": 0.9158,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5089,
+            "brierScore": 0.0765,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.3253,
+              "betaDemographic": 0.277,
+              "betaAstrology": 0.3775
+            }
           }
         ]
       },
@@ -431,7 +469,11 @@
           "within90DaysPct": 1.83,
           "within180DaysPct": 3.74,
           "within365DaysPct": 8.11
-        }
+        },
+        "historicalRecordGranularity": "DAY",
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
       },
       "unionMode": {
         "status": "EVALUATED",
@@ -601,54 +643,71 @@
           {
             "modelId": "MODEL_0_NULL",
             "modelName": "Null Intercept-Only Baseline",
-            "accuracy": 0.9385,
+            "accuracy": 0.9649,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
             "rocAuc": 0.5,
-            "brierScore": 0.0587,
+            "brierScore": 0.0371,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.2915,
+              "slope": 0
+            }
           },
           {
             "modelId": "MODEL_1_DEMOGRAPHIC",
             "modelName": "Demographic Baseline Model",
-            "accuracy": 0.9385,
+            "accuracy": 0.9649,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.3033,
-            "brierScore": 0.0587,
+            "rocAuc": 0.5619,
+            "brierScore": 0.0395,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.4486,
+              "betaCohort": 0.2773
+            }
           },
           {
             "modelId": "MODEL_2_ASTROLOGY",
             "modelName": "Astrology-Only Model",
-            "accuracy": 0.9385,
+            "accuracy": 0.9649,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.5,
-            "brierScore": 0.0638,
+            "rocAuc": 0.5072,
+            "brierScore": 0.0371,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.1631,
+              "slope": 0.3938
+            }
           },
           {
             "modelId": "MODEL_3_COMBINED",
             "modelName": "Combined Demographic + Astrology Model",
-            "accuracy": 0.9385,
+            "accuracy": 0.9649,
             "recall": 1,
             "specificity": 0,
             "mcc": 0,
             "balancedAccuracy": 0.5,
-            "rocAuc": 0.3033,
-            "brierScore": 0.0652,
+            "rocAuc": 0.5554,
+            "brierScore": 0.0395,
             "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+            "fittedParameters": {
+              "intercept": 2.3253,
+              "betaDemographic": 0.277,
+              "betaAstrology": 0.3775
+            }
           }
         ]
       },
@@ -691,7 +750,11 @@
           "within90DaysPct": 1.56,
           "within180DaysPct": 2.5,
           "within365DaysPct": 5.94
-        }
+        },
+        "historicalRecordGranularity": "DAY",
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
       },
       "unionMode": {
         "status": "NOT_AVAILABLE",

@@ -169,24 +169,30 @@ export function assertNoExternalLeakage(trainCohort, externalCohort) {
 
 /**
  * Selects optimal decision threshold strictly on VALIDATION partition and freezes it.
+ * Explicitly enforces minimum specificity constraint (>= options.minSpecificity, default 0.40).
+ * If no threshold meets the constraint, returns status: "THRESHOLD_NOT_IDENTIFIABLE" rather
+ * than silently selecting an unconstrained threshold.
  */
 export function selectValidationThreshold(probActualPairs, options = {}) {
   const method = options.method || "MAXIMIZE_MCC_ON_VALIDATION";
+  const minSpecificity = options.minSpecificity !== undefined ? options.minSpecificity : 0.40;
+  const enforceMinSpecificity = options.enforceMinSpecificity !== false;
+
   if (!Array.isArray(probActualPairs) || probActualPairs.length === 0) {
     return {
       optimalThreshold: 0.50,
       method,
       metricValue: 0,
+      status: "INSUFFICIENT_DATA",
+      satisfiesConstraint: false,
       frozen: true,
       confusionMatrix: { tp: 0, fp: 0, tn: 0, fn: 0 }
     };
   }
 
-  let bestThresh = 0.50;
-  let bestScore = -1;
-  let bestMatrix = { tp: 0, fp: 0, tn: 0, fn: 0 };
+  const candidateThresholds = [];
 
-  for (let t = 0.10; t <= 0.90; t += 0.02) {
+  for (let t = 0.05; t <= 0.95; t += 0.02) {
     let tp = 0, fp = 0, tn = 0, fn = 0;
     for (const pair of probActualPairs) {
       const predPos = pair.prob >= t;
@@ -197,32 +203,65 @@ export function selectValidationThreshold(probActualPairs, options = {}) {
       else fn++;
     }
 
-    let score = 0;
-    if (method === "MAXIMIZE_MCC_ON_VALIDATION") {
-      const denom = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
-      score = denom > 0 ? (tp * tn - fp * fn) / denom : 0;
-    } else if (method === "YOUDEN_J") {
-      const tpr = (tp + fn) > 0 ? tp / (tp + fn) : 0;
-      const fpr = (tn + fp) > 0 ? fp / (tn + fp) : 0;
-      score = tpr - fpr;
-    } else {
-      const tpr = (tp + fn) > 0 ? tp / (tp + fn) : 0;
-      const tnr = (tn + fp) > 0 ? tn / (tn + fp) : 0;
-      score = (tpr + tnr) / 2;
-    }
+    const specificity = (tn + fp) > 0 ? tn / (tn + fp) : 0;
+    const sensitivity = (tp + fn) > 0 ? tp / (tp + fn) : 0;
+    const balancedAccuracy = (sensitivity + specificity) / 2;
+    const denom = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+    const mcc = denom > 0 ? (tp * tn - fp * fn) / denom : 0;
+    const youdenJ = sensitivity + specificity - 1;
 
-    if (score > bestScore || (score === bestScore && tn > bestMatrix.tn)) {
-      bestScore = score;
-      bestThresh = Number(t.toFixed(2));
-      bestMatrix = { tp, fp, tn, fn };
+    let score = 0;
+    if (method === "MAXIMIZE_MCC_ON_VALIDATION") score = mcc;
+    else if (method === "YOUDEN_J") score = youdenJ;
+    else score = balancedAccuracy;
+
+    candidateThresholds.push({
+      threshold: Number(t.toFixed(2)),
+      score,
+      specificity,
+      sensitivity,
+      balancedAccuracy,
+      mcc,
+      matrix: { tp, fp, tn, fn }
+    });
+  }
+
+  // Filter thresholds satisfying the minimum specificity constraint
+  const eligible = enforceMinSpecificity
+    ? candidateThresholds.filter(c => c.specificity >= minSpecificity)
+    : candidateThresholds;
+
+  if (eligible.length === 0) {
+    return {
+      optimalThreshold: null,
+      method,
+      metricValue: 0,
+      status: "THRESHOLD_NOT_IDENTIFIABLE",
+      satisfiesConstraint: false,
+      reason: `No threshold satisfies minimum specificity constraint (>= ${(minSpecificity * 100).toFixed(0)}%) on validation partition`,
+      minSpecificityRequired: minSpecificity,
+      frozen: false,
+      confusionMatrix: { tp: 0, fp: 0, tn: 0, fn: 0 }
+    };
+  }
+
+  // Optimize among eligible candidates
+  let best = eligible[0];
+  for (const cand of eligible) {
+    if (cand.score > best.score || (cand.score === best.score && cand.specificity > best.specificity)) {
+      best = cand;
     }
   }
 
   return {
-    optimalThreshold: bestThresh,
+    optimalThreshold: best.threshold,
     method,
-    metricValue: Number(bestScore.toFixed(4)),
-    confusionMatrix: bestMatrix,
+    metricValue: Number(best.score.toFixed(4)),
+    status: "CONSTRAINED_OPTIMUM_IDENTIFIED",
+    satisfiesConstraint: true,
+    specificity: Number(best.specificity.toFixed(4)),
+    sensitivity: Number(best.sensitivity.toFixed(4)),
+    confusionMatrix: best.matrix,
     frozen: true
   };
 }
@@ -302,7 +341,9 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
 
   const isPredicted = eligibleWindows.length > 0 && pMarriage >= effectiveThreshold;
   const prediction = isPredicted ? "MARRIAGE_PREDICTED" : "NO_EVENT_PREDICTED";
-  const classifierStatus = isPredicted ? "PREDICTED_EVENT" : "PREDICTED_NON_EVENT";
+  const classifierStatus = (calParams.satisfiesConstraint === false || calParams.thresholdSelectionStatus === "THRESHOLD_NOT_IDENTIFIABLE")
+    ? "DEGENERATE_BASE_RATE_CLASSIFIER"
+    : (isPredicted ? "PREDICTED_EVENT" : "PREDICTED_NON_EVENT");
 
   const result = {
     target: "MARRIAGE_WITHIN_HORIZON_V2",
@@ -318,6 +359,9 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
     pMarriage: Number(pMarriage.toFixed(4)),
     prediction,
     threshold: Number(effectiveThreshold.toFixed(4)),
+    validationOptimizedThreshold: calParams.validationOptimizedThreshold ?? null,
+    thresholdSelectionStatus: calParams.thresholdSelectionStatus ?? "CONSTRAINED_OPTIMUM_IDENTIFIED",
+    satisfiesConstraint: calParams.satisfiesConstraint ?? true,
     classifierStatus,
     eligibleWindowCount: eligibleWindows.length,
     horizon: { minAge: horizonMinAge, maxAge: horizonMaxAge },
@@ -1029,6 +1073,14 @@ export function evaluateTiming(timingPredictions, groundTruths) {
 
   return {
     n: eligibleEvaluations,
+    historicalRecordGranularity: {
+      dayLevelRecordsCount: dayRecords.length,
+      monthLevelRecordsCount: monthRecords.length,
+      yearLevelRecordsCount: yearRecords.length
+    },
+    computedCalendarGranularity: "DAY",
+    empiricalPredictiveResolution: "MULTI_YEAR_RANGE",
+    empiricalTimingStatus: "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
     precisionDistribution: {
       dayPrecisionCount: dayRecords.length,
       monthPrecisionCount: monthRecords.length,
@@ -1198,10 +1250,143 @@ export function evaluateDemographicBaseline(evalCohort, trainCohort = null) {
 // ============================================================================
 // 10B. 4-MODEL COMPARATIVE OCCURRENCE FRAMEWORK (Part 1.2)
 // Model 0: Null Intercept-Only
-// Model 1: Demographic Baseline
-// Model 2: Astrology-Only
-// Model 3: Combined (Demographic + Astrology)
+// Model 1: Demographic Baseline (Fitted via IRLS on TRAIN)
+// Model 2: Astrology-Only (Fitted via IRLS on TRAIN)
+// Model 3: Combined Demographic + Astrology (Fitted via IRLS on TRAIN)
 // ============================================================================
+
+/**
+ * Lightweight, robust Newton-Raphson IRLS solver for logistic regression
+ * with L2 ridge regularization.
+ */
+export function solveLogisticRegression(dataPoints, p, lambda = 0.01) {
+  if (!Array.isArray(dataPoints) || dataPoints.length === 0) {
+    return { beta: new Array(p).fill(0), converged: false, iterations: 0 };
+  }
+  let sumY = 0;
+  for (const d of dataPoints) sumY += d.y;
+  const meanY = Math.max(0.01, Math.min(0.99, sumY / dataPoints.length));
+  const beta = new Array(p).fill(0);
+  beta[0] = Math.log(meanY / (1 - meanY));
+
+  let converged = false;
+  let iterations = 0;
+
+  for (let iter = 0; iter < 25; iter++) {
+    iterations++;
+    const grad = new Array(p).fill(0);
+    const hess = Array.from({ length: p }, () => new Array(p).fill(0));
+
+    for (const d of dataPoints) {
+      let eta = 0;
+      for (let j = 0; j < p; j++) eta += d.x[j] * beta[j];
+      const h = 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, eta))));
+      const w = Math.max(1e-7, h * (1 - h));
+      const resid = h - d.y;
+
+      for (let j = 0; j < p; j++) {
+        grad[j] += resid * d.x[j];
+        for (let k = 0; k < p; k++) {
+          hess[j][k] += w * d.x[j] * d.x[k];
+        }
+      }
+    }
+
+    for (let j = 0; j < p; j++) {
+      grad[j] += lambda * beta[j];
+      hess[j][j] += lambda;
+    }
+
+    const sys = hess.map((row, i) => [...row, -grad[i]]);
+    for (let i = 0; i < p; i++) {
+      let maxRow = i;
+      for (let k = i + 1; k < p; k++) {
+        if (Math.abs(sys[k][i]) > Math.abs(sys[maxRow][i])) maxRow = k;
+      }
+      [sys[i], sys[maxRow]] = [sys[maxRow], sys[i]];
+      let pivot = sys[i][i];
+      if (Math.abs(pivot) < 1e-12) pivot = pivot < 0 ? -1e-6 : 1e-6;
+      for (let j = i; j <= p; j++) sys[i][j] /= pivot;
+      for (let k = 0; k < p; k++) {
+        if (k !== i) {
+          const factor = sys[k][i];
+          for (let j = i; j <= p; j++) sys[k][j] -= factor * sys[i][j];
+        }
+      }
+    }
+
+    const step = sys.map(row => row[p]);
+    let maxDelta = 0;
+    for (let j = 0; j < p; j++) {
+      beta[j] += step[j];
+      if (Math.abs(step[j]) > maxDelta) maxDelta = Math.abs(step[j]);
+    }
+
+    if (maxDelta < 1e-6) {
+      converged = true;
+      break;
+    }
+  }
+
+  return { beta, converged, iterations };
+}
+
+let _externalPredictionCache = null;
+export function setCachedPredictionProvider(fnOrMap) {
+  _externalPredictionCache = fnOrMap;
+}
+
+/**
+ * Extracts a record's authentic astrological rule score [0, 1].
+ */
+export function getRecordAstrologicalScore(record, options = {}) {
+  if (typeof record?.rawRuleScore === "number" && Number.isFinite(record.rawRuleScore)) {
+    return record.rawRuleScore;
+  }
+  const id = record?.sourceRecordId || record?.id || record?.recordId;
+  if (!id) return null;
+
+  // Direct map check first
+  if (options?.predictionCache && typeof options.predictionCache === "object" && options.predictionCache[id]) {
+    const entry = options.predictionCache[id];
+    if (typeof entry?.occ?.rawRuleScore === "number" && Number.isFinite(entry.occ.rawRuleScore)) return entry.occ.rawRuleScore;
+  }
+  if (_externalPredictionCache && typeof _externalPredictionCache === "object" && _externalPredictionCache[id]) {
+    const entry = _externalPredictionCache[id];
+    if (typeof entry?.occ?.rawRuleScore === "number" && Number.isFinite(entry.occ.rawRuleScore)) return entry.occ.rawRuleScore;
+  }
+  const globalCache = (typeof globalThis !== "undefined" && globalThis.__PREDICTION_CACHE__) || (typeof global !== "undefined" && global.__PREDICTION_CACHE__);
+  if (globalCache && typeof globalCache === "object" && globalCache[id]) {
+    const entry = globalCache[id];
+    if (typeof entry?.occ?.rawRuleScore === "number" && Number.isFinite(entry.occ.rawRuleScore)) return entry.occ.rawRuleScore;
+  }
+
+  // Functional cache check
+  if (typeof options?.getCachedPrediction === "function") {
+    try {
+      const cached = options.getCachedPrediction(id);
+      if (typeof cached?.occ?.rawRuleScore === "number" && Number.isFinite(cached.occ.rawRuleScore)) return cached.occ.rawRuleScore;
+    } catch {}
+  }
+  if (typeof _externalPredictionCache === "function") {
+    try {
+      const cached = _externalPredictionCache(id);
+      if (typeof cached?.occ?.rawRuleScore === "number" && Number.isFinite(cached.occ.rawRuleScore)) return cached.occ.rawRuleScore;
+    } catch {}
+  }
+
+  // Direct calculation via chartGetter if provided
+  if (typeof options?.chartGetter === "function") {
+    try {
+      const chart = options.chartGetter(record);
+      if (chart) {
+        const occ = predictMarriageOccurrence(record, chart);
+        if (typeof occ?.rawRuleScore === "number" && Number.isFinite(occ.rawRuleScore)) return occ.rawRuleScore;
+      }
+    } catch {}
+  }
+  return null;
+}
 
 export function fitNullOccurrenceModel(trainCohort) {
   let events = 0;
@@ -1225,78 +1410,157 @@ export function fitNullOccurrenceModel(trainCohort) {
   };
 }
 
-export function fitDemographicOccurrenceModel(trainCohort) {
-  let sumY = 0, sumCohort = 0, count = 0;
+export function fitDemographicOccurrenceModel(trainCohort, options = {}) {
+  const dataPoints = [];
   for (const r of trainCohort) {
     const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
-    if (status === "EVENT" || status === "NO_EVENT" || status === "NO_EVENT_WITH_COMPLETE_FOLLOWUP") {
-      const y = status === "EVENT" ? 1 : 0;
-      sumY += y;
-      const bYear = r.birthYear || 1950;
-      sumCohort += (bYear - 1900) / 100;
-      count++;
-    }
+    if (status === "RIGHT_CENSORED" || status === "UNKNOWN" || status === "MISSING_OUTCOME" || status === "EVENT_PRE_HORIZON") continue;
+    const y = status === "EVENT" ? 1 : 0;
+    const bYear = r.birthYear || 1950;
+    const xDemo = (bYear - 1950) / 50;
+    dataPoints.push({ y, x: [1, xDemo] });
   }
-  const meanY = count > 0 ? sumY / count : 0.84;
-  const meanCohort = count > 0 ? sumCohort / count : 0.50;
-  const betaCohort = -0.15;
-  const intercept = Math.log(meanY / (1 - meanY)) - (betaCohort * meanCohort);
+
+  const fit = solveLogisticRegression(dataPoints, 2, options.lambda ?? 0.01);
+  const intercept = fit.beta[0];
+  const betaCohort = fit.beta[1];
 
   return {
     modelId: "MODEL_1_DEMOGRAPHIC",
     modelName: "Demographic Baseline Model",
     intercept: Number(intercept.toFixed(4)),
     betaCohort: Number(betaCohort.toFixed(4)),
-    trainingN: count,
+    trainingN: dataPoints.length,
+    converged: fit.converged,
+    iterations: fit.iterations,
     predict: (record) => {
       const bYear = record.birthYear || 1950;
-      const c = (bYear - 1900) / 100;
-      const logit = intercept + betaCohort * c;
-      return 1 / (1 + Math.exp(-logit));
+      const xDemo = (bYear - 1950) / 50;
+      const logit = intercept + betaCohort * xDemo;
+      return 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, logit))));
     }
   };
 }
 
-export function fitAstrologyOccurrenceModel(trainCohort, calibrationParams = null) {
-  const cal = calibrationParams || getCalibrationParameters();
+export function fitAstrologyOccurrenceModel(trainCohort, options = {}) {
+  const dataPoints = [];
+  for (const r of trainCohort) {
+    const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+    if (status === "RIGHT_CENSORED" || status === "UNKNOWN" || status === "MISSING_OUTCOME" || status === "EVENT_PRE_HORIZON") continue;
+    const rawScore = getRecordAstrologicalScore(r, options);
+    if (rawScore === null || typeof rawScore !== "number" || !Number.isFinite(rawScore)) continue;
+    const y = status === "EVENT" ? 1 : 0;
+    const xAstro = rawScore - 0.5;
+    dataPoints.push({ y, x: [1, xAstro] });
+  }
+
+  if (dataPoints.length === 0) {
+    return {
+      modelId: "MODEL_2_ASTROLOGY",
+      modelName: "Astrology-Only Model",
+      status: "INSUFFICIENT_DATA",
+      intercept: 0,
+      slope: 0,
+      trainingN: 0,
+      converged: false,
+      iterations: 0,
+      predict: () => 0.5
+    };
+  }
+
+  const fit = solveLogisticRegression(dataPoints, 2, options.lambda ?? 0.01);
+  const intercept = fit.beta[0];
+  const slope = fit.beta[1];
+
   return {
     modelId: "MODEL_2_ASTROLOGY",
     modelName: "Astrology-Only Model",
-    intercept: cal.intercept,
-    slope: cal.slope,
-    threshold: cal.threshold ?? 0.50,
-    predict: (rawRuleScore) => {
-      const s = typeof rawRuleScore === "number" ? rawRuleScore : 0.35;
-      const logit = (cal.slope * s) + cal.intercept;
-      return 1 / (1 + Math.exp(-logit));
+    intercept: Number(intercept.toFixed(4)),
+    slope: Number(slope.toFixed(4)),
+    trainingN: dataPoints.length,
+    converged: fit.converged,
+    iterations: fit.iterations,
+    predict: (record, rawRuleScore = null) => {
+      const s = typeof rawRuleScore === "number" && Number.isFinite(rawRuleScore)
+        ? rawRuleScore
+        : getRecordAstrologicalScore(record, options);
+      if (s === null || typeof s !== "number" || !Number.isFinite(s)) {
+        return 1 / (1 + Math.exp(-intercept));
+      }
+      const xAstro = s - 0.5;
+      const logit = intercept + slope * xAstro;
+      return 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, logit))));
     }
   };
 }
 
-export function fitCombinedOccurrenceModel(trainCohort, calibrationParams = null) {
-  const cal = calibrationParams || getCalibrationParameters();
-  const demo = fitDemographicOccurrenceModel(trainCohort);
+export function fitCombinedOccurrenceModel(trainCohort, options = {}) {
+  const dataPoints = [];
+  for (const r of trainCohort) {
+    const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+    if (status === "RIGHT_CENSORED" || status === "UNKNOWN" || status === "MISSING_OUTCOME" || status === "EVENT_PRE_HORIZON") continue;
+    const rawScore = getRecordAstrologicalScore(r, options);
+    if (rawScore === null || typeof rawScore !== "number" || !Number.isFinite(rawScore)) continue;
+    const y = status === "EVENT" ? 1 : 0;
+    const bYear = r.birthYear || 1950;
+    const xDemo = (bYear - 1950) / 50;
+    const xAstro = rawScore - 0.5;
+    dataPoints.push({ y, x: [1, xDemo, xAstro] });
+  }
+
+  if (dataPoints.length === 0) {
+    return {
+      modelId: "MODEL_3_COMBINED",
+      modelName: "Combined Demographic + Astrology Model",
+      status: "INSUFFICIENT_DATA",
+      intercept: 0,
+      betaDemographic: 0,
+      betaAstrology: 0,
+      trainingN: 0,
+      converged: false,
+      iterations: 0,
+      predict: () => 0.5
+    };
+  }
+
+  const fit = solveLogisticRegression(dataPoints, 3, options.lambda ?? 0.01);
+  const intercept = fit.beta[0];
+  const betaDemographic = fit.beta[1];
+  const betaAstrology = fit.beta[2];
+
   return {
     modelId: "MODEL_3_COMBINED",
     modelName: "Combined Demographic + Astrology Model",
-    intercept: Number(((cal.intercept + demo.intercept) / 2).toFixed(4)),
-    betaAstrology: Number((cal.slope * 0.8).toFixed(4)),
-    betaDemographic: demo.betaCohort,
-    predict: (record, rawRuleScore) => {
+    intercept: Number(intercept.toFixed(4)),
+    betaDemographic: Number(betaDemographic.toFixed(4)),
+    betaAstrology: Number(betaAstrology.toFixed(4)),
+    trainingN: dataPoints.length,
+    converged: fit.converged,
+    iterations: fit.iterations,
+    predict: (record, rawRuleScore = null) => {
       const bYear = record.birthYear || 1950;
-      const c = (bYear - 1900) / 100;
-      const s = typeof rawRuleScore === "number" ? rawRuleScore : 0.35;
-      const logit = cal.intercept + (cal.slope * s * 0.8) + (demo.betaCohort * c);
-      return 1 / (1 + Math.exp(-logit));
+      const xDemo = (bYear - 1950) / 50;
+      const s = typeof rawRuleScore === "number" && Number.isFinite(rawRuleScore)
+        ? rawRuleScore
+        : getRecordAstrologicalScore(record, options);
+      if (s === null || typeof s !== "number" || !Number.isFinite(s)) {
+        const logit = intercept + betaDemographic * xDemo;
+        return 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, logit))));
+      }
+      const xAstro = s - 0.5;
+      const logit = intercept + betaDemographic * xDemo + betaAstrology * xAstro;
+      return 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, logit))));
     }
   };
 }
 
-export function evaluate4ModelComparison(evalCohort, trainCohort, valThreshold = 0.50) {
+export function evaluate4ModelComparison(evalCohort, trainCohort, options = 0.50) {
+  const valThreshold = typeof options === "number" ? options : (options?.threshold ?? 0.50);
+  const fitOpts = typeof options === "object" ? options : {};
   const m0 = fitNullOccurrenceModel(trainCohort);
-  const m1 = fitDemographicOccurrenceModel(trainCohort);
-  const m2 = fitAstrologyOccurrenceModel(trainCohort);
-  const m3 = fitCombinedOccurrenceModel(trainCohort);
+  const m1 = fitDemographicOccurrenceModel(trainCohort, fitOpts);
+  const m2 = fitAstrologyOccurrenceModel(trainCohort, fitOpts);
+  const m3 = fitCombinedOccurrenceModel(trainCohort, fitOpts);
 
   const models = [m0, m1, m2, m3];
   const summary = [];
@@ -1305,10 +1569,17 @@ export function evaluate4ModelComparison(evalCohort, trainCohort, valThreshold =
     const preds = [];
     for (const r of evalCohort) {
       let p = 0.5;
-      if (m.modelId === "MODEL_0_NULL") p = m.predict();
-      else if (m.modelId === "MODEL_1_DEMOGRAPHIC") p = m.predict(r);
-      else if (m.modelId === "MODEL_2_ASTROLOGY") p = m.predict(0.35);
-      else p = m.predict(r, 0.35);
+      if (m.modelId === "MODEL_0_NULL") {
+        p = m.predict();
+      } else if (m.modelId === "MODEL_1_DEMOGRAPHIC") {
+        p = m.predict(r);
+      } else if (m.modelId === "MODEL_2_ASTROLOGY") {
+        const s = getRecordAstrologicalScore(r, fitOpts);
+        p = m.predict(r, s);
+      } else {
+        const s = getRecordAstrologicalScore(r, fitOpts);
+        p = m.predict(r, s);
+      }
 
       preds.push({
         pMarriage: p,
@@ -1329,7 +1600,14 @@ export function evaluate4ModelComparison(evalCohort, trainCohort, valThreshold =
       rocAuc: evalRes.rocAuc,
       brierScore: evalRes.brierScore,
       classifierStatus: evalRes.classifierStatus,
-      validationStatus: evalRes.validationStatus
+      validationStatus: evalRes.validationStatus,
+      fittedParameters: {
+        intercept: m.intercept,
+        betaCohort: m.betaCohort,
+        slope: m.slope,
+        betaDemographic: m.betaDemographic,
+        betaAstrology: m.betaAstrology
+      }
     });
   }
 

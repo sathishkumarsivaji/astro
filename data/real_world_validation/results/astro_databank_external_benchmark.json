@@ -6,8 +6,8 @@
     "generatedAt": "2026-10-06T02:21:21.614Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
-    "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
+    "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
+    "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
@@ -30,8 +30,8 @@
       "cacheMisses": 0,
       "recomputedCount": 0,
       "invalidatedEntries": 0,
-      "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
-      "calibrationHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc"
+      "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
+      "calibrationHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59"
     }
   },
   "primaryBenchmark": {
@@ -125,7 +125,11 @@
         "within90DaysPct": 1.56,
         "within180DaysPct": 2.5,
         "within365DaysPct": 5.94
-      }
+      },
+      "historicalRecordGranularity": "DAY",
+      "computedCalendarGranularity": "DAY",
+      "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+      "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
     },
     "unionMode": {
       "status": "NOT_AVAILABLE",

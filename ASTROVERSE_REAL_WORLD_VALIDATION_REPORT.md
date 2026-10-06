@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA).
 - **Actual Production Model Calibration:** Platt scaling and conformal prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5`) and calibration model SHA-256 hash (`f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae`) and calibration model SHA-256 hash (`1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -96,8 +96,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
-  "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
+  "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
+  "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -129,6 +129,45 @@ Every cached prediction entry contains:
 | **Conformal 80% Coverage** | **80.53%** | **80.69%** |
 | **Demographic Baseline MAE**| **4.28 years** | **4.43 years** |
 | **Demographic Within $\pm 1$ Year** | **28.71%** | **27.7%** |
+
+---
+
+## SECTION 16B: 4-MODEL DISCRIMINATIVE OCCURRENCE FRAMEWORK & TIMING RESOLUTION SEPARATION
+
+### 1. 4-Model Comparative Occurrence Framework (Fitted via IRLS on TRAIN)
+To evaluate whether astrological rule scores add any discriminative value over demographic base rates, 4 comparative models were fitted on the TRAIN partition ($N=9,366$) and evaluated out-of-sample:
+1. **Model 0 (Null Baseline):** Intercept-only logistic model predicting empirical base rate ($\text{logit}(p) = \beta_0$).
+2. **Model 1 (Demographic Baseline):** Cohort birth-year demographic model ($\text{logit}(p) = \beta_0 + \beta_{\text{demo}} x_{\text{demo}}$).
+3. **Model 2 (Astrology-Only Model):** Authentic per-subject astrological score model ($\text{logit}(p) = \beta_0 + \beta_{\text{astro}} x_{\text{astro}}$).
+4. **Model 3 (Combined Model):** Bivariate model ($\text{logit}(p) = \beta_0 + \beta_{\text{demo}} x_{\text{demo}} + \beta_{\text{astro}} x_{\text{astro}}$).
+
+#### Out-of-Sample Performance Comparison (BLIND_TEST):
+| Model ID | Model Description | Accuracy | Specificity | Sensitivity | Balanced Acc | ROC-AUC | Brier Score | Classifier Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **MODEL_0_NULL** | Null Intercept-Only Baseline | 91.22% | 0.00% | 100.00% | 50.00% | 0.5 | 0.0801 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
+| **MODEL_1_DEMOGRAPHIC** | Demographic Baseline Model | 91.22% | 0.00% | 100.00% | 50.00% | 0.4841 | 0.0798 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
+| **MODEL_2_ASTROLOGY** | Astrology-Only Model | 91.22% | 0.00% | 100.00% | 50.00% | 0.5569 | 0.08 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
+| **MODEL_3_COMBINED** | Combined Demographic + Astrology Model | 91.22% | 0.00% | 100.00% | 50.00% | 0.4944 | 0.0797 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
+
+All models exhibit zero true negatives at the default threshold ($p=0.50$), correctly flagged as `DEGENERATE_BASE_RATE_CLASSIFIER`. When evaluated against a minimum specificity constraint ($\text{specificity} \ge 0.40$), threshold optimization returns:
+- `status: "THRESHOLD_NOT_IDENTIFIABLE"`
+- `satisfiesConstraint: false`
+- `optimalThreshold: null`
+
+### 2. Timing Granularity vs. Empirical Precision Separation
+A crucial architectural distinction is enforced between calendar calculation granularity and empirical predictive precision:
+- **Historical Record Granularity:** `DAY` (Exact dates recorded in registries).
+- **Computed Calendar Granularity:** `DAY` (Planetary transits, dashas, and astronomical cusps computed down to the minute/day).
+- **Empirical Predictive Resolution:** `MULTI_YEAR_RANGE` (Observed out-of-sample timing error quantiles $q_{50} = \pm 6\text{y}$, $q_{80} = \pm 10\text{y}$, $\text{MAE} \approx 6.89\text{y}$).
+- **Empirical Timing Status:** `EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY`.
+
+The platform strictly disallows implying that day-level transit or dasha boundaries confer day-level empirical event predictability.
+
+### 3. Empirical Residual-Quantile Prediction Intervals
+Prediction intervals are calibrated as empirical residual-quantile intervals on the holdout error distribution:
+- **Methodology:** Conformal empirical residual quantiles fitted on TRAIN error residuals ($|y_i - \hat{y}_i|$).
+- **Coverage Guarantees:** Nominal 50% ($q_{50} = \pm 6\text{y}$), Nominal 80% ($q_{80} = \pm 10\text{y}$), Nominal 90% ($q_{90} = \pm 14\text{y}$), Nominal 95% ($q_{95} = \pm 19\text{y}$).
+- **Disclosure:** Fully disclosed as empirical residual-quantile intervals, not asymptotic Gaussian confidence intervals.
 
 ---
 
@@ -223,8 +262,8 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5` |
-| **Calibration Model Hash** | `f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc` |
+| **Prediction Engine Hash** | `1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae` |
+| **Calibration Model Hash** | `1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |

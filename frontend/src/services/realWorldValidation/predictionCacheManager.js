@@ -105,9 +105,11 @@ export function loadCache(filePath) {
     try {
       predictionCache = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       cacheStats.total = Object.keys(predictionCache).length;
+      global.__PREDICTION_CACHE__ = predictionCache;
     } catch (e) {
       console.warn("Could not parse prediction cache:", e.message);
       predictionCache = {};
+      global.__PREDICTION_CACHE__ = null;
     }
   }
 }

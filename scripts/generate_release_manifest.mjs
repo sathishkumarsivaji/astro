@@ -44,13 +44,14 @@ export function generateReleaseManifest() {
   const astroDatabankTrueIndependentHash = byteHash(path.join(ROOT, 'data/real_world_validation/results/astro_databank_external_benchmark.json'));
   const overlapManifestHash = byteHash(path.join(ROOT, 'data/real_world_validation/splits/split_manifest.json'));
 
+  const nowIso = new Date().toISOString();
   const manifest = {
     releaseVersion: "3.0.0",
     modelVersion: "2.2.0",
     schemaVersion: "3.0",
     astronomyEngineVersion: "4.2.0",
     historicalTimeEngineVersion: "2.1.0",
-    generatedAt: "2026-10-04T12:00:00.000Z",
+    generatedAt: nowIso,
     status: {
       astronomicalEngine: "CALCULATION_VALIDATED",
       softwareInfrastructure: "SOFTWARE_VALIDATED",
@@ -72,7 +73,7 @@ export function generateReleaseManifest() {
       astroDatabankTrueIndependentHash,
       overlapManifestHash
     },
-    updatedAt: "2026-10-04T12:00:00.000Z"
+    updatedAt: nowIso
   };
 
   const manifestPath = path.join(ROOT, 'current_release_manifest.json');

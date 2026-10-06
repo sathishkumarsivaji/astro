@@ -23,7 +23,8 @@ import {
   fitCombinedOccurrenceModel,
   evaluate4ModelComparison,
   predictMarriageOccurrence,
-  predictMarriageTiming
+  predictMarriageTiming,
+  evaluateTiming
 } from "./src/services/realWorldValidation/empiricalEvaluationEngine.js";
 
 console.log("===========================================================================");
@@ -196,6 +197,65 @@ test("predictMarriageTiming outputs decoupled TimingPrediction schema", () => {
   assert.ok("centralEstimateYear" in timing);
   assert.ok("predictedInterval" in timing);
   assert.ok("predictedIntervalYears" in timing);
+});
+
+// -------------------------------------------------------------------------
+// 6. Threshold Identification Failure on Degenerate Data
+// -------------------------------------------------------------------------
+test("selectValidationThreshold returns THRESHOLD_NOT_IDENTIFIABLE when no threshold satisfies minSpecificity", () => {
+  const degeneratePairs = [
+    { prob: 0.92, actual: 1 },
+    { prob: 0.91, actual: 1 },
+    { prob: 0.90, actual: 1 },
+    { prob: 0.99, actual: 0 }
+  ];
+
+  const res = selectValidationThreshold(degeneratePairs, { minSpecificity: 0.40 });
+  assert.equal(res.status, "THRESHOLD_NOT_IDENTIFIABLE");
+  assert.equal(res.satisfiesConstraint, false);
+  assert.equal(res.optimalThreshold, null);
+});
+
+// -------------------------------------------------------------------------
+// 7. Data-Dependent IRLS Fitting
+// -------------------------------------------------------------------------
+test("IRLS models produce data-dependent coefficients on distinct data partitions", () => {
+  const setA = [
+    { censoringStatus: "EVENT", birthYear: 1950, sourceRecordId: "A1" },
+    { censoringStatus: "EVENT", birthYear: 1955, sourceRecordId: "A2" },
+    { censoringStatus: "NO_EVENT", birthYear: 1980, sourceRecordId: "A3" }
+  ];
+  const setB = [
+    { censoringStatus: "EVENT", birthYear: 1980, sourceRecordId: "B1" },
+    { censoringStatus: "EVENT", birthYear: 1985, sourceRecordId: "B2" },
+    { censoringStatus: "NO_EVENT", birthYear: 1950, sourceRecordId: "B3" }
+  ];
+
+  const demoA = fitDemographicOccurrenceModel(setA);
+  const demoB = fitDemographicOccurrenceModel(setB);
+  assert.notEqual(demoA.betaCohort, demoB.betaCohort, "Demographic coefficients are data-dependent");
+});
+
+// -------------------------------------------------------------------------
+// 8. Timing Granularity vs. Empirical Predictive Resolution Separation
+// -------------------------------------------------------------------------
+test("evaluateTiming distinguishes computedCalendarGranularity (DAY) from empiricalPredictiveResolution (MULTI_YEAR_RANGE)", () => {
+  const timingPreds = [{
+    hasTimingPrediction: true,
+    centralEstimateYear: 2015,
+    predictedIntervalYears: 4,
+    conformalIntervals: { p80: { lowerYear: 2011, upperYear: 2019 } }
+  }];
+  const groundTruths = [{
+    birthYear: 1985,
+    hasDocumentedMarriage: true,
+    marriages: [{ marriageYear: 2016, marriageDate: "2016-06-15", precision: "DAY" }]
+  }];
+
+  const tEval = evaluateTiming(timingPreds, groundTruths);
+  assert.equal(tEval.computedCalendarGranularity, "DAY");
+  assert.equal(tEval.empiricalPredictiveResolution, "MULTI_YEAR_RANGE");
+  assert.equal(tEval.empiricalTimingStatus, "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY");
 });
 
 console.log("\n===========================================================================");

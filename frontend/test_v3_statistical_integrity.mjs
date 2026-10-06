@@ -361,8 +361,9 @@ if (latestBenchExists) {
 
   // Even if external data with extreme ages is defined elsewhere, train baseline does not change
   const baselineA_rerun = fitDemographicBaselineHazard(trainSample);
+  const normalize = (b) => ({ ...b, metadata: { ...b.metadata, fittedAt: null } });
   assert(
-    JSON.stringify(baselineA) === JSON.stringify(baselineA_rerun),
+    JSON.stringify(normalize(baselineA)) === JSON.stringify(normalize(baselineA_rerun)),
     10,
     "External data presence does not alter fitted TRAIN demographic baseline hazard"
   );

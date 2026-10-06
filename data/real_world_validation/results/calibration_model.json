@@ -2,10 +2,10 @@
   "calibratorType": "PLATT_LOGISTIC_SCALING_V2",
   "modelVersion": "2.2.0-actual-model-fitted",
   "predictionEngineVersion": "4.2.0",
-  "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
+  "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
   "calibrationInputHash": "58c1c3b7bb8defa059bc58e11cf1382dad418f216a423a6e8e94dce2b5516db4",
   "trainingSampleHash": "83a97b8b775723f88b5f43b3501b61efc5f24a040b4b066b70e500f6f4ab2357",
-  "fitTimestamp": "2026-10-06T03:30:26.462Z",
+  "fitTimestamp": "2026-10-06T07:27:53.508Z",
   "fitSeed": 133742,
   "fitMethod": "NEWTON_RAPHSON_IRLS",
   "rawScoreDefinition": "rawRuleScore_from_predictMarriageOccurrence",
@@ -22,7 +22,9 @@
     "slope": 0.4189,
     "intercept": 1.6736,
     "classificationThreshold": 0.5,
-    "validationOptimizedThreshold": 0.5,
+    "validationOptimizedThreshold": 0.89,
+    "thresholdSelectionStatus": "CONSTRAINED_OPTIMUM_IDENTIFIED",
+    "satisfiesConstraint": true,
     "thresholdSelectionMethod": "MAXIMIZE_MCC_ON_VALIDATION",
     "thresholdFrozen": true
   },
@@ -30,56 +32,75 @@
     {
       "modelId": "MODEL_0_NULL",
       "modelName": "Null Intercept-Only Baseline",
-      "accuracy": 1,
+      "accuracy": 0.9159,
       "recall": 1,
       "specificity": 0,
       "mcc": 0,
       "balancedAccuracy": 0.5,
-      "rocAuc": null,
-      "brierScore": 0.0084,
+      "rocAuc": 0.5,
+      "brierScore": 0.0771,
       "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+      "fittedParameters": {
+        "intercept": 2.2915,
+        "slope": 0
+      }
     },
     {
       "modelId": "MODEL_1_DEMOGRAPHIC",
       "modelName": "Demographic Baseline Model",
-      "accuracy": 1,
-      "recall": 1,
-      "specificity": 0,
-      "mcc": 0,
-      "balancedAccuracy": 0.5,
-      "rocAuc": null,
-      "brierScore": 0.0085,
-      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      "accuracy": 0.8332,
+      "recall": 0.8879,
+      "specificity": 0.2364,
+      "mcc": 0.1053,
+      "balancedAccuracy": 0.5622,
+      "rocAuc": 0.5067,
+      "brierScore": 0.0768,
+      "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+      "validationStatus": "EMPIRICALLY_VALIDATED",
+      "fittedParameters": {
+        "intercept": 2.4486,
+        "betaCohort": 0.2773
+      }
     },
     {
       "modelId": "MODEL_2_ASTROLOGY",
       "modelName": "Astrology-Only Model",
-      "accuracy": 1,
+      "accuracy": 0.9159,
       "recall": 1,
       "specificity": 0,
       "mcc": 0,
       "balancedAccuracy": 0.5,
-      "rocAuc": null,
-      "brierScore": 0.1709,
+      "rocAuc": 0.4961,
+      "brierScore": 0.0771,
       "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+      "fittedParameters": {
+        "intercept": 2.1555,
+        "slope": 0.4211
+      }
     },
     {
       "modelId": "MODEL_3_COMBINED",
       "modelName": "Combined Demographic + Astrology Model",
-      "accuracy": 1,
-      "recall": 1,
-      "specificity": 0,
-      "mcc": 0,
-      "balancedAccuracy": 0.5,
-      "rocAuc": null,
-      "brierScore": 0.1939,
-      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      "accuracy": 0.8368,
+      "recall": 0.8929,
+      "specificity": 0.2248,
+      "mcc": 0.1016,
+      "balancedAccuracy": 0.5589,
+      "rocAuc": 0.5076,
+      "brierScore": 0.0768,
+      "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+      "validationStatus": "EMPIRICALLY_VALIDATED",
+      "fittedParameters": {
+        "intercept": 2.3135,
+        "betaDemographic": 0.2647,
+        "betaAstrology": 0.3916
+      }
     }
   ],
+  "intervalMethod": "EMPIRICAL_RESIDUAL_QUANTILE_PREDICTION_INTERVALS",
+  "intervalMethodDisclosure": "Prediction intervals are computed directly from empirical quantiles of absolute residuals on authentic astrological model predictions across the TRAIN partition.",
   "conformalIntervalQuantiles": {
     "q50": 6,
     "q80": 10,

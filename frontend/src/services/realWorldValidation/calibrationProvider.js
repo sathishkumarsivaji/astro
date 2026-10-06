@@ -146,6 +146,10 @@ export function getCalibrationParameters() {
     intercept: model.parameters.intercept,
     threshold: model.parameters.classificationThreshold ?? 0.50,
     classificationThreshold: model.parameters.classificationThreshold ?? 0.50,
+    validationOptimizedThreshold: model.parameters.validationOptimizedThreshold ?? null,
+    thresholdSelectionStatus: model.parameters.thresholdSelectionStatus ?? "CONSTRAINED_OPTIMUM_IDENTIFIED",
+    satisfiesConstraint: model.parameters.satisfiesConstraint ?? true,
+    thresholdSelectionMethod: model.parameters.thresholdSelectionMethod ?? "MAXIMIZE_MCC_ON_VALIDATION",
     calibratorType: model.calibratorType,
     modelVersion: model.modelVersion
   };

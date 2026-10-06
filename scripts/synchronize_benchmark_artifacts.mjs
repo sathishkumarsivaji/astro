@@ -1,14 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate4ModelComparison } from '../frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js';
-import { getCurrentHashes, initCacheManager } from '../frontend/src/services/realWorldValidation/predictionCacheManager.js';
+import { evaluate4ModelComparison, setCachedPredictionProvider } from '../frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js';
+import { getCurrentHashes, initCacheManager, loadCache, getCachedPrediction } from '../frontend/src/services/realWorldValidation/predictionCacheManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
 
+const CACHE_PATH = path.join(ROOT, 'data/real_world_validation/cache/prediction_cache.json');
 initCacheManager();
+loadCache(CACHE_PATH);
+setCachedPredictionProvider(getCachedPrediction);
+
 const { predictionEngineHash, calibrationModelHash } = getCurrentHashes();
 
 console.log('Current predictionEngineHash:', predictionEngineHash);
@@ -25,10 +29,24 @@ const holdoutRecords = JSON.parse(fs.readFileSync(INTERNAL_HOLDOUT_PATH, 'utf8')
 const adbRecords = JSON.parse(fs.readFileSync(ADB_PATH, 'utf8'));
 const adbCertified = adbRecords.filter(r => r.birthTimeReliability === 'AA' || r.birthTimeReliability === 'A');
 
-console.log('Evaluating 4-model comparison across cohorts...');
-const blind4Model = evaluate4ModelComparison(blindRecords.slice(0, 500), trainRecords, 0.50);
-const holdout4Model = evaluate4ModelComparison(holdoutRecords.slice(0, 500), trainRecords, 0.50);
-const adb4Model = evaluate4ModelComparison(adbCertified.slice(0, 500), trainRecords, 0.50);
+console.log(`Evaluating 4-model comparison across FULL cohorts (NO SLICING):`);
+console.log(`  BLIND_TEST: ${blindRecords.length} records`);
+console.log(`  INTERNAL_HOLDOUT: ${holdoutRecords.length} records`);
+console.log(`  ASTRO_DATABANK_CERTIFIED: ${adbCertified.length} records`);
+
+const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
+const holdout4Model = evaluate4ModelComparison(holdoutRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
+const adb4Model = evaluate4ModelComparison(adbCertified, trainRecords, { threshold: 0.50, getCachedPrediction });
+
+// Helper to set timing resolution separation
+function setTimingResolution(timingObj) {
+  if (timingObj && typeof timingObj === 'object') {
+    timingObj.historicalRecordGranularity = "DAY";
+    timingObj.computedCalendarGranularity = "DAY";
+    timingObj.empiricalPredictiveResolution = "MULTI_YEAR_RANGE";
+    timingObj.empiricalTimingStatus = "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY";
+  }
+}
 
 // 1. Update benchmark_results.json
 const BENCHMARK_PATH = path.join(ROOT, 'data/real_world_validation/results/benchmark_results.json');
@@ -45,16 +63,22 @@ if (fs.existsSync(BENCHMARK_PATH)) {
     bench.splits.BLIND_TEST.occurrence.isDegenerate = true;
     bench.splits.BLIND_TEST.occurrence.fourModelComparison = blind4Model;
   }
+  setTimingResolution(bench.splits?.BLIND_TEST?.timing);
+
   if (bench.splits?.INTERNAL_HOLDOUT?.occurrence) {
     bench.splits.INTERNAL_HOLDOUT.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
     bench.splits.INTERNAL_HOLDOUT.occurrence.isDegenerate = true;
     bench.splits.INTERNAL_HOLDOUT.occurrence.fourModelComparison = holdout4Model;
   }
+  setTimingResolution(bench.splits?.INTERNAL_HOLDOUT?.timing);
+
   if (bench.splits?.EXTERNAL_ASTRO_DATABANK_CERTIFIED?.occurrence) {
     bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
     bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence.isDegenerate = true;
     bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence.fourModelComparison = adb4Model;
   }
+  setTimingResolution(bench.splits?.EXTERNAL_ASTRO_DATABANK_CERTIFIED?.timing);
+
   fs.writeFileSync(BENCHMARK_PATH, JSON.stringify(bench, null, 2) + '\n', 'utf8');
   console.log('✓ Synchronized benchmark_results.json');
 }
@@ -77,6 +101,8 @@ if (fs.existsSync(ADB_BENCHMARK_PATH)) {
     adbBench.primaryBenchmark.comparativeSummary.occurrenceClassifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
     adbBench.primaryBenchmark.comparativeSummary.fourModelComparison = adb4Model;
   }
+  setTimingResolution(adbBench.primaryBenchmark?.timing);
+
   fs.writeFileSync(ADB_BENCHMARK_PATH, JSON.stringify(adbBench, null, 2) + '\n', 'utf8');
   console.log('✓ Synchronized astro_databank_external_benchmark.json');
 }
@@ -107,16 +133,22 @@ if (fs.existsSync(LATEST_BENCHMARK_PATH)) {
     latestBench.metrics.blindTest.occurrence.isDegenerate = true;
     latestBench.metrics.blindTest.occurrence.fourModelComparison = blind4Model;
   }
+  setTimingResolution(latestBench.metrics?.blindTest?.timing);
+
   if (latestBench.metrics?.holdout?.occurrence) {
     latestBench.metrics.holdout.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
     latestBench.metrics.holdout.occurrence.isDegenerate = true;
     latestBench.metrics.holdout.occurrence.fourModelComparison = holdout4Model;
   }
+  setTimingResolution(latestBench.metrics?.holdout?.timing);
+
   if (latestBench.metrics?.astroDatabankCertifiedAAA?.occurrence) {
     latestBench.metrics.astroDatabankCertifiedAAA.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
     latestBench.metrics.astroDatabankCertifiedAAA.occurrence.isDegenerate = true;
     latestBench.metrics.astroDatabankCertifiedAAA.occurrence.fourModelComparison = adb4Model;
   }
+  setTimingResolution(latestBench.metrics?.astroDatabankCertifiedAAA?.timing);
+
   fs.writeFileSync(LATEST_BENCHMARK_PATH, JSON.stringify(latestBench, null, 2) + '\n', 'utf8');
   console.log('✓ Synchronized latestBenchmarkResults.json');
 }

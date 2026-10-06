@@ -69,7 +69,8 @@ const FINANCIAL_ADVISORY_PATTERNS = [
   /\bsell (stocks?|shares?|bonds?)\b/gi,
   /\b(guaranteed|certain) returns?\b/gi,
   /\bguaranteed\s+(?:to\s+become\s+wealthy|wealth|profit|returns?|income|money)\b/gi,
-  /\bbecome\s+wealthy\s+guaranteed\b/gi
+  /\bbecome\s+wealthy\s+guaranteed\b/gi,
+  /\b(?:will\s+become\s+(?:a\s+)?(?:billionaire|millionaire|rich|wealthy)|become\s+(?:a\s+)?(?:billionaire|millionaire)|billionaire|millionaire|earn\s+millions|accumulate\s+vast\s+wealth|destined\s+to\s+(?:be|become)\s+(?:rich|wealthy|billionaire|millionaire)|(?:wealth|income|finances?|investments?|money)\s+will\s+(?:rise\s+dramatically|skyrocket|multiply|double|triple)|lottery|jackpot)\b/gi
 ];
 
 // Legal advisory patterns
@@ -136,7 +137,8 @@ export function classifySentence(sentence) {
   // 2. FINANCIAL checks
   const financialCertaintyRegex = /\b(?:guaranteed\s+(?:to\s+become\s+wealthy|wealth|profit|returns?|income|money)|become\s+wealthy\s+guaranteed|guaranteed\s+to\s+become\s+rich)\b/i;
   const financialAdvisoryRegex = /\b(?:buy\s+(?:stocks?|shares?|bonds?|crypto)|invest\s+in)\b/i;
-  if (financialCertaintyRegex.test(s) || financialAdvisoryRegex.test(s)) {
+  const financialPredictiveRegex = /\b(?:will\s+become\s+(?:a\s+)?(?:billionaire|millionaire|rich|wealthy)|become\s+(?:a\s+)?(?:billionaire|millionaire)|billionaire|millionaire|earn\s+millions|accumulate\s+vast\s+wealth|destined\s+to\s+(?:be|become)\s+(?:rich|wealthy|billionaire|millionaire)|(?:wealth|income|finances?|investments?|money)\s+will\s+(?:rise\s+dramatically|skyrocket|multiply|double|triple)|lottery|jackpot)\b/i;
+  if (financialCertaintyRegex.test(s) || financialAdvisoryRegex.test(s) || financialPredictiveRegex.test(s)) {
     return {
       sentence: s,
       sentenceType: CLAIM_TYPES.FINANCIAL,
@@ -144,7 +146,7 @@ export function classifySentence(sentence) {
       domain: "FINANCE",
       safetyViolation: true,
       violationType: "UNSUPPORTED_FINANCIAL_CERTAINTY",
-      reason: "Guaranteed wealth or financial advisory prediction is strictly prohibited."
+      reason: "Guaranteed wealth, extreme windfall, or speculative financial predictions are strictly prohibited."
     };
   }
 
@@ -199,7 +201,7 @@ export function classifySentence(sentence) {
   const signsPattern = SIGN_NAMES.join("|");
   const factSignRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, "i");
   const factDashaRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(Mahadasha|Antardasha|Dasha|Bhukti)/i;
-  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success)\b/i.test(s);
+  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers|leads\s+to|brings|produces|will\s+rise\s+dramatically)\b/i.test(s);
 
   if ((factHouseRegex.test(s) || factSignRegex.test(s) || factDashaRegex.test(s)) && !hasInterpretiveVerb) {
     return {
@@ -212,8 +214,8 @@ export function classifySentence(sentence) {
   }
 
   // 7. INTERPRETATION checks
-  const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders)\b/i;
-  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development"];
+  const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers|will\s+rise\s+dramatically)\b/i;
+  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development", "life", "future"];
   const matchedDomain = domainKeywords.find(d => s.toLowerCase().includes(d)) || "GENERAL_INTERPRETATION";
 
   if (interpretiveRegex.test(s) || hasInterpretiveVerb) {
@@ -227,11 +229,11 @@ export function classifySentence(sentence) {
   }
 
   // 8. GENERAL checks
-  const isGeneral = /\b(?:welcome|reading|chart|overview|analysis|namaste|report)\b/i.test(s) && s.length < 50;
+  const isBoilerplate = /\b(?:welcome|reading|chart|overview|analysis|namaste|report|disclaimer|methodology|framework|summary|note)\b/i.test(s) && s.length < 60;
   return {
     sentence: s,
     sentenceType: CLAIM_TYPES.GENERAL,
-    substantive: !isGeneral,
+    substantive: !isBoilerplate,
     domain: "GENERAL",
     safetyViolation: false
   };
@@ -394,12 +396,17 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
 
   // 4. Universal Sentence Segmentation and Classification
   const rawSentences = splitIntoSentences(rawText);
-  const classifiedSentences = rawSentences.map(classifySentence);
+  const classifiedSentences = rawSentences.map((s, idx) => ({
+    ...classifySentence(s),
+    sentenceId: `SENTENCE_${idx + 1}`,
+    index: idx
+  }));
 
   // 5. Grounding verification against calculated chart data
   const verifiedClaims = [];
   const unsupportedClaims = [];
   const contradictoryClaims = [];
+  const coveredSentenceIndices = new Set();
 
   const planetFacts = buildPlanetFactMap(chartContext);
 
@@ -459,43 +466,54 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   );
 
   // Check classified sentences through claim firewall
-  for (const cs of classifiedSentences) {
+  for (let i = 0; i < classifiedSentences.length; i++) {
+    const cs = classifiedSentences[i];
     if (cs.sentenceType === CLAIM_TYPES.HEALTH) {
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.HEALTH,
         reason: cs.reason,
         failure: "HEALTH_SAFETY_VIOLATION",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.FINANCIAL && cs.safetyViolation) {
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.FINANCIAL,
         reason: cs.reason,
         failure: "UNSUPPORTED_FINANCIAL_CERTAINTY",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.LEGAL && cs.safetyViolation) {
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.LEGAL,
         reason: cs.reason,
         failure: "UNSUPPORTED_LEGAL_CERTAINTY",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.EMPIRICAL) {
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.EMPIRICAL,
         reason: cs.reason,
         failure: "MISREPRESENTED_METRIC",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.TIMING) {
+      coveredSentenceIndices.add(i);
       if (cs.hasExactDate) {
         unsupportedClaims.push({
           claimText: cs.sentence,
+          sentenceId: cs.sentenceId,
           claimType: CLAIM_TYPES.TIMING,
           reason: cs.reason,
           failure: "UNSUPPORTED_TIMING_PRECISION",
@@ -506,6 +524,7 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
         if (!hasTimingEvidence) {
           unsupportedClaims.push({
             claimText: cs.sentence,
+            sentenceId: cs.sentenceId,
             claimType: CLAIM_TYPES.TIMING,
             reason: "INSUFFICIENT_DATA: Timing claim requires candidate timing windows in chartContext",
             failure: "INSUFFICIENT_TIMING_EVIDENCE",
@@ -514,6 +533,7 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
         } else {
           verifiedClaims.push({
             claimText: cs.sentence,
+            sentenceId: cs.sentenceId,
             claimType: CLAIM_TYPES.TIMING,
             matchedFactor: "Verified timing window in chartContext",
             evidenceIds: effectiveNodes.filter(n => n.type?.startsWith("DASHA")).map(n => n.nodeId),
@@ -522,6 +542,7 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
         }
       }
     } else if (cs.sentenceType === CLAIM_TYPES.INTERPRETATION) {
+      coveredSentenceIndices.add(i);
       const targetDomain = cs.domain.toLowerCase();
       const canonicalRuleNodes = effectiveNodes.filter(n =>
         n.nodeType !== "AUTO_DERIVED_FACT_NODE" &&
@@ -536,6 +557,7 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
       if (canonicalRuleNodes.length === 0) {
         unsupportedClaims.push({
           claimText: cs.sentence,
+          sentenceId: cs.sentenceId,
           claimType: CLAIM_TYPES.INTERPRETATION,
           reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${cs.domain} requires canonical evidence rule node in chartContext`,
           failure: "NO_INTERPRETIVE_RULE_IN_GRAPH",
@@ -544,6 +566,7 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
       } else {
         verifiedClaims.push({
           claimText: cs.sentence,
+          sentenceId: cs.sentenceId,
           claimType: CLAIM_TYPES.INTERPRETATION,
           matchedFactor: `Canonical rule grounding for ${cs.domain}`,
           evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
@@ -557,6 +580,11 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   const houseRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/gi;
   let m;
   while ((m = houseRegex.exec(workingText)) !== null) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(m[0]) || m[0].includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
     const pName = normalizePlanetName(m[1]);
     const assertedHouse = parseInt(m[2], 10);
     const fact = planetFacts.get(pName);
@@ -604,6 +632,11 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   const signRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, 'gi');
   let sm;
   while ((sm = signRegex.exec(workingText)) !== null) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(sm[0]) || sm[0].includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
     const pName = normalizePlanetName(sm[1]);
     const assertedSign = sm[2];
     const fact = planetFacts.get(pName);
@@ -654,6 +687,11 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   const activeAdLord = chartContext?.currentDasha?.antardashaLord || chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha || chartContext?.activeDasha?.subLord || chartContext?.activeAdLord || null;
   let dm;
   while ((dm = dashaRegex.exec(workingText)) !== null) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(dm[0]) || dm[0].includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
     const pName = normalizePlanetName(dm[1]);
     const dashaType = dm[2].toLowerCase();
 
@@ -713,6 +751,25 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
     }
   }
 
+  // Substantive Sentence Coverage Gate:
+  // Every substantive declarative statement must produce at least one verifiable claim or violation.
+  const uncoveredSubstantiveSentenceIds = [];
+  for (let i = 0; i < classifiedSentences.length; i++) {
+    const cs = classifiedSentences[i];
+    if (cs.substantive && !coveredSentenceIndices.has(i)) {
+      const sentenceId = cs.sentenceId || `SENTENCE_${i + 1}`;
+      uncoveredSubstantiveSentenceIds.push(sentenceId);
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        sentenceId,
+        claimType: cs.sentenceType || CLAIM_TYPES.GENERAL,
+        reason: `UNCOVERED_SUBSTANTIVE_SENTENCE: Substantive sentence "${cs.sentence}" is not grounded by canonical evidence rule nodes or chart facts`,
+        failure: "UNCOVERED_SUBSTANTIVE_SENTENCE",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    }
+  }
+
   // Redact contradictory and unsupported claims from narrative text
   for (const c of contradictoryClaims) {
     if (c.claimText && workingText.includes(c.claimText)) {
@@ -752,7 +809,10 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
                 contradictoryClaims.length === 0 &&
                 unsupportedClaims.length === 0;
 
-  if (substantiveSentences.length > 0 && totalClaims === 0) {
+  if (uncoveredSubstantiveSentenceIds.length > 0) {
+    isValid = false;
+    failureReason = "UNCOVERED_SUBSTANTIVE_SENTENCES";
+  } else if (substantiveSentences.length > 0 && totalClaims === 0) {
     claimExtractionStatus = "INCOMPLETE";
     isValid = false;
     failureReason = "SUBSTANTIVE_CLAIM_EXTRACTION_FAILED";
@@ -784,6 +844,10 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
     disclaimersAdded: hasHealthContent || hasFinancialContent || hasLegalContent,
     claimExtractionStatus,
     failureReason,
-    classifiedSentences
+    classifiedSentences,
+    uncoveredSubstantiveSentenceIds
   };
 }
+
+export const verifyNarrativeEvidence = validateAndSanitizeAIResponse;
+export const verifyAndSanitizeAiNarrative = validateAndSanitizeAIResponse;

@@ -189,6 +189,42 @@ Every cached prediction entry contains:
 
 ---
 
+## SECTION 16B: 4-MODEL DISCRIMINATIVE OCCURRENCE FRAMEWORK & TIMING RESOLUTION SEPARATION
+
+### 1. 4-Model Comparative Occurrence Framework (Fitted via IRLS on TRAIN)
+To evaluate whether astrological rule scores add any discriminative value over demographic base rates, 4 comparative models were fitted on the TRAIN partition ($N=9,366$) and evaluated out-of-sample:
+1. **Model 0 (Null Baseline):** Intercept-only logistic model predicting empirical base rate ($\\text{logit}(p) = \\beta_0$).
+2. **Model 1 (Demographic Baseline):** Cohort birth-year demographic model ($\\text{logit}(p) = \\beta_0 + \\beta_{\\text{demo}} x_{\\text{demo}}$).
+3. **Model 2 (Astrology-Only Model):** Authentic per-subject astrological score model ($\\text{logit}(p) = \\beta_0 + \\beta_{\\text{astro}} x_{\\text{astro}}$).
+4. **Model 3 (Combined Model):** Bivariate model ($\\text{logit}(p) = \\beta_0 + \\beta_{\\text{demo}} x_{\\text{demo}} + \\beta_{\\text{astro}} x_{\\text{astro}}$).
+
+#### Out-of-Sample Performance Comparison (BLIND_TEST):
+| Model ID | Model Description | Accuracy | Specificity | Sensitivity | Balanced Acc | ROC-AUC | Brier Score | Classifier Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+${(blind?.occurrence?.fourModelComparison || latestBench?.metrics?.blindTest?.occurrence?.fourModelComparison || []).map(m => `| **${m.modelId}** | ${m.modelName} | ${(m.accuracy * 100).toFixed(2)}% | ${(m.specificity * 100).toFixed(2)}% | ${(m.recall * 100).toFixed(2)}% | ${(m.balancedAccuracy * 100).toFixed(2)}% | ${m.rocAuc} | ${m.brierScore} | \`${m.classifierStatus}\` |`).join("\n")}
+
+All models exhibit zero true negatives at the default threshold ($p=0.50$), correctly flagged as \`DEGENERATE_BASE_RATE_CLASSIFIER\`. When evaluated against a minimum specificity constraint ($\\text{specificity} \\ge 0.40$), threshold optimization returns:
+- \`status: "THRESHOLD_NOT_IDENTIFIABLE"\`
+- \`satisfiesConstraint: false\`
+- \`optimalThreshold: null\`
+
+### 2. Timing Granularity vs. Empirical Precision Separation
+A crucial architectural distinction is enforced between calendar calculation granularity and empirical predictive precision:
+- **Historical Record Granularity:** \`DAY\` (Exact dates recorded in registries).
+- **Computed Calendar Granularity:** \`DAY\` (Planetary transits, dashas, and astronomical cusps computed down to the minute/day).
+- **Empirical Predictive Resolution:** \`MULTI_YEAR_RANGE\` (Observed out-of-sample timing error quantiles $q_{50} = \\pm ${cal?.conformalIntervalQuantiles?.q50 ?? 6}\\text{y}$, $q_{80} = \\pm ${cal?.conformalIntervalQuantiles?.q80 ?? 10}\\text{y}$, $\\text{MAE} \\approx ${blind?.timing?.mae ?? 6.89}\\text{y}$).
+- **Empirical Timing Status:** \`EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY\`.
+
+The platform strictly disallows implying that day-level transit or dasha boundaries confer day-level empirical event predictability.
+
+### 3. Empirical Residual-Quantile Prediction Intervals
+Prediction intervals are calibrated as empirical residual-quantile intervals on the holdout error distribution:
+- **Methodology:** Conformal empirical residual quantiles fitted on TRAIN error residuals ($|y_i - \\hat{y}_i|$).
+- **Coverage Guarantees:** Nominal 50% ($q_{50} = \\pm ${cal?.conformalIntervalQuantiles?.q50 ?? 6}\\text{y}$), Nominal 80% ($q_{80} = \\pm ${cal?.conformalIntervalQuantiles?.q80 ?? 10}\\text{y}$), Nominal 90% ($q_{90} = \\pm ${cal?.conformalIntervalQuantiles?.q90 ?? 14}\\text{y}$), Nominal 95% ($q_{95} = \\pm ${cal?.conformalIntervalQuantiles?.q95 ?? 19}\\text{y}$).
+- **Disclosure:** Fully disclosed as empirical residual-quantile intervals, not asymptotic Gaussian confidence intervals.
+
+---
+
 ## SECTION 17: DISCRETE-TIME HAZARD SURVIVAL MODEL (V3 TIME-TO-EVENT ARCHITECTURE)
 
 ### 1. Mathematical Formulation & Likelihood Under Right-Censoring

@@ -218,6 +218,29 @@ test("FAIL-CLOSED MANDATE: Declarative substantive sentences cannot escape with 
   assert.ok(res.unsupportedClaims.length > 0 || res.failureReason != null);
 });
 
+// -------------------------------------------------------------------------
+// SUBSTANTIVE-SENTENCE COVERAGE GATE & BILLIONAIRE MULTI-SENTENCE LOOPHOLE
+// -------------------------------------------------------------------------
+test("MULTI-SENTENCE LOOPHOLE TEST: Verified fact cannot shield extreme billionaire financial prediction", () => {
+  const mixedText = "Jupiter is in the 10th house. You will become a billionaire in 2027.";
+  const res = verifyAndSanitizeAiNarrative(mixedText, chartContextWithJupiter10);
+
+  assert.equal(res.isValid, false, "Must fail closed despite Jupiter 10th house verification");
+  assert.equal(res.verifiedClaims.length, 1, "Jupiter in House 10 is verified");
+  const finViolation = res.unsupportedClaims.find(c => c.failure === "UNSUPPORTED_FINANCIAL_CERTAINTY");
+  assert.ok(finViolation, "Must flag UNSUPPORTED_FINANCIAL_CERTAINTY for billionaire prediction");
+});
+
+test("SUBSTANTIVE-SENTENCE COVERAGE GATE: Every substantive sentence must have verifiable evidence grounding", () => {
+  const partiallyGroundedText = "Jupiter in the 10th house traditionally supports career development. An unprecedented mysterious fate awaits you tomorrow.";
+  const res = verifyAndSanitizeAiNarrative(partiallyGroundedText, chartContextWithCareerRule);
+
+  assert.equal(res.isValid, false, "Must fail closed when substantive sentence lacks grounding");
+  assert.equal(res.failureReason, "UNCOVERED_SUBSTANTIVE_SENTENCES");
+  assert.ok(res.uncoveredSubstantiveSentenceIds.length >= 1, "Must list uncovered substantive sentence IDs");
+  assert.ok(res.unsupportedClaims.some(c => c.failure === "UNCOVERED_SUBSTANTIVE_SENTENCE"));
+});
+
 console.log("\n===========================================================================");
 if (failed === 0) {
   console.log(` ALL ${passed} UNIVERSAL CLAIM FIREWALL TESTS PASSED 100%!`);

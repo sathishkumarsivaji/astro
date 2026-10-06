@@ -128,10 +128,11 @@ export function classifySentence(sentence) {
     };
   }
 
-  // 2. FINANCIAL checks: guaranteed wealth, returns, investment advisory
+  // 2. FINANCIAL checks: guaranteed wealth, returns, investment advisory, windfall predictions
   const financialCertaintyRegex = /\b(?:guaranteed\s+(?:to\s+become\s+wealthy|wealth|profit|returns?|income|money)|become\s+wealthy\s+guaranteed|guaranteed\s+to\s+become\s+rich)\b/i;
   const financialAdvisoryRegex = /\b(?:buy\s+(?:stocks?|shares?|bonds?|crypto)|invest\s+in)\b/i;
-  if (financialCertaintyRegex.test(s) || financialAdvisoryRegex.test(s)) {
+  const financialPredictiveRegex = /\b(?:will\s+become\s+(?:a\s+)?(?:billionaire|millionaire|rich|wealthy)|become\s+(?:a\s+)?(?:billionaire|millionaire)|billionaire|millionaire|earn\s+millions|accumulate\s+vast\s+wealth|destined\s+to\s+(?:be|become)\s+(?:rich|wealthy|billionaire|millionaire)|(?:wealth|income|finances?|investments?|money)\s+will\s+(?:rise\s+dramatically|skyrocket|multiply|double|triple)|lottery|jackpot)\b/i;
+  if (financialCertaintyRegex.test(s) || financialAdvisoryRegex.test(s) || financialPredictiveRegex.test(s)) {
     return {
       sentence: s,
       sentenceType: CLAIM_TYPES.FINANCIAL,
@@ -139,7 +140,7 @@ export function classifySentence(sentence) {
       domain: "FINANCE",
       safetyViolation: true,
       violationType: "UNSUPPORTED_FINANCIAL_CERTAINTY",
-      reason: "Guaranteed wealth or financial advisory prediction is strictly prohibited."
+      reason: "Guaranteed wealth, extreme windfall, or speculative financial predictions are strictly prohibited."
     };
   }
 
@@ -197,7 +198,7 @@ export function classifySentence(sentence) {
 
   // Distinguish factual placement from interpretation:
   // If sentence has "Jupiter in the 10th house traditionally supports career development", it has a FACT component and an INTERPRETATION component
-  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success)\b/i.test(s);
+  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers|leads\s+to|brings|produces)\b/i.test(s);
 
   if ((factHouseRegex.test(s) || factSignRegex.test(s) || factDashaRegex.test(s)) && !hasInterpretiveVerb) {
     return {
@@ -210,8 +211,8 @@ export function classifySentence(sentence) {
   }
 
   // 7. INTERPRETATION checks: domain indications, career success, marriage support
-  const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders)\b/i;
-  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development"];
+  const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers)\b/i;
+  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development", "life", "future"];
   const matchedDomain = domainKeywords.find(d => s.toLowerCase().includes(d)) || "GENERAL_INTERPRETATION";
 
   if (interpretiveRegex.test(s) || hasInterpretiveVerb) {
@@ -225,11 +226,11 @@ export function classifySentence(sentence) {
   }
 
   // 8. GENERAL checks: boilerplate, greetings, general philosophy
-  const isGeneral = /\b(?:welcome|reading|chart|overview|analysis|namaste|report)\b/i.test(s) && s.length < 50;
+  const isBoilerplate = /\b(?:welcome|reading|chart|overview|analysis|namaste|report|disclaimer|methodology|framework|summary|note)\b/i.test(s) && s.length < 60;
   return {
     sentence: s,
     sentenceType: CLAIM_TYPES.GENERAL,
-    substantive: !isGeneral,
+    substantive: !isBoilerplate,
     domain: "GENERAL",
     safetyViolation: false
   };
@@ -378,10 +379,15 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
 
   // 4. Universal Sentence Segmentation and Classification
   const rawSentences = splitIntoSentences(narrative);
-  const classifiedSentences = rawSentences.map(classifySentence);
+  const classifiedSentences = rawSentences.map((s, idx) => ({
+    ...classifySentence(s),
+    sentenceId: `SENTENCE_${idx + 1}`,
+    index: idx
+  }));
 
   const verifiedClaims = [];
   const unsupportedClaims = [];
+  const coveredSentenceIndices = new Set();
 
   // Populate effective evidence nodes from chartContext
   let effectiveNodes = Array.isArray(chartContext?.evidenceNodes)
@@ -441,48 +447,59 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   const planetFacts = buildPlanetFactMap(chartContext);
 
   // Evaluate each classified sentence through the Universal Semantic Firewall
-  for (const cs of classifiedSentences) {
+  for (let i = 0; i < classifiedSentences.length; i++) {
+    const cs = classifiedSentences[i];
     if (cs.sentenceType === CLAIM_TYPES.HEALTH) {
       violations.push(`HEALTH_SAFETY_VIOLATION: ${cs.reason}`);
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.HEALTH,
         reason: cs.reason,
         failure: "HEALTH_SAFETY_VIOLATION",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.FINANCIAL && cs.safetyViolation) {
       violations.push(`UNSUPPORTED_FINANCIAL_CERTAINTY: ${cs.reason}`);
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.FINANCIAL,
         reason: cs.reason,
         failure: "UNSUPPORTED_FINANCIAL_CERTAINTY",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.LEGAL && cs.safetyViolation) {
       violations.push(`UNSUPPORTED_LEGAL_CERTAINTY: ${cs.reason}`);
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.LEGAL,
         reason: cs.reason,
         failure: "UNSUPPORTED_LEGAL_CERTAINTY",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.EMPIRICAL) {
       violations.push(`MISREPRESENTED_METRIC: ${cs.reason}`);
       unsupportedClaims.push({
         claimText: cs.sentence,
+        sentenceId: cs.sentenceId,
         claimType: CLAIM_TYPES.EMPIRICAL,
         reason: cs.reason,
         failure: "MISREPRESENTED_METRIC",
         status: "UNSUPPORTED_CLAIM"
       });
+      coveredSentenceIndices.add(i);
     } else if (cs.sentenceType === CLAIM_TYPES.TIMING) {
+      coveredSentenceIndices.add(i);
       if (cs.hasExactDate) {
         violations.push(`UNSUPPORTED_TIMING_PRECISION: ${cs.reason}`);
         unsupportedClaims.push({
           claimText: cs.sentence,
+          sentenceId: cs.sentenceId,
           claimType: CLAIM_TYPES.TIMING,
           reason: cs.reason,
           failure: "UNSUPPORTED_TIMING_PRECISION",
@@ -494,6 +511,7 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
         if (!hasTimingEvidence) {
           unsupportedClaims.push({
             claimText: cs.sentence,
+            sentenceId: cs.sentenceId,
             claimType: CLAIM_TYPES.TIMING,
             reason: "INSUFFICIENT_DATA: Timing claim requires candidate timing windows or active dasha periods in chartContext",
             failure: "INSUFFICIENT_TIMING_EVIDENCE",
@@ -502,6 +520,7 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
         } else {
           verifiedClaims.push({
             claimText: cs.sentence,
+            sentenceId: cs.sentenceId,
             claimType: CLAIM_TYPES.TIMING,
             matchedFactor: "Verified timing window in chartContext",
             evidenceIds: effectiveNodes.filter(n => n.type?.startsWith("DASHA")).map(n => n.nodeId),
@@ -510,6 +529,7 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
         }
       }
     } else if (cs.sentenceType === CLAIM_TYPES.INTERPRETATION) {
+      coveredSentenceIndices.add(i);
       // INTERPRETATION requires matching canonical evidence rule node for asserted domain
       const targetDomain = cs.domain.toLowerCase();
       const canonicalRuleNodes = effectiveNodes.filter(n =>
@@ -525,6 +545,7 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
       if (canonicalRuleNodes.length === 0) {
         unsupportedClaims.push({
           claimText: cs.sentence,
+          sentenceId: cs.sentenceId,
           claimType: CLAIM_TYPES.INTERPRETATION,
           reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${cs.domain} requires canonical evidence rule node in chartContext`,
           failure: "NO_INTERPRETIVE_RULE_IN_GRAPH",
@@ -533,6 +554,7 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
       } else {
         verifiedClaims.push({
           claimText: cs.sentence,
+          sentenceId: cs.sentenceId,
           claimType: CLAIM_TYPES.INTERPRETATION,
           matchedFactor: `Canonical rule grounding for ${cs.domain}`,
           evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
@@ -545,6 +567,11 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   // Check Planet-in-House assertions (FACT)
   const houseAssertions = extractPlanetHouseAssertions(processedText);
   for (const assertion of houseAssertions) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(assertion.fullText) || assertion.fullText.includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
     const fact = planetFacts.get(assertion.planet);
     if (!fact || fact.house == null) {
       unsupportedClaims.push({
@@ -596,6 +623,11 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   // Check Planet-in-Sign assertions (FACT)
   const signAssertions = extractPlanetSignAssertions(processedText);
   for (const assertion of signAssertions) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(assertion.fullText) || assertion.fullText.includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
     const fact = planetFacts.get(assertion.planet);
     if (!fact || !fact.sign) {
       unsupportedClaims.push({
@@ -651,6 +683,11 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
 
   if (Array.isArray(dashaTable) && dashaTable.length > 0) {
     for (const assertion of dashaAssertions) {
+      for (let i = 0; i < classifiedSentences.length; i++) {
+        if (classifiedSentences[i].sentence.includes(assertion.fullText) || assertion.fullText.includes(classifiedSentences[i].sentence)) {
+          coveredSentenceIndices.add(i);
+        }
+      }
       let isLordVerified = false;
       let matchedReason = "";
 
@@ -705,6 +742,26 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     }
   }
 
+  // Substantive Sentence Coverage Gate:
+  // Every substantive declarative statement must produce at least one verifiable claim or violation.
+  const uncoveredSubstantiveSentenceIds = [];
+  for (let i = 0; i < classifiedSentences.length; i++) {
+    const cs = classifiedSentences[i];
+    if (cs.substantive && !coveredSentenceIndices.has(i)) {
+      const sentenceId = cs.sentenceId || `SENTENCE_${i + 1}`;
+      uncoveredSubstantiveSentenceIds.push(sentenceId);
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        sentenceId,
+        claimType: cs.sentenceType || CLAIM_TYPES.GENERAL,
+        reason: `UNCOVERED_SUBSTANTIVE_SENTENCE: Substantive sentence "${cs.sentence}" is not grounded by canonical evidence rule nodes or chart facts`,
+        failure: "UNCOVERED_SUBSTANTIVE_SENTENCE",
+        status: "UNSUPPORTED_CLAIM"
+      });
+      violations.push(`UNCOVERED_SUBSTANTIVE_SENTENCE: Sentence ${i + 1} lacks verifiable evidence grounding`);
+    }
+  }
+
   // In strict grounding mode, replace or annotate contradictory claims in narrative
   if (strictGrounding && unsupportedClaims.length > 0) {
     for (const un of unsupportedClaims) {
@@ -720,13 +777,14 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   const totalClaims = verifiedClaims.length + unsupportedClaims.length;
   const substantiveSentences = classifiedSentences.filter(s => s.substantive);
 
-  // Requirement 3.3 Fail-Closed Rule:
-  // If the narrative contains substantive declarative statements but totalClaims = 0:
   let claimExtractionStatus = "COMPLETE";
   let failureReason = null;
   let isValid = violations.length === 0 && unsupportedClaims.length === 0;
 
-  if (substantiveSentences.length > 0 && totalClaims === 0) {
+  if (uncoveredSubstantiveSentenceIds.length > 0) {
+    isValid = false;
+    failureReason = "UNCOVERED_SUBSTANTIVE_SENTENCES";
+  } else if (substantiveSentences.length > 0 && totalClaims === 0) {
     claimExtractionStatus = "INCOMPLETE";
     isValid = false;
     failureReason = "SUBSTANTIVE_CLAIM_EXTRACTION_FAILED";
@@ -748,10 +806,12 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     claimExtractionStatus,
     failureReason,
     classifiedSentences,
+    uncoveredSubstantiveSentenceIds,
     epistemicAudit: {
       totalClaims,
       verifiedCount: verifiedClaims.length,
       unsupportedCount: unsupportedClaims.length,
+      uncoveredSubstantiveCount: uncoveredSubstantiveSentenceIds.length,
       groundingRate,
       claimExtractionStatus,
       failureReason,
@@ -763,3 +823,5 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     }
   };
 }
+
+export const verifyNarrativeEvidence = verifyAndSanitizeAiNarrative;

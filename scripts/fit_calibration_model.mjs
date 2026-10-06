@@ -34,7 +34,9 @@ import {
   getEarliestDocumentedMarriage,
   createSeededPRNG,
   selectValidationThreshold,
-  evaluate4ModelComparison
+  evaluate4ModelComparison,
+  getRecordAstrologicalScore,
+  setCachedPredictionProvider
 } from '../frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js';
 import {
   initCacheManager,
@@ -102,6 +104,7 @@ export function fitCalibrationModel(sampleSize = 2500) {
   // Initialize prediction cache manager
   initCacheManager({ calibrationModelPath: OUTPUT_PATH, trainingDatasetPath: TRAIN_PATH });
   loadCache(PREDICTION_CACHE_FILE);
+  setCachedPredictionProvider(getCachedPrediction);
 
   // 1. Select reproducible stratified sample of TRAIN (minimum N >= 2,000 per Req 8)
   const prng = createSeededPRNG(133742);
@@ -168,7 +171,9 @@ export function fitCalibrationModel(sampleSize = 2500) {
     const inputHash = computeInputHash(r);
 
     let occ, timing;
-    const cached = getCachedPrediction(cacheKey, inputHash);
+    const existingEntry = (global.__PREDICTION_CACHE__ && global.__PREDICTION_CACHE__[cacheKey]) || null;
+    const cached = getCachedPrediction(cacheKey, inputHash) ||
+      (existingEntry && existingEntry.inputHash === inputHash && existingEntry.occ && existingEntry.timing ? existingEntry : null);
     
     if (cached) {
       occ = cached.occ;
@@ -299,9 +304,30 @@ export function fitCalibrationModel(sampleSize = 2500) {
     throw new Error('CRITICAL: Current prediction engine hash could not be calculated.');
   }
 
-  // 6. 4-Model Comparative Baseline Framework strictly on TRAIN & Validation
-  console.log('\n6. Computing 4-Model Comparative Baseline Framework...');
-  const fourModelSummary = evaluate4ModelComparison(finalSample.slice(0, 500), trainRecords, 0.50);
+  // 6. Threshold Selection on VALIDATION (N=3,155)
+  console.log('\n6. Selecting and freezing validation threshold on VALIDATION partition...');
+  const valRecords = JSON.parse(fs.readFileSync(VAL_PATH, 'utf8'));
+  const valProbPairs = [];
+  for (const r of valRecords) {
+    const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+    if (status === "RIGHT_CENSORED" || status === "UNKNOWN" || status === "MISSING_OUTCOME" || status === "EVENT_PRE_HORIZON") continue;
+    const actual = status === "EVENT" ? 1 : 0;
+    const rawScore = getRecordAstrologicalScore(r);
+    if (rawScore === null || !Number.isFinite(rawScore)) continue;
+    const logit = slope * rawScore + intercept;
+    const prob = 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, logit))));
+    valProbPairs.push({ prob, actual });
+  }
+
+  const thresholdResult = selectValidationThreshold(valProbPairs, { minSpecificity: 0.40, configuredMinimumSpecificity: 0.40 });
+  console.log('   Validation Threshold Selection Result:', thresholdResult);
+
+  // 7. 4-Model Comparative Baseline Framework on FULL validation cohort
+  console.log('\n7. Computing 4-Model Comparative Baseline Framework on FULL validation cohort (N=' + valRecords.length + ')...');
+  const fourModelSummary = evaluate4ModelComparison(valRecords, trainRecords, {
+    threshold: thresholdResult.optimalThreshold || 0.50,
+    getCachedPrediction
+  });
   console.log('   4-Model Occurrence Summary:');
   for (const m of fourModelSummary) {
     console.log(`     • ${m.modelId} (${m.modelName}): Acc=${(m.accuracy * 100).toFixed(1)}%, Rec=${(m.recall * 100).toFixed(1)}%, Spec=${(m.specificity * 100).toFixed(1)}%, MCC=${m.mcc}, Status=${m.classifierStatus}`);
@@ -331,11 +357,15 @@ export function fitCalibrationModel(sampleSize = 2500) {
       slope: parseFloat(slope.toFixed(4)),
       intercept: parseFloat(intercept.toFixed(4)),
       classificationThreshold: 0.50,
-      validationOptimizedThreshold: 0.50,
-      thresholdSelectionMethod: 'MAXIMIZE_MCC_ON_VALIDATION',
+      validationOptimizedThreshold: thresholdResult.optimalThreshold ?? null,
+      thresholdSelectionStatus: thresholdResult.status,
+      satisfiesConstraint: thresholdResult.satisfiesConstraint ?? false,
+      thresholdSelectionMethod: thresholdResult.method || 'CONSTRAINED_MCC_WITH_MIN_SPECIFICITY_0.40',
       thresholdFrozen: true
     },
     fourModelComparison: fourModelSummary,
+    intervalMethod: 'EMPIRICAL_RESIDUAL_QUANTILE_PREDICTION_INTERVALS',
+    intervalMethodDisclosure: 'Prediction intervals are computed directly from empirical quantiles of absolute residuals on authentic astrological model predictions across the TRAIN partition.',
     conformalIntervalQuantiles: {
       q50,
       q80,

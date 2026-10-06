@@ -760,7 +760,7 @@ if (adbCertifiedResults) {
       astrologicalWithin1yPct: adbCertifiedResults.timing.within1yPct,
       demographicWithin1yPct: adbCertifiedResults.demographicBaseline.within1yPct,
       occurrenceClassifierStatus: adbCertifiedResults.occurrence.classifierStatus,
-      fourModelComparison: evaluate4ModelComparison(adbCertifiedCohort.slice(0, 500), trainRecords, 0.50),
+      fourModelComparison: evaluate4ModelComparison(adbCertifiedCohort, trainRecords, { threshold: 0.50, getCachedPrediction }),
       superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
     }
   };

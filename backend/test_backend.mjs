@@ -456,6 +456,20 @@ const healthRes = validateAndSanitizeAIResponse(healthAiText, mockChartContext);
 assert(healthRes.isValid === false, "Health diagnostic language fails safety validation");
 assert(healthRes.text.includes("does NOT constitute medical diagnosis"), "Statutory medical notice appended to output");
 
+// 10E. Multi-Sentence Loophole & Extreme Wealth Prediction Blocking
+const multiSentenceWealthText = "Sun is placed in the 1st house. You will become a billionaire in 2027.";
+const multiWealthRes = validateAndSanitizeAIResponse(multiSentenceWealthText, mockChartContext);
+assert(multiWealthRes.isValid === false, "Multi-sentence billionaire prediction fails isValid gate check");
+assert(multiWealthRes.verifiedClaims.length >= 1, "Legitimate placement verified in multi-sentence narrative");
+assert(multiWealthRes.unsupportedClaims.some(c => c.failure === "UNSUPPORTED_FINANCIAL_CERTAINTY"), "Billionaire prediction flagged as unsupported financial certainty");
+
+// 10F. Substantive Sentence Coverage Gate
+const uncoveredSubstantiveText = "Sun is placed in the 1st house. An unknown miraculous fortune awaits around the corner.";
+const uncoveredRes = validateAndSanitizeAIResponse(uncoveredSubstantiveText, mockChartContext);
+assert(uncoveredRes.isValid === false, "Uncovered substantive sentence fails isValid gate check");
+assert(uncoveredRes.failureReason === "UNCOVERED_SUBSTANTIVE_SENTENCES", "Uncovered sentence sets failureReason UNCOVERED_SUBSTANTIVE_SENTENCES");
+assert(uncoveredRes.uncoveredSubstantiveSentenceIds.length >= 1, "Uncovered sentence ID recorded in dossier");
+
 console.log("\n==============================================================");
 if (failed === 0) {
   console.log(` ALL ${passed} PRODUCTION BACKEND & SECURITY CHECKS PASSED 100%!`);
