@@ -33,7 +33,7 @@
  */
 
 import crypto from "node:crypto";
-import { calculateClassicalAshtakavarga } from "../astroEngine.js";
+import { calculateClassicalAshtakavarga, calculateMarriageTimingEvents, clearTransitWindowCache } from "../astroEngine.js";
 
 // 16 two-year age bins across adult marital window [18, 50]
 export const SURVIVAL_AGE_BINS = Object.freeze([
@@ -771,6 +771,20 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
   // Dasha table hierarchy from chart
   const dashaTable = chartData?.dashaTable || [];
 
+  // Bridge candidate windows: ensure authentic calculated windows are present
+  let effectiveWindows = Array.isArray(candidateWindows) && candidateWindows.length > 0
+    ? candidateWindows
+    : (chartData?._marriageTimingEvents?.candidateWindows || chartData?.candidateWindows || chartData?.timingWindows || []);
+
+  if (effectiveWindows.length === 0 && chartData && (Array.isArray(planets) && planets.length > 0 && Number.isFinite(ascLong))) {
+    try {
+      const timingEvents = chartData._marriageTimingEvents || (chartData._marriageTimingEvents = calculateMarriageTimingEvents(chartData));
+      effectiveWindows = timingEvents?.candidateWindows || [];
+    } catch {
+      effectiveWindows = [];
+    }
+  }
+
   return SURVIVAL_AGE_BINS.map(bin => {
     let topScore = 0;
     let dashaScore = 0;
@@ -782,7 +796,7 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
     let hasD9Support = false;
 
     // Check Candidate Windows overlap (strictly requiring valid finite ages)
-    for (const w of candidateWindows) {
+    for (const w of effectiveWindows) {
       if (typeof w.startAge !== "number" || !Number.isFinite(w.startAge)) continue;
       const wStart = w.startAge;
       const wEnd = (typeof w.endAge === "number" && Number.isFinite(w.endAge)) ? w.endAge : (wStart + 2);
@@ -797,10 +811,11 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
 
         // Authentic Jupiter transit support check
         const jupInTransit = (Array.isArray(w.transitConcurrence) && w.transitConcurrence.some(t => {
-          const text = typeof t === "string" ? t : (t.description || t.event || t.planet || "");
-          return /jupiter|guru|வியாழன்/i.test(text);
-        })) || (Array.isArray(w.supportingFactors) && w.supportingFactors.some(f => /jupiter|guru|வியாழன்/i.test(f)))
-           || Boolean(w.transitSupport?.jupiterSupports);
+          if (typeof t === "string") return /jupiter|guru|வியாழன்/i.test(t);
+          const pName = t.transitingPlanet || t.planet || "";
+          const summary = t.summaryEn || t.summaryTa || t.description || t.event || "";
+          return /jupiter|guru|வியாழன்/i.test(pName) || /jupiter|guru|வியாழன்/i.test(summary);
+        })) || Boolean(w.transitSupport?.jupiterSupports);
         if (jupInTransit) {
           hasJupiterTransit = true;
           transitScore = Math.max(transitScore, 0.80);
@@ -809,8 +824,13 @@ export function extractIntervalAstrologicalFeatures(chartData, candidateWindows 
         // Authentic Saturn transit affliction check
         const satInTransit = (Array.isArray(w.counterIndicators) && w.counterIndicators.some(c => /saturn|shani|சனி/i.test(c)))
           || (Array.isArray(w.transitConcurrence) && w.transitConcurrence.some(t => {
-            const text = typeof t === "string" ? t : (t.description || t.event || t.planet || "");
-            return /saturn|shani|சனி/i.test(text) && /afflict|aspect|7th|retrograde|malefic/i.test(text);
+            if (typeof t === "string") return /saturn|shani|சனி/i.test(t) && /afflict|aspect|7th|retrograde|malefic/i.test(t);
+            const pName = t.transitingPlanet || t.planet || "";
+            const summary = t.summaryEn || t.summaryTa || t.description || t.event || "";
+            const aspect = t.aspectName || "";
+            const isSat = /saturn|shani|சனி/i.test(pName) || /saturn|shani|சனி/i.test(summary);
+            if (!isSat) return false;
+            return /aspect|afflict|conjunction|ingress|retrograde/i.test(aspect || summary || t.eventType || "") || Boolean(t.targetPlanet || t.targetType);
           }));
         if (satInTransit) {
           hasSaturnTransitAffliction = true;
@@ -951,7 +971,7 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
   }
 
   // 1. Fit Demographic Baseline Hazard from TRAIN
-  const baselineFit = fitDemographicBaselineHazard(recordsToFit);
+  const baselineFit = fitDemographicBaselineHazard(recordsToFit, options);
   const baselineTable = baselineFit.baselineTable;
 
   // 2. Build Subject-Interval Matrix
@@ -969,6 +989,11 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
 
     evaluatedSubjects++;
     if (isEvent) totalEvents++;
+
+    if (global.gc && evaluatedSubjects % 500 === 0) {
+      if (typeof clearTransitWindowCache === "function") clearTransitWindowCache();
+      global.gc();
+    }
 
     const chart = chartProvider(rec);
     const windows = chart?._marriageTimingEvents?.candidateWindows || [];
@@ -1013,6 +1038,29 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
   }
 
   const p = modelType === "MULTI_FACTOR" ? 6 : 1;
+  const paramNames = modelType === "MULTI_FACTOR"
+    ? ["betaDasha", "betaTransitJup", "betaTransitSat", "betaD9", "betaPromise", "betaSav"]
+    : ["betaAstro"];
+
+  if (modelType === "MULTI_FACTOR") {
+    for (let j = 0; j < p; j++) {
+      const exposedCount = dataPoints.filter(d => d.x[j] !== 0 && d.x[j] != null).length;
+      if (exposedCount === 0) {
+        return {
+          status: "FEATURE_INSUFFICIENT_VARIATION",
+          modelType,
+          reason: `Feature '${paramNames[j]}' has zero exposure across all ${dataPoints.length} person-intervals`,
+          failedFeature: paramNames[j],
+          failedFeatureIndex: j,
+          baselineTable,
+          coefficients: null,
+          coefficientTable: [],
+          sampleProvenance: { evaluatedSubjects, totalEvents, personIntervals: dataPoints.length }
+        };
+      }
+    }
+  }
+
   const fitResult = solveRegularizedLogisticHazard(dataPoints, p, lambda);
 
   // Log-Likelihoods for Null vs Fitted Alternative Model
@@ -1036,10 +1084,6 @@ export function fitDiscreteHazardModel(trainRecords, chartProvider, options = {}
   const bic = p * Math.log(dataPoints.length) - 2 * logLikAlt;
 
   // Build Coefficient Descriptors with Wald CIs
-  const paramNames = modelType === "MULTI_FACTOR"
-    ? ["betaDasha", "betaTransitJup", "betaTransitSat", "betaD9", "betaPromise", "betaSav"]
-    : ["betaAstro"];
-
   const coefficients = {};
   const coefficientTable = [];
 
@@ -1157,6 +1201,11 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
 
     if (isEvent) totalEventsInCohort++;
 
+    if (global.gc && cohortSubjects.length % 500 === 0) {
+      if (typeof clearTransitWindowCache === "function") clearTransitWindowCache();
+      global.gc();
+    }
+
     const chart = chartProvider(rec);
     const windows = chart?._marriageTimingEvents?.candidateWindows || [];
     const intervalFeatures = extractIntervalAstrologicalFeatures(chart, windows);
@@ -1170,7 +1219,7 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
       }
     }
 
-    cohortSubjects.push({ exitAge, isEvent, exitK, intervalFeatures });
+    cohortSubjects.push({ exitAge, isEvent, exitK, exitFeatures: intervalFeatures[exitK]?.features || {} });
 
     for (let k = 0; k < SURVIVAL_AGE_BINS.length; k++) {
       const bin = SURVIVAL_AGE_BINS[k];
@@ -1246,7 +1295,7 @@ export function runRealDataFeatureLevelSurvivalAnalysis(records, chartProvider, 
     // Compute Harrell's C-index using fitted beta on subject risk scores with right censoring
     const subjectRiskCases = [];
     for (const sub of cohortSubjects) {
-      const rawFeatVal = sub.intervalFeatures[sub.exitK]?.features?.[def.id];
+      const rawFeatVal = sub.exitFeatures?.[def.id];
       if (rawFeatVal === null || rawFeatVal === undefined || !Number.isFinite(rawFeatVal)) {
         continue;
       }
@@ -1401,7 +1450,7 @@ export function predictDiscreteHazardSurvival(chartData, candidateWindows = [], 
     };
   }
 
-  const intervalFeatures = extractIntervalAstrologicalFeatures(chartData, candidateWindows, options);
+  const intervalFeatures = options.intervalFeatures || extractIntervalAstrologicalFeatures(chartData, candidateWindows, options);
   if (!intervalFeatures || intervalFeatures.length === 0) {
     return {
       status: "INSUFFICIENT_DATA",
@@ -1627,12 +1676,18 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
     totalSubjects++;
     if (isEvent) eventSubjects++; else censoredSubjects++;
 
+    if (global.gc && totalSubjects % 500 === 0) {
+      if (typeof clearTransitWindowCache === "function") clearTransitWindowCache();
+      global.gc();
+    }
+
     const chart = chartProvider(rec);
     const windows = chart?._marriageTimingEvents?.candidateWindows || [];
+    const intervalFeatures = extractIntervalAstrologicalFeatures(chart, windows);
 
-    const predNull = predictDiscreteHazardSurvival(chart, windows, { modelType: "DEMOGRAPHIC_AGE_ONLY", baselineTable });
-    const predCombined = predictDiscreteHazardSurvival(chart, windows, { modelType: "COMBINED_HAZARD", betaAstro, classificationThreshold, baselineTable });
-    const predAstro = predictDiscreteHazardSurvival(chart, windows, { modelType: "ASTROLOGY_ONLY" });
+    const predNull = predictDiscreteHazardSurvival(chart, windows, { modelType: "DEMOGRAPHIC_AGE_ONLY", baselineTable, intervalFeatures });
+    const predCombined = predictDiscreteHazardSurvival(chart, windows, { modelType: "COMBINED_HAZARD", betaAstro, classificationThreshold, baselineTable, intervalFeatures });
+    const predAstro = predictDiscreteHazardSurvival(chart, windows, { modelType: "ASTROLOGY_ONLY", intervalFeatures });
 
     // Target age bin
     const targetAge = isEvent ? eventAge : censorAge;
@@ -1870,7 +1925,16 @@ export function fitAllAblationModels(trainRecords, chartProvider, baselineTable 
     meanCompN++;
 
     const exitAge = isEvent ? eventAge : censorAge;
-    trainSubjects.push({ isEvent, eventAge, exitAge, intervalFeatures, meanComp });
+    const compactFeatures = intervalFeatures.map(f => ({
+      compositeScore: f.compositeScore,
+      features: f.features
+    }));
+    trainSubjects.push({ isEvent, eventAge, exitAge, intervalFeatures: compactFeatures, meanComp });
+
+    if (global.gc && trainSubjects.length % 500 === 0) {
+      if (typeof clearTransitWindowCache === "function") clearTransitWindowCache();
+      global.gc();
+    }
   }
 
   const overallMeanComp = meanCompN > 0 ? meanCompSum / meanCompN : 0.5;
@@ -1987,7 +2051,16 @@ export function runRealDataFeatureAblation(trainRecords, evalRecords, chartProvi
       }
     }
 
-    evalSubjects.push({ isEvent, eventAge, exitAge, exitK, intervalFeatures });
+    const compactFeatures = intervalFeatures.map(f => ({
+      compositeScore: f.compositeScore,
+      features: f.features
+    }));
+    evalSubjects.push({ isEvent, eventAge, exitAge, exitK, intervalFeatures: compactFeatures });
+
+    if (global.gc && evalSubjects.length % 500 === 0) {
+      if (typeof clearTransitWindowCache === "function") clearTransitWindowCache();
+      global.gc();
+    }
   }
 
   const N = evalSubjects.length;

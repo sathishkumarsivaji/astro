@@ -9833,6 +9833,11 @@ export function findTransitEvents(firstArg, maybeAscLong, maybeJdStart, maybeJdE
 }
 
 const _transitWindowCache = new Map();
+const MAX_TRANSIT_WINDOW_CACHE = 200;
+
+export function clearTransitWindowCache() {
+  _transitWindowCache.clear();
+}
 
 function formatLocalDateTime(rootDate, tzOffsetHours = 5.5) {
   const localMs = rootDate.getTime() + tzOffsetHours * 3600000;
@@ -10128,6 +10133,10 @@ export function findMajorTransitEventsForWindow(planets = [], ascendantLong = 0,
   }
 
   events.sort((a, b) => a.jd - b.jd);
+  if (_transitWindowCache.size >= MAX_TRANSIT_WINDOW_CACHE) {
+    const firstKey = _transitWindowCache.keys().next().value;
+    _transitWindowCache.delete(firstKey);
+  }
   _transitWindowCache.set(cacheKey, events);
   return events;
 }
@@ -10269,8 +10278,12 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
     return { rankedPDs: [], peakPD: null, peakWindow: null };
   }
 
+  const ascLong = ctx?.ascendantLong ?? ctx?.ascendant?.longitude;
+  if (!Number.isFinite(ascLong)) {
+    return { rankedPDs: [], peakPD: null, peakWindow: null, status: "INSUFFICIENT_DATA" };
+  }
   const isTamil = ctx?.lang === "ta";
-  const lagnaSignIdx = Math.floor(norm360(ctx?.ascendantLong ?? 0) / 30);
+  const lagnaSignIdx = Math.floor(norm360(ascLong) / 30);
   const planets = ctx?.planets || [];
   const tzOffset = ctx?.timezoneOffsetHours ?? (ctx?.timezoneId === "UTC" ? 0 : (ctx?.timezoneId === "Asia/Kolkata" ? 5.5 : null));
   const tzId = ctx?.timezoneId || (ctx?.timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : (ctx?.timezoneOffsetHours === 0 ? "UTC" : null));
@@ -10354,7 +10367,7 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
   };
 
   const config = domainConfig[domain] || domainConfig.general;
-  const vargaChart = config.vargaFn ? getVargaChartData(planets, ctx?.ascendantLong ?? 0, config.vargaFn) : null;
+  const vargaChart = config.vargaFn ? getVargaChartData(planets, ascLong, config.vargaFn) : null;
   const bkPlanet = planets.find(p => p.name?.toLowerCase() === bkLord?.toLowerCase());
   const bkHouse = (typeof bkPlanet?.house === "number" && bkPlanet.house >= 1 && bkPlanet.house <= 12) ? bkPlanet.house : null;
 
@@ -10367,7 +10380,7 @@ export function rankPratyantardashasForDomain(pratyantardashas, domain, ctx, bkL
       const fullStart = isFinite(jdStart) ? jdStart : (pratyantardashas[0]?.jdStart ?? 2451545.0);
       const fullEnd = isFinite(jdEnd) ? jdEnd : (pratyantardashas[pratyantardashas.length - 1]?.jdEnd ?? (fullStart + 365.25));
       if (isFinite(fullStart) && isFinite(fullEnd) && fullEnd > fullStart) {
-        windowTransits = findMajorTransitEventsForWindow(planets, ctx?.ascendantLong ?? 0, fullStart, fullEnd, config.transitCategory, tzOffset, ctx?.timezoneId || null);
+        windowTransits = findMajorTransitEventsForWindow(planets, ascLong, fullStart, fullEnd, config.transitCategory, tzOffset, ctx?.timezoneId || null);
       }
     } catch (_err) {
       windowTransits = [];
@@ -12548,8 +12561,8 @@ export function calculateChronologicalDashaTimeline(
   if (chartOrPlanets && !Array.isArray(chartOrPlanets)) {
     const ctx = parseChartContext(chartOrPlanets, maybeAscLong, maybeMoonLong, maybeDashaTable, maybeBirthYear, maybeLang);
     planets = ctx.planets || [];
-    ascendantLong = ctx.ascendantLong ?? 0;
-    moonLong = ctx.moonLong ?? 0;
+    ascendantLong = ctx.ascendantLong ?? null;
+    moonLong = ctx.moonLong ?? null;
     dashaTable = ctx.dashaTable && ctx.dashaTable.length > 0 ? ctx.dashaTable : [];
     birthYear = ctx.birthYear ?? birthYear;
     lang = ctx.lang || lang;
@@ -12561,6 +12574,16 @@ export function calculateChronologicalDashaTimeline(
     ascendantSign = chartOrPlanets.ascendantSign || ascendantSign;
     moonSign = chartOrPlanets.moonSign || moonSign;
     moonNakshatra = chartOrPlanets.moonNakshatra || moonNakshatra;
+  }
+
+  if (!Number.isFinite(ascendantLong)) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      reason: "Ascendant longitude not available for chronological dasha lifecycle calculation",
+      phases: [],
+      currentPhase: null,
+      dashaTimeline: []
+    };
   }
 
   const isTamil = lang === "ta";
@@ -13255,9 +13278,10 @@ export function calculateExecutiveSummary(chartData, lang = "en") {
   ];
 
   // 6. Birth-Time Sensitivity (Computed from actual local Ascendant velocity)
-  const ascLong = chartData.ascendant?.longitude ?? chartData.ascendantLong ?? 0;
-  const lagnaDeg = parseFloat((ascLong % 30).toFixed(2));
-  const isBoundary = lagnaDeg < 1.0 || lagnaDeg > 29.0;
+  const ascLong = chartData.ascendant?.longitude ?? chartData.ascendantLong ?? null;
+  const isAscFinite = Number.isFinite(ascLong);
+  const lagnaDeg = isAscFinite ? parseFloat((ascLong % 30).toFixed(2)) : null;
+  const isBoundary = isAscFinite ? (lagnaDeg < 1.0 || lagnaDeg > 29.0) : false;
   const ascSpeed = chartData.ascendantSpeedDegPerMin || (chartData.divisionalCharts?.D60?.d60SensitivityMinutes ? (0.5 / chartData.divisionalCharts.D60.d60SensitivityMinutes) : null);
   
   const d60IntervalMin = (ascSpeed && ascSpeed > 0) ? (0.5 / ascSpeed) : null;

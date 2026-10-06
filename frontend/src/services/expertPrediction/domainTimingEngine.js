@@ -73,6 +73,20 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
     lang = typeof configOrLang === "boolean" ? (configOrLang ? "ta" : "en") : (configOrLang || "en");
   }
 
+  const ascLong = canonicalFacts?.ascendantLong ?? canonicalFacts?.ascendant?.longitude;
+  if (!Number.isFinite(ascLong)) {
+    return {
+      domain,
+      status: "INSUFFICIENT_DATA",
+      reason: "Ascendant longitude not available or insufficient chart facts",
+      allWindows: [],
+      candidateWindows: [],
+      primaryWindows: [],
+      natalPromise: null,
+      evidenceSummary: { totalWindows: 0, highestConfidence: null }
+    };
+  }
+
   const isTamil = lang === "ta";
   const {
     relevantHouses = domainConfig.houses || DOMAIN_HOUSES[domain] || [],

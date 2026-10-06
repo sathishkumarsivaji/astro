@@ -23,6 +23,7 @@ const EXTERNAL_JSON_PATH = path.join(ROOT, "data/real_world_validation/results/e
 const CALIBRATION_JSON_PATH = path.join(ROOT, "data/real_world_validation/results/calibration_model.json");
 const LATEST_BENCHMARK_PATH = path.join(ROOT, "frontend/src/config/latestBenchmarkResults.json");
 const REPORT_MD_PATH = path.join(ROOT, "ASTROVERSE_FINAL_VALIDATION_REPORT.md");
+const ROOT_REPORT_MD_PATH = path.join(ROOT, "ASTROVERSE_REAL_WORLD_VALIDATION_REPORT.md");
 
 if (!fs.existsSync(BENCHMARK_JSON_PATH) || !fs.existsSync(EXTERNAL_JSON_PATH)) {
   console.error("Benchmark JSON files missing. Run benchmark first.");
@@ -155,7 +156,7 @@ Every cached prediction entry contains:
   "predictionEngineHash": "${meta?.predictionEngineHash}",
   "calibrationModelHash": "${meta?.calibrationModelHash}",
   "astronomyEngineVersion": "4.2.0",
-  "historicalTimeEngineVersion": "1.0.0",
+  "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
   "modelVersion": "2.2.0"
 }
@@ -281,4 +282,6 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 `;
 
 fs.writeFileSync(REPORT_MD_PATH, md);
+fs.writeFileSync(ROOT_REPORT_MD_PATH, md);
 console.log(`✓ Synchronized report generated at ${REPORT_MD_PATH}`);
+console.log(`✓ Synchronized root report generated at ${ROOT_REPORT_MD_PATH}`);

@@ -201,27 +201,51 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
 
   // Populate effective evidence nodes: respect provided nodes or build from calculated chart
   let effectiveNodes = Array.isArray(chartContext?.evidenceNodes)
-    ? chartContext.evidenceNodes
-    : (Array.isArray(chartContext?.evidenceIds) ? chartContext.evidenceIds.map(id => ({ nodeId: id })) : []);
+    ? chartContext.evidenceNodes.map(n => ({ ...n, nodeType: n.nodeType || "CANONICAL_EVIDENCE_NODE", source: n.source || "CANONICAL_EVIDENCE_NODE" }))
+    : (Array.isArray(chartContext?.evidenceIds) ? chartContext.evidenceIds.map(id => ({ nodeId: id, nodeType: "CANONICAL_EVIDENCE_NODE", source: "CANONICAL_EVIDENCE_NODE" })) : []);
 
   if (effectiveNodes.length === 0 && Array.isArray(chartContext?.planets)) {
     const autoNodes = [];
     for (const p of chartContext.planets) {
       if (p && p.name) {
         if (p.house != null) {
-          autoNodes.push({ nodeId: `EV_PLANET_${p.name.toUpperCase()}_H${p.house}`, type: 'HOUSE', description: `${p.name} in House ${p.house}` });
+          autoNodes.push({
+            nodeId: `EV_PLANET_${p.name.toUpperCase()}_H${p.house}`,
+            type: 'HOUSE',
+            nodeType: 'AUTO_DERIVED_FACT_NODE',
+            source: 'AUTO_DERIVED_FACT_NODE',
+            description: `${p.name} in House ${p.house}`
+          });
         }
         if (p.sign) {
-          autoNodes.push({ nodeId: `EV_PLANET_${p.name.toUpperCase()}_${p.sign.toUpperCase()}`, type: 'SIGN', description: `${p.name} in ${p.sign}` });
+          autoNodes.push({
+            nodeId: `EV_PLANET_${p.name.toUpperCase()}_${p.sign.toUpperCase()}`,
+            type: 'SIGN',
+            nodeType: 'AUTO_DERIVED_FACT_NODE',
+            source: 'AUTO_DERIVED_FACT_NODE',
+            description: `${p.name} in ${p.sign}`
+          });
         }
       }
     }
     if (chartContext?.currentDasha?.lord) {
-      autoNodes.push({ nodeId: `EV_DASHA_${chartContext.currentDasha.lord.toUpperCase()}`, type: 'DASHA_MD', description: `Active Mahadasha: ${chartContext.currentDasha.lord}` });
+      autoNodes.push({
+        nodeId: `EV_DASHA_${chartContext.currentDasha.lord.toUpperCase()}`,
+        type: 'DASHA_MD',
+        nodeType: 'AUTO_DERIVED_FACT_NODE',
+        source: 'AUTO_DERIVED_FACT_NODE',
+        description: `Active Mahadasha: ${chartContext.currentDasha.lord}`
+      });
     }
     if (chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha) {
       const antar = chartContext.currentDasha.subLord || chartContext.currentDasha.antarDasha;
-      autoNodes.push({ nodeId: `EV_DASHA_${antar.toUpperCase()}`, type: 'DASHA_AD', description: `Active Antardasha: ${antar}` });
+      autoNodes.push({
+        nodeId: `EV_DASHA_${antar.toUpperCase()}`,
+        type: 'DASHA_AD',
+        nodeType: 'AUTO_DERIVED_FACT_NODE',
+        source: 'AUTO_DERIVED_FACT_NODE',
+        description: `Active Antardasha: ${antar}`
+      });
     }
     effectiveNodes = autoNodes;
   }
@@ -380,6 +404,47 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
           claimText: assertion.fullText,
           reason: `CONTRADICTS_CALCULATED_CHART: ${assertion.planet} is not verified in active or indicated dasha periods`,
           status: "UNSUPPORTED_CLAIM"
+        });
+      }
+    }
+  }
+
+  // 4D. Substantive / Interpretive Claim Grounding
+  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children"];
+  const interpretivePattern = /\b(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)(?:'s| in \w+|\s+in\s+(?:the\s+)?(?:\d+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\s+house)?\s+(?:strongly\s+)?(supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders)\s+(?:a\s+|an\s+|the\s+)?([a-z\s]+?)(?=[.,;\n]|$)/gi;
+
+  let im;
+  while ((im = interpretivePattern.exec(processedText)) !== null) {
+    const pName = im[1];
+    const verb = im[2];
+    const targetPhrase = im[3].toLowerCase();
+    const matchedDomain = domainKeywords.find(d => targetPhrase.includes(d));
+
+    if (matchedDomain) {
+      const canonicalRuleNodes = effectiveNodes.filter(n =>
+        n.nodeType !== "AUTO_DERIVED_FACT_NODE" &&
+        (
+          (n.domain && n.domain.toLowerCase() === matchedDomain) ||
+          (n.nodeId && n.nodeId.toLowerCase().includes(matchedDomain)) ||
+          (n.ruleId && n.ruleId.toLowerCase().includes(matchedDomain)) ||
+          (n.description && n.description.toLowerCase().includes(matchedDomain) && n.description.toLowerCase().includes(pName.toLowerCase()))
+        )
+      );
+
+      if (canonicalRuleNodes.length === 0) {
+        unsupportedClaims.push({
+          claimText: im[0].trim(),
+          reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${matchedDomain} requires canonical evidence rule node, but only factual placement nodes exist in chartContext`,
+          status: "UNSUPPORTED_CLAIM",
+          claimType: "INTERPRETIVE_CLAIM"
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: im[0].trim(),
+          matchedFactor: `Canonical rule grounding for ${matchedDomain} (${pName} ${verb})`,
+          evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
+          status: "VERIFIED",
+          claimType: "INTERPRETIVE_CLAIM"
         });
       }
     }

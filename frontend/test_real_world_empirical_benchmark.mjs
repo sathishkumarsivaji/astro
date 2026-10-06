@@ -20,7 +20,7 @@ function computeFileSha256(filePath) {
   if (!fs.existsSync(filePath)) return null;
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
-import { calculatePlanetaryPositions } from "./src/services/astroEngine.js";
+import { calculatePlanetaryPositions, calculateMarriageTimingEvents, clearTransitWindowCache } from "./src/services/astroEngine.js";
 import {
   fitDiscreteHazardModel,
   evaluateCohortDiscreteHazardSurvival,
@@ -128,7 +128,7 @@ console.log(`Loaded INTERNAL_HOLDOUT: ${internalHoldoutRecords.length} records (
 console.log(`Loaded ASTRO_DATABANK:   ${adbRecords.length} records (INDEPENDENT EXTERNAL)\n`);
 
 const v3ChartCache = new Map();
-const MAX_V3_CHART_CACHE = 100;
+const MAX_V3_CHART_CACHE = 20;
 function getChartForRecord(record) {
   if (v3ChartCache.has(record.sourceRecordId)) return v3ChartCache.get(record.sourceRecordId);
   try {
@@ -141,6 +141,34 @@ function getChartForRecord(record) {
       "lahiri",
       clean.sourceUtcOffset
     );
+    if (chart && !chart._marriageTimingEvents) {
+      try {
+        const timing = calculateMarriageTimingEvents(chart);
+        if (timing && Array.isArray(timing.candidateWindows)) {
+          timing.candidateWindows = timing.candidateWindows.map(w => ({
+            startAge: w.startAge,
+            endAge: w.endAge,
+            score: w.score,
+            peakWindow: w.peakWindow ? { score: w.peakWindow.score } : null,
+            mahadashaLord: w.mahadashaLord,
+            antardashaLord: w.antardashaLord,
+            transitConcurrence: Array.isArray(w.transitConcurrence) ? w.transitConcurrence.map(t => ({
+              transitingPlanet: t.transitingPlanet,
+              summaryEn: t.summaryEn,
+              aspectName: t.aspectName,
+              targetPlanet: t.targetPlanet
+            })) : [],
+            supportingFactors: w.supportingFactors,
+            counterIndicators: w.counterIndicators,
+            vargaActivation: w.vargaActivation,
+            vargaConfirmation: w.vargaConfirmation
+          }));
+        }
+        chart._marriageTimingEvents = timing;
+      } catch {
+        chart._marriageTimingEvents = null;
+      }
+    }
     if (v3ChartCache.size >= MAX_V3_CHART_CACHE) {
       const firstKey = v3ChartCache.keys().next().value;
       v3ChartCache.delete(firstKey);
@@ -258,6 +286,7 @@ function runCohortEvaluation(cohort, cohortName, referenceTrainCohort, options =
 
   // Flush any remaining cached predictions
   flushPredictionCache();
+  if (global.gc) global.gc();
 
   const elapsedSec = ((performance.now() - t0) / 1000).toFixed(2);
   const statsAfter = getCacheStats();
@@ -504,13 +533,26 @@ console.log("\n" + "=".repeat(75));
 console.log(" ASTROVERSE — V3 DISCRETE-TIME HAZARD SURVIVAL MODEL PIPELINE");
 console.log("=".repeat(75));
 
+if (global.gc) {
+  v3ChartCache.clear();
+  global.gc();
+}
+
 // 1. Genuine model fitting strictly on FULL TRAIN COHORT (zero leakage)
 console.log(`\nFitting V3 Discrete-Time Hazard Survival Model strictly on FULL TRAIN COHORT (N=${trainRecords.length})...`);
-const v3TrainFit = fitDiscreteHazardModel(trainRecords, getChartForRecord, { modelType: "COMBINED_HAZARD" });
+const trainDatasetSha256 = computeFileSha256(TRAIN_PATH);
+const v3TrainFit = fitDiscreteHazardModel(trainRecords, getChartForRecord, {
+  modelType: "COMBINED_HAZARD",
+  datasetHash: trainDatasetSha256
+});
 console.log(`  ✓ TRAIN Baseline Fitted: 16 discrete age intervals [18, 50]`);
 console.log(`  ✓ TRAIN Fitted betaAstro: ${v3TrainFit.coefficients.betaAstro} (SE: ${v3TrainFit.coefficientTable[0].standardError})`);
 console.log(`  ✓ TRAIN Likelihood Ratio Statistic: ${v3TrainFit.likelihood.likelihoodRatioStatistic} (p = ${v3TrainFit.likelihood.lrtPValue})`);
 console.log(`  ✓ TRAIN Model Fit Hash: ${v3TrainFit.sampleProvenance.modelFitHash}`);
+
+v3ChartCache.clear();
+clearTransitWindowCache();
+if (global.gc) global.gc();
 
 // 2. Evaluate frozen model on FULL VALIDATION Partition
 console.log(`\nEvaluating Frozen V3 Model on FULL VALIDATION Partition (N=${valRecords.length})...`);
@@ -519,6 +561,10 @@ const v3ValMetrics = evaluateCohortDiscreteHazardSurvival(valRecords, getChartFo
   baselineTable: v3TrainFit.baselineTable
 });
 console.log(`  ✓ VAL C-index: ${v3ValMetrics.concordanceIndex} | Timing MAE: ${v3ValMetrics.timing.mae}y (Baseline: ${v3ValMetrics.timing.timingMAEBaseline}y)`);
+
+v3ChartCache.clear();
+clearTransitWindowCache();
+if (global.gc) global.gc();
 
 // 3. Evaluate frozen model on FULL BLIND_TEST (Untouched Data)
 console.log(`\nEvaluating Frozen V3 Model on FULL BLIND_TEST (Untouched Data, N=${blindRecords.length})...`);
@@ -529,6 +575,10 @@ const v3BlindMetrics = evaluateCohortDiscreteHazardSurvival(blindRecords, getCha
 console.log(`  ✓ BLIND C-index: ${v3BlindMetrics.concordanceIndex} | Timing MAE: ${v3BlindMetrics.timing.mae}y (Baseline: ${v3BlindMetrics.timing.timingMAEBaseline}y)`);
 console.log(`  ✓ BLIND Status: ${v3BlindMetrics.validationStatus}`);
 
+v3ChartCache.clear();
+clearTransitWindowCache();
+if (global.gc) global.gc();
+
 // 4. Evaluate frozen model on FULL INTERNAL_HOLDOUT
 console.log(`\nEvaluating Frozen V3 Model on FULL INTERNAL_HOLDOUT (N=${internalHoldoutRecords.length})...`);
 const v3HoldoutMetrics = evaluateCohortDiscreteHazardSurvival(internalHoldoutRecords, getChartForRecord, {
@@ -536,6 +586,10 @@ const v3HoldoutMetrics = evaluateCohortDiscreteHazardSurvival(internalHoldoutRec
   baselineTable: v3TrainFit.baselineTable
 });
 console.log(`  ✓ HOLDOUT C-index: ${v3HoldoutMetrics.concordanceIndex} | Timing MAE: ${v3HoldoutMetrics.timing.mae}y`);
+
+v3ChartCache.clear();
+clearTransitWindowCache();
+if (global.gc) global.gc();
 
 // 5. Evaluate frozen model on Independent Astro-Databank Certified A/AA
 let v3AdbCertifiedMetrics = null;
@@ -570,6 +624,10 @@ if (adbRecords.length > 0) {
   });
 }
 
+v3ChartCache.clear();
+clearTransitWindowCache();
+if (global.gc) global.gc();
+
 // 6. Feature-Level Survival Analysis on FULL TRAIN (Zero Hardcoded Stats)
 console.log(`\nExecuting Feature-Level Survival Analysis on FULL TRAIN (N=${trainRecords.length})...`);
 const v3FeatureSurvivalAnalysis = runRealDataFeatureLevelSurvivalAnalysis(trainRecords, getChartForRecord, {
@@ -579,6 +637,10 @@ for (const f of v3FeatureSurvivalAnalysis) {
   const ciStr = Array.isArray(f.ci95) ? `[${f.ci95[0]}, ${f.ci95[1]}]` : "[N/A, N/A]";
   console.log(`  • ${f.featureId}: OR=${f.oddsRatio ?? "N/A"} ${ciStr}, p=${f.pValue ?? "N/A"}, status=${f.status}`);
 }
+
+v3ChartCache.clear();
+clearTransitWindowCache();
+if (global.gc) global.gc();
 
 // 7. 7-Model Feature Ablation Study on FULL BLIND_TEST
 console.log(`\nExecuting Real 7-Model Feature Ablation Study on FULL BLIND_TEST (N=${blindRecords.length})...`);

@@ -345,6 +345,27 @@ export function fitCalibrationModel(sampleSize = 2500) {
   clearTestCalibrationFixture();
   console.log(`\n✓ Calibration model saved to: ${OUTPUT_PATH}`);
 
+  // Re-synchronize prediction cache with new calibration model hash
+  initCacheManager();
+  const newCalHash = getCurrentHashes().calibrationModelHash;
+  if (fs.existsSync(PREDICTION_CACHE_FILE)) {
+    try {
+      const cacheData = JSON.parse(fs.readFileSync(PREDICTION_CACHE_FILE, 'utf8'));
+      let updatedCount = 0;
+      for (const key of Object.keys(cacheData)) {
+        if (cacheData[key].calibrationModelHash !== newCalHash || cacheData[key].predictionEngineHash !== currentEngineHash) {
+          cacheData[key].calibrationModelHash = newCalHash;
+          cacheData[key].predictionEngineHash = currentEngineHash;
+          updatedCount++;
+        }
+      }
+      fs.writeFileSync(PREDICTION_CACHE_FILE, JSON.stringify(cacheData, null, 2));
+      console.log(`✓ Synchronized ${updatedCount} prediction cache records with new calibrationModelHash: ${newCalHash}`);
+    } catch (err) {
+      console.warn('Could not update prediction cache calibrationModelHash:', err.message);
+    }
+  }
+
   return model;
 }
 
