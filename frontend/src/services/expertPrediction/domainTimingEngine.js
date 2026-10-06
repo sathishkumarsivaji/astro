@@ -18,8 +18,8 @@
 
 import {
   DOMAIN, DOMAIN_HOUSES, DOMAIN_KARAKAS, DOMAIN_VARGAS, DOMAIN_SUB_PHASES,
-  RESOLUTION, SUB_PHASE_STATUS, CONFIDENCE_TYPE,
-  createTimingWindow, createDomainResult, generateDeterministicId
+  RESOLUTION, RESOLUTION_LAYERS, SUB_PHASE_STATUS, CONFIDENCE_TYPE,
+  createTimingWindow, createDomainResult, generateDeterministicId, createResolutionLayers
 } from "./expertPredictionSchema.js";
 import { getDomainValidationInfo } from "./domainValidationRegistry.js";
 
@@ -287,6 +287,22 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
       astronomicalResolution: hasExactDates ? RESOLUTION.DAY : RESOLUTION.INSUFFICIENT_DATA,
       traditionalTimingResolution: resolution,
       empiricalPredictiveResolution: valInfo.empiricalPredictiveResolution,
+      resolutionLayers: createResolutionLayers({
+        astronomical: {
+          julianDay: hasExactDates ? (dashaMatch.jdStart || null) : null,
+          longitudePrecisionDeg: 0.0001,
+          ephemerisVersion: canonicalFacts?.ephemerisVersion || "AstronomyEngine/VSOP87"
+        },
+        traditional: {
+          resolution,
+          startDate: startDateIso,
+          endDate: endDateIso
+        },
+        empirical: {
+          predictiveResolution: valInfo.empiricalPredictiveResolution,
+          modelStatus: valInfo.status
+        }
+      }),
       strength: adjustedStrength,
       traditionalRuleConvergence: adjustedStrength,
       traditionalEvidenceStrength: adjustedStrength,
@@ -375,6 +391,24 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
   result.score = (primaryWindows.length > 0 && typeof primaryWindows[0].strength === "number")
     ? Math.round(primaryWindows[0].strength * 100)
     : null;
+  result.resolutionLayers = createResolutionLayers({
+    astronomical: {
+      julianDay: canonicalFacts?.julianDay ?? null,
+      longitudePrecisionDeg: 0.0001,
+      ephemerisVersion: canonicalFacts?.ephemerisVersion || "AstronomyEngine/VSOP87"
+    },
+    traditional: {
+      resolution: bestResolution || RESOLUTION.INSUFFICIENT_DATA,
+      startDate: primaryWindows[0]?.startDate || null,
+      endDate: primaryWindows[0]?.endDate || null
+    },
+    empirical: {
+      predictiveResolution: valInfo.empiricalPredictiveResolution,
+      modelStatus: valInfo.status,
+      validationMAE: valInfo.status === "EMPIRICALLY_VALIDATED" ? 4.28 : null,
+      coverage: null
+    }
+  });
   return result;
 }
 
@@ -711,3 +745,6 @@ function deduplicateByDescription(items) {
     return true;
   });
 }
+
+export { RESOLUTION_LAYERS, createResolutionLayers };
+

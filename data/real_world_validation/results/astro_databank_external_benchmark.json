@@ -6,8 +6,8 @@
     "generatedAt": "2026-10-06T02:21:21.614Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0",
-    "calibrationModelHash": "c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758",
+    "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
+    "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
@@ -30,8 +30,8 @@
       "cacheMisses": 0,
       "recomputedCount": 0,
       "invalidatedEntries": 0,
-      "predictionEngineHash": "be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0",
-      "calibrationHash": "c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758"
+      "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
+      "calibrationHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc"
     }
   },
   "primaryBenchmark": {
@@ -82,7 +82,9 @@
       "ci95": {
         "lower": 0.9382,
         "upper": 0.9803
-      }
+      },
+      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+      "isDegenerate": true
     },
     "timing": {
       "n": 320,

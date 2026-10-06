@@ -13,8 +13,8 @@
     "independentAstroDatabank": 4798,
     "certifiedAstroDatabankAAA": 3751,
     "antiLeakageProtocol": "SHA-256 Pre-Cutoff Commitment Hashing",
-    "predictionEngineHash": "be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0",
-    "calibrationModelHash": "c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758",
+    "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
+    "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
@@ -83,7 +83,63 @@
         "ci95": {
           "lower": 0.8973,
           "upper": 0.9252
-        }
+        },
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "fourModelComparison": [
+          {
+            "modelId": "MODEL_0_NULL",
+            "modelName": "Null Intercept-Only Baseline",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5,
+            "brierScore": 0.0763,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_1_DEMOGRAPHIC",
+            "modelName": "Demographic Baseline Model",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5215,
+            "brierScore": 0.0765,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_2_ASTROLOGY",
+            "modelName": "Astrology-Only Model",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5,
+            "brierScore": 0.0794,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_3_COMBINED",
+            "modelName": "Combined Demographic + Astrology Model",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5215,
+            "brierScore": 0.0808,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          }
+        ]
       },
       "timing": {
         "n": 1484,
@@ -276,7 +332,63 @@
         "ci95": {
           "lower": 0.9008,
           "upper": 0.9288
-        }
+        },
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "fourModelComparison": [
+          {
+            "modelId": "MODEL_0_NULL",
+            "modelName": "Null Intercept-Only Baseline",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5,
+            "brierScore": 0.0763,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_1_DEMOGRAPHIC",
+            "modelName": "Demographic Baseline Model",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5545,
+            "brierScore": 0.0765,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_2_ASTROLOGY",
+            "modelName": "Astrology-Only Model",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5,
+            "brierScore": 0.0794,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_3_COMBINED",
+            "modelName": "Combined Demographic + Astrology Model",
+            "accuracy": 0.9168,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5545,
+            "brierScore": 0.0807,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          }
+        ]
       },
       "timing": {
         "n": 1419,
@@ -469,7 +581,63 @@
         "ci95": {
           "lower": 0.9382,
           "upper": 0.9803
-        }
+        },
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "fourModelComparison": [
+          {
+            "modelId": "MODEL_0_NULL",
+            "modelName": "Null Intercept-Only Baseline",
+            "accuracy": 0.9385,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5,
+            "brierScore": 0.0587,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_1_DEMOGRAPHIC",
+            "modelName": "Demographic Baseline Model",
+            "accuracy": 0.9385,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.3033,
+            "brierScore": 0.0587,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_2_ASTROLOGY",
+            "modelName": "Astrology-Only Model",
+            "accuracy": 0.9385,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.5,
+            "brierScore": 0.0638,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          },
+          {
+            "modelId": "MODEL_3_COMBINED",
+            "modelName": "Combined Demographic + Astrology Model",
+            "accuracy": 0.9385,
+            "recall": 1,
+            "specificity": 0,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.3033,
+            "brierScore": 0.0652,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+          }
+        ]
       },
       "timing": {
         "n": 320,

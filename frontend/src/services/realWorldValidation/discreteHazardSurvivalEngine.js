@@ -2441,3 +2441,25 @@ export function runDiscreteHazardPermutationTest(cohort, chartProvider, options 
     passesNullCheck: empiricalPValue > 0.01 // Confirms empirical p-value indicates absence of artificial overfitting
   };
 }
+
+export const RESOLUTION_LAYERS = Object.freeze({
+  ASTRONOMICAL_CALCULATION: "ASTRONOMICAL_CALCULATION",
+  TRADITIONAL_RULE_RESOLUTION: "TRADITIONAL_RULE_RESOLUTION",
+  EMPIRICAL_PREDICTIVE_RESOLUTION: "EMPIRICAL_PREDICTIVE_RESOLUTION"
+});
+
+export function validateResolutionSeparation(prediction) {
+  if (!prediction) return { isValid: false, reason: "MISSING_PREDICTION" };
+  const hasDayPredictiveClaim = prediction.predictiveResolution === "DAY" || prediction.hasExactDayPrediction === true;
+  const isEmpiricallyValidated = prediction.validationStatus === "EMPIRICALLY_VALIDATED";
+  if (hasDayPredictiveClaim && !isEmpiricallyValidated) {
+    return {
+      isValid: false,
+      blocked: true,
+      reason: "UNSUPPORTED_TIMING_PRECISION: Exact day predictive claims without empirical validation are strictly prohibited.",
+      modelStatus: "INSUFFICIENT_VALIDATION"
+    };
+  }
+  return { isValid: true, blocked: false };
+}
+

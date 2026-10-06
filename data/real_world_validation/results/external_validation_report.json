@@ -1,8 +1,8 @@
 {
   "reportTitle": "Astro-Databank External Validation Summary Report",
   "metadata": {
-    "predictionEngineHash": "be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0",
-    "calibrationModelHash": "c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758",
+    "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
+    "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
@@ -50,7 +50,63 @@
     "demographicBaselineMAE": 6.41,
     "demographicBaselineWithin1yPct": 19.38,
     "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.",
+    "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+    "occurrenceIsDegenerate": true,
+    "fourModelComparison": [
+      {
+        "modelId": "MODEL_0_NULL",
+        "modelName": "Null Intercept-Only Baseline",
+        "accuracy": 0.9385,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.5,
+        "brierScore": 0.0587,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      },
+      {
+        "modelId": "MODEL_1_DEMOGRAPHIC",
+        "modelName": "Demographic Baseline Model",
+        "accuracy": 0.9385,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.3033,
+        "brierScore": 0.0587,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      },
+      {
+        "modelId": "MODEL_2_ASTROLOGY",
+        "modelName": "Astrology-Only Model",
+        "accuracy": 0.9385,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.5,
+        "brierScore": 0.0638,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      },
+      {
+        "modelId": "MODEL_3_COMBINED",
+        "modelName": "Combined Demographic + Astrology Model",
+        "accuracy": 0.9385,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.3033,
+        "brierScore": 0.0652,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+      }
+    ]
   },
   "conclusion": "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
 }

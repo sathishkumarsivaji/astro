@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA).
 - **Actual Production Model Calibration:** Platt scaling and conformal prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0`) and calibration model SHA-256 hash (`c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5`) and calibration model SHA-256 hash (`f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -96,8 +96,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0",
-  "calibrationModelHash": "c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758",
+  "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
+  "calibrationModelHash": "f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -223,8 +223,8 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0` |
-| **Calibration Model Hash** | `c63352b45d7999841897227438eca26c37800d1392bde2f4b8bc22a24032a758` |
+| **Prediction Engine Hash** | `fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5` |
+| **Calibration Model Hash** | `f48432c2e53b0b2450cf7f3b4bb7ca4790c2ae07a94ce36233aa9eab1b4339dc` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |

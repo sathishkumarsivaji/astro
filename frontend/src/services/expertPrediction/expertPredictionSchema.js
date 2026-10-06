@@ -16,6 +16,7 @@
 
 export const RESOLUTION = Object.freeze({
   YEAR:               "YEAR",
+  MULTI_YEAR_RANGE:   "MULTI_YEAR_RANGE",
   SEASON:             "SEASON",
   MONTH_RANGE:        "MONTH_RANGE",
   DATE_RANGE:         "DATE_RANGE",
@@ -34,10 +35,59 @@ export const RESOLUTION_RANK = Object.freeze({
   [RESOLUTION.MONTH_RANGE]:        4,
   [RESOLUTION.SEASON]:             5,
   [RESOLUTION.YEAR]:               6,
-  [RESOLUTION.MULTI_MODAL]:        7,
-  [RESOLUTION.NOT_DISCRIMINATING]: 8,
-  [RESOLUTION.INSUFFICIENT_DATA]:  9
+  [RESOLUTION.MULTI_YEAR_RANGE]:   7,
+  [RESOLUTION.MULTI_MODAL]:        8,
+  [RESOLUTION.NOT_DISCRIMINATING]: 9,
+  [RESOLUTION.INSUFFICIENT_DATA]:  10
 });
+
+export const RESOLUTION_LAYERS = Object.freeze({
+  ASTRONOMICAL_CALCULATION: "ASTRONOMICAL_CALCULATION",
+  TRADITIONAL_RULE_RESOLUTION: "TRADITIONAL_RULE_RESOLUTION",
+  EMPIRICAL_PREDICTIVE_RESOLUTION: "EMPIRICAL_PREDICTIVE_RESOLUTION"
+});
+
+export const EMPIRICAL_STATUS = Object.freeze({
+  EXPERIMENTAL: "EXPERIMENTAL",
+  VALIDATED: "VALIDATED",
+  NOT_EMPIRICALLY_VALIDATED: "NOT_EMPIRICALLY_VALIDATED",
+  BASE_RATE_DOMINATED: "BASE_RATE_DOMINATED",
+  NOT_DISCRIMINATIVE: "NOT_DISCRIMINATIVE",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA",
+  FEATURE_NOT_IDENTIFIABLE: "FEATURE_NOT_IDENTIFIABLE",
+  LEAKAGE_DETECTED: "LEAKAGE_DETECTED",
+  CALIBRATION_INVALID: "CALIBRATION_INVALID",
+  PROVENANCE_INVALID: "PROVENANCE_INVALID"
+});
+
+export function createResolutionLayers({ astronomical, traditional, empirical }) {
+  return {
+    layerA: {
+      resolutionType: RESOLUTION_LAYERS.ASTRONOMICAL_CALCULATION,
+      timestamp: astronomical?.timestamp || new Date().toISOString(),
+      julianDay: astronomical?.julianDay ?? null,
+      longitudePrecisionDeg: astronomical?.longitudePrecisionDeg ?? 0.0001,
+      ephemerisVersion: astronomical?.ephemerisVersion || "AstronomyEngine/VSOP87",
+      precisionDescription: "Ephemeris calculation precision (computational precision only, does not imply predictive accuracy)."
+    },
+    layerB: {
+      resolutionType: RESOLUTION_LAYERS.TRADITIONAL_RULE_RESOLUTION,
+      ruleGranularity: traditional?.resolution || RESOLUTION.YEAR,
+      startDate: traditional?.startDate || null,
+      endDate: traditional?.endDate || null,
+      granularityDescription: "Granularity defined by traditional rule convergence."
+    },
+    layerC: {
+      resolutionType: RESOLUTION_LAYERS.EMPIRICAL_PREDICTIVE_RESOLUTION,
+      predictiveResolution: empirical?.predictiveResolution || RESOLUTION.NOT_DISCRIMINATING,
+      modelStatus: empirical?.modelStatus || "INSUFFICIENT_VALIDATION",
+      validationMAE: empirical?.validationMAE ?? null,
+      coverage: empirical?.coverage ?? null,
+      exactDateBlocked: true,
+      resolutionDisclaimer: "Astronomical precision cannot be used to infer exact predictive event dates without validated empirical evidence."
+    }
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // 2. SUB-PHASE STATUS

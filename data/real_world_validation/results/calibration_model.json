@@ -2,10 +2,10 @@
   "calibratorType": "PLATT_LOGISTIC_SCALING_V2",
   "modelVersion": "2.2.0-actual-model-fitted",
   "predictionEngineVersion": "4.2.0",
-  "predictionEngineHash": "be12e0428dbd256ffe5b2d77c3b9b890fec250fcc133ab345efdcfb45f25a7c0",
+  "predictionEngineHash": "fb8643e19b71df62fc99bbc17247775dfe7f9ba0a5fa0baddc0cb3e3a2e948a5",
   "calibrationInputHash": "58c1c3b7bb8defa059bc58e11cf1382dad418f216a423a6e8e94dce2b5516db4",
   "trainingSampleHash": "83a97b8b775723f88b5f43b3501b61efc5f24a040b4b066b70e500f6f4ab2357",
-  "fitTimestamp": "2026-10-05T13:12:07.150Z",
+  "fitTimestamp": "2026-10-06T03:30:26.462Z",
   "fitSeed": 133742,
   "fitMethod": "NEWTON_RAPHSON_IRLS",
   "rawScoreDefinition": "rawRuleScore_from_predictMarriageOccurrence",
@@ -21,8 +21,65 @@
   "parameters": {
     "slope": 0.4189,
     "intercept": 1.6736,
-    "classificationThreshold": 0.5
+    "classificationThreshold": 0.5,
+    "validationOptimizedThreshold": 0.5,
+    "thresholdSelectionMethod": "MAXIMIZE_MCC_ON_VALIDATION",
+    "thresholdFrozen": true
   },
+  "fourModelComparison": [
+    {
+      "modelId": "MODEL_0_NULL",
+      "modelName": "Null Intercept-Only Baseline",
+      "accuracy": 1,
+      "recall": 1,
+      "specificity": 0,
+      "mcc": 0,
+      "balancedAccuracy": 0.5,
+      "rocAuc": null,
+      "brierScore": 0.0084,
+      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+    },
+    {
+      "modelId": "MODEL_1_DEMOGRAPHIC",
+      "modelName": "Demographic Baseline Model",
+      "accuracy": 1,
+      "recall": 1,
+      "specificity": 0,
+      "mcc": 0,
+      "balancedAccuracy": 0.5,
+      "rocAuc": null,
+      "brierScore": 0.0085,
+      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+    },
+    {
+      "modelId": "MODEL_2_ASTROLOGY",
+      "modelName": "Astrology-Only Model",
+      "accuracy": 1,
+      "recall": 1,
+      "specificity": 0,
+      "mcc": 0,
+      "balancedAccuracy": 0.5,
+      "rocAuc": null,
+      "brierScore": 0.1709,
+      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+    },
+    {
+      "modelId": "MODEL_3_COMBINED",
+      "modelName": "Combined Demographic + Astrology Model",
+      "accuracy": 1,
+      "recall": 1,
+      "specificity": 0,
+      "mcc": 0,
+      "balancedAccuracy": 0.5,
+      "rocAuc": null,
+      "brierScore": 0.1939,
+      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED"
+    }
+  ],
   "conformalIntervalQuantiles": {
     "q50": 6,
     "q80": 10,

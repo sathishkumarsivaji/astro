@@ -42,7 +42,8 @@ import {
   runNegativeControls,
   calculateContingencyPValue,
   applyBenjaminiHochberg,
-  crossCheckPublicRecord
+  crossCheckPublicRecord,
+  evaluate4ModelComparison
 } from "./src/services/realWorldValidation/empiricalEvaluationEngine.js";
 import {
   initCacheManager,
@@ -728,6 +729,8 @@ if (adbCertifiedResults) {
       occurrenceBrierScore: adbCertifiedResults.occurrence.brierScore,
       occurrenceECE: adbCertifiedResults.occurrence.ece,
       occurrenceQualityGate: adbCertifiedResults.occurrence.validationStatus,
+      occurrenceClassifierStatus: adbCertifiedResults.occurrence.classifierStatus,
+      occurrenceIsDegenerate: adbCertifiedResults.occurrence.isDegenerate,
       timingMAE: adbCertifiedResults.timing.mae,
       timingWithin1yPct: adbCertifiedResults.timing.within1yPct,
       timingWithin2yPct: adbCertifiedResults.timing.within2yPct,
@@ -756,6 +759,8 @@ if (adbCertifiedResults) {
       demographicBaselineMAE: adbCertifiedResults.demographicBaseline.mae,
       astrologicalWithin1yPct: adbCertifiedResults.timing.within1yPct,
       demographicWithin1yPct: adbCertifiedResults.demographicBaseline.within1yPct,
+      occurrenceClassifierStatus: adbCertifiedResults.occurrence.classifierStatus,
+      fourModelComparison: evaluate4ModelComparison(adbCertifiedCohort.slice(0, 500), trainRecords, 0.50),
       superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
     }
   };

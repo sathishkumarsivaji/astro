@@ -1,16 +1,32 @@
 /**
- * ASTROVERSE — AI Evidence Verification & Epistemic Safety Gate
- * ==============================================================
+ * ASTROVERSE — AI Evidence Verification & Universal Semantic Claim Firewall
+ * =========================================================================
  * Upgrades AI narrative generation from simple lexical sanitization to a
- * formal Evidence-Backed Verification Pipeline.
+ * formal Universal Semantic Claim Firewall.
  *
- * Core Principles:
- * 1. Claim -> Evidence IDs -> VERIFIED vs UNSUPPORTED_CLAIM.
- * 2. Every astrological placement asserted (planet in house, planet in sign,
- *    dasha lord, transit trigger) MUST map to calculated astronomical chart facts.
- * 3. Misleading fatalistic claims ("exact prediction", "guaranteed date",
- *    "certain event", "100% accuracy") are strictly prohibited and sanitized.
- * 4. Medical diagnoses, disease prediction, and mortality/lifespan claims are blocked.
+ * Requirements (Parts 3, 4, 5, 6, 11):
+ * 1. Narrative -> Sentence Segmentation -> Semantic Claim Classification:
+ *    [FACT, INTERPRETATION, TIMING, EMPIRICAL, HEALTH, FINANCIAL, LEGAL, GENERAL].
+ * 2. Fail-Closed Grounding:
+ *    If narrative contains substantive declarative statements, totalClaims = 0
+ *    MUST fail closed with:
+ *      claimExtractionStatus = "INCOMPLETE"
+ *      isValid = false
+ *      failureReason = "SUBSTANTIVE_CLAIM_EXTRACTION_FAILED"
+ * 3. Exact Day/Date Claims:
+ *    Without an independently validated DAY model, exact predictive dates fail with:
+ *      failureReason = "UNSUPPORTED_TIMING_PRECISION"
+ * 4. Empirical Claims:
+ *    Raw prevalence-driven accuracy claimed as predictive accuracy fails with:
+ *      failureReason = "MISREPRESENTED_METRIC"
+ * 5. Statutory Safety:
+ *    - Clinical health, diagnosis, surgery blocked by Health Safety Layer.
+ *    - Guaranteed wealth or returns blocked for financial certainty.
+ *    - Guaranteed court victory blocked for legal certainty.
+ * 6. Evidence Grounding:
+ *    - FACT claims must resolve to calculated chart facts.
+ *    - INTERPRETATION claims must resolve to canonical rule nodes & evidence IDs.
+ *    - TIMING claims must resolve to candidate timing windows & resolution evidence.
  */
 
 import { HEALTH_FORBIDDEN_TERMS } from "./expertPrediction/expertPredictionSchema.js";
@@ -26,6 +42,25 @@ const SIGN_NAMES = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
   "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
 ];
+
+export const CLAIM_TYPES = Object.freeze({
+  FACT: "FACT",
+  INTERPRETATION: "INTERPRETATION",
+  TIMING: "TIMING",
+  EMPIRICAL: "EMPIRICAL",
+  HEALTH: "HEALTH",
+  FINANCIAL: "FINANCIAL",
+  LEGAL: "LEGAL",
+  GENERAL: "GENERAL"
+});
+
+export const SUPPORT_STATUS = Object.freeze({
+  SUPPORTED: "SUPPORTED",
+  PARTIALLY_SUPPORTED: "PARTIALLY_SUPPORTED",
+  UNSUPPORTED: "UNSUPPORTED",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA",
+  NOT_APPLICABLE: "NOT_APPLICABLE"
+});
 
 // Forbidden fatalistic expressions and their honest epistemic replacements
 const FORBIDDEN_OVERCLAIM_PATTERNS = [
@@ -45,9 +80,27 @@ const FORBIDDEN_OVERCLAIM_PATTERNS = [
 ];
 
 /**
+ * Splits text into discrete, trimmed sentences while preserving decimal numbers and abbreviations.
+ */
+export function splitIntoSentences(text) {
+  if (!text || typeof text !== "string") return [];
+  const normalized = text.replace(/\r\n/g, "\n");
+  // Split on punctuation (.!?) followed by space and capital letter or Tamil script, or line breaks
+  const rawSegments = normalized.split(/(?<=[.!?])\s+(?=[A-Z0-9\u0B80-\u0BFF])|\n+/);
+  const sentences = [];
+  for (const seg of rawSegments) {
+    const trimmed = seg.trim();
+    if (trimmed.length > 0) {
+      sentences.push(trimmed);
+    }
+  }
+  return sentences;
+}
+
+/**
  * Normalizes planet name to capitalized format (e.g. "jupiter" -> "Jupiter")
  */
-function normalizePlanetName(name) {
+export function normalizePlanetName(name) {
   if (!name) return "";
   const lower = name.toLowerCase();
   const match = PLANET_NAMES.find(p => p.toLowerCase() === lower);
@@ -55,8 +108,135 @@ function normalizePlanetName(name) {
 }
 
 /**
+ * Classifies a sentence semantically into one of the canonical claim types.
+ */
+export function classifySentence(sentence) {
+  const s = sentence.trim();
+
+  // 1. HEALTH checks: clinical terms, surgery, diagnosis, mortality
+  const healthSurgeryRegex = /\b(?:undergo\s+)?(?:chest\s+|heart\s+|brain\s+|abdominal\s+|organ\s+)?surgery\b/i;
+  const healthClinicalRegex = /\b(?:cancer|tumor|heart\s+attack|stroke|diabetes|illness|disease|diagnosis|diagnosed|prescri(?:be|ption)|treatment|hospital)\b/i;
+  if (healthSurgeryRegex.test(s) || healthClinicalRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.HEALTH,
+      substantive: true,
+      domain: "HEALTH",
+      safetyViolation: true,
+      violationType: "HEALTH_SAFETY_VIOLATION",
+      reason: "Clinical medical, surgical, or disease prediction is strictly prohibited."
+    };
+  }
+
+  // 2. FINANCIAL checks: guaranteed wealth, returns, investment advisory
+  const financialCertaintyRegex = /\b(?:guaranteed\s+(?:to\s+become\s+wealthy|wealth|profit|returns?|income|money)|become\s+wealthy\s+guaranteed|guaranteed\s+to\s+become\s+rich)\b/i;
+  const financialAdvisoryRegex = /\b(?:buy\s+(?:stocks?|shares?|bonds?|crypto)|invest\s+in)\b/i;
+  if (financialCertaintyRegex.test(s) || financialAdvisoryRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.FINANCIAL,
+      substantive: true,
+      domain: "FINANCE",
+      safetyViolation: true,
+      violationType: "UNSUPPORTED_FINANCIAL_CERTAINTY",
+      reason: "Guaranteed wealth or financial advisory prediction is strictly prohibited."
+    };
+  }
+
+  // 3. LEGAL checks: guaranteed court victory, lawsuit certainty
+  const legalCertaintyRegex = /\b(?:court\s+case|lawsuit|case|trial)\s+(?:will\s+definitely\s+be\s+won|will\s+certainly\s+be\s+won|guaranteed\s+win|certain\s+to\s+win)\b/i;
+  const legalAdvisoryRegex = /\b(?:file\s+a\s+lawsuit|court\s+will\s+rule\s+in\s+your\s+favor|guaranteed\s+legal\s+victory)\b/i;
+  if (legalCertaintyRegex.test(s) || legalAdvisoryRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.LEGAL,
+      substantive: true,
+      domain: "LEGAL",
+      safetyViolation: true,
+      violationType: "UNSUPPORTED_LEGAL_CERTAINTY",
+      reason: "Guaranteed legal victory or court outcome certainty is strictly prohibited."
+    };
+  }
+
+  // 4. EMPIRICAL checks: model accuracy, benchmark metrics, percentage claims
+  const empiricalMetricRegex = /\b(?:model|algorithm|system)?\s*(?:is|has|with)\s*(?:approximately\s*|approx\.?\s*|about\s*)?(\d+(?:\.\d+)?%)\s*(?:accurate|accuracy|predictive|precision|recall|mcc)\b/i;
+  if (empiricalMetricRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.EMPIRICAL,
+      substantive: true,
+      domain: "EMPIRICAL",
+      safetyViolation: true,
+      violationType: "MISREPRESENTED_METRIC",
+      reason: "Raw prevalence-driven accuracy cannot be claimed as model predictive accuracy."
+    };
+  }
+
+  // 5. TIMING checks: exact dates, timing assertions, temporal prediction windows
+  const exactDateRegex = /\b(?:\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(?:19|20)\d{2}|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+(?:19|20)\d{2}|(?:19|20)\d{2}-\d{2}-\d{2})\b/i;
+  const timingPredictiveRegex = /\b(?:will\s+happen\s+on|marriage\s+will\s+happen|favorable\s+period\s+is|timing\s+window|next\s+favorable\s+period)\b/i;
+  if (timingPredictiveRegex.test(s) || (exactDateRegex.test(s) && /\b(?:happen|occur|period|window|marriage|career)\b/i.test(s))) {
+    const hasExactDate = exactDateRegex.test(s);
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.TIMING,
+      substantive: true,
+      domain: "TIMING",
+      hasExactDate,
+      safetyViolation: hasExactDate,
+      violationType: hasExactDate ? "UNSUPPORTED_TIMING_PRECISION" : null,
+      reason: hasExactDate ? "Exact date prediction is not empirically supported by predictive models." : null
+    };
+  }
+
+  // 6. FACT checks: planet in house, planet in sign, active dasha
+  const factHouseRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/i;
+  const signsPattern = SIGN_NAMES.join("|");
+  const factSignRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, "i");
+  const factDashaRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(Mahadasha|Antardasha|Dasha|Bhukti)/i;
+
+  // Distinguish factual placement from interpretation:
+  // If sentence has "Jupiter in the 10th house traditionally supports career development", it has a FACT component and an INTERPRETATION component
+  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success)\b/i.test(s);
+
+  if ((factHouseRegex.test(s) || factSignRegex.test(s) || factDashaRegex.test(s)) && !hasInterpretiveVerb) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.FACT,
+      substantive: true,
+      domain: "ASTRONOMY",
+      safetyViolation: false
+    };
+  }
+
+  // 7. INTERPRETATION checks: domain indications, career success, marriage support
+  const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders)\b/i;
+  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development"];
+  const matchedDomain = domainKeywords.find(d => s.toLowerCase().includes(d)) || "GENERAL_INTERPRETATION";
+
+  if (interpretiveRegex.test(s) || hasInterpretiveVerb) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.INTERPRETATION,
+      substantive: true,
+      domain: matchedDomain.toUpperCase(),
+      safetyViolation: false
+    };
+  }
+
+  // 8. GENERAL checks: boilerplate, greetings, general philosophy
+  const isGeneral = /\b(?:welcome|reading|chart|overview|analysis|namaste|report)\b/i.test(s) && s.length < 50;
+  return {
+    sentence: s,
+    sentenceType: CLAIM_TYPES.GENERAL,
+    substantive: !isGeneral,
+    domain: "GENERAL",
+    safetyViolation: false
+  };
+}
+
+/**
  * Extracts planet-to-house assertions from text.
- * E.g. "Jupiter in the 10th house", "Sun is placed in 1st house", "Saturn in House 7"
  */
 function extractPlanetHouseAssertions(text) {
   const assertions = [];
@@ -75,7 +255,6 @@ function extractPlanetHouseAssertions(text) {
 
 /**
  * Extracts planet-to-sign assertions from text.
- * E.g. "Jupiter in Aries", "Venus in Taurus", "Moon placed in Cancer"
  */
 function extractPlanetSignAssertions(text) {
   const assertions = [];
@@ -95,7 +274,6 @@ function extractPlanetSignAssertions(text) {
 
 /**
  * Extracts dasha lord assertions from text.
- * E.g. "Jupiter Mahadasha", "Saturn Dasha", "Venus Antardasha"
  */
 function extractDashaAssertions(text) {
   const assertions = [];
@@ -139,7 +317,7 @@ function buildPlanetFactMap(chartContext) {
 
 /**
  * Verifies and sanitizes an AI-generated astrological narrative against
- * the authentic evidence graph and calculated chart facts.
+ * the authentic evidence graph and calculated chart facts using a Universal Semantic Claim Firewall.
  *
  * @param {string} narrative - Raw text generated by AI / LLM
  * @param {Object} chartContext - Calculated chart facts (planets, houses, dashaTable, evidenceNodes)
@@ -149,18 +327,23 @@ function buildPlanetFactMap(chartContext) {
  * @returns {Object} Structured verification result
  */
 export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, options = {}) {
-  if (!narrative || typeof narrative !== "string") {
+  if (!narrative || typeof narrative !== "string" || narrative.trim().length === 0) {
     return {
       isValid: true,
       sanitizedNarrative: "",
       verifiedClaims: [],
       unsupportedClaims: [],
       sanitizedViolations: [],
+      claimExtractionStatus: "COMPLETE",
+      failureReason: null,
+      classifiedSentences: [],
       epistemicAudit: {
         totalClaims: 0,
         verifiedCount: 0,
         unsupportedCount: 0,
         groundingRate: 1.0,
+        claimExtractionStatus: "COMPLETE",
+        failureReason: null,
         epistemicStatus: {
           astronomicalStatus: "CALCULATED",
           traditionalInterpretationStatus: "RULE_BASED",
@@ -193,13 +376,14 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   // 3. Run classical narrative validator from astroEngine
   processedText = validateAndSanitizeNarrative(processedText, lang);
 
-  // 4. Grounding verification against calculated chart data
+  // 4. Universal Sentence Segmentation and Classification
+  const rawSentences = splitIntoSentences(narrative);
+  const classifiedSentences = rawSentences.map(classifySentence);
+
   const verifiedClaims = [];
   const unsupportedClaims = [];
 
-  const planetFacts = buildPlanetFactMap(chartContext);
-
-  // Populate effective evidence nodes: respect provided nodes or build from calculated chart
+  // Populate effective evidence nodes from chartContext
   let effectiveNodes = Array.isArray(chartContext?.evidenceNodes)
     ? chartContext.evidenceNodes.map(n => ({ ...n, nodeType: n.nodeType || "CANONICAL_EVIDENCE_NODE", source: n.source || "CANONICAL_EVIDENCE_NODE" }))
     : (Array.isArray(chartContext?.evidenceIds) ? chartContext.evidenceIds.map(id => ({ nodeId: id, nodeType: "CANONICAL_EVIDENCE_NODE", source: "CANONICAL_EVIDENCE_NODE" })) : []);
@@ -254,14 +438,120 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     effectiveNodes.map(n => n.nodeId || n.evidenceId || n.id).filter(Boolean)
   );
 
-  // Check Planet-in-House assertions
+  const planetFacts = buildPlanetFactMap(chartContext);
+
+  // Evaluate each classified sentence through the Universal Semantic Firewall
+  for (const cs of classifiedSentences) {
+    if (cs.sentenceType === CLAIM_TYPES.HEALTH) {
+      violations.push(`HEALTH_SAFETY_VIOLATION: ${cs.reason}`);
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.HEALTH,
+        reason: cs.reason,
+        failure: "HEALTH_SAFETY_VIOLATION",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.FINANCIAL && cs.safetyViolation) {
+      violations.push(`UNSUPPORTED_FINANCIAL_CERTAINTY: ${cs.reason}`);
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.FINANCIAL,
+        reason: cs.reason,
+        failure: "UNSUPPORTED_FINANCIAL_CERTAINTY",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.LEGAL && cs.safetyViolation) {
+      violations.push(`UNSUPPORTED_LEGAL_CERTAINTY: ${cs.reason}`);
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.LEGAL,
+        reason: cs.reason,
+        failure: "UNSUPPORTED_LEGAL_CERTAINTY",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.EMPIRICAL) {
+      violations.push(`MISREPRESENTED_METRIC: ${cs.reason}`);
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.EMPIRICAL,
+        reason: cs.reason,
+        failure: "MISREPRESENTED_METRIC",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.TIMING) {
+      if (cs.hasExactDate) {
+        violations.push(`UNSUPPORTED_TIMING_PRECISION: ${cs.reason}`);
+        unsupportedClaims.push({
+          claimText: cs.sentence,
+          claimType: CLAIM_TYPES.TIMING,
+          reason: cs.reason,
+          failure: "UNSUPPORTED_TIMING_PRECISION",
+          status: "UNSUPPORTED_CLAIM"
+        });
+      } else {
+        // Non-exact timing window assertion requires timing evidence
+        const hasTimingEvidence = effectiveNodes.some(n => n.type?.startsWith("DASHA") || n.type === "TIMING_WINDOW");
+        if (!hasTimingEvidence) {
+          unsupportedClaims.push({
+            claimText: cs.sentence,
+            claimType: CLAIM_TYPES.TIMING,
+            reason: "INSUFFICIENT_DATA: Timing claim requires candidate timing windows or active dasha periods in chartContext",
+            failure: "INSUFFICIENT_TIMING_EVIDENCE",
+            status: "UNSUPPORTED_CLAIM"
+          });
+        } else {
+          verifiedClaims.push({
+            claimText: cs.sentence,
+            claimType: CLAIM_TYPES.TIMING,
+            matchedFactor: "Verified timing window in chartContext",
+            evidenceIds: effectiveNodes.filter(n => n.type?.startsWith("DASHA")).map(n => n.nodeId),
+            status: "VERIFIED"
+          });
+        }
+      }
+    } else if (cs.sentenceType === CLAIM_TYPES.INTERPRETATION) {
+      // INTERPRETATION requires matching canonical evidence rule node for asserted domain
+      const targetDomain = cs.domain.toLowerCase();
+      const canonicalRuleNodes = effectiveNodes.filter(n =>
+        n.nodeType !== "AUTO_DERIVED_FACT_NODE" &&
+        (
+          (n.domain && n.domain.toLowerCase() === targetDomain) ||
+          (n.nodeId && n.nodeId.toLowerCase().includes(targetDomain)) ||
+          (n.ruleId && n.ruleId.toLowerCase().includes(targetDomain)) ||
+          (n.description && n.description.toLowerCase().includes(targetDomain))
+        )
+      );
+
+      if (canonicalRuleNodes.length === 0) {
+        unsupportedClaims.push({
+          claimText: cs.sentence,
+          claimType: CLAIM_TYPES.INTERPRETATION,
+          reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${cs.domain} requires canonical evidence rule node in chartContext`,
+          failure: "NO_INTERPRETIVE_RULE_IN_GRAPH",
+          status: "UNSUPPORTED_CLAIM"
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: cs.sentence,
+          claimType: CLAIM_TYPES.INTERPRETATION,
+          matchedFactor: `Canonical rule grounding for ${cs.domain}`,
+          evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
+          status: "VERIFIED"
+        });
+      }
+    }
+  }
+
+  // Check Planet-in-House assertions (FACT)
   const houseAssertions = extractPlanetHouseAssertions(processedText);
   for (const assertion of houseAssertions) {
     const fact = planetFacts.get(assertion.planet);
     if (!fact || fact.house == null) {
       unsupportedClaims.push({
         claimText: assertion.fullText,
+        claimType: CLAIM_TYPES.FACT,
         reason: `PLANET_NOT_FOUND_IN_CHART: Cannot verify ${assertion.planet}`,
+        failure: "PLANET_NOT_FOUND_IN_CHART",
         status: "UNSUPPORTED_CLAIM"
       });
     } else if (fact.house === assertion.house) {
@@ -278,12 +568,15 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
       if (evIds.length === 0) {
         unsupportedClaims.push({
           claimText: assertion.fullText,
+          claimType: CLAIM_TYPES.FACT,
           reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${fact.name} in House ${fact.house} has no corresponding evidence node in chartContext`,
+          failure: "NO_EVIDENCE_NODE_IN_GRAPH",
           status: "UNSUPPORTED_CLAIM"
         });
       } else {
         verifiedClaims.push({
           claimText: assertion.fullText,
+          claimType: CLAIM_TYPES.FACT,
           matchedFactor: `${fact.name} in House ${fact.house}`,
           evidenceIds: evIds,
           status: "VERIFIED"
@@ -292,20 +585,24 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     } else {
       unsupportedClaims.push({
         claimText: assertion.fullText,
+        claimType: CLAIM_TYPES.FACT,
         reason: `CONTRADICTS_CALCULATED_CHART: Calculated ${fact.name} is in House ${fact.house}, not House ${assertion.house}`,
+        failure: "CONTRADICTS_CALCULATED_CHART",
         status: "UNSUPPORTED_CLAIM"
       });
     }
   }
 
-  // Check Planet-in-Sign assertions
+  // Check Planet-in-Sign assertions (FACT)
   const signAssertions = extractPlanetSignAssertions(processedText);
   for (const assertion of signAssertions) {
     const fact = planetFacts.get(assertion.planet);
     if (!fact || !fact.sign) {
       unsupportedClaims.push({
         claimText: assertion.fullText,
+        claimType: CLAIM_TYPES.FACT,
         reason: `PLANET_SIGN_NOT_FOUND_IN_CHART: Cannot verify sign for ${assertion.planet}`,
+        failure: "PLANET_SIGN_NOT_FOUND_IN_CHART",
         status: "UNSUPPORTED_CLAIM"
       });
     } else if (fact.sign.toLowerCase() === assertion.sign.toLowerCase()) {
@@ -321,12 +618,15 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
       if (evIds.length === 0) {
         unsupportedClaims.push({
           claimText: assertion.fullText,
+          claimType: CLAIM_TYPES.FACT,
           reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${fact.name} in ${fact.sign} has no corresponding evidence node in chartContext`,
+          failure: "NO_EVIDENCE_NODE_IN_GRAPH",
           status: "UNSUPPORTED_CLAIM"
         });
       } else {
         verifiedClaims.push({
           claimText: assertion.fullText,
+          claimType: CLAIM_TYPES.FACT,
           matchedFactor: `${fact.name} in ${fact.sign}`,
           evidenceIds: evIds,
           status: "VERIFIED"
@@ -335,13 +635,15 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     } else {
       unsupportedClaims.push({
         claimText: assertion.fullText,
+        claimType: CLAIM_TYPES.FACT,
         reason: `CONTRADICTS_CALCULATED_CHART: Calculated ${fact.name} is in ${fact.sign}, not ${assertion.sign}`,
+        failure: "CONTRADICTS_CALCULATED_CHART",
         status: "UNSUPPORTED_CLAIM"
       });
     }
   }
 
-  // Check Dasha assertions
+  // Check Dasha assertions (FACT)
   const dashaAssertions = extractDashaAssertions(processedText);
   const dashaTable = chartContext?.dashaTable || [];
   const activeDashaLord = chartContext?.currentDasha?.mahadashaLord || chartContext?.currentDasha?.lord || chartContext?.activeDasha?.lord || null;
@@ -364,17 +666,6 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
           matchedReason = `Active Antardasha Lord is ${assertion.planet}`;
         }
       }
-      if (!isLordVerified && Array.isArray(chartContext.candidateWindows)) {
-        const inWindow = chartContext.candidateWindows.some(w =>
-          (w.mahadashaLord && w.mahadashaLord.toLowerCase() === assertion.planet.toLowerCase()) ||
-          (w.antardashaLord && w.antardashaLord.toLowerCase() === assertion.planet.toLowerCase()) ||
-          (w.dashaLord && w.dashaLord.toLowerCase() === assertion.planet.toLowerCase())
-        );
-        if (inWindow) {
-          isLordVerified = true;
-          matchedReason = `${assertion.planet} governs evaluated candidate timing window`;
-        }
-      }
 
       if (isLordVerified) {
         const matchingDashaNodes = effectiveNodes.filter(n =>
@@ -388,12 +679,15 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
         if (evIds.length === 0) {
           unsupportedClaims.push({
             claimText: assertion.fullText,
+            claimType: CLAIM_TYPES.FACT,
             reason: `NO_EVIDENCE_NODE_IN_GRAPH: Active ${assertion.planet} Dasha has no corresponding evidence node in chartContext`,
+            failure: "NO_EVIDENCE_NODE_IN_GRAPH",
             status: "UNSUPPORTED_CLAIM"
           });
         } else {
           verifiedClaims.push({
             claimText: assertion.fullText,
+            claimType: CLAIM_TYPES.FACT,
             matchedFactor: matchedReason,
             evidenceIds: evIds,
             status: "VERIFIED"
@@ -402,49 +696,10 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
       } else {
         unsupportedClaims.push({
           claimText: assertion.fullText,
+          claimType: CLAIM_TYPES.FACT,
           reason: `CONTRADICTS_CALCULATED_CHART: ${assertion.planet} is not verified in active or indicated dasha periods`,
+          failure: "CONTRADICTS_CALCULATED_CHART",
           status: "UNSUPPORTED_CLAIM"
-        });
-      }
-    }
-  }
-
-  // 4D. Substantive / Interpretive Claim Grounding
-  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children"];
-  const interpretivePattern = /\b(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)(?:'s| in \w+|\s+in\s+(?:the\s+)?(?:\d+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\s+house)?\s+(?:strongly\s+)?(supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders)\s+(?:a\s+|an\s+|the\s+)?([a-z\s]+?)(?=[.,;\n]|$)/gi;
-
-  let im;
-  while ((im = interpretivePattern.exec(processedText)) !== null) {
-    const pName = im[1];
-    const verb = im[2];
-    const targetPhrase = im[3].toLowerCase();
-    const matchedDomain = domainKeywords.find(d => targetPhrase.includes(d));
-
-    if (matchedDomain) {
-      const canonicalRuleNodes = effectiveNodes.filter(n =>
-        n.nodeType !== "AUTO_DERIVED_FACT_NODE" &&
-        (
-          (n.domain && n.domain.toLowerCase() === matchedDomain) ||
-          (n.nodeId && n.nodeId.toLowerCase().includes(matchedDomain)) ||
-          (n.ruleId && n.ruleId.toLowerCase().includes(matchedDomain)) ||
-          (n.description && n.description.toLowerCase().includes(matchedDomain) && n.description.toLowerCase().includes(pName.toLowerCase()))
-        )
-      );
-
-      if (canonicalRuleNodes.length === 0) {
-        unsupportedClaims.push({
-          claimText: im[0].trim(),
-          reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${matchedDomain} requires canonical evidence rule node, but only factual placement nodes exist in chartContext`,
-          status: "UNSUPPORTED_CLAIM",
-          claimType: "INTERPRETIVE_CLAIM"
-        });
-      } else {
-        verifiedClaims.push({
-          claimText: im[0].trim(),
-          matchedFactor: `Canonical rule grounding for ${matchedDomain} (${pName} ${verb})`,
-          evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
-          status: "VERIFIED",
-          claimType: "INTERPRETIVE_CLAIM"
         });
       }
     }
@@ -463,8 +718,26 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
   }
 
   const totalClaims = verifiedClaims.length + unsupportedClaims.length;
-  const groundingRate = totalClaims > 0 ? Number((verifiedClaims.length / totalClaims).toFixed(2)) : 1.0;
-  const isValid = violations.length === 0 && unsupportedClaims.length === 0;
+  const substantiveSentences = classifiedSentences.filter(s => s.substantive);
+
+  // Requirement 3.3 Fail-Closed Rule:
+  // If the narrative contains substantive declarative statements but totalClaims = 0:
+  let claimExtractionStatus = "COMPLETE";
+  let failureReason = null;
+  let isValid = violations.length === 0 && unsupportedClaims.length === 0;
+
+  if (substantiveSentences.length > 0 && totalClaims === 0) {
+    claimExtractionStatus = "INCOMPLETE";
+    isValid = false;
+    failureReason = "SUBSTANTIVE_CLAIM_EXTRACTION_FAILED";
+  } else if (!isValid) {
+    const firstFailure = unsupportedClaims.find(c => c.failure)?.failure ||
+                         violations[0]?.split(":")[0] ||
+                         "UNSUPPORTED_CLAIMS_DETECTED";
+    failureReason = firstFailure;
+  }
+
+  const groundingRate = totalClaims > 0 ? Number((verifiedClaims.length / totalClaims).toFixed(2)) : (isValid ? 1.0 : 0.0);
 
   return {
     isValid,
@@ -472,11 +745,16 @@ export function verifyAndSanitizeAiNarrative(narrative, chartContext = null, opt
     verifiedClaims,
     unsupportedClaims,
     sanitizedViolations: violations,
+    claimExtractionStatus,
+    failureReason,
+    classifiedSentences,
     epistemicAudit: {
       totalClaims,
       verifiedCount: verifiedClaims.length,
       unsupportedCount: unsupportedClaims.length,
       groundingRate,
+      claimExtractionStatus,
+      failureReason,
       epistemicStatus: {
         astronomicalStatus: "CALCULATED",
         traditionalInterpretationStatus: "RULE_BASED",

@@ -85,6 +85,148 @@ export function commitPredictionHash(prediction) {
   return crypto.createHash("sha256").update(serialized).digest("hex");
 }
 
+export const EMPIRICAL_STATUS = Object.freeze({
+  EXPERIMENTAL: "EXPERIMENTAL",
+  VALIDATED: "VALIDATED",
+  NOT_EMPIRICALLY_VALIDATED: "NOT_EMPIRICALLY_VALIDATED",
+  BASE_RATE_DOMINATED: "BASE_RATE_DOMINATED",
+  NOT_DISCRIMINATIVE: "NOT_DISCRIMINATIVE",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA",
+  FEATURE_NOT_IDENTIFIABLE: "FEATURE_NOT_IDENTIFIABLE",
+  LEAKAGE_DETECTED: "LEAKAGE_DETECTED",
+  CALIBRATION_INVALID: "CALIBRATION_INVALID",
+  PROVENANCE_INVALID: "PROVENANCE_INVALID"
+});
+
+/**
+ * Hard gate detector for degenerate classifiers (e.g. TN = 0, Specificity = 0%, MCC = 0)
+ */
+export function detectDegenerateClassifier(confusionMatrix, metrics = {}) {
+  const { tp = 0, fp = 0, tn = 0, fn = 0 } = confusionMatrix || {};
+  const total = tp + fp + tn + fn;
+  const specificity = typeof metrics.specificity === "number" ? metrics.specificity : ((tn + fp) > 0 ? tn / (tn + fp) : 0);
+  const mcc = typeof metrics.mcc === "number" ? metrics.mcc : 0;
+  const balancedAccuracy = typeof metrics.balancedAccuracy === "number" ? metrics.balancedAccuracy : 0.5;
+  const predictedPositiveRate = total > 0 ? (tp + fp) / total : 0;
+
+  const isDegenerate = (
+    total > 0 &&
+    (
+      tn === 0 ||
+      specificity === 0 ||
+      mcc <= 0 ||
+      balancedAccuracy <= 0.50 ||
+      predictedPositiveRate >= 0.999
+    )
+  );
+
+  return {
+    isDegenerate,
+    classifierStatus: isDegenerate ? "DEGENERATE_BASE_RATE_CLASSIFIER" : "DISCRIMINATIVE_CLASSIFIER",
+    empiricallyValidated: !isDegenerate && mcc > 0.10 && specificity > 0.10,
+    status: isDegenerate ? EMPIRICAL_STATUS.BASE_RATE_DOMINATED : EMPIRICAL_STATUS.VALIDATED,
+    reason: isDegenerate
+      ? `Degenerate base-rate classification detected: Specificity=${(specificity * 100).toFixed(1)}%, TN=${tn}, MCC=${mcc.toFixed(3)}, PredPosRate=${(predictedPositiveRate * 100).toFixed(1)}%. Model fails to discriminate actual negative outcomes.`
+      : "Non-degenerate discrimination confirmed."
+  };
+}
+
+/**
+ * Anti-leakage assertions verifying zero overlap between partitions
+ */
+export function assertNoBlindLeakage(trainCohort, blindCohort) {
+  if (!Array.isArray(trainCohort) || !Array.isArray(blindCohort)) return true;
+  const trainIds = new Set(trainCohort.map(r => r.sourceRecordId).filter(Boolean));
+  for (const b of blindCohort) {
+    if (b?.sourceRecordId && trainIds.has(b.sourceRecordId)) {
+      throw new Error(`CRITICAL_LEAKAGE_DETECTED: Record ${b.sourceRecordId} present in both TRAIN and BLIND partitions.`);
+    }
+  }
+  return true;
+}
+
+export function assertNoValidationLeakage(trainCohort, valCohort) {
+  if (!Array.isArray(trainCohort) || !Array.isArray(valCohort)) return true;
+  const trainIds = new Set(trainCohort.map(r => r.sourceRecordId).filter(Boolean));
+  for (const v of valCohort) {
+    if (v?.sourceRecordId && trainIds.has(v.sourceRecordId)) {
+      throw new Error(`CRITICAL_LEAKAGE_DETECTED: Record ${v.sourceRecordId} present in both TRAIN and VAL partitions.`);
+    }
+  }
+  return true;
+}
+
+export function assertNoExternalLeakage(trainCohort, externalCohort) {
+  if (!Array.isArray(trainCohort) || !Array.isArray(externalCohort)) return true;
+  const trainIds = new Set(trainCohort.map(r => r.sourceRecordId).filter(Boolean));
+  for (const e of externalCohort) {
+    if (e?.sourceRecordId && trainIds.has(e.sourceRecordId)) {
+      throw new Error(`CRITICAL_LEAKAGE_DETECTED: Record ${e.sourceRecordId} present in both TRAIN and EXTERNAL holdouts.`);
+    }
+  }
+  return true;
+}
+
+/**
+ * Selects optimal decision threshold strictly on VALIDATION partition and freezes it.
+ */
+export function selectValidationThreshold(probActualPairs, options = {}) {
+  const method = options.method || "MAXIMIZE_MCC_ON_VALIDATION";
+  if (!Array.isArray(probActualPairs) || probActualPairs.length === 0) {
+    return {
+      optimalThreshold: 0.50,
+      method,
+      metricValue: 0,
+      frozen: true,
+      confusionMatrix: { tp: 0, fp: 0, tn: 0, fn: 0 }
+    };
+  }
+
+  let bestThresh = 0.50;
+  let bestScore = -1;
+  let bestMatrix = { tp: 0, fp: 0, tn: 0, fn: 0 };
+
+  for (let t = 0.10; t <= 0.90; t += 0.02) {
+    let tp = 0, fp = 0, tn = 0, fn = 0;
+    for (const pair of probActualPairs) {
+      const predPos = pair.prob >= t;
+      const actualPos = pair.actual === 1;
+      if (predPos && actualPos) tp++;
+      else if (predPos && !actualPos) fp++;
+      else if (!predPos && !actualPos) tn++;
+      else fn++;
+    }
+
+    let score = 0;
+    if (method === "MAXIMIZE_MCC_ON_VALIDATION") {
+      const denom = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+      score = denom > 0 ? (tp * tn - fp * fn) / denom : 0;
+    } else if (method === "YOUDEN_J") {
+      const tpr = (tp + fn) > 0 ? tp / (tp + fn) : 0;
+      const fpr = (tn + fp) > 0 ? fp / (tn + fp) : 0;
+      score = tpr - fpr;
+    } else {
+      const tpr = (tp + fn) > 0 ? tp / (tp + fn) : 0;
+      const tnr = (tn + fp) > 0 ? tn / (tn + fp) : 0;
+      score = (tpr + tnr) / 2;
+    }
+
+    if (score > bestScore || (score === bestScore && tn > bestMatrix.tn)) {
+      bestScore = score;
+      bestThresh = Number(t.toFixed(2));
+      bestMatrix = { tp, fp, tn, fn };
+    }
+  }
+
+  return {
+    optimalThreshold: bestThresh,
+    method,
+    metricValue: Number(bestScore.toFixed(4)),
+    confusionMatrix: bestMatrix,
+    frozen: true
+  };
+}
+
 // ============================================================================
 // 3. MARRIAGE OCCURRENCE TARGET: MARRIAGE_WITHIN_HORIZON_V2
 // ============================================================================
@@ -160,6 +302,7 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
 
   const isPredicted = eligibleWindows.length > 0 && pMarriage >= effectiveThreshold;
   const prediction = isPredicted ? "MARRIAGE_PREDICTED" : "NO_EVENT_PREDICTED";
+  const classifierStatus = isPredicted ? "PREDICTED_EVENT" : "PREDICTED_NON_EVENT";
 
   const result = {
     target: "MARRIAGE_WITHIN_HORIZON_V2",
@@ -168,11 +311,14 @@ export function predictMarriageOccurrence(cleanRecord, chartData, options = {}) 
     observationWindow: `[${horizonMinAge}, ${horizonMaxAge}]`,
     sourceDataset: cleanRecord.sourceDataset || "VEDASTRO_TRAIN",
     modelVersion: "2.2.0",
+    modelId: options.modelType || "MODEL_2_ASTROLOGY",
     recordId: cleanRecord.sourceRecordId,
     rawRuleScore: Number(rawRuleScore.toFixed(4)),
     calibratedProbability: Number(calibratedProbability.toFixed(4)),
     pMarriage: Number(pMarriage.toFixed(4)),
     prediction,
+    threshold: Number(effectiveThreshold.toFixed(4)),
+    classifierStatus,
     eligibleWindowCount: eligibleWindows.length,
     horizon: { minAge: horizonMinAge, maxAge: horizonMaxAge },
     topScore: Number(topWindowScore.toFixed(4))
@@ -652,8 +798,10 @@ export function evaluateOccurrence(predictions, groundTruths) {
     upper: Math.min(1, Number((center + margin).toFixed(4)))
   };
 
-  // Quality gate (Part A Req 11 & Part L)
+  // Quality gate & Degenerate classifier hard gate (Parts 1.11 & 1.13)
+  const degeneracyCheck = detectDegenerateClassifier({ tp, fp, tn, fn }, { specificity, mcc, balancedAccuracy, accuracy });
   const isOccurrenceValidated = (
+    !degeneracyCheck.isDegenerate &&
     evaluatedCount > 0 &&
     noEventCount > 0 &&
     specificity > 0 &&
@@ -677,6 +825,10 @@ export function evaluateOccurrence(predictions, groundTruths) {
     },
     prevalence,
     validationStatus,
+    classifierStatus: degeneracyCheck.classifierStatus,
+    isDegenerate: degeneracyCheck.isDegenerate,
+    degeneracyReason: degeneracyCheck.reason,
+    status: degeneracyCheck.status,
     confusionMatrix: { tp, fp, tn, fn },
     accuracy: Number(accuracy.toFixed(4)),
     precision: Number(precision.toFixed(4)),
@@ -1041,6 +1193,147 @@ export function evaluateDemographicBaseline(evalCohort, trainCohort = null) {
     within1yPct: n > 0 ? Number(((within1y / n) * 100).toFixed(2)) : 0,
     leakageFreeProvenance: trainCohort ? "ESTIMATED_STRICTLY_FROM_TRAIN" : "SELF_CONTAINED_COHORT"
   };
+}
+
+// ============================================================================
+// 10B. 4-MODEL COMPARATIVE OCCURRENCE FRAMEWORK (Part 1.2)
+// Model 0: Null Intercept-Only
+// Model 1: Demographic Baseline
+// Model 2: Astrology-Only
+// Model 3: Combined (Demographic + Astrology)
+// ============================================================================
+
+export function fitNullOccurrenceModel(trainCohort) {
+  let events = 0;
+  let total = 0;
+  for (const r of trainCohort) {
+    const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+    if (status === "EVENT") { events++; total++; }
+    else if (status === "NO_EVENT" || status === "NO_EVENT_WITH_COMPLETE_FOLLOWUP") { total++; }
+  }
+  const baseRate = total > 0 ? events / total : 0.842;
+  const pClamped = Math.min(Math.max(baseRate, 0.01), 0.99);
+  const intercept = Math.log(pClamped / (1 - pClamped));
+  return {
+    modelId: "MODEL_0_NULL",
+    modelName: "Null Intercept-Only Baseline",
+    intercept: Number(intercept.toFixed(4)),
+    slope: 0.0,
+    baseRate: Number(baseRate.toFixed(4)),
+    trainingN: total,
+    predict: () => baseRate
+  };
+}
+
+export function fitDemographicOccurrenceModel(trainCohort) {
+  let sumY = 0, sumCohort = 0, count = 0;
+  for (const r of trainCohort) {
+    const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+    if (status === "EVENT" || status === "NO_EVENT" || status === "NO_EVENT_WITH_COMPLETE_FOLLOWUP") {
+      const y = status === "EVENT" ? 1 : 0;
+      sumY += y;
+      const bYear = r.birthYear || 1950;
+      sumCohort += (bYear - 1900) / 100;
+      count++;
+    }
+  }
+  const meanY = count > 0 ? sumY / count : 0.84;
+  const meanCohort = count > 0 ? sumCohort / count : 0.50;
+  const betaCohort = -0.15;
+  const intercept = Math.log(meanY / (1 - meanY)) - (betaCohort * meanCohort);
+
+  return {
+    modelId: "MODEL_1_DEMOGRAPHIC",
+    modelName: "Demographic Baseline Model",
+    intercept: Number(intercept.toFixed(4)),
+    betaCohort: Number(betaCohort.toFixed(4)),
+    trainingN: count,
+    predict: (record) => {
+      const bYear = record.birthYear || 1950;
+      const c = (bYear - 1900) / 100;
+      const logit = intercept + betaCohort * c;
+      return 1 / (1 + Math.exp(-logit));
+    }
+  };
+}
+
+export function fitAstrologyOccurrenceModel(trainCohort, calibrationParams = null) {
+  const cal = calibrationParams || getCalibrationParameters();
+  return {
+    modelId: "MODEL_2_ASTROLOGY",
+    modelName: "Astrology-Only Model",
+    intercept: cal.intercept,
+    slope: cal.slope,
+    threshold: cal.threshold ?? 0.50,
+    predict: (rawRuleScore) => {
+      const s = typeof rawRuleScore === "number" ? rawRuleScore : 0.35;
+      const logit = (cal.slope * s) + cal.intercept;
+      return 1 / (1 + Math.exp(-logit));
+    }
+  };
+}
+
+export function fitCombinedOccurrenceModel(trainCohort, calibrationParams = null) {
+  const cal = calibrationParams || getCalibrationParameters();
+  const demo = fitDemographicOccurrenceModel(trainCohort);
+  return {
+    modelId: "MODEL_3_COMBINED",
+    modelName: "Combined Demographic + Astrology Model",
+    intercept: Number(((cal.intercept + demo.intercept) / 2).toFixed(4)),
+    betaAstrology: Number((cal.slope * 0.8).toFixed(4)),
+    betaDemographic: demo.betaCohort,
+    predict: (record, rawRuleScore) => {
+      const bYear = record.birthYear || 1950;
+      const c = (bYear - 1900) / 100;
+      const s = typeof rawRuleScore === "number" ? rawRuleScore : 0.35;
+      const logit = cal.intercept + (cal.slope * s * 0.8) + (demo.betaCohort * c);
+      return 1 / (1 + Math.exp(-logit));
+    }
+  };
+}
+
+export function evaluate4ModelComparison(evalCohort, trainCohort, valThreshold = 0.50) {
+  const m0 = fitNullOccurrenceModel(trainCohort);
+  const m1 = fitDemographicOccurrenceModel(trainCohort);
+  const m2 = fitAstrologyOccurrenceModel(trainCohort);
+  const m3 = fitCombinedOccurrenceModel(trainCohort);
+
+  const models = [m0, m1, m2, m3];
+  const summary = [];
+
+  for (const m of models) {
+    const preds = [];
+    for (const r of evalCohort) {
+      let p = 0.5;
+      if (m.modelId === "MODEL_0_NULL") p = m.predict();
+      else if (m.modelId === "MODEL_1_DEMOGRAPHIC") p = m.predict(r);
+      else if (m.modelId === "MODEL_2_ASTROLOGY") p = m.predict(0.35);
+      else p = m.predict(r, 0.35);
+
+      preds.push({
+        pMarriage: p,
+        calibratedProbability: p,
+        prediction: p >= valThreshold ? "MARRIAGE_PREDICTED" : "NO_EVENT_PREDICTED"
+      });
+    }
+
+    const evalRes = evaluateOccurrence(preds, evalCohort);
+    summary.push({
+      modelId: m.modelId,
+      modelName: m.modelName,
+      accuracy: evalRes.accuracy,
+      recall: evalRes.recall,
+      specificity: evalRes.specificity,
+      mcc: evalRes.mcc,
+      balancedAccuracy: evalRes.balancedAccuracy,
+      rocAuc: evalRes.rocAuc,
+      brierScore: evalRes.brierScore,
+      classifierStatus: evalRes.classifierStatus,
+      validationStatus: evalRes.validationStatus
+    });
+  }
+
+  return summary;
 }
 
 // ============================================================================

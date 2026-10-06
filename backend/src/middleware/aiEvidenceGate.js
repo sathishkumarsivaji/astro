@@ -1,16 +1,16 @@
 /**
- * ASTROVERSE — Server-Side AI Evidence Gate & Epistemic Grounding Pipeline
- *
- * Backend must NEVER return ungrounded or contradictory AI text. Every AI response must pass through:
- * 1. Claim extraction — identify astronomical placements, signs, and dasha claims
- * 2. Evidence verification — verify assertions against authentic calculated chartContext
- * 3. Contradiction & unsupported claim redaction — remove/replace claims that contradict chart facts
- * 4. Fabricated value detection — scan and redact invented high-precision DMS or longitudes
- * 5. Statutory safety scan — detect health diagnostic, financial advisory, and legal advisory language
- * 6. Narrative sanitization — replace categorical/fatalistic language with calibrated traditional phrasing
- * 7. Statutory disclaimers — inject mandatory legal, medical, and financial disclaimers
- *
- * This is the LAST LINE OF DEFENSE before AI text reaches the client.
+ * ASTROVERSE — Server-Side AI Evidence Gate & Universal Semantic Claim Firewall
+ * ==============================================================================
+ * Backend must NEVER return ungrounded, contradictory, or safety-violating AI text.
+ * Every AI response passes through:
+ * 1. Sentence segmentation & semantic classification [FACT, INTERPRETATION, TIMING, EMPIRICAL, HEALTH, FINANCIAL, LEGAL, GENERAL]
+ * 2. Fail-closed substantive grounding gate (totalClaims = 0 with substantive text fails closed)
+ * 3. Exact predictive date blocking (UNSUPPORTED_TIMING_PRECISION)
+ * 4. Misrepresented empirical accuracy blocking (MISREPRESENTED_METRIC)
+ * 5. Health, Financial, Legal statutory safety scanning & blocking
+ * 6. Evidence verification against calculated chartContext
+ * 7. Fabricated value detection & coordinate redaction
+ * 8. Statutory disclaimers injection
  */
 
 const PLANET_NAMES = [
@@ -21,6 +21,17 @@ const SIGN_NAMES = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
+
+export const CLAIM_TYPES = Object.freeze({
+  FACT: "FACT",
+  INTERPRETATION: "INTERPRETATION",
+  TIMING: "TIMING",
+  EMPIRICAL: "EMPIRICAL",
+  HEALTH: "HEALTH",
+  FINANCIAL: "FINANCIAL",
+  LEGAL: "LEGAL",
+  GENERAL: "GENERAL"
+});
 
 // Forbidden categorical prediction language
 const FORBIDDEN_PATTERNS = [
@@ -47,14 +58,18 @@ const HEALTH_DIAGNOSTIC_PATTERNS = [
   /\bdiagnos(is|ed|e)\b/gi,
   /\bprescri(be|ption|bed)\b/gi,
   /\bsurgery is (needed|required|indicated)\b/gi,
+  /\bundergo\s+(?:chest\s+|heart\s+|brain\s+|abdominal\s+|organ\s+)?surgery\b/gi,
+  /\b(cancer|tumor|heart\s+attack|stroke|diabetes)\b/gi
 ];
 
 // Financial advisory patterns  
 const FINANCIAL_ADVISORY_PATTERNS = [
   /\binvest in [A-Z]/gi,
-  /\bbuy (stocks?|shares?|bonds?)\b/gi,
+  /\bbuy (stocks?|shares?|bonds?|crypto)\b/gi,
   /\bsell (stocks?|shares?|bonds?)\b/gi,
   /\b(guaranteed|certain) returns?\b/gi,
+  /\bguaranteed\s+(?:to\s+become\s+wealthy|wealth|profit|returns?|income|money)\b/gi,
+  /\bbecome\s+wealthy\s+guaranteed\b/gi
 ];
 
 // Legal advisory patterns
@@ -65,7 +80,8 @@ const LEGAL_ADVISORY_PATTERNS = [
   /\bcourt will rule in your favor\b/gi,
   /\bsettle out of court\b/gi,
   /\bguaranteed legal victory\b/gi,
-  /\bbypass legal proceedings\b/gi
+  /\bbypass legal proceedings\b/gi,
+  /\bcourt\s+case\s+(?:will\s+definitely\s+be\s+won|will\s+certainly\s+be\s+won|guaranteed\s+win)\b/gi
 ];
 
 // Fabricated astronomical value patterns
@@ -74,11 +90,151 @@ const FABRICATED_VALUE_PATTERNS = [
   /longitude[:\s]+\d+\.\d{4,}/gi,                 // High-precision longitude AI might invent
 ];
 
-function normalizePlanetName(name) {
+export function normalizePlanetName(name) {
   if (!name) return '';
   const lower = name.toLowerCase();
   const match = PLANET_NAMES.find(p => p.toLowerCase() === lower);
   return match || name;
+}
+
+/**
+ * Splits narrative into individual sentences.
+ */
+export function splitIntoSentences(text) {
+  if (!text || typeof text !== "string") return [];
+  const normalized = text.replace(/\r\n/g, "\n");
+  const rawSegments = normalized.split(/(?<=[.!?])\s+(?=[A-Z0-9\u0B80-\u0BFF])|\n+/);
+  const sentences = [];
+  for (const seg of rawSegments) {
+    const trimmed = seg.trim();
+    if (trimmed.length > 0) sentences.push(trimmed);
+  }
+  return sentences;
+}
+
+/**
+ * Classifies a sentence semantically into one of the canonical claim types.
+ */
+export function classifySentence(sentence) {
+  const s = sentence.trim();
+
+  // 1. HEALTH checks
+  const healthSurgeryRegex = /\b(?:undergo\s+)?(?:chest\s+|heart\s+|brain\s+|abdominal\s+|organ\s+)?surgery\b/i;
+  const healthClinicalRegex = /\b(?:cancer|tumor|heart\s+attack|stroke|diabetes|illness|disease|diagnosis|diagnosed|prescri(?:be|ption)|treatment|hospital)\b/i;
+  if (healthSurgeryRegex.test(s) || healthClinicalRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.HEALTH,
+      substantive: true,
+      domain: "HEALTH",
+      safetyViolation: true,
+      violationType: "HEALTH_SAFETY_VIOLATION",
+      reason: "Clinical medical, surgical, or disease prediction is strictly prohibited."
+    };
+  }
+
+  // 2. FINANCIAL checks
+  const financialCertaintyRegex = /\b(?:guaranteed\s+(?:to\s+become\s+wealthy|wealth|profit|returns?|income|money)|become\s+wealthy\s+guaranteed|guaranteed\s+to\s+become\s+rich)\b/i;
+  const financialAdvisoryRegex = /\b(?:buy\s+(?:stocks?|shares?|bonds?|crypto)|invest\s+in)\b/i;
+  if (financialCertaintyRegex.test(s) || financialAdvisoryRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.FINANCIAL,
+      substantive: true,
+      domain: "FINANCE",
+      safetyViolation: true,
+      violationType: "UNSUPPORTED_FINANCIAL_CERTAINTY",
+      reason: "Guaranteed wealth or financial advisory prediction is strictly prohibited."
+    };
+  }
+
+  // 3. LEGAL checks
+  const legalCertaintyRegex = /\b(?:court\s+case|lawsuit|case|trial)\s+(?:will\s+definitely\s+be\s+won|will\s+certainly\s+be\s+won|guaranteed\s+win|certain\s+to\s+win)\b/i;
+  const legalAdvisoryRegex = /\b(?:file\s+a\s+lawsuit|court\s+will\s+rule\s+in\s+your\s+favor|guaranteed\s+legal\s+victory)\b/i;
+  if (legalCertaintyRegex.test(s) || legalAdvisoryRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.LEGAL,
+      substantive: true,
+      domain: "LEGAL",
+      safetyViolation: true,
+      violationType: "UNSUPPORTED_LEGAL_CERTAINTY",
+      reason: "Guaranteed legal victory or court outcome certainty is strictly prohibited."
+    };
+  }
+
+  // 4. EMPIRICAL checks
+  const empiricalMetricRegex = /\b(?:model|algorithm|system)?\s*(?:is|has|with)\s*(?:approximately\s*|approx\.?\s*|about\s*)?(\d+(?:\.\d+)?%)\s*(?:accurate|accuracy|predictive|precision|recall|mcc)\b/i;
+  if (empiricalMetricRegex.test(s)) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.EMPIRICAL,
+      substantive: true,
+      domain: "EMPIRICAL",
+      safetyViolation: true,
+      violationType: "MISREPRESENTED_METRIC",
+      reason: "Raw prevalence-driven accuracy cannot be claimed as model predictive accuracy."
+    };
+  }
+
+  // 5. TIMING checks
+  const exactDateRegex = /\b(?:\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(?:19|20)\d{2}|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+(?:19|20)\d{2}|(?:19|20)\d{2}-\d{2}-\d{2})\b/i;
+  const timingPredictiveRegex = /\b(?:will\s+happen\s+on|marriage\s+will\s+happen|favorable\s+period\s+is|timing\s+window|next\s+favorable\s+period)\b/i;
+  if (timingPredictiveRegex.test(s) || (exactDateRegex.test(s) && /\b(?:happen|occur|period|window|marriage|career)\b/i.test(s))) {
+    const hasExactDate = exactDateRegex.test(s);
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.TIMING,
+      substantive: true,
+      domain: "TIMING",
+      hasExactDate,
+      safetyViolation: hasExactDate,
+      violationType: hasExactDate ? "UNSUPPORTED_TIMING_PRECISION" : null,
+      reason: hasExactDate ? "Exact date prediction is not empirically supported by predictive models." : null
+    };
+  }
+
+  // 6. FACT checks
+  const factHouseRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/i;
+  const signsPattern = SIGN_NAMES.join("|");
+  const factSignRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, "i");
+  const factDashaRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(Mahadasha|Antardasha|Dasha|Bhukti)/i;
+  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success)\b/i.test(s);
+
+  if ((factHouseRegex.test(s) || factSignRegex.test(s) || factDashaRegex.test(s)) && !hasInterpretiveVerb) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.FACT,
+      substantive: true,
+      domain: "ASTRONOMY",
+      safetyViolation: false
+    };
+  }
+
+  // 7. INTERPRETATION checks
+  const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders)\b/i;
+  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development"];
+  const matchedDomain = domainKeywords.find(d => s.toLowerCase().includes(d)) || "GENERAL_INTERPRETATION";
+
+  if (interpretiveRegex.test(s) || hasInterpretiveVerb) {
+    return {
+      sentence: s,
+      sentenceType: CLAIM_TYPES.INTERPRETATION,
+      substantive: true,
+      domain: matchedDomain.toUpperCase(),
+      safetyViolation: false
+    };
+  }
+
+  // 8. GENERAL checks
+  const isGeneral = /\b(?:welcome|reading|chart|overview|analysis|namaste|report)\b/i.test(s) && s.length < 50;
+  return {
+    sentence: s,
+    sentenceType: CLAIM_TYPES.GENERAL,
+    substantive: !isGeneral,
+    domain: "GENERAL",
+    safetyViolation: false
+  };
 }
 
 /**
@@ -209,7 +365,7 @@ function buildPlanetFactMap(chartContext) {
  * Call this on any AI-generated text BEFORE returning to the client.
  */
 export function validateAndSanitizeAIResponse(rawText, chartContext = null, options = {}) {
-  if (!rawText || typeof rawText !== 'string') {
+  if (!rawText || typeof rawText !== 'string' || rawText.trim().length === 0) {
     return { 
       text: '', 
       isValid: false, 
@@ -218,7 +374,10 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
       verifiedClaims: [],
       unsupportedClaims: [],
       contradictoryClaims: [],
-      disclaimersAdded: false
+      disclaimersAdded: false,
+      claimExtractionStatus: 'COMPLETE',
+      failureReason: 'EMPTY_INPUT',
+      classifiedSentences: []
     };
   }
   
@@ -233,263 +392,340 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   const { sanitized: textAfterFabricationScan, fabricated: fabricatedViolations } = scanFabricatedValues(workingText, chartContext);
   workingText = textAfterFabricationScan;
 
-  // 4. Grounding verification against calculated chart data
+  // 4. Universal Sentence Segmentation and Classification
+  const rawSentences = splitIntoSentences(rawText);
+  const classifiedSentences = rawSentences.map(classifySentence);
+
+  // 5. Grounding verification against calculated chart data
   const verifiedClaims = [];
   const unsupportedClaims = [];
   const contradictoryClaims = [];
 
-  if (chartContext) {
-    const planetFacts = buildPlanetFactMap(chartContext);
+  const planetFacts = buildPlanetFactMap(chartContext);
 
-    // Populate effective evidence nodes: respect provided nodes or build from calculated chart
-    let effectiveNodes = Array.isArray(chartContext.evidenceNodes)
-      ? chartContext.evidenceNodes.map(n => ({ ...n, nodeType: n.nodeType || "CANONICAL_EVIDENCE_NODE", source: n.source || "CANONICAL_EVIDENCE_NODE" }))
-      : (Array.isArray(chartContext.evidenceIds) ? chartContext.evidenceIds.map(id => ({ nodeId: id, nodeType: "CANONICAL_EVIDENCE_NODE", source: "CANONICAL_EVIDENCE_NODE" })) : []);
+  // Populate effective evidence nodes
+  let effectiveNodes = Array.isArray(chartContext?.evidenceNodes)
+    ? chartContext.evidenceNodes.map(n => ({ ...n, nodeType: n.nodeType || "CANONICAL_EVIDENCE_NODE", source: n.source || "CANONICAL_EVIDENCE_NODE" }))
+    : (Array.isArray(chartContext?.evidenceIds) ? chartContext.evidenceIds.map(id => ({ nodeId: id, nodeType: "CANONICAL_EVIDENCE_NODE", source: "CANONICAL_EVIDENCE_NODE" })) : []);
 
-    if (effectiveNodes.length === 0 && Array.isArray(chartContext.planets)) {
-      const autoNodes = [];
-      for (const p of chartContext.planets) {
-        if (p && p.name) {
-          if (p.house != null) {
-            autoNodes.push({
-              nodeId: `EV_PLANET_${p.name.toUpperCase()}_H${p.house}`,
-              type: 'HOUSE',
-              nodeType: 'AUTO_DERIVED_FACT_NODE',
-              source: 'AUTO_DERIVED_FACT_NODE',
-              description: `${p.name} in House ${p.house}`
-            });
-          }
-          if (p.sign) {
-            autoNodes.push({
-              nodeId: `EV_PLANET_${p.name.toUpperCase()}_${p.sign.toUpperCase()}`,
-              type: 'SIGN',
-              nodeType: 'AUTO_DERIVED_FACT_NODE',
-              source: 'AUTO_DERIVED_FACT_NODE',
-              description: `${p.name} in ${p.sign}`
-            });
-          }
-        }
-      }
-      if (chartContext.currentDasha?.lord) {
-        autoNodes.push({
-          nodeId: `EV_DASHA_${chartContext.currentDasha.lord.toUpperCase()}`,
-          type: 'DASHA_MD',
-          nodeType: 'AUTO_DERIVED_FACT_NODE',
-          source: 'AUTO_DERIVED_FACT_NODE',
-          description: `Active Mahadasha: ${chartContext.currentDasha.lord}`
-        });
-      }
-      if (chartContext.currentDasha?.subLord || chartContext.currentDasha?.antarDasha) {
-        const antar = chartContext.currentDasha.subLord || chartContext.currentDasha.antarDasha;
-        autoNodes.push({
-          nodeId: `EV_DASHA_${antar.toUpperCase()}`,
-          type: 'DASHA_AD',
-          nodeType: 'AUTO_DERIVED_FACT_NODE',
-          source: 'AUTO_DERIVED_FACT_NODE',
-          description: `Active Antardasha: ${antar}`
-        });
-      }
-      effectiveNodes = autoNodes;
-    }
-
-    const evidenceNodeIds = new Set(
-      effectiveNodes.map(n => n.nodeId || n.evidenceId || n.id).filter(Boolean)
-    );
-
-    // 4A. Planet-to-house assertions
-    const houseRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/gi;
-    let m;
-    while ((m = houseRegex.exec(workingText)) !== null) {
-      const pName = normalizePlanetName(m[1]);
-      const assertedHouse = parseInt(m[2], 10);
-      const fact = planetFacts.get(pName);
-
-      if (!fact || fact.house == null) {
-        unsupportedClaims.push({
-          claimText: m[0],
-          reason: `PLANET_NOT_FOUND_IN_CHART: Cannot verify ${pName}`,
-          status: 'UNSUPPORTED_CLAIM'
-        });
-      } else if (fact.house === assertedHouse) {
-        const matchingEvId = Array.from(evidenceNodeIds).find(id => id.toLowerCase().includes(pName.toLowerCase()));
-        if (!matchingEvId) {
-          unsupportedClaims.push({
-            claimText: m[0],
-            reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${pName} in House ${fact.house} has no corresponding evidence node in chartContext`,
-            status: 'UNSUPPORTED_CLAIM'
-          });
-        } else {
-          verifiedClaims.push({
-            claimText: m[0],
-            matchedFactor: `${pName} in House ${fact.house}`,
-            evidenceIds: [matchingEvId],
-            status: 'VERIFIED'
+  if (effectiveNodes.length === 0 && Array.isArray(chartContext?.planets)) {
+    const autoNodes = [];
+    for (const p of chartContext.planets) {
+      if (p && p.name) {
+        if (p.house != null) {
+          autoNodes.push({
+            nodeId: `EV_PLANET_${p.name.toUpperCase()}_H${p.house}`,
+            type: 'HOUSE',
+            nodeType: 'AUTO_DERIVED_FACT_NODE',
+            source: 'AUTO_DERIVED_FACT_NODE',
+            description: `${p.name} in House ${p.house}`
           });
         }
-      } else {
-        contradictoryClaims.push({
-          claimText: m[0],
-          reason: `Calculated ${pName} is in House ${fact.house}, not House ${assertedHouse}`,
-          status: 'CONTRADICTS_CALCULATED_CHART'
-        });
+        if (p.sign) {
+          autoNodes.push({
+            nodeId: `EV_PLANET_${p.name.toUpperCase()}_${p.sign.toUpperCase()}`,
+            type: 'SIGN',
+            nodeType: 'AUTO_DERIVED_FACT_NODE',
+            source: 'AUTO_DERIVED_FACT_NODE',
+            description: `${p.name} in ${p.sign}`
+          });
+        }
       }
     }
-
-    // 4B. Planet-to-sign assertions
-    const signsPattern = SIGN_NAMES.join('|');
-    const signRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, 'gi');
-    let sm;
-    while ((sm = signRegex.exec(workingText)) !== null) {
-      const pName = normalizePlanetName(sm[1]);
-      const assertedSign = sm[2];
-      const fact = planetFacts.get(pName);
-
-      if (!fact || !fact.sign) {
-        unsupportedClaims.push({
-          claimText: sm[0],
-          reason: `PLANET_SIGN_NOT_FOUND_IN_CHART: Cannot verify sign for ${pName}`,
-          status: 'UNSUPPORTED_CLAIM'
-        });
-      } else if (fact.sign.toLowerCase() === assertedSign.toLowerCase()) {
-        const matchingEvId = Array.from(evidenceNodeIds).find(id =>
-          id.toLowerCase().includes(pName.toLowerCase()) || id.toLowerCase().includes(fact.sign.toLowerCase())
-        );
-        if (!matchingEvId) {
-          unsupportedClaims.push({
-            claimText: sm[0],
-            reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${pName} in ${fact.sign} has no corresponding evidence node in chartContext`,
-            status: 'UNSUPPORTED_CLAIM'
-          });
-        } else {
-          verifiedClaims.push({
-            claimText: sm[0],
-            matchedFactor: `${pName} in ${fact.sign}`,
-            evidenceIds: [matchingEvId],
-            status: 'VERIFIED'
-          });
-        }
-      } else {
-        contradictoryClaims.push({
-          claimText: sm[0],
-          reason: `Calculated ${pName} is in ${fact.sign}, not ${assertedSign}`,
-          status: 'CONTRADICTS_CALCULATED_CHART'
-        });
-      }
+    if (chartContext?.currentDasha?.lord) {
+      autoNodes.push({
+        nodeId: `EV_DASHA_${chartContext.currentDasha.lord.toUpperCase()}`,
+        type: 'DASHA_MD',
+        nodeType: 'AUTO_DERIVED_FACT_NODE',
+        source: 'AUTO_DERIVED_FACT_NODE',
+        description: `Active Mahadasha: ${chartContext.currentDasha.lord}`
+      });
     }
+    if (chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha) {
+      const antar = chartContext.currentDasha.subLord || chartContext.currentDasha.antarDasha;
+      autoNodes.push({
+        nodeId: `EV_DASHA_${antar.toUpperCase()}`,
+        type: 'DASHA_AD',
+        nodeType: 'AUTO_DERIVED_FACT_NODE',
+        source: 'AUTO_DERIVED_FACT_NODE',
+        description: `Active Antardasha: ${antar}`
+      });
+    }
+    effectiveNodes = autoNodes;
+  }
 
-    // 4C. Dasha lord assertions (must match active/current calculated Dasha period)
-    const dashaRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(Mahadasha|Antardasha|Dasha|Bhukti)/gi;
-    const activeMdLord = chartContext?.currentDasha?.mahadashaLord || chartContext?.currentDasha?.lord || chartContext?.activeDasha?.lord || chartContext?.activeMdLord || null;
-    const activeAdLord = chartContext?.currentDasha?.antardashaLord || chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha || chartContext?.activeDasha?.subLord || chartContext?.activeAdLord || null;
-    let dm;
-    while ((dm = dashaRegex.exec(workingText)) !== null) {
-      const pName = normalizePlanetName(dm[1]);
-      const dashaType = dm[2].toLowerCase();
+  const evidenceNodeIds = new Set(
+    effectiveNodes.map(n => n.nodeId || n.evidenceId || n.id).filter(Boolean)
+  );
 
-      let isLordActive = false;
-      let dashaReason = '';
-
-      if (activeMdLord && (dashaType.includes('maha') || dashaType === 'dasha')) {
-        if (activeMdLord.toLowerCase() === pName.toLowerCase()) {
-          isLordActive = true;
-          dashaReason = `Active Mahadasha: ${pName}`;
-        }
-      }
-      if (!isLordActive && activeAdLord && (dashaType.includes('antar') || dashaType.includes('bhukti') || dashaType === 'dasha')) {
-        if (activeAdLord.toLowerCase() === pName.toLowerCase()) {
-          isLordActive = true;
-          dashaReason = `Active Antardasha: ${pName}`;
-        }
-      }
-
-      if (!activeMdLord && !activeAdLord) {
+  // Check classified sentences through claim firewall
+  for (const cs of classifiedSentences) {
+    if (cs.sentenceType === CLAIM_TYPES.HEALTH) {
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.HEALTH,
+        reason: cs.reason,
+        failure: "HEALTH_SAFETY_VIOLATION",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.FINANCIAL && cs.safetyViolation) {
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.FINANCIAL,
+        reason: cs.reason,
+        failure: "UNSUPPORTED_FINANCIAL_CERTAINTY",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.LEGAL && cs.safetyViolation) {
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.LEGAL,
+        reason: cs.reason,
+        failure: "UNSUPPORTED_LEGAL_CERTAINTY",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.EMPIRICAL) {
+      unsupportedClaims.push({
+        claimText: cs.sentence,
+        claimType: CLAIM_TYPES.EMPIRICAL,
+        reason: cs.reason,
+        failure: "MISREPRESENTED_METRIC",
+        status: "UNSUPPORTED_CLAIM"
+      });
+    } else if (cs.sentenceType === CLAIM_TYPES.TIMING) {
+      if (cs.hasExactDate) {
         unsupportedClaims.push({
-          claimText: dm[0],
-          reason: `ACTIVE_DASHA_NOT_CALCULATED: Cannot verify active dasha period for ${pName}`,
-          status: 'UNSUPPORTED_CLAIM'
-        });
-      } else if (!isLordActive) {
-        contradictoryClaims.push({
-          claimText: dm[0],
-          reason: `${pName} is not the active Mahadasha (${activeMdLord || 'none'}) or Antardasha (${activeAdLord || 'none'}) lord in calculated chart`,
-          status: 'CONTRADICTS_CALCULATED_CHART'
+          claimText: cs.sentence,
+          claimType: CLAIM_TYPES.TIMING,
+          reason: cs.reason,
+          failure: "UNSUPPORTED_TIMING_PRECISION",
+          status: "UNSUPPORTED_CLAIM"
         });
       } else {
-        const matchingEvId = Array.from(evidenceNodeIds).find(id =>
-          id.toLowerCase().includes(pName.toLowerCase()) || id.toLowerCase().includes('dasha')
-        );
-        if (!matchingEvId) {
+        const hasTimingEvidence = effectiveNodes.some(n => n.type?.startsWith("DASHA") || n.type === "TIMING_WINDOW");
+        if (!hasTimingEvidence) {
           unsupportedClaims.push({
-            claimText: dm[0],
-            reason: `NO_EVIDENCE_NODE_IN_GRAPH: Active ${pName} Dasha has no corresponding evidence node in chartContext`,
-            status: 'UNSUPPORTED_CLAIM'
+            claimText: cs.sentence,
+            claimType: CLAIM_TYPES.TIMING,
+            reason: "INSUFFICIENT_DATA: Timing claim requires candidate timing windows in chartContext",
+            failure: "INSUFFICIENT_TIMING_EVIDENCE",
+            status: "UNSUPPORTED_CLAIM"
           });
         } else {
           verifiedClaims.push({
-            claimText: dm[0],
-            matchedFactor: dashaReason,
-            evidenceIds: [matchingEvId],
-            status: 'VERIFIED'
+            claimText: cs.sentence,
+            claimType: CLAIM_TYPES.TIMING,
+            matchedFactor: "Verified timing window in chartContext",
+            evidenceIds: effectiveNodes.filter(n => n.type?.startsWith("DASHA")).map(n => n.nodeId),
+            status: "VERIFIED"
           });
         }
       }
-    }
+    } else if (cs.sentenceType === CLAIM_TYPES.INTERPRETATION) {
+      const targetDomain = cs.domain.toLowerCase();
+      const canonicalRuleNodes = effectiveNodes.filter(n =>
+        n.nodeType !== "AUTO_DERIVED_FACT_NODE" &&
+        (
+          (n.domain && n.domain.toLowerCase() === targetDomain) ||
+          (n.nodeId && n.nodeId.toLowerCase().includes(targetDomain)) ||
+          (n.ruleId && n.ruleId.toLowerCase().includes(targetDomain)) ||
+          (n.description && n.description.toLowerCase().includes(targetDomain))
+        )
+      );
 
-    // 4D. Substantive / Interpretive Claim Grounding
-    const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children"];
-    const interpretivePattern = /\b(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)(?:'s| in \w+|\s+in\s+(?:the\s+)?(?:\d+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\s+house)?\s+(?:strongly\s+)?(supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders)\s+(?:a\s+|an\s+|the\s+)?([a-z\s]+?)(?=[.,;\n]|$)/gi;
-
-    let im;
-    while ((im = interpretivePattern.exec(workingText)) !== null) {
-      const pName = im[1];
-      const verb = im[2];
-      const targetPhrase = im[3].toLowerCase();
-      const matchedDomain = domainKeywords.find(d => targetPhrase.includes(d));
-
-      if (matchedDomain) {
-        const canonicalRuleNodes = effectiveNodes.filter(n =>
-          n.nodeType !== "AUTO_DERIVED_FACT_NODE" &&
-          (
-            (n.domain && n.domain.toLowerCase() === matchedDomain) ||
-            (n.nodeId && n.nodeId.toLowerCase().includes(matchedDomain)) ||
-            (n.ruleId && n.ruleId.toLowerCase().includes(matchedDomain)) ||
-            (n.description && n.description.toLowerCase().includes(matchedDomain) && n.description.toLowerCase().includes(pName.toLowerCase()))
-          )
-        );
-
-        if (canonicalRuleNodes.length === 0) {
-          unsupportedClaims.push({
-            claimText: im[0].trim(),
-            reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${matchedDomain} requires canonical evidence rule node, but only factual placement nodes exist in chartContext`,
-            status: "UNSUPPORTED_CLAIM",
-            claimType: "INTERPRETIVE_CLAIM"
-          });
-        } else {
-          verifiedClaims.push({
-            claimText: im[0].trim(),
-            matchedFactor: `Canonical rule grounding for ${matchedDomain} (${pName} ${verb})`,
-            evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
-            status: "VERIFIED",
-            claimType: "INTERPRETIVE_CLAIM"
-          });
-        }
-      }
-    }
-
-    // REJECT / REDACT unsupported and contradictory claims from narrative text
-    for (const c of contradictoryClaims) {
-      if (c.claimText && workingText.includes(c.claimText)) {
-        workingText = workingText.split(c.claimText).join(`[REMOVED: CONTRADICTORY CLAIM (${c.reason})]`);
-      }
-    }
-    for (const u of unsupportedClaims) {
-      if (u.claimText && workingText.includes(u.claimText)) {
-        workingText = workingText.split(u.claimText).join(`[REMOVED: UNSUPPORTED CLAIM (${u.reason})]`);
+      if (canonicalRuleNodes.length === 0) {
+        unsupportedClaims.push({
+          claimText: cs.sentence,
+          claimType: CLAIM_TYPES.INTERPRETATION,
+          reason: `NO_INTERPRETIVE_RULE_IN_GRAPH: Interpretive claim for ${cs.domain} requires canonical evidence rule node in chartContext`,
+          failure: "NO_INTERPRETIVE_RULE_IN_GRAPH",
+          status: "UNSUPPORTED_CLAIM"
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: cs.sentence,
+          claimType: CLAIM_TYPES.INTERPRETATION,
+          matchedFactor: `Canonical rule grounding for ${cs.domain}`,
+          evidenceIds: canonicalRuleNodes.map(n => n.nodeId || n.id),
+          status: "VERIFIED"
+        });
       }
     }
   }
 
-  // 5. Add mandatory statutory disclaimers if health, financial, or legal content detected
+  // 5A. Planet-to-house assertions (FACT)
+  const houseRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/gi;
+  let m;
+  while ((m = houseRegex.exec(workingText)) !== null) {
+    const pName = normalizePlanetName(m[1]);
+    const assertedHouse = parseInt(m[2], 10);
+    const fact = planetFacts.get(pName);
+
+    if (!fact || fact.house == null) {
+      unsupportedClaims.push({
+        claimText: m[0],
+        claimType: CLAIM_TYPES.FACT,
+        reason: `PLANET_NOT_FOUND_IN_CHART: Cannot verify ${pName}`,
+        failure: "PLANET_NOT_FOUND_IN_CHART",
+        status: 'UNSUPPORTED_CLAIM'
+      });
+    } else if (fact.house === assertedHouse) {
+      const matchingEvId = Array.from(evidenceNodeIds).find(id => id.toLowerCase().includes(pName.toLowerCase()));
+      if (!matchingEvId) {
+        unsupportedClaims.push({
+          claimText: m[0],
+          claimType: CLAIM_TYPES.FACT,
+          reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${pName} in House ${fact.house} has no corresponding evidence node in chartContext`,
+          failure: "NO_EVIDENCE_NODE_IN_GRAPH",
+          status: 'UNSUPPORTED_CLAIM'
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: m[0],
+          claimType: CLAIM_TYPES.FACT,
+          matchedFactor: `${pName} in House ${fact.house}`,
+          evidenceIds: [matchingEvId],
+          status: 'VERIFIED'
+        });
+      }
+    } else {
+      contradictoryClaims.push({
+        claimText: m[0],
+        claimType: CLAIM_TYPES.FACT,
+        reason: `Calculated ${pName} is in House ${fact.house}, not House ${assertedHouse}`,
+        failure: "CONTRADICTS_CALCULATED_CHART",
+        status: 'CONTRADICTS_CALCULATED_CHART'
+      });
+    }
+  }
+
+  // 5B. Planet-to-sign assertions (FACT)
+  const signsPattern = SIGN_NAMES.join('|');
+  const signRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, 'gi');
+  let sm;
+  while ((sm = signRegex.exec(workingText)) !== null) {
+    const pName = normalizePlanetName(sm[1]);
+    const assertedSign = sm[2];
+    const fact = planetFacts.get(pName);
+
+    if (!fact || !fact.sign) {
+      unsupportedClaims.push({
+        claimText: sm[0],
+        claimType: CLAIM_TYPES.FACT,
+        reason: `PLANET_SIGN_NOT_FOUND_IN_CHART: Cannot verify sign for ${pName}`,
+        failure: "PLANET_SIGN_NOT_FOUND_IN_CHART",
+        status: 'UNSUPPORTED_CLAIM'
+      });
+    } else if (fact.sign.toLowerCase() === assertedSign.toLowerCase()) {
+      const matchingEvId = Array.from(evidenceNodeIds).find(id =>
+        id.toLowerCase().includes(pName.toLowerCase()) || id.toLowerCase().includes(fact.sign.toLowerCase())
+      );
+      if (!matchingEvId) {
+        unsupportedClaims.push({
+          claimText: sm[0],
+          claimType: CLAIM_TYPES.FACT,
+          reason: `NO_EVIDENCE_NODE_IN_GRAPH: ${pName} in ${fact.sign} has no corresponding evidence node in chartContext`,
+          failure: "NO_EVIDENCE_NODE_IN_GRAPH",
+          status: 'UNSUPPORTED_CLAIM'
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: sm[0],
+          claimType: CLAIM_TYPES.FACT,
+          matchedFactor: `${pName} in ${fact.sign}`,
+          evidenceIds: [matchingEvId],
+          status: 'VERIFIED'
+        });
+      }
+    } else {
+      contradictoryClaims.push({
+        claimText: sm[0],
+        claimType: CLAIM_TYPES.FACT,
+        reason: `Calculated ${pName} is in ${fact.sign}, not ${assertedSign}`,
+        failure: "CONTRADICTS_CALCULATED_CHART",
+        status: 'CONTRADICTS_CALCULATED_CHART'
+      });
+    }
+  }
+
+  // 5C. Dasha lord assertions (FACT)
+  const dashaRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(Mahadasha|Antardasha|Dasha|Bhukti)/gi;
+  const activeMdLord = chartContext?.currentDasha?.mahadashaLord || chartContext?.currentDasha?.lord || chartContext?.activeDasha?.lord || chartContext?.activeMdLord || null;
+  const activeAdLord = chartContext?.currentDasha?.antardashaLord || chartContext?.currentDasha?.subLord || chartContext?.currentDasha?.antarDasha || chartContext?.activeDasha?.subLord || chartContext?.activeAdLord || null;
+  let dm;
+  while ((dm = dashaRegex.exec(workingText)) !== null) {
+    const pName = normalizePlanetName(dm[1]);
+    const dashaType = dm[2].toLowerCase();
+
+    let isLordActive = false;
+    let dashaReason = '';
+
+    if (activeMdLord && (dashaType.includes('maha') || dashaType === 'dasha')) {
+      if (activeMdLord.toLowerCase() === pName.toLowerCase()) {
+        isLordActive = true;
+        dashaReason = `Active Mahadasha: ${pName}`;
+      }
+    }
+    if (!isLordActive && activeAdLord && (dashaType.includes('antar') || dashaType.includes('bhukti') || dashaType === 'dasha')) {
+      if (activeAdLord.toLowerCase() === pName.toLowerCase()) {
+        isLordActive = true;
+        dashaReason = `Active Antardasha: ${pName}`;
+      }
+    }
+
+    if (!activeMdLord && !activeAdLord) {
+      unsupportedClaims.push({
+        claimText: dm[0],
+        claimType: CLAIM_TYPES.FACT,
+        reason: `ACTIVE_DASHA_NOT_CALCULATED: Cannot verify active dasha period for ${pName}`,
+        failure: "ACTIVE_DASHA_NOT_CALCULATED",
+        status: 'UNSUPPORTED_CLAIM'
+      });
+    } else if (!isLordActive) {
+      contradictoryClaims.push({
+        claimText: dm[0],
+        claimType: CLAIM_TYPES.FACT,
+        reason: `${pName} is not the active Mahadasha (${activeMdLord || 'none'}) or Antardasha (${activeAdLord || 'none'}) lord in calculated chart`,
+        failure: "CONTRADICTS_CALCULATED_CHART",
+        status: 'CONTRADICTS_CALCULATED_CHART'
+      });
+    } else {
+      const matchingEvId = Array.from(evidenceNodeIds).find(id =>
+        id.toLowerCase().includes(pName.toLowerCase()) || id.toLowerCase().includes('dasha')
+      );
+      if (!matchingEvId) {
+        unsupportedClaims.push({
+          claimText: dm[0],
+          claimType: CLAIM_TYPES.FACT,
+          reason: `NO_EVIDENCE_NODE_IN_GRAPH: Active ${pName} Dasha has no corresponding evidence node in chartContext`,
+          failure: "NO_EVIDENCE_NODE_IN_GRAPH",
+          status: 'UNSUPPORTED_CLAIM'
+        });
+      } else {
+        verifiedClaims.push({
+          claimText: dm[0],
+          claimType: CLAIM_TYPES.FACT,
+          matchedFactor: dashaReason,
+          evidenceIds: [matchingEvId],
+          status: 'VERIFIED'
+        });
+      }
+    }
+  }
+
+  // Redact contradictory and unsupported claims from narrative text
+  for (const c of contradictoryClaims) {
+    if (c.claimText && workingText.includes(c.claimText)) {
+      workingText = workingText.split(c.claimText).join(`[REMOVED: CONTRADICTORY CLAIM (${c.reason})]`);
+    }
+  }
+  for (const u of unsupportedClaims) {
+    if (u.claimText && workingText.includes(u.claimText)) {
+      workingText = workingText.split(u.claimText).join(`[REMOVED: UNSUPPORTED CLAIM (${u.reason})]`);
+    }
+  }
+
+  // Statutory disclaimers
   let finalText = workingText;
   const hasHealthContent = safetyViolations.some(v => v.type === 'HEALTH_DIAGNOSTIC');
   const hasFinancialContent = safetyViolations.some(v => v.type === 'FINANCIAL_ADVISORY');
@@ -505,10 +741,28 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
     finalText += '\n\n⚠️ Statutory Notice: Traditional astrological interpretation only. This does NOT constitute legal advice or formal attorney counsel. Always consult qualified legal professionals for legal matters.';
   }
 
-  const isValid = safetyViolations.length === 0 &&
-                  fabricatedViolations.length === 0 &&
-                  contradictoryClaims.length === 0 &&
-                  unsupportedClaims.length === 0;
+  const substantiveSentences = classifiedSentences.filter(s => s.substantive);
+  const totalClaims = verifiedClaims.length + unsupportedClaims.length + contradictoryClaims.length;
+
+  // Requirement 3.3 Fail-Closed Rule:
+  let claimExtractionStatus = "COMPLETE";
+  let failureReason = null;
+  let isValid = safetyViolations.length === 0 &&
+                fabricatedViolations.length === 0 &&
+                contradictoryClaims.length === 0 &&
+                unsupportedClaims.length === 0;
+
+  if (substantiveSentences.length > 0 && totalClaims === 0) {
+    claimExtractionStatus = "INCOMPLETE";
+    isValid = false;
+    failureReason = "SUBSTANTIVE_CLAIM_EXTRACTION_FAILED";
+  } else if (!isValid) {
+    const firstFailure = unsupportedClaims.find(c => c.failure)?.failure ||
+                         contradictoryClaims[0]?.failure ||
+                         (safetyViolations[0]?.type) ||
+                         "UNSUPPORTED_CLAIMS_DETECTED";
+    failureReason = firstFailure;
+  }
 
   return {
     text: finalText,
@@ -527,6 +781,9 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
     verifiedClaims,
     unsupportedClaims,
     contradictoryClaims,
-    disclaimersAdded: hasHealthContent || hasFinancialContent || hasLegalContent
+    disclaimersAdded: hasHealthContent || hasFinancialContent || hasLegalContent,
+    claimExtractionStatus,
+    failureReason,
+    classifiedSentences
   };
 }
