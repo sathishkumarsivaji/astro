@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA). No overlap was detected under the preregistered exact-name/birth-date and normalized-name linkage rules. Residual linkage risk from aliases or unresolved identity variants cannot be completely excluded.
 - **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca`) and calibration model SHA-256 hash (`0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38`) and calibration model SHA-256 hash (`5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -96,8 +96,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca",
-  "calibrationModelHash": "0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd",
+  "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
+  "calibrationModelHash": "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -273,11 +273,11 @@ Every astrological feature is calculated strictly from the chart and transit eph
 ### 5. Out-of-Sample Empirical Evaluation (Frozen Final Model)
 Coefficients frozen on TRAIN and evaluated across untouched out-of-sample cohorts:
 
-| Cohort Split | Sample $N$ | Events / Censored | Harrell's C-Index | Model Timing MAE | Demographic Null MAE | Model Beats Baseline? | LRT vs Null ($p$-value) | Empirical Quality Gate |
+| Cohort Split | Sample $N$ | Events / Censored | Harrell's C-Index | Model Timing MAE | Demographic Null MAE | Baseline Comparison | LRT vs Null ($p$-value) | Empirical Quality Gate |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **BLIND_TEST** | 1605 | 1440 / 165 | **0.5048** | 4.05y | 4.05y | YES | $\Delta G^2 = 0.6886$ ($p = 0.40662$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **INTERNAL_HOLDOUT** | 1528 | 1374 / 154 | **0.507** | 4.09y | 4.09y | NO | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **Astro-Databank Certified A/AA** | 869 | 301 / 568 | **0.5345** | 4.91y | 4.92y | YES | $\Delta G^2 = 0.4375$ ($p = 0.50833$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **BLIND_TEST** | 1605 | 1440 / 165 | **0.5048** | 4.05y | 4.05y | MEANINGFUL_IMPROVEMENT | $\Delta G^2 = 0.6886$ ($p = 0.40662$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **INTERNAL_HOLDOUT** | 1528 | 1374 / 154 | **0.507** | 4.09y | 4.09y | STATISTICALLY_TIED | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **Astro-Databank Certified A/AA** | 869 | 301 / 568 | **0.5345** | 4.91y | 4.92y | MEANINGFUL_IMPROVEMENT | $\Delta G^2 = 0.4375$ ($p = 0.50833$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 
 *Scientific Gate Note:* On untouched BLIND_TEST out-of-sample data, the V3 combined model does not beat the demographic baseline (timing MAE is ~4.05y vs ~4.05y, LRT $p = 0.407$). The model performs at baseline demographic parity, fully validating the truthful designation `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
 
@@ -298,8 +298,8 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca` |
-| **Calibration Model Hash** | `0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd` |
+| **Prediction Engine Hash** | `a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38` |
+| **Calibration Model Hash** | `5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
@@ -307,4 +307,4 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
 | **Benchmark Code Hash** | `d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3` |
-| **Artifact Generation Timestamp** | `2026-10-07T04:31:25.744Z` |
+| **Artifact Generation Timestamp** | `2026-10-07T15:02:26.942Z` |

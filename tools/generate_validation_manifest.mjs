@@ -64,6 +64,7 @@ const TEST_SUITES = [
   { name: "Advanced Q&A Engine", cwd: FRONTEND_DIR, cmd: "node test_advanced_qa_engine.mjs" },
   { name: "Follow-Up Q&A Engine", cwd: FRONTEND_DIR, cmd: "node test_follow_up_qa.mjs" },
   { name: "Q&A Scientific Grounding", cwd: FRONTEND_DIR, cmd: "node test_qa_scientific_grounding.mjs" },
+  { name: "P0 P1 Remediation Audit", cwd: FRONTEND_DIR, cmd: "node test_p0_p1_remediation_audit.mjs" },
   { name: "Validation Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_validation_manifest_integrity.mjs" }
 ];
 

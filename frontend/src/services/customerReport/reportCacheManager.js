@@ -26,8 +26,8 @@ import { generateChartFingerprint } from "../astroEngine.js";
 
 // Authoritative frozen baseline versions and hashes
 export const DEFAULT_ENGINE_VERSION = "ASTROVERSE Core v4.2.0";
-export const DEFAULT_PREDICTION_ENGINE_HASH = "5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca";
-export const DEFAULT_CALIBRATION_MODEL_HASH = "0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd";
+export const DEFAULT_PREDICTION_ENGINE_HASH = "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
+export const DEFAULT_CALIBRATION_MODEL_HASH = "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea";
 export const DEFAULT_SCHEMA_VERSION = "3.0";
 
 let activeEngineVersion = DEFAULT_ENGINE_VERSION;
@@ -35,26 +35,44 @@ let activePredictionEngineHash = DEFAULT_PREDICTION_ENGINE_HASH;
 let activeCalibrationModelHash = DEFAULT_CALIBRATION_MODEL_HASH;
 let activeSchemaVersion = DEFAULT_SCHEMA_VERSION;
 
-// Attempt dynamic synchronization with release manifest if available
-try {
-  const currentDir = typeof __dirname !== "undefined"
-    ? __dirname
-    : path.dirname(fileURLToPath(import.meta.url));
-  const manifestPath = path.resolve(currentDir, "../../../../current_release_manifest.json");
-  if (fs.existsSync(manifestPath)) {
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
-    if (manifest.authoritativeHashes?.predictionEngineHash) {
-      activePredictionEngineHash = manifest.authoritativeHashes.predictionEngineHash;
+function loadReleaseManifest() {
+  try {
+    const currentDir = typeof __dirname !== "undefined"
+      ? __dirname
+      : (typeof import.meta !== "undefined" && import.meta.url ? path.dirname(fileURLToPath(import.meta.url)) : "");
+    if (!currentDir) return null;
+
+    const candidatePaths = [
+      path.resolve(currentDir, "../../../../current_release_manifest.json"),
+      path.resolve(currentDir, "../../config/current_release_manifest.json")
+    ];
+
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, "utf-8"));
+      }
     }
-    if (manifest.authoritativeHashes?.calibrationModelHash) {
-      activeCalibrationModelHash = manifest.authoritativeHashes.calibrationModelHash;
-    }
-    if (manifest.schemaVersion) {
-      activeSchemaVersion = manifest.schemaVersion;
+  } catch (err) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(`RELEASE_MANIFEST_REQUIRED: Failed to load release manifest in production: ${err.message}`);
     }
   }
-} catch {
-  // Gracefully retain frozen authoritative defaults
+  return null;
+}
+
+const manifest = loadReleaseManifest();
+if (manifest) {
+  if (manifest.authoritativeHashes?.predictionEngineHash) {
+    activePredictionEngineHash = manifest.authoritativeHashes.predictionEngineHash;
+  }
+  if (manifest.authoritativeHashes?.calibrationModelHash) {
+    activeCalibrationModelHash = manifest.authoritativeHashes.calibrationModelHash;
+  }
+  if (manifest.schemaVersion) {
+    activeSchemaVersion = manifest.schemaVersion;
+  }
+} else if (process.env.NODE_ENV === "production") {
+  throw new Error("RELEASE_MANIFEST_REQUIRED: Release manifest must be present in production to bind report cache");
 }
 
 const reportCache = new Map();

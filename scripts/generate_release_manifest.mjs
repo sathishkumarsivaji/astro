@@ -79,6 +79,10 @@ export function generateReleaseManifest() {
   const manifestPath = path.join(ROOT, 'current_release_manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
   console.log('✓ current_release_manifest.json successfully generated.');
+
+  const feManifestPath = path.join(ROOT, 'frontend/src/config/current_release_manifest.json');
+  fs.writeFileSync(feManifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+  console.log('✓ frontend/src/config/current_release_manifest.json mirrored.');
   return manifest;
 }
 

@@ -36,8 +36,13 @@ export {
 // Re-export canonical fact adapter
 export { extractCanonicalFacts } from "./canonicalFactAdapter.js";
 
-// Re-export report assembler
-export { assembleExpertReport } from "./expertReportAssembler.js";
+// Re-export report assembler and cache methods
+export {
+  assembleExpertReport,
+  generateExpertReportCached,
+  clearExpertReportCache,
+  getExpertReportCacheStats
+} from "./expertReportAssembler.js";
 
 // Re-export narrative builder
 export { buildDomainNarrative, DOMAIN_LABELS, RESOLUTION_LABELS } from "./narrativeBuilder.js";
@@ -53,7 +58,7 @@ export { calculateElectionalMuhurta } from "./muhurtaEngine.js";
 // PRIMARY PUBLIC API
 // ─────────────────────────────────────────────────────────────
 
-import { assembleExpertReport } from "./expertReportAssembler.js";
+import { assembleExpertReport, generateExpertReportCached } from "./expertReportAssembler.js";
 
 /**
  * Generate the complete Expert Mode prediction report.
@@ -88,7 +93,10 @@ import { assembleExpertReport } from "./expertReportAssembler.js";
  * console.log(expertReport.crossDomainAnalysis);
  */
 export function generateExpertReport(chartData, lang = "en", options = {}) {
-  return assembleExpertReport(chartData, lang, options);
+  if (options && options.noCache) {
+    return assembleExpertReport(chartData, lang, options);
+  }
+  return generateExpertReportCached(chartData, lang, options);
 }
 
 /**
@@ -97,8 +105,13 @@ export function generateExpertReport(chartData, lang = "en", options = {}) {
  * @param {Object} chartData - Output of calculateChartBySystem()
  * @param {string} domainId - Domain ID from DOMAIN enum
  * @param {string} [lang="en"] - Language
+ * @param {Object} [options] - Optional configuration
  * @returns {ExpertReport} Report with single domain result
  */
-export function generateDomainReport(chartData, domainId, lang = "en") {
-  return assembleExpertReport(chartData, lang, { domains: [domainId] });
+export function generateDomainReport(chartData, domainId, lang = "en", options = {}) {
+  if (options && options.noCache) {
+    return assembleExpertReport(chartData, lang, { ...options, domains: [domainId] });
+  }
+  return generateExpertReportCached(chartData, lang, { ...options, domains: [domainId] });
 }
+

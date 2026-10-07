@@ -194,7 +194,7 @@ export function getAyanamshaForSystem(jd, systemOrConfig, includeNutation = fals
     return 0.0;
   }
   
-  throw new Error(`INVALID_ASTROLOGY_SYSTEM: "${sysNorm}". Valid systems: lahiri, kp, raman, tropical.`);
+  throw new Error(`INVALID_ASTROLOGY_SYSTEM: Unknown astrological system "${sysNorm}". Valid systems: lahiri, kp, raman, tropical.`);
 }
 
 /**

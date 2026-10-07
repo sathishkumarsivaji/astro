@@ -4,7 +4,7 @@
   "schemaVersion": "3.0",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
-  "generatedAt": "2026-10-07T08:40:41.737Z",
+  "generatedAt": "2026-10-07T15:02:39.020Z",
   "status": {
     "astronomicalEngine": "CALCULATION_VALIDATED",
     "softwareInfrastructure": "SOFTWARE_VALIDATED",
@@ -12,19 +12,19 @@
     "empiricalPrediction": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
   },
   "authoritativeHashes": {
-    "astroEngineHash": "7fd206c8d34db29cfe9cd2207481b8adc1af0e4bcef7fee8cc2138ff110ec5a8",
+    "astroEngineHash": "6ff061885982a5814e5af5c1d9d7a1f8d78073033429e40884eb1a53c9d7f032",
     "empiricalEvaluationEngineHash": "e3e2b0b9302c205f9bb93928e7cb2cfe78b739fce1629219e467cb4240b98179",
-    "discreteHazardSurvivalEngineHash": "4ec752a56b99ea34ae20b01dd3ab227096e88a3d0ef3259c87acad219ef8656c",
-    "predictionEngineHash": "5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca",
-    "calibrationModelHash": "0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd"
+    "discreteHazardSurvivalEngineHash": "c773f858941f35d1bf03dfdfd89d37c29fa812f23fd4ba4cfd3e42d3133cdee6",
+    "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
+    "calibrationModelHash": "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea"
   },
   "datasetHashes": {
     "trainSplitHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "valSplitHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindTestSplitHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
     "internalHoldoutSplitHash": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
-    "astroDatabankTrueIndependentHash": "81297ebe367f99e43d124f30677fa4dde53e3b29484078462c4586df28c991b2",
+    "astroDatabankTrueIndependentHash": "3af11ded4a0476a9c12711313776d2d313396a37652f24acd0c6af9a38fae018",
     "overlapManifestHash": "6c6cac3c32bf7d63cc2bbe74060214757e2e1a3f8f68317fe844da51b140bb99"
   },
-  "updatedAt": "2026-10-07T08:40:41.737Z"
+  "updatedAt": "2026-10-07T15:02:39.020Z"
 }

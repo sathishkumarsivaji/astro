@@ -1,0 +1,21 @@
+{
+  "name": "astroverse",
+  "version": "3.0.0",
+  "description": "ASTROVERSE — Production-Grade Astrological Research & Precision Q&A Engine",
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix frontend test",
+    "test:smoke": "npm --prefix frontend run test:smoke",
+    "test:core": "npm --prefix frontend run test:core",
+    "test:security": "npm --prefix frontend run test:security",
+    "test:expert": "npm --prefix frontend run test:expert",
+    "test:full": "npm --prefix frontend run test:full",
+    "test:research": "npm --prefix frontend run test:research",
+    "manifest:sync": "node scripts/synchronize_benchmark_artifacts.mjs && node scripts/generate_release_manifest.mjs",
+    "manifest:generate": "node tools/generate_validation_manifest.mjs",
+    "package:clean": "node scripts/package_clean_release.mjs"
+  }
+}

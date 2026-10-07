@@ -1,6 +1,6 @@
 {
   "manifestVersion": "2.3.0",
-  "generatedAt": "2026-10-07T12:29:12.523Z",
+  "generatedAt": "2026-10-07T15:06:23.346Z",
   "application": {
     "name": "AstroVerse",
     "version": "4.2.0-Scientific",
@@ -200,8 +200,8 @@
     "releaseGateStatus": "PASS"
   },
   "testSuiteSummary": {
-    "totalChecks": 2042,
-    "passed": 2042,
+    "totalChecks": 2052,
+    "passed": 2052,
     "failed": 0,
     "status": "ALL_PASSED",
     "suites": [
@@ -212,7 +212,7 @@
         "passed": 180,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 562
+        "durationMs": 407
       },
       {
         "name": "True Node Independent Benchmark",
@@ -221,7 +221,7 @@
         "passed": 24,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 438
+        "durationMs": 355
       },
       {
         "name": "Cross-System Consistency",
@@ -230,7 +230,7 @@
         "passed": 90,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 682
+        "durationMs": 509
       },
       {
         "name": "Prediction Lab & Backtesting",
@@ -239,7 +239,7 @@
         "passed": 87,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1007
+        "durationMs": 808
       },
       {
         "name": "Consultation Engine",
@@ -248,7 +248,7 @@
         "passed": 51,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 213
+        "durationMs": 175
       },
       {
         "name": "Multi-Turn QA Router",
@@ -257,7 +257,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 13154
+        "durationMs": 10410
       },
       {
         "name": "PDF & Fingerprint Integrity",
@@ -266,7 +266,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1884
+        "durationMs": 1526
       },
       {
         "name": "Tamil Purity & Localization",
@@ -275,7 +275,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 6646
+        "durationMs": 5452
       },
       {
         "name": "Detailed Report Anti-Fabrication",
@@ -284,7 +284,7 @@
         "passed": 104,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2945
+        "durationMs": 2400
       },
       {
         "name": "Convention Fixtures",
@@ -293,7 +293,7 @@
         "passed": 67,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 102
+        "durationMs": 78
       },
       {
         "name": "Golden Astronomy",
@@ -302,7 +302,7 @@
         "passed": 780,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 3559
+        "durationMs": 2887
       },
       {
         "name": "Claim Graph",
@@ -311,7 +311,7 @@
         "passed": 15,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 219
+        "durationMs": 165
       },
       {
         "name": "Calendar Engine",
@@ -320,7 +320,7 @@
         "passed": 13,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 99
+        "durationMs": 84
       },
       {
         "name": "Differential Prediction Integrity",
@@ -329,7 +329,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 397
+        "durationMs": 333
       },
       {
         "name": "No Fabricated Calculated Values",
@@ -338,7 +338,7 @@
         "passed": 7,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1678
+        "durationMs": 1380
       },
       {
         "name": "Behavioral Anti-Fabrication Invariants",
@@ -347,7 +347,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 205
+        "durationMs": 171
       },
       {
         "name": "V3 Statistical Integrity",
@@ -356,7 +356,7 @@
         "passed": 46,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 4800
+        "durationMs": 3867
       },
       {
         "name": "V3 Full Cohort Execution",
@@ -365,7 +365,7 @@
         "passed": 17,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 70
+        "durationMs": 62
       },
       {
         "name": "Harrell's C Censoring",
@@ -374,7 +374,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 105
+        "durationMs": 83
       },
       {
         "name": "P0 Negative Data Matrix",
@@ -383,7 +383,7 @@
         "passed": 24,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 135
+        "durationMs": 115
       },
       {
         "name": "Backend Security & Push",
@@ -392,7 +392,7 @@
         "passed": 88,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1781
+        "durationMs": 12953
       },
       {
         "name": "Epistemic Architecture Mandates",
@@ -401,7 +401,7 @@
         "passed": 17,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 5913
+        "durationMs": 4692
       },
       {
         "name": "Cache Coefficient Hash Integrity",
@@ -410,7 +410,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 179
+        "durationMs": 145
       },
       {
         "name": "Current Release Manifest Integrity",
@@ -419,7 +419,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 126
+        "durationMs": 111
       },
       {
         "name": "Forensic Integrity Mandates",
@@ -428,7 +428,7 @@
         "passed": 12,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 235
+        "durationMs": 197
       },
       {
         "name": "Customer Report Pipeline",
@@ -437,7 +437,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 18500
+        "durationMs": 14981
       },
       {
         "name": "Precision Q&A Engine Complete Verification",
@@ -446,7 +446,7 @@
         "passed": 82,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 6316
+        "durationMs": 5050
       },
       {
         "name": "Advanced Q&A Engine",
@@ -455,7 +455,7 @@
         "passed": 40,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 6235
+        "durationMs": 5059
       },
       {
         "name": "Follow-Up Q&A Engine",
@@ -464,7 +464,7 @@
         "passed": 189,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 11349
+        "durationMs": 9471
       },
       {
         "name": "Q&A Scientific Grounding",
@@ -473,7 +473,16 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 166
+        "durationMs": 143
+      },
+      {
+        "name": "P0 P1 Remediation Audit",
+        "command": "node test_p0_p1_remediation_audit.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 319
       },
       {
         "name": "Validation Manifest Integrity",
@@ -482,7 +491,7 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 67
+        "durationMs": 58
       }
     ]
   }

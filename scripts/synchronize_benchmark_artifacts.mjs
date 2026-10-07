@@ -52,6 +52,9 @@ function setTimingResolution(timingObj) {
     timingObj.computedCalendarGranularity = "DAY";
     timingObj.empiricalPredictiveResolution = "MULTI_YEAR_RANGE";
     timingObj.empiricalTimingStatus = "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY";
+    if (!timingObj.baselineComparisonStatus) {
+      timingObj.baselineComparisonStatus = timingObj.doesCombinedBeatBaseline ? "MEANINGFUL_IMPROVEMENT" : "STATISTICALLY_TIED";
+    }
   }
 }
 
@@ -158,8 +161,10 @@ if (fs.existsSync(EXT_REPORT_PATH)) {
 const LATEST_BENCHMARK_PATH = path.join(ROOT, 'frontend/src/config/latestBenchmarkResults.json');
 if (fs.existsSync(LATEST_BENCHMARK_PATH)) {
   const latestBench = JSON.parse(fs.readFileSync(LATEST_BENCHMARK_PATH, 'utf8'));
+  const nowIso = new Date().toISOString();
   latestBench.provenance.predictionEngineHash = predictionEngineHash;
   latestBench.provenance.calibrationModelHash = calibrationModelHash;
+  latestBench.provenance.generationTimestamp = nowIso;
   if (latestBench.metrics?.blindTest?.occurrence) {
     syncOccurrenceStatus(latestBench.metrics.blindTest.occurrence, blind4Model);
   }
@@ -177,6 +182,14 @@ if (fs.existsSync(LATEST_BENCHMARK_PATH)) {
 
   fs.writeFileSync(LATEST_BENCHMARK_PATH, JSON.stringify(latestBench, null, 2) + '\n', 'utf8');
   console.log('✓ Synchronized latestBenchmarkResults.json');
+}
+
+// 5. Mirror current_release_manifest.json to frontend config
+const ROOT_MANIFEST_PATH = path.join(ROOT, 'current_release_manifest.json');
+const FE_MANIFEST_PATH = path.join(ROOT, 'frontend/src/config/current_release_manifest.json');
+if (fs.existsSync(ROOT_MANIFEST_PATH)) {
+  fs.copyFileSync(ROOT_MANIFEST_PATH, FE_MANIFEST_PATH);
+  console.log('✓ Mirrored current_release_manifest.json to frontend/src/config');
 }
 
 console.log('All benchmark artifacts successfully synchronized.');

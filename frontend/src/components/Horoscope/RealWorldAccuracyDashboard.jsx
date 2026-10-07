@@ -35,12 +35,14 @@ import {
 } from "lucide-react";
 import { getChapterAvailabilityMatrix } from "../../services/realWorldValidation/chapterAvailabilityMatrix.js";
 import { getAllDomainValidationEntries } from "../../services/expertPrediction/domainValidationRegistry.js";
+import { getReleaseGateStatus } from "../../services/realWorldValidation/authoritativeEmpiricalMetrics.js";
 import BENCHMARK_DATA from "../../config/latestBenchmarkResults.json";
 
 export default function RealWorldAccuracyDashboard({ isTamil = false, onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
   const chapterMatrix = getChapterAvailabilityMatrix();
   const domainEntries = getAllDomainValidationEntries();
+  const gateStatus = getReleaseGateStatus();
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
@@ -63,13 +65,35 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="self-end sm:self-center px-4 py-1.5 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold transition-all border border-stone-700"
-            >
-              {isTamil ? "மூடு" : "Close"}
-            </button>
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              {gateStatus.isSynchronized ? (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-mono font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Status: VERIFIED_SYNCHRONIZED</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-mono font-bold">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Status: STALE — REVALIDATION REQUIRED</span>
+                </div>
+              )}
+              <button
+                onClick={onClose}
+                className="px-4 py-1.5 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold transition-all border border-stone-700"
+              >
+                {isTamil ? "மூடு" : "Close"}
+              </button>
+            </div>
           </div>
+
+          {!gateStatus.isSynchronized && (
+            <div className="mt-3 p-3 rounded-2xl bg-amber-900/40 border border-amber-500/60 text-xs text-amber-200 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                <strong>EMPIRICAL_METRICS_STALE:</strong> Prediction engine or calibration model has drifted from the release manifest. Benchmark must be re-synchronized before displaying empirical validation metrics.
+              </span>
+            </div>
+          )}
 
           {/* Epistemological Banner */}
           <div className="mt-4 p-3 rounded-2xl bg-stone-800/90 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-center gap-2">

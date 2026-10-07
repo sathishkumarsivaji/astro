@@ -1977,7 +1977,7 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   if (typeof options?.ayanamshaValue === "number") {
     const sysCheck = String(system).toLowerCase();
     if (sysCheck !== "vedic" && sysCheck !== "lahiri" && sysCheck !== "kp" && sysCheck !== "raman" && sysCheck !== "tropical" && sysCheck !== "western" && sysCheck !== "sayana") {
-      throw new Error(`INVALID_ASTROLOGY_SYSTEM: "${system}". Valid systems: lahiri, kp, raman, tropical.`);
+      throw new Error(`INVALID_ASTROLOGY_SYSTEM: Unknown astrological system "${system}". Valid systems: lahiri, kp, raman, tropical.`);
     }
     ayanamsha = options.ayanamshaValue;
   } else {

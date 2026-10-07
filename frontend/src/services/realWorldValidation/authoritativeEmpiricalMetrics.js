@@ -8,6 +8,7 @@
  */
 
 import latestBenchmarkResults from "../../config/latestBenchmarkResults.json" with { type: "json" };
+import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 
 if (!latestBenchmarkResults || !latestBenchmarkResults.provenance) {
   throw new Error("CRITICAL_INTEGRITY_FAILURE: latestBenchmarkResults.json missing or invalid.");
@@ -17,7 +18,24 @@ const prov = latestBenchmarkResults.provenance;
 const mBlind = latestBenchmarkResults.metrics?.blindTest;
 const mAdb = latestBenchmarkResults.metrics?.astroDatabankCertifiedAAA;
 
+// Cryptographic Release Hash Gate
+const authHashes = releaseManifest?.authoritativeHashes || {};
+const engineHashMatches = prov.predictionEngineHash === authHashes.predictionEngineHash;
+const calibrationHashMatches = prov.calibrationModelHash === authHashes.calibrationModelHash;
+export const isReleaseSynchronized = Boolean(engineHashMatches && calibrationHashMatches);
+export const releaseGateStatus = isReleaseSynchronized ? "VERIFIED_SYNCHRONIZED" : "EMPIRICAL_METRICS_STALE";
+
 export const AUTHORITATIVE_EMPIRICAL_METRICS = Object.freeze({
+  releaseGate: Object.freeze({
+    isSynchronized: isReleaseSynchronized,
+    status: releaseGateStatus,
+    engineHashMatches,
+    calibrationHashMatches,
+    predictionEngineHash: prov.predictionEngineHash,
+    expectedPredictionEngineHash: authHashes.predictionEngineHash,
+    calibrationModelHash: prov.calibrationModelHash,
+    expectedCalibrationModelHash: authHashes.calibrationModelHash
+  }),
   provenance: Object.freeze({
     dataset: prov.dataset,
     predictionEngineHash: prov.predictionEngineHash,
@@ -32,10 +50,11 @@ export const AUTHORITATIVE_EMPIRICAL_METRICS = Object.freeze({
   domains: Object.freeze({
     MARRIAGE: Object.freeze({
       domain: "MARRIAGE",
-      empiricalOutcomeValidationAvailable: true,
-      empiricalPredictiveResolution: mBlind?.timing?.empiricalPredictiveResolution || "MULTI_YEAR_RANGE",
+      empiricalOutcomeValidationAvailable: isReleaseSynchronized,
+      empiricalPredictiveResolution: isReleaseSynchronized ? (mBlind?.timing?.empiricalPredictiveResolution || "MULTI_YEAR_RANGE") : "NOT_ESTABLISHED",
       traditionalTimingResolution: "DATE_RANGE",
-      validationStatus: "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+      validationStatus: isReleaseSynchronized ? (mBlind?.timing?.validationStatus || "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED") : "EMPIRICAL_METRICS_STALE",
+      releaseGateStatus,
       internalCohort: Object.freeze({
         datasetName: "VedAstro 15k Famous People (BLIND_TEST Partition)",
         sampleSizeN: mBlind?.n,
@@ -113,3 +132,8 @@ export function getAuthoritativeEmpiricalMetrics(domain) {
 export function getMarriageEmpiricalMetrics() {
   return AUTHORITATIVE_EMPIRICAL_METRICS.domains.MARRIAGE;
 }
+
+export function getReleaseGateStatus() {
+  return AUTHORITATIVE_EMPIRICAL_METRICS.releaseGate;
+}
+

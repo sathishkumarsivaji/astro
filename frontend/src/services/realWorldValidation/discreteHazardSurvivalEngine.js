@@ -1802,8 +1802,23 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   const mcc = mccDenom > 0 ? ((tp * tn) - (fp * fn)) / mccDenom : 0.0;
   const meanBrier = brierScores.length > 0 ? brierScores.reduce((a, b) => a + b, 0) / brierScores.length : 0;
 
-  // Scientific Quality Gate (Requirement 15 & 25)
-  const beatsDemographicBaseline = timingMAECombined !== null && timingMAEBaseline !== null && timingMAECombined < timingMAEBaseline;
+  // Scientific Quality Gate & Categorical Baseline Comparison
+  let baselineComparisonStatus = "INCONCLUSIVE";
+  let beatsDemographicBaseline = false;
+  if (timingMAECombined !== null && timingMAEBaseline !== null) {
+    const maeDelta = timingMAEBaseline - timingMAECombined; // positive = combined model has lower error
+    if (Math.abs(maeDelta) < 0.05 || lrtPValue >= 0.05) {
+      baselineComparisonStatus = "STATISTICALLY_TIED";
+      beatsDemographicBaseline = false; // Never claim "beats baseline" on ties or insignificant LRT
+    } else if (maeDelta >= 0.05 && lrtPValue < 0.05) {
+      baselineComparisonStatus = "MEANINGFUL_IMPROVEMENT";
+      beatsDemographicBaseline = true;
+    } else if (maeDelta <= -0.05) {
+      baselineComparisonStatus = "WORSE_THAN_BASELINE";
+      beatsDemographicBaseline = false;
+    }
+  }
+
   const cIndexAboveChance = cIndex > 0.51;
   const hasSpecificity = specificity > 0.05;
   const hasPositiveMcc = mcc > 0.05;
@@ -1834,7 +1849,8 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
       within1yPct: Number(within1yPct.toFixed(2)),
       within2yPct: Number(within2yPct.toFixed(2)),
       within3yPct: Number(within3yPct.toFixed(2)),
-      doesCombinedBeatBaseline: beatsDemographicBaseline
+      doesCombinedBeatBaseline: beatsDemographicBaseline,
+      baselineComparisonStatus
     },
     occurrence: {
       evaluatedCount: evaluatedOccCount,
