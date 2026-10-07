@@ -883,22 +883,60 @@ export function evaluateOccurrence(predictions, groundTruths) {
     }
   }
 
-  // Calibration slope and intercept
-  const validBins = bins.filter(b => b.count > 0);
+  // Calibration slope and intercept: standard logistic calibration (Cox/Steyerberg)
+  // logit(P(Y=1)) = alpha + beta * logit(p) fitted via Newton-Raphson IRLS on unbinned data
   let calibrationSlope = 1.0;
   let calibrationIntercept = 0.0;
-  if (validBins.length >= 2) {
-    const xs = validBins.map(b => b.sumProb / b.count);
-    const ys = validBins.map(b => b.sumTrue / b.count);
-    const xMean = xs.reduce((a, b) => a + b, 0) / xs.length;
-    const yMean = ys.reduce((a, b) => a + b, 0) / ys.length;
-    let num = 0, den = 0;
-    for (let i = 0; i < xs.length; i++) {
-      num += (xs[i] - xMean) * (ys[i] - yMean);
-      den += (xs[i] - xMean) ** 2;
+  if (probPairs.length >= 10) {
+    const totalPos = probPairs.filter(p => p.actual === 1).length;
+    const totalNeg = probPairs.length - totalPos;
+    if (totalPos > 0 && totalNeg > 0) {
+      let alpha = 0.0;
+      let beta = 1.0;
+      const eps = 1e-4;
+      const unbinnedData = probPairs.map(pair => {
+        const pClamped = Math.max(eps, Math.min(1 - eps, pair.prob));
+        const logitP = Math.log(pClamped / (1 - pClamped));
+        return { logitP, y: pair.actual };
+      });
+
+      for (let iter = 0; iter < 30; iter++) {
+        let gAlpha = 0;
+        let gBeta = 0;
+        let hAA = 0;
+        let hAB = 0;
+        let hBB = 0;
+
+        for (const pt of unbinnedData) {
+          const eta = Math.max(-20, Math.min(20, alpha + beta * pt.logitP));
+          const pi = 1 / (1 + Math.exp(-eta));
+          const w = Math.max(1e-6, pi * (1 - pi));
+          const r = pt.y - pi;
+
+          gAlpha += r;
+          gBeta += r * pt.logitP;
+          hAA += w;
+          hAB += w * pt.logitP;
+          hBB += w * pt.logitP * pt.logitP;
+        }
+
+        const det = (hAA * hBB) - (hAB * hAB);
+        if (det < 1e-12) break;
+
+        const dAlpha = ((hBB * gAlpha) - (hAB * gBeta)) / det;
+        const dBeta = ((-hAB * gAlpha) + (hAA * gBeta)) / det;
+
+        alpha += dAlpha;
+        beta += dBeta;
+
+        if (Math.abs(dAlpha) < 1e-6 && Math.abs(dBeta) < 1e-6) break;
+      }
+
+      if (Number.isFinite(beta) && Number.isFinite(alpha)) {
+        calibrationSlope = Number(beta.toFixed(4));
+        calibrationIntercept = Number(alpha.toFixed(4));
+      }
     }
-    calibrationSlope = den > 0 ? Number((num / den).toFixed(4)) : 1.0;
-    calibrationIntercept = Number((yMean - calibrationSlope * xMean).toFixed(4));
   }
 
   const brierScore = probErrors.length > 0 ? probErrors.reduce((a, b) => a + b, 0) / probErrors.length : 0;
@@ -967,7 +1005,13 @@ export function evaluateOccurrence(predictions, groundTruths) {
     calibrationIntercept,
     brierScore: Number(brierScore.toFixed(4)),
     ece: Number(ece.toFixed(4)),
-    ci95
+    ci95,
+    sparseNegativeWarning: (noEventCount < 25 && evaluatedCount > 0)
+      ? `External occurrence discrimination is underpowered because verified negative outcomes are sparse (only ${noEventCount} negative observations out of ${evaluatedCount} evaluable records).`
+      : null,
+    sparseNegativeDisclosure: (noEventCount < 25 && evaluatedCount > 0)
+      ? `External occurrence discrimination is underpowered because verified negative outcomes are sparse (only ${noEventCount} negative observations out of ${evaluatedCount} evaluable records).`
+      : null
   };
 }
 
@@ -1916,11 +1960,38 @@ export function runNegativeControls(cohortRecords, chartGetter = null, options =
   const outcomePermutationTiming = evaluateTiming(timePreds, shuffledOutcomes);
   const outcomePermutationOcc = evaluateOccurrence(occPreds, shuffledOutcomes);
 
-  // Permutation test 2: Random Labels
-  const randomLabels = cohortRecords.map(() => ({
-    censoringStatus: "EVENT",
-    hasDocumentedMarriage: prng() > 0.5
-  }));
+  // Permutation test 2: Random Labels (Authentic Permutation of Actual Evaluable Labels)
+  // Preserving censoring semantics and prevalence across evaluable subjects
+  const evaluableIndices = [];
+  const evaluableLabels = [];
+  for (let i = 0; i < cohortRecords.length; i++) {
+    const r = cohortRecords[i];
+    const censoring = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+    if (censoring === "EVENT" || censoring === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || censoring === "NO_EVENT") {
+      evaluableIndices.push(i);
+      evaluableLabels.push(censoring);
+    }
+  }
+
+  // Seeded Fisher-Yates shuffle of evaluable labels
+  for (let i = evaluableLabels.length - 1; i > 0; i--) {
+    const j = Math.floor(prng() * (i + 1));
+    const temp = evaluableLabels[i];
+    evaluableLabels[i] = evaluableLabels[j];
+    evaluableLabels[j] = temp;
+  }
+
+  const randomLabels = cohortRecords.map(r => ({ ...r }));
+  for (let k = 0; k < evaluableIndices.length; k++) {
+    const origIdx = evaluableIndices[k];
+    const shuffledCensoring = evaluableLabels[k];
+    randomLabels[origIdx] = {
+      ...randomLabels[origIdx],
+      censoringStatus: shuffledCensoring,
+      hasDocumentedMarriage: shuffledCensoring === "EVENT"
+    };
+  }
+
   const randomLabelOcc = evaluateOccurrence(occPreds, randomLabels);
 
   // Permutation test 3: Authentic Non-Parametric 10,000-Run Permutation of Observed Outcome Labels

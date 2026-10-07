@@ -52,9 +52,9 @@ export const QUESTION_INTENTS = Object.freeze({
  * @returns {Object} Intent classification { primaryIntent, intents: [], confidence: number }
  */
 export function classifyIntent(normalizedQ, history = []) {
-  const text = normalizedQ.raw || "";
-  const norm = normalizedQ.normalized || "";
-  const cues = normalizedQ.cues || {};
+  const text = typeof normalizedQ === "string" ? normalizedQ : (normalizedQ?.raw || normalizedQ?.text || "");
+  const norm = typeof normalizedQ === "string" ? normalizedQ.toLowerCase() : (normalizedQ?.normalized || "");
+  const cues = (typeof normalizedQ === "object" && normalizedQ) ? (normalizedQ.cues || {}) : {};
 
   const detectedIntents = new Set();
 

@@ -121,11 +121,11 @@ export function resolveConversationalReferences(questionText, conversationHistor
 export function routeFollowUpQuestion(question, context, conversationHistory = []) {
   const rawQ = typeof question === "string" ? question : (question?.text || "");
   const qLower = rawQ.toLowerCase().trim();
-  const sysId = context.system?.id || "lahiri";
-  const isTamil = context.lang === "ta" || /[\u0B80-\u0BFF]/.test(rawQ) || context.chart?.userLanguage === "ta";
+  const sysId = context?.system?.id || "lahiri";
+  const isTamil = context?.lang === "ta" || /[\u0B80-\u0BFF]/.test(rawQ) || context?.chart?.userLanguage === "ta";
 
   // 1. Resolve conversational references
-  const { resolvedText, resolvedDomain, isFollowUp } = resolveConversationalReferences(rawQ, conversationHistory, context.report?.activeSectionId);
+  const { resolvedText, resolvedDomain, isFollowUp } = resolveConversationalReferences(rawQ, conversationHistory, context?.report?.activeSectionId);
 
   // 2. System Isolation & Unsupported Techniques Check
   if (sysId === "tropical" || sysId === "sayana" || sysId === "western") {

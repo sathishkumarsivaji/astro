@@ -1807,13 +1807,14 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   let beatsDemographicBaseline = false;
   if (timingMAECombined !== null && timingMAEBaseline !== null) {
     const maeDelta = timingMAEBaseline - timingMAECombined; // positive = combined model has lower error
-    if (Math.abs(maeDelta) < 0.05 || lrtPValue >= 0.05) {
+    const practicalThresholdYears = 0.25; // 3 months practical demographic significance
+    if (Math.abs(maeDelta) < practicalThresholdYears || lrtPValue >= 0.05) {
       baselineComparisonStatus = "STATISTICALLY_TIED";
-      beatsDemographicBaseline = false; // Never claim "beats baseline" on ties or insignificant LRT
-    } else if (maeDelta >= 0.05 && lrtPValue < 0.05) {
+      beatsDemographicBaseline = false; // Never claim "beats baseline" on ties, sub-threshold differences (< 0.25y), or insignificant LRT
+    } else if (maeDelta >= practicalThresholdYears && lrtPValue < 0.05) {
       baselineComparisonStatus = "MEANINGFUL_IMPROVEMENT";
       beatsDemographicBaseline = true;
-    } else if (maeDelta <= -0.05) {
+    } else if (maeDelta <= -practicalThresholdYears) {
       baselineComparisonStatus = "WORSE_THAN_BASELINE";
       beatsDemographicBaseline = false;
     }

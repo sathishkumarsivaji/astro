@@ -631,6 +631,17 @@ export function buildFollowUpContext({
       milestones: (isTamil ? (chartData.retrospectiveLifeAuditTamil || chartData.retrospectiveMilestonesTamil) : (chartData.retrospectiveLifeAudit || chartData.retrospectiveMilestones)) || null,
       palmistry: (isTamil ? (chartData.palmistryAnalysisTamil || chartData.palmistryTamil) : (chartData.palmistryAnalysis || chartData.palmistry)) || chartData.palmistryAnalysis || chartData.palmistry || null,
       ayanamshaValue: chartData.ayanamshaValue ?? chartData.ayanamsa ?? null,
+      birthDateStr: chartData.birthDateStr || null,
+      birthTimeStr: chartData.birthTimeStr || null,
+      birthDate: chartData.birthDate || null,
+      date: chartData.date || null,
+      birthTime: chartData.birthTime || chartData.time || null,
+      latitude: chartData.birthLatitude ?? chartData.latitude ?? chartData.lat ?? null,
+      longitude: chartData.birthLongitude ?? chartData.longitude ?? chartData.lng ?? null,
+      timezoneId: chartData.timezoneId || chartData.tz || null,
+      utcOffset: chartData.utcOffset ?? null,
+      system: chartData.system || null,
+      multiSystemBundle: multiSystemBundle || chartData.multiSystemBundle || null,
       atmakaraka: atmakaraka ? {
         planet: atmakaraka.planet || atmakaraka.name,
         sign: atmakaraka.sign || null,
@@ -683,6 +694,7 @@ export function buildFollowUpContext({
       reasoningLevels: reasoningLevels.slice(0, 18),
       ledger: rawLedger
     },
+    multiSystemBundle: multiSystemBundle || chartData.multiSystemBundle || null,
     multiSystemAvailable: Boolean(multiSystemBundle || chartData.multiSystemBundle),
     multiSystemComparison: (multiSystemBundle?.comparison || chartData.multiSystemBundle?.comparison) || null
   };

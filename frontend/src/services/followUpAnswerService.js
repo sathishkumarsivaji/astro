@@ -1798,12 +1798,19 @@ function validateAIResponse(parsed, context, route = null) {
 /**
  * Main entry point to answer follow-up questions
  */
-export async function answerFollowUpQuestion({
-  question,
-  context,
-  conversationHistory = [],
-  onCreditDeducted = null
-}) {
+export async function answerFollowUpQuestion(params, contextArg = null) {
+  let question, context, conversationHistory, onCreditDeducted;
+  if (typeof params === "object" && params !== null && ("question" in params || "context" in params)) {
+    question = params.question;
+    context = params.context;
+    conversationHistory = params.conversationHistory || [];
+    onCreditDeducted = params.onCreditDeducted || null;
+  } else {
+    question = params;
+    context = contextArg;
+    conversationHistory = [];
+    onCreditDeducted = null;
+  }
   if (!question) {
     throw new Error("Question parameter is required.");
   }

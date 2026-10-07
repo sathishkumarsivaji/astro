@@ -145,6 +145,9 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = ${indep?.ce
 | **Timing Quality Gate** | **${adb?.timingQualityGate}** | Baseline outperforms model by ${(adb?.timingMAE - adb?.demographicBaselineMAE).toFixed(2)}y |
 | **Overall Scientific Status** | **${adb?.overallEmpiricalStatus}** | Fully disclosed in reports & UI |
 
+- **Sparse Negative Outcome Disclosure:** External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).
+- **Cohort Stratification:** All 3,751 subjects in the independent certified A/AA cohort receive astrological predictions (prediction cohort $N = 3,751$). Evaluated occurrence cohort comprises $N = 313$ subjects with complete follow-up (302 events + 11 verified lifelong non-events). Evaluated timing cohort comprises $N = 320$ documented first-marriage events.
+
 ### 2. External Discrete-Time Hazard Survival Model (V3) Denominator & Degeneracy Reporting
 - **Certified Cohort vs. Evaluated Denominator:** While the certified independent A/AA cohort comprises 3,751 total records, exactly **869** subjects met the V3 time-to-event interval horizon eligibility requirements (301 observed events, 568 right-censored; records with missing outcome intervals or pre-horizon events excluded).
 - **Sub-Cohort Breakdown:**

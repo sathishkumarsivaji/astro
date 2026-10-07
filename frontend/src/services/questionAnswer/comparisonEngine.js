@@ -114,11 +114,32 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     if (chart?.multiSystemBundle) {
       bundle = chart.multiSystemBundle;
     } else {
+      let bDate = chart?.birthDateStr;
+      if (!bDate && chart?.birthDate) {
+        if (typeof chart.birthDate === "string") {
+          bDate = chart.birthDate.split("T")[0];
+        } else if (chart.birthDate instanceof Date) {
+          bDate = chart.birthDate.toISOString().split("T")[0];
+        }
+      }
+      if (!bDate && chart?.date) {
+        if (typeof chart.date === "string") {
+          bDate = chart.date.split("T")[0];
+        } else if (chart.date instanceof Date) {
+          bDate = chart.date.toISOString().split("T")[0];
+        }
+      }
+
+      let bTime = chart?.birthTimeStr || chart?.birthTime || chart?.time || "12:00";
+      if (typeof bTime === "string" && bTime.length > 5) {
+        bTime = bTime.slice(0, 5);
+      }
+
       const birthData = chart?.birthData || {
-        birthDate: chart?.date || chart?.birthDate,
-        birthTime: chart?.time || chart?.birthTime,
-        latitude: chart?.lat || chart?.latitude,
-        longitude: chart?.lng || chart?.longitude,
+        birthDate: bDate,
+        birthTime: bTime,
+        latitude: chart?.birthLatitude ?? chart?.latitude ?? chart?.lat,
+        longitude: chart?.birthLongitude ?? chart?.longitude ?? chart?.lng,
         timezoneId: chart?.timezoneId || chart?.tz || chart?.timezone || "Asia/Kolkata",
         utcOffset: chart?.utcOffset
       };
@@ -348,6 +369,19 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     summaryTa: verdictTa
   };
 }
+
+/**
+ * Evaluates comparative inquiries between two astrological options.
+ *
+ * @param {Object} params
+ * @param {string} params.comparisonType - "YEAR" | "CAREER_TYPE" | "PROPERTY_TYPE" | "FAMILY_WEALTH" | "GENERIC"
+ * @param {string} params.optionA - First candidate (e.g., "Job", "2027", "Land")
+ * @param {string} params.optionB - Second candidate (e.g., "Business", "2028", "Apartment")
+ * @param {Object} params.chart - Calculated chart data
+ * @param {boolean} [params.isTamil=false] - Language flag
+ * @returns {Object} Structured comparative analysis
+ */
+export function evaluateComparison({ comparisonType, optionA, optionB, chart, isTamil = false }) {
   const pMap = {};
   for (const p of (chart?.planets || [])) {
     pMap[p.name || p.planetName] = p;

@@ -4,8 +4,8 @@
     "generatedAt": "2026-10-07T04:31:25.658Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
-    "calibrationModelHash": "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277",
+    "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
+    "calibrationModelHash": "326df1359e95e05647e27bf60ecf21a1fd6d9ee3140781347c7710732773fd12",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff:116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
@@ -21,8 +21,8 @@
       "cacheMisses": 0,
       "recomputedCount": 7987,
       "invalidatedEntries": 7987,
-      "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
-      "calibrationHash": "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277"
+      "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
+      "calibrationHash": "326df1359e95e05647e27bf60ecf21a1fd6d9ee3140781347c7710732773fd12"
     }
   },
   "splits": {
@@ -1863,9 +1863,9 @@
         "controlId": "RANDOM_LABEL",
         "name": "Randomized Occurrence Label Test",
         "expectedBehavior": "Balanced accuracy ~ 0.50",
-        "observedBalancedAccuracy": 0.12,
-        "observedBrier": 0.0134,
-        "passesNullCheck": false
+        "observedBalancedAccuracy": 0.5403,
+        "observedBrier": 0.0617,
+        "passesNullCheck": true
       },
       {
         "controlId": "10K_PERMUTATION_DISTRIBUTION",

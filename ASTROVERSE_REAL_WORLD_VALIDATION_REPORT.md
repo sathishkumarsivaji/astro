@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA). No overlap was detected under the preregistered exact-name/birth-date and normalized-name linkage rules. Residual linkage risk from aliases or unresolved identity variants cannot be completely excluded.
 - **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38`) and calibration model SHA-256 hash (`5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8`) and calibration model SHA-256 hash (`326df1359e95e05647e27bf60ecf21a1fd6d9ee3140781347c7710732773fd12`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -87,6 +87,9 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = 3751$):
 | **Timing Quality Gate** | **NOT_EMPIRICALLY_VALIDATED** | Baseline outperforms model by 2.78y |
 | **Overall Scientific Status** | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** | Fully disclosed in reports & UI |
 
+- **Sparse Negative Outcome Disclosure:** External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).
+- **Cohort Stratification:** All 3,751 subjects in the independent certified A/AA cohort receive astrological predictions (prediction cohort $N = 3,751$). Evaluated occurrence cohort comprises $N = 313$ subjects with complete follow-up (302 events + 11 verified lifelong non-events). Evaluated timing cohort comprises $N = 320$ documented first-marriage events.
+
 ### 2. External Discrete-Time Hazard Survival Model (V3) Denominator & Degeneracy Reporting
 - **Certified Cohort vs. Evaluated Denominator:** While the certified independent A/AA cohort comprises 3,751 total records, exactly **869** subjects met the V3 time-to-event interval horizon eligibility requirements (301 observed events, 568 right-censored; records with missing outcome intervals or pre-horizon events excluded).
 - **Sub-Cohort Breakdown:**
@@ -111,8 +114,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
-  "calibrationModelHash": "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277",
+  "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
+  "calibrationModelHash": "326df1359e95e05647e27bf60ecf21a1fd6d9ee3140781347c7710732773fd12",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -320,8 +323,8 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38` |
-| **Calibration Model Hash** | `5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277` |
+| **Prediction Engine Hash** | `aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8` |
+| **Calibration Model Hash** | `326df1359e95e05647e27bf60ecf21a1fd6d9ee3140781347c7710732773fd12` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
@@ -329,4 +332,4 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
 | **Benchmark Code Hash** | `d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3` |
-| **Artifact Generation Timestamp** | `2026-10-07T15:48:43.059Z` |
+| **Artifact Generation Timestamp** | `2026-10-07T17:47:21.084Z` |

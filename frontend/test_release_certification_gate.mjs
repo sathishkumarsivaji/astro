@@ -63,6 +63,70 @@ function byteHash(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
+function getTrackedFilesOrScan() {
+  const gitDir = path.join(ROOT, ".git");
+  if (fs.existsSync(gitDir)) {
+    try {
+      return execSync("git ls-files", { cwd: ROOT, encoding: "utf8" });
+    } catch {
+      // fallback to filesystem scan
+    }
+  }
+  function scanDir(dir) {
+    let files = [];
+    if (!fs.existsSync(dir)) return files;
+    for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (item.name === "node_modules" || item.name === ".git" || item.name === "dist") continue;
+      const full = path.join(dir, item.name);
+      if (item.isDirectory()) {
+        files = files.concat(scanDir(full));
+      } else {
+        files.push(path.relative(ROOT, full).replace(/\\/g, "/"));
+      }
+    }
+    return files;
+  }
+  return scanDir(ROOT).join("\n");
+}
+
+function scanForBannedPatterns(dirPath, patterns) {
+  const gitDir = path.join(ROOT, ".git");
+  if (fs.existsSync(gitDir)) {
+    try {
+      const grepResult = execSync(`git grep -E "(${patterns.join("|")})" frontend/src/services/`, {
+        cwd: ROOT,
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"]
+      }).trim();
+      return grepResult ? [grepResult] : [];
+    } catch {
+      // Exit code 1 from git grep means zero matches found (clean)
+      return [];
+    }
+  }
+  const regexes = patterns.map(p => new RegExp(p));
+  const matches = [];
+  function scan(dir) {
+    if (!fs.existsSync(dir)) return;
+    for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (item.name === "node_modules" || item.name === ".git") continue;
+      const full = path.join(dir, item.name);
+      if (item.isDirectory()) {
+        scan(full);
+      } else if (item.name.endsWith(".js") || item.name.endsWith(".mjs") || item.name.endsWith(".jsx")) {
+        const content = fs.readFileSync(full, "utf8");
+        for (const regex of regexes) {
+          if (regex.test(content)) {
+            matches.push(`${path.relative(ROOT, full)} matches ${regex}`);
+          }
+        }
+      }
+    }
+  }
+  scan(dirPath);
+  return matches;
+}
+
 // Load Release Manifest
 const manifestPath = path.join(ROOT, "current_release_manifest.json");
 if (!fs.existsSync(manifestPath)) {
@@ -268,8 +332,8 @@ let npmCiDetail = "";
 try {
   const fePkg = JSON.parse(fs.readFileSync(path.join(FRONTEND_DIR, "package.json"), "utf8"));
   const feLockExists = fs.existsSync(path.join(FRONTEND_DIR, "package-lock.json"));
-  const trackedFiles = execSync("git ls-files", { cwd: ROOT, encoding: "utf8" });
-  const nodeModulesTracked = trackedFiles.includes("node_modules/");
+  const trackedFiles = getTrackedFilesOrScan();
+  const nodeModulesTracked = trackedFiles.split("\n").some(f => f.startsWith("node_modules/") || f.includes("/node_modules/"));
   
   if (!feLockExists) {
     npmCiClean = false;
@@ -281,7 +345,7 @@ try {
     npmCiClean = false;
     npmCiDetail = "package.json missing build or lint scripts";
   } else {
-    npmCiDetail = "package.json and package-lock.json verified; zero node_modules in git";
+    npmCiDetail = "package.json and package-lock.json verified; zero node_modules in distribution";
   }
 } catch (err) {
   npmCiClean = false;
@@ -347,25 +411,13 @@ try {
       "\\bbestBukthi\\b",
       "\\bnetBalance\\b"
     ];
-    let foundBanned = false;
-    try {
-      const grepResult = execSync(`git grep -E "(${bannedPatterns.join("|")})" frontend/src/services/`, {
-        cwd: ROOT,
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"]
-      }).trim();
-      if (grepResult.length > 0) {
-        foundBanned = true;
-        lintDetail = `Banned heuristic identifiers found: ${grepResult.slice(0, 100)}`;
-      }
-    } catch {
-      // Exit code 1 from git grep means zero matches found (clean)
-    }
+    const bannedMatches = scanForBannedPatterns(path.join(FRONTEND_DIR, "src/services"), bannedPatterns);
 
-    if (!foundBanned) {
+    if (bannedMatches.length === 0) {
       lintDetail = "npm run lint passed with 0 errors; zero banned synthetic heuristics";
     } else {
       lintSucceeds = false;
+      lintDetail = `Banned heuristic identifiers found: ${bannedMatches.join("; ").slice(0, 100)}`;
     }
   }
 } catch (err) {
@@ -447,13 +499,14 @@ check(
 let secPass = true;
 let secDetail = "";
 try {
-  // A. No secret env files or runtime DB in git index
-  const trackedFiles = execSync("git ls-files", { cwd: ROOT, encoding: "utf8" });
-  if (trackedFiles.includes(".env\n") || trackedFiles.endsWith(".env") || trackedFiles.includes(".env.local")) {
-    throw new Error("Secret .env found in git index");
+  // A. No secret env files or runtime DB in distribution or git index
+  const trackedFiles = getTrackedFilesOrScan();
+  const trackedLines = trackedFiles.split("\n");
+  if (trackedLines.some(f => f === ".env" || f.endsWith("/.env") || f.endsWith(".env.local"))) {
+    throw new Error("Secret .env found in distribution or git index");
   }
-  if (trackedFiles.includes("astroverse_store.json")) {
-    throw new Error("astroverse_store.json found in git index");
+  if (trackedLines.some(f => f.endsWith("astroverse_store.json"))) {
+    throw new Error("astroverse_store.json found in distribution or git index");
   }
 
   // B. Exact-date / deterministic prediction firewall
