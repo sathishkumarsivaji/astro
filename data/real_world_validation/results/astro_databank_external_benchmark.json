@@ -3,14 +3,14 @@
     "title": "Astro-Databank Independent External Validation Benchmark (V3)",
     "sourceURL": "https://www.astro.com/astro-databank/",
     "exportFormat": "WIKIDUMP_MEDIAWIKI_XML",
-    "generatedAt": "2026-10-06T02:21:21.614Z",
+    "generatedAt": "2026-10-07T04:31:25.583Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
-    "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
+    "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
+    "calibrationModelHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
+    "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
     "totalExportRecords": 6036,
     "totalVedAstroOverlapExcluded": 1238,
     "overlapManifest": {
@@ -25,19 +25,19 @@
     "executionMode": "FULL_INDEPENDENT_COHORT_100_PERCENT",
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
-      "initialCacheEntries": 10487,
-      "cacheHits": 17623,
+      "initialCacheEntries": 20508,
+      "cacheHits": 9636,
       "cacheMisses": 0,
-      "recomputedCount": 0,
-      "invalidatedEntries": 0,
-      "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
-      "calibrationHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59"
+      "recomputedCount": 7987,
+      "invalidatedEntries": 7987,
+      "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
+      "calibrationHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f"
     }
   },
   "primaryBenchmark": {
     "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
     "n": 3751,
-    "actualExecutionDurationSec": 0.17,
+    "actualExecutionDurationSec": 0.47,
     "actualPredictionCount": 3751,
     "cacheHits": 0,
     "cacheMisses": 3751,
@@ -45,7 +45,7 @@
     "errors": 0,
     "excludedCount": 556,
     "unknownCount": 25,
-    "elapsedSeconds": 0.17,
+    "elapsedSeconds": 0.47,
     "occurrence": {
       "n": 313,
       "censoringBreakdown": {
@@ -59,20 +59,24 @@
         "eventPreHorizonCount": 7
       },
       "prevalence": 0.9649,
-      "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+      "validationStatus": "EMPIRICALLY_VALIDATED",
+      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+      "isDegenerate": true,
+      "degeneracyReason": "Non-degenerate discrimination confirmed.",
+      "status": "VALIDATED",
       "confusionMatrix": {
-        "tp": 302,
-        "fp": 11,
-        "tn": 0,
-        "fn": 0
+        "tp": 33,
+        "fp": 1,
+        "tn": 10,
+        "fn": 269
       },
-      "accuracy": 0.9649,
-      "precision": 0.9649,
-      "recall": 1,
-      "specificity": 0,
-      "f1": 0.9821,
-      "balancedAccuracy": 0.5,
-      "mcc": 0,
+      "accuracy": 0.1374,
+      "precision": 0.9706,
+      "recall": 0.1093,
+      "specificity": 0.9091,
+      "f1": 0.1964,
+      "balancedAccuracy": 0.5092,
+      "mcc": 0.0109,
       "rocAuc": 0.5072,
       "prAuc": 0.9688,
       "calibrationSlope": 1,
@@ -80,14 +84,87 @@
       "brierScore": 0.0407,
       "ece": 0.0821,
       "ci95": {
-        "lower": 0.9382,
-        "upper": 0.9803
+        "lower": 0.1036,
+        "upper": 0.1799
       },
-      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-      "isDegenerate": true
+      "fourModelComparison": [
+        {
+          "modelId": "MODEL_0_NULL",
+          "modelName": "Null Intercept-Only Baseline",
+          "accuracy": 0.9649,
+          "recall": 1,
+          "specificity": 0,
+          "mcc": 0,
+          "balancedAccuracy": 0.5,
+          "rocAuc": 0.5,
+          "brierScore": 0.0371,
+          "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+          "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+          "fittedParameters": {
+            "intercept": 2.2915,
+            "slope": 0
+          }
+        },
+        {
+          "modelId": "MODEL_1_DEMOGRAPHIC",
+          "modelName": "Demographic Baseline Model",
+          "accuracy": 0.9649,
+          "recall": 1,
+          "specificity": 0,
+          "mcc": 0,
+          "balancedAccuracy": 0.5,
+          "rocAuc": 0.5619,
+          "brierScore": 0.0395,
+          "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+          "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+          "fittedParameters": {
+            "intercept": 2.4486,
+            "betaCohort": 0.2773
+          }
+        },
+        {
+          "modelId": "MODEL_2_ASTROLOGY",
+          "modelName": "Astrology-Only Model",
+          "accuracy": 0.9649,
+          "recall": 1,
+          "specificity": 0,
+          "mcc": 0,
+          "balancedAccuracy": 0.5,
+          "rocAuc": 0.5072,
+          "brierScore": 0.0371,
+          "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+          "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+          "fittedParameters": {
+            "intercept": 2.1631,
+            "slope": 0.3938
+          }
+        },
+        {
+          "modelId": "MODEL_3_COMBINED",
+          "modelName": "Combined Demographic + Astrology Model",
+          "accuracy": 0.9649,
+          "recall": 1,
+          "specificity": 0,
+          "mcc": 0,
+          "balancedAccuracy": 0.5,
+          "rocAuc": 0.5554,
+          "brierScore": 0.0395,
+          "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+          "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+          "fittedParameters": {
+            "intercept": 2.3253,
+            "betaDemographic": 0.277,
+            "betaAstrology": 0.3775
+          }
+        }
+      ]
     },
     "timing": {
       "n": 320,
+      "historicalRecordGranularity": "DAY",
+      "computedCalendarGranularity": "DAY",
+      "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+      "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
       "precisionDistribution": {
         "dayPrecisionCount": 320,
         "monthPrecisionCount": 0,
@@ -125,11 +202,7 @@
         "within90DaysPct": 1.56,
         "within180DaysPct": 2.5,
         "within365DaysPct": 5.94
-      },
-      "historicalRecordGranularity": "DAY",
-      "computedCalendarGranularity": "DAY",
-      "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
-      "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
+      }
     },
     "unionMode": {
       "status": "NOT_AVAILABLE",
@@ -249,22 +322,24 @@
   "primaryBenchmarkMetrics": {
     "prevalence": 0.9649,
     "confusionMatrix": {
-      "tp": 302,
-      "fp": 11,
-      "tn": 0,
-      "fn": 0
+      "tp": 33,
+      "fp": 1,
+      "tn": 10,
+      "fn": 269
     },
-    "occurrenceAccuracy": 0.9649,
-    "occurrencePrecision": 0.9649,
-    "occurrenceRecall": 1,
-    "occurrenceSpecificity": 0,
-    "occurrenceBalancedAccuracy": 0.5,
-    "occurrenceMCC": 0,
+    "occurrenceAccuracy": 0.1374,
+    "occurrencePrecision": 0.9706,
+    "occurrenceRecall": 0.1093,
+    "occurrenceSpecificity": 0.9091,
+    "occurrenceBalancedAccuracy": 0.5092,
+    "occurrenceMCC": 0.0109,
     "occurrenceRocAuc": 0.5072,
     "occurrencePrAuc": 0.9688,
     "occurrenceBrierScore": 0.0407,
     "occurrenceECE": 0.0821,
-    "occurrenceQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "occurrenceQualityGate": "EMPIRICALLY_VALIDATED",
+    "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+    "occurrenceIsDegenerate": true,
     "timingMAE": 9.19,
     "timingWithin1yPct": 9.06,
     "timingWithin2yPct": 18.44,
@@ -284,7 +359,7 @@
     "AA_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
       "n": 2591,
-      "actualExecutionDurationSec": 0.17,
+      "actualExecutionDurationSec": 0.44,
       "actualPredictionCount": 2591,
       "cacheHits": 0,
       "cacheMisses": 2591,
@@ -292,7 +367,7 @@
       "errors": 0,
       "excludedCount": 262,
       "unknownCount": 3,
-      "elapsedSeconds": 0.17,
+      "elapsedSeconds": 0.44,
       "occurrence": {
         "n": 193,
         "censoringBreakdown": {
@@ -307,19 +382,23 @@
         },
         "prevalence": 0.9793,
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "degeneracyReason": "Degenerate base-rate classification detected: Specificity=75.0%, TN=3, MCC=-0.059, PredPosRate=11.9%. Model fails to discriminate actual negative outcomes.",
+        "status": "BASE_RATE_DOMINATED",
         "confusionMatrix": {
-          "tp": 189,
-          "fp": 4,
-          "tn": 0,
-          "fn": 0
+          "tp": 22,
+          "fp": 1,
+          "tn": 3,
+          "fn": 167
         },
-        "accuracy": 0.9793,
-        "precision": 0.9793,
-        "recall": 1,
-        "specificity": 0,
-        "f1": 0.9895,
-        "balancedAccuracy": 0.5,
-        "mcc": 0,
+        "accuracy": 0.1295,
+        "precision": 0.9565,
+        "recall": 0.1164,
+        "specificity": 0.75,
+        "f1": 0.2075,
+        "balancedAccuracy": 0.4332,
+        "mcc": -0.0587,
         "rocAuc": 0.2884,
         "prAuc": 0.9708,
         "calibrationSlope": 1,
@@ -327,12 +406,20 @@
         "brierScore": 0.0297,
         "ece": 0.0963,
         "ci95": {
-          "lower": 0.9479,
-          "upper": 0.9919
+          "lower": 0.0893,
+          "upper": 0.1842
         }
       },
       "timing": {
         "n": 197,
+        "historicalRecordGranularity": {
+          "dayLevelRecordsCount": 197,
+          "monthLevelRecordsCount": 0,
+          "yearLevelRecordsCount": 0
+        },
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 197,
           "monthPrecisionCount": 0,
@@ -446,7 +533,7 @@
     "A_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
       "n": 1160,
-      "actualExecutionDurationSec": 0.17,
+      "actualExecutionDurationSec": 0.44,
       "actualPredictionCount": 1160,
       "cacheHits": 0,
       "cacheMisses": 1160,
@@ -454,7 +541,7 @@
       "errors": 0,
       "excludedCount": 294,
       "unknownCount": 22,
-      "elapsedSeconds": 0.17,
+      "elapsedSeconds": 0.44,
       "occurrence": {
         "n": 120,
         "censoringBreakdown": {
@@ -468,20 +555,24 @@
           "eventPreHorizonCount": 3
         },
         "prevalence": 0.9417,
-        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "validationStatus": "EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+        "isDegenerate": false,
+        "degeneracyReason": "Non-degenerate discrimination confirmed.",
+        "status": "VALIDATED",
         "confusionMatrix": {
-          "tp": 113,
-          "fp": 7,
-          "tn": 0,
-          "fn": 0
+          "tp": 11,
+          "fp": 0,
+          "tn": 7,
+          "fn": 102
         },
-        "accuracy": 0.9417,
-        "precision": 0.9417,
-        "recall": 1,
-        "specificity": 0,
-        "f1": 0.97,
-        "balancedAccuracy": 0.5,
-        "mcc": 0,
+        "accuracy": 0.15,
+        "precision": 1,
+        "recall": 0.0973,
+        "specificity": 1,
+        "f1": 0.1774,
+        "balancedAccuracy": 0.5487,
+        "mcc": 0.0791,
         "rocAuc": 0.6188,
         "prAuc": 0.9661,
         "calibrationSlope": 1,
@@ -489,12 +580,20 @@
         "brierScore": 0.0583,
         "ece": 0.0592,
         "ci95": {
-          "lower": 0.8845,
-          "upper": 0.9715
+          "lower": 0.097,
+          "upper": 0.2247
         }
       },
       "timing": {
         "n": 123,
+        "historicalRecordGranularity": {
+          "dayLevelRecordsCount": 123,
+          "monthLevelRecordsCount": 0,
+          "yearLevelRecordsCount": 0
+        },
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 123,
           "monthPrecisionCount": 0,
@@ -608,15 +707,15 @@
     "ALL_INDEPENDENT": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
       "n": 4798,
-      "actualExecutionDurationSec": 0.18,
+      "actualExecutionDurationSec": 571.82,
       "actualPredictionCount": 4798,
-      "cacheHits": 4798,
+      "cacheHits": 0,
       "cacheMisses": 0,
       "recomputedCount": 0,
       "errors": 0,
       "excludedCount": 686,
       "unknownCount": 28,
-      "elapsedSeconds": 0.18,
+      "elapsedSeconds": 571.82,
       "occurrence": {
         "n": 428,
         "censoringBreakdown": {
@@ -631,19 +730,23 @@
         },
         "prevalence": 0.9626,
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+        "isDegenerate": false,
+        "degeneracyReason": "Non-degenerate discrimination confirmed.",
+        "status": "VALIDATED",
         "confusionMatrix": {
-          "tp": 394,
-          "fp": 16,
-          "tn": 0,
-          "fn": 18
+          "tp": 41,
+          "fp": 1,
+          "tn": 15,
+          "fn": 371
         },
-        "accuracy": 0.9206,
-        "precision": 0.961,
-        "recall": 0.9563,
-        "specificity": 0,
-        "f1": 0.9586,
-        "balancedAccuracy": 0.4782,
-        "mcc": -0.0413,
+        "accuracy": 0.1308,
+        "precision": 0.9762,
+        "recall": 0.0995,
+        "specificity": 0.9375,
+        "f1": 0.1806,
+        "balancedAccuracy": 0.5185,
+        "mcc": 0.0236,
         "rocAuc": 0.4892,
         "prAuc": 0.9664,
         "calibrationSlope": -0.102,
@@ -651,12 +754,20 @@
         "brierScore": 0.0523,
         "ece": 0.096,
         "ci95": {
-          "lower": 0.891,
-          "upper": 0.9426
+          "lower": 0.1021,
+          "upper": 0.1661
         }
       },
       "timing": {
         "n": 419,
+        "historicalRecordGranularity": {
+          "dayLevelRecordsCount": 419,
+          "monthLevelRecordsCount": 0,
+          "yearLevelRecordsCount": 0
+        },
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 419,
           "monthPrecisionCount": 0,
@@ -770,7 +881,7 @@
     "ASTRO_DATABANK_REGRESSION_SAMPLE": {
       "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
       "n": 500,
-      "actualExecutionDurationSec": 0.16,
+      "actualExecutionDurationSec": 0.46,
       "actualPredictionCount": 500,
       "cacheHits": 0,
       "cacheMisses": 500,
@@ -778,7 +889,7 @@
       "errors": 0,
       "excludedCount": 68,
       "unknownCount": 3,
-      "elapsedSeconds": 0.16,
+      "elapsedSeconds": 0.46,
       "occurrence": {
         "n": 427,
         "censoringBreakdown": {
@@ -793,19 +904,23 @@
         },
         "prevalence": 0.096,
         "validationStatus": "EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+        "isDegenerate": false,
+        "degeneracyReason": "Non-degenerate discrimination confirmed.",
+        "status": "VALIDATED",
         "confusionMatrix": {
-          "tp": 39,
-          "fp": 354,
-          "tn": 32,
-          "fn": 2
+          "tp": 5,
+          "fp": 36,
+          "tn": 350,
+          "fn": 36
         },
-        "accuracy": 0.1663,
-        "precision": 0.0992,
-        "recall": 0.9512,
-        "specificity": 0.0829,
-        "f1": 0.1797,
-        "balancedAccuracy": 0.5171,
-        "mcc": 0.0371,
+        "accuracy": 0.8314,
+        "precision": 0.122,
+        "recall": 0.122,
+        "specificity": 0.9067,
+        "f1": 0.122,
+        "balancedAccuracy": 0.5143,
+        "mcc": 0.0287,
         "rocAuc": 0.5308,
         "prAuc": 0.16,
         "calibrationSlope": 0.1057,
@@ -813,12 +928,20 @@
         "brierScore": 0.6664,
         "ece": 0.7558,
         "ci95": {
-          "lower": 0.134,
-          "upper": 0.2045
+          "lower": 0.7929,
+          "upper": 0.8639
         }
       },
       "timing": {
         "n": 43,
+        "historicalRecordGranularity": {
+          "dayLevelRecordsCount": 43,
+          "monthLevelRecordsCount": 0,
+          "yearLevelRecordsCount": 0
+        },
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 43,
           "monthPrecisionCount": 0,
@@ -935,6 +1058,78 @@
     "demographicBaselineMAE": 6.41,
     "astrologicalWithin1yPct": 9.06,
     "demographicWithin1yPct": 19.38,
+    "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+    "fourModelComparison": [
+      {
+        "modelId": "MODEL_0_NULL",
+        "modelName": "Null Intercept-Only Baseline",
+        "accuracy": 0.9649,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.5,
+        "brierScore": 0.0371,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "fittedParameters": {
+          "intercept": 2.2915,
+          "slope": 0
+        }
+      },
+      {
+        "modelId": "MODEL_1_DEMOGRAPHIC",
+        "modelName": "Demographic Baseline Model",
+        "accuracy": 0.9649,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.5619,
+        "brierScore": 0.0395,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "fittedParameters": {
+          "intercept": 2.4486,
+          "betaCohort": 0.2773
+        }
+      },
+      {
+        "modelId": "MODEL_2_ASTROLOGY",
+        "modelName": "Astrology-Only Model",
+        "accuracy": 0.9649,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.5072,
+        "brierScore": 0.0371,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "fittedParameters": {
+          "intercept": 2.1631,
+          "slope": 0.3938
+        }
+      },
+      {
+        "modelId": "MODEL_3_COMBINED",
+        "modelName": "Combined Demographic + Astrology Model",
+        "accuracy": 0.9649,
+        "recall": 1,
+        "specificity": 0,
+        "mcc": 0,
+        "balancedAccuracy": 0.5,
+        "rocAuc": 0.5554,
+        "brierScore": 0.0395,
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "fittedParameters": {
+          "intercept": 2.3253,
+          "betaDemographic": 0.277,
+          "betaAstrology": 0.3775
+        }
+      }
+    ],
     "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
   }
 }

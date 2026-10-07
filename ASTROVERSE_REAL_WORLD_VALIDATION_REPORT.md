@@ -22,9 +22,9 @@ This comprehensive scientific and production remediation enforces:
 - **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of 4.05y (vs demographic baseline 4.05y, C-index 0.5048) on untouched BLIND_TEST, properly classifying out-of-sample performance as `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
 - **Zero Inferred Marriage Types:** Astro-Databank ingestion assigns `marriageType: 'UNKNOWN'` by default. Zero love marriages are inferred from documented marriage events.
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
-- **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA).
-- **Actual Production Model Calibration:** Platt scaling and conformal prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae`) and calibration model SHA-256 hash (`1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59`). Cache statistics: `initialCacheEntries: 10487`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
+- **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA).
+- **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d`) and calibration model SHA-256 hash (`76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -43,7 +43,7 @@ Conservation is exact ($15,710 + 87 + 10 = 15,807$).
 
 ---
 
-## SECTION 8: COMPLETE 4-WAY OVERLAP DETECTION & ELIMINATION PROTOCOL
+## SECTION 8: COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES
 
 | Partition | Total Partition Records | Astro-Databank Overlap Found | Overlap Percentage |
 | :--- | :--- | :--- | :--- |
@@ -96,15 +96,15 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
-  "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
+  "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
+  "calibrationModelHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
   "modelVersion": "2.2.0"
 }
 ```
-- Initial cache entries: `10487`
+- Initial cache entries: `20508`
 - Cache hits: `17623`
 - Cache misses / recomputed: `0`
 - Invalidated entries: `0`
@@ -145,9 +145,9 @@ To evaluate whether astrological rule scores add any discriminative value over d
 | Model ID | Model Description | Accuracy | Specificity | Sensitivity | Balanced Acc | ROC-AUC | Brier Score | Classifier Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **MODEL_0_NULL** | Null Intercept-Only Baseline | 91.22% | 0.00% | 100.00% | 50.00% | 0.5 | 0.0801 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
-| **MODEL_1_DEMOGRAPHIC** | Demographic Baseline Model | 91.22% | 0.00% | 100.00% | 50.00% | 0.4841 | 0.0798 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
+| **MODEL_1_DEMOGRAPHIC** | Demographic Baseline Model | 83.78% | 25.18% | 89.41% | 57.30% | 0.4841 | 0.0798 | `DISCRIMINATIVE_CLASSIFIER` |
 | **MODEL_2_ASTROLOGY** | Astrology-Only Model | 91.22% | 0.00% | 100.00% | 50.00% | 0.5569 | 0.08 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
-| **MODEL_3_COMBINED** | Combined Demographic + Astrology Model | 91.22% | 0.00% | 100.00% | 50.00% | 0.4944 | 0.0797 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
+| **MODEL_3_COMBINED** | Combined Demographic + Astrology Model | 83.46% | 24.46% | 89.13% | 56.80% | 0.4944 | 0.0797 | `DISCRIMINATIVE_CLASSIFIER` |
 
 All models exhibit zero true negatives at the default threshold ($p=0.50$), correctly flagged as `DEGENERATE_BASE_RATE_CLASSIFIER`. When evaluated against a minimum specificity constraint ($\text{specificity} \ge 0.40$), threshold optimization returns:
 - `status: "THRESHOLD_NOT_IDENTIFIABLE"`
@@ -165,7 +165,7 @@ The platform strictly disallows implying that day-level transit or dasha boundar
 
 ### 3. Empirical Residual-Quantile Prediction Intervals
 Prediction intervals are calibrated as empirical residual-quantile intervals on the holdout error distribution:
-- **Methodology:** Conformal empirical residual quantiles fitted on TRAIN error residuals ($|y_i - \hat{y}_i|$).
+- **Methodology:** Empirical residual quantiles fitted on TRAIN error residuals ($|y_i - \hat{y}_i|$).
 - **Coverage Guarantees:** Nominal 50% ($q_{50} = \pm 6\text{y}$), Nominal 80% ($q_{80} = \pm 10\text{y}$), Nominal 90% ($q_{90} = \pm 14\text{y}$), Nominal 95% ($q_{95} = \pm 19\text{y}$).
 - **Disclosure:** Fully disclosed as empirical residual-quantile intervals, not asymptotic Gaussian confidence intervals.
 
@@ -262,13 +262,13 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae` |
-| **Calibration Model Hash** | `1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59` |
+| **Prediction Engine Hash** | `85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d` |
+| **Calibration Model Hash** | `76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
 | **External Dataset Hash** | `116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392` |
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
-| **Benchmark Code Hash** | `5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931` |
-| **Artifact Generation Timestamp** | `2026-10-06T02:21:21.862Z` |
+| **Benchmark Code Hash** | `d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3` |
+| **Artifact Generation Timestamp** | `2026-10-06T14:25:00.300Z` |

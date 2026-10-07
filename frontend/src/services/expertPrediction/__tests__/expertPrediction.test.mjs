@@ -93,10 +93,15 @@ describe('Expert Mode Prediction Engine Benchmark', () => {
       startDate: '2025-01-01', endDate: '2035-01-01'
     }), RESOLUTION.NOT_DISCRIMINATING);
 
-    // Day level (narrow + transit)
+    // Day level strictly requires explicit independent corroboration (P0-1)
+    assert.equal(classifyResolution({
+      startDate: '2028-06-01', endDate: '2028-06-05', transitFacts: [{ planet: 'Jupiter' }], hasIndependentCorroboration: true
+    }), RESOLUTION.DAY);
+
+    // Without explicit independent corroboration, narrow transit window stays at DATE_RANGE
     assert.equal(classifyResolution({
       startDate: '2028-06-01', endDate: '2028-06-05', transitFacts: [{ planet: 'Jupiter' }]
-    }), RESOLUTION.DAY);
+    }), RESOLUTION.DATE_RANGE);
 
     // Time window (muhurta)
     assert.equal(classifyResolution({

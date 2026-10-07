@@ -21,7 +21,7 @@
 
 import crypto from "node:crypto";
 import { calculatePlanetaryPositions, calculateMarriageTimingEvents } from "../astroEngine.js";
-import { getCalibrationParameters, getConformalQuantiles } from "./calibrationProvider.js";
+import { getCalibrationParameters, getConformalQuantiles, getEmpiricalResidualQuantiles } from "./calibrationProvider.js";
 
 // ============================================================================
 // 1. REPRODUCIBLE DETERMINISTIC PRNG (Mulberry32)
@@ -499,6 +499,13 @@ export function predictMarriageTiming(cleanRecord, chartData, options = {}) {
       widthYears: Number((q80 * 2).toFixed(2)),
       nominalCoverage: 0.80
     },
+    intervalMethod: "EMPIRICAL_RESIDUAL_PREDICTION_INTERVALS",
+    empiricalResidualIntervals: {
+      p50: { lowerYear: estYear !== null ? Number((estYear - q50).toFixed(2)) : null, upperYear: estYear !== null ? Number((estYear + q50).toFixed(2)) : null, widthYears: q50 * 2, nominalCoverage: 0.50 },
+      p80: { lowerYear, upperYear, widthYears: q80 * 2, nominalCoverage: 0.80 },
+      p90: { lowerYear: estYear !== null ? Number((estYear - q90).toFixed(2)) : null, upperYear: estYear !== null ? Number((estYear + q90).toFixed(2)) : null, widthYears: q90 * 2, nominalCoverage: 0.90 },
+      p95: { lowerYear: estYear !== null ? Number((estYear - q95).toFixed(2)) : null, upperYear: estYear !== null ? Number((estYear + q95).toFixed(2)) : null, widthYears: q95 * 2, nominalCoverage: 0.95 }
+    },
     conformalIntervals: {
       p50: { lowerYear: estYear !== null ? Number((estYear - q50).toFixed(2)) : null, upperYear: estYear !== null ? Number((estYear + q50).toFixed(2)) : null, widthYears: q50 * 2, nominalCoverage: 0.50 },
       p80: { lowerYear, upperYear, widthYears: q80 * 2, nominalCoverage: 0.80 },
@@ -972,11 +979,11 @@ export function evaluateTiming(timingPredictions, groundTruths) {
     const intWidth = pred.predictedIntervalYears ?? 2.0;
     intervalWidths.push(intWidth);
 
-    // Requirement 7: Prediction interval checks across nominal coverage levels
-    const p80 = pred.conformalIntervals?.p80 || pred.predictedInterval;
-    const p50 = pred.conformalIntervals?.p50;
-    const p90 = pred.conformalIntervals?.p90;
-    const p95 = pred.conformalIntervals?.p95;
+    // Requirement 7 (P0-4): Empirical residual prediction interval checks across nominal coverage levels
+    const p80 = pred.empiricalResidualIntervals?.p80 || pred.conformalIntervals?.p80 || pred.predictedInterval;
+    const p50 = pred.empiricalResidualIntervals?.p50 || pred.conformalIntervals?.p50;
+    const p90 = pred.empiricalResidualIntervals?.p90 || pred.conformalIntervals?.p90;
+    const p95 = pred.empiricalResidualIntervals?.p95 || pred.conformalIntervals?.p95;
 
     const lowerBound80 = p80?.lowerYear ?? (predYear - 6.0);
     const upperBound80 = p80?.upperYear ?? (predYear + 6.0);

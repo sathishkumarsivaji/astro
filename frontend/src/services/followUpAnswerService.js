@@ -1748,3 +1748,6 @@ export async function answerFollowUpQuestion({
   // 4. Robust Deterministic Report Synthesis Fallback (Offline & Anti-Failure)
   return generateDeterministicAnswer(route.resolvedText || rawQ, context, route);
 }
+
+export { processEvidenceLinkedQA } from "./questionAnswer/index.js";
+

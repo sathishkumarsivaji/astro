@@ -9,7 +9,8 @@
  *   chartData → canonicalFactAdapter → domainAdapters → narrativeBuilder → ExpertReport
  */
 
-import { createExpertReport, DOMAIN, ALL_DOMAINS } from "./expertPredictionSchema.js";
+import { createExpertReport, DOMAIN, ALL_DOMAINS, RESOLUTION, RESOLUTION_RANK, RESOLUTION_LAYERS } from "./expertPredictionSchema.js";
+import { DOMAIN_VALIDATION_REGISTRY } from "./domainValidationRegistry.js";
 import { extractCanonicalFacts } from "./canonicalFactAdapter.js";
 import { buildDomainNarrative, DOMAIN_LABELS } from "./narrativeBuilder.js";
 
@@ -142,6 +143,9 @@ export function assembleExpertReport(chartData, lang = "en", options = {}) {
     }
   }
 
+  // ── Apply Anti-False-Precision Firewall (P2) ──
+  applyAntiFalsePrecisionFirewall(domainResults);
+
   // ── Cross-domain analysis ──
   const crossDomainAnalysis = buildCrossDomainAnalysis(domainResults, lang);
 
@@ -169,6 +173,75 @@ export function assembleExpertReport(chartData, lang = "en", options = {}) {
       )
     }
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// GLOBAL ANTI-FALSE-PRECISION FIREWALL (P2)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Global Anti-False-Precision Firewall (P2)
+ * Final gate before report assembly rejecting any empirical resolution finer
+ * than the validated resolution for that domain, and explicitly labeling
+ * all traditional timing windows as TRADITIONAL RULE WINDOW.
+ *
+ * @param {Object} domainResults - Dictionary of domain expert results
+ * @returns {Object} Cleaned domain results
+ */
+export function applyAntiFalsePrecisionFirewall(domainResults) {
+  if (!domainResults || typeof domainResults !== "object") return domainResults;
+
+  for (const [domainId, result] of Object.entries(domainResults)) {
+    if (!result || typeof result !== "object") continue;
+
+    const valInfo = DOMAIN_VALIDATION_REGISTRY[domainId];
+    const allowedEmpiricalRes = (valInfo && valInfo.empiricalOutcomeValidationAvailable)
+      ? valInfo.empiricalPredictiveResolution
+      : "NOT_ESTABLISHED";
+
+    // 1. Reject empirical resolution finer than validated resolution
+    if (allowedEmpiricalRes === "NOT_ESTABLISHED") {
+      result.empiricalPredictiveResolution = "NOT_ESTABLISHED";
+      if (result.epistemicStatus) {
+        result.epistemicStatus.empiricalValidationStatus = "NOT_ESTABLISHED";
+      }
+      result.validationStatus = "TRADITIONAL_RULE_FRAMEWORK_UNVALIDATED";
+    } else {
+      const allowedRank = RESOLUTION_RANK[allowedEmpiricalRes] ?? 10;
+      const currentRank = RESOLUTION_RANK[result.empiricalPredictiveResolution];
+      if (currentRank === undefined || currentRank < allowedRank) {
+        result.empiricalPredictiveResolution = allowedEmpiricalRes;
+      }
+    }
+
+    // 2. Process timing windows: label traditional timing windows as TRADITIONAL RULE WINDOW
+    const processWindowList = (windows) => {
+      if (!Array.isArray(windows)) return;
+      for (const w of windows) {
+        if (!w || typeof w !== "object") continue;
+        w.windowCategory = "TRADITIONAL_RULE_WINDOW";
+        w.windowTypeLabel = "TRADITIONAL RULE WINDOW";
+        w.traditionalTimingLabel = "TRADITIONAL RULE WINDOW";
+        w.resolutionLayer = RESOLUTION_LAYERS.TRADITIONAL_RULE_RESOLUTION;
+
+        if (allowedEmpiricalRes === "NOT_ESTABLISHED") {
+          w.empiricalPredictiveResolution = "NOT_ESTABLISHED";
+        } else {
+          const wRank = RESOLUTION_RANK[w.empiricalPredictiveResolution];
+          const allowedRank = RESOLUTION_RANK[allowedEmpiricalRes] ?? 10;
+          if (wRank === undefined || wRank < allowedRank) {
+            w.empiricalPredictiveResolution = allowedEmpiricalRes;
+          }
+        }
+      }
+    };
+
+    processWindowList(result.primaryWindows);
+    processWindowList(result.cautionWindows);
+    processWindowList(result.subPhases);
+  }
+
+  return domainResults;
 }
 
 // ─────────────────────────────────────────────────────────────

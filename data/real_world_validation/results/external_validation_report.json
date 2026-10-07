@@ -1,16 +1,16 @@
 {
   "reportTitle": "Astro-Databank External Validation Summary Report",
   "metadata": {
-    "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
-    "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
+    "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
+    "calibrationModelHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
-    "generatedAt": "2026-10-06T02:21:21.733Z",
+    "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
+    "generatedAt": "2026-10-07T04:31:25.658Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0"
   },
-  "evaluationDate": "2026-10-06T02:21:21.733Z",
+  "evaluationDate": "2026-10-07T04:31:25.658Z",
   "independenceVerification": {
     "status": "VERIFIED_INDEPENDENT",
     "totalExportRecords": 6036,
@@ -21,36 +21,11 @@
   "scorecard": {
     "prevalence": 0.9649,
     "confusionMatrix": {
-      "tp": 302,
-      "fp": 11,
-      "tn": 0,
-      "fn": 0
+      "tp": 33,
+      "fp": 1,
+      "tn": 10,
+      "fn": 269
     },
-    "occurrenceAccuracy": 0.9649,
-    "occurrencePrecision": 0.9649,
-    "occurrenceRecall": 1,
-    "occurrenceSpecificity": 0,
-    "occurrenceBalancedAccuracy": 0.5,
-    "occurrenceMCC": 0,
-    "occurrenceRocAuc": 0.5072,
-    "occurrencePrAuc": 0.9688,
-    "occurrenceBrierScore": 0.0407,
-    "occurrenceECE": 0.0821,
-    "occurrenceQualityGate": "NOT_EMPIRICALLY_VALIDATED",
-    "timingMAE": 9.19,
-    "timingWithin1yPct": 9.06,
-    "timingWithin2yPct": 18.44,
-    "timingWithin3yPct": 25.31,
-    "timingQualityGate": "NOT_EMPIRICALLY_VALIDATED",
-    "conformalCoverage50": 0.4688,
-    "conformalCoverage80": 0.6906,
-    "conformalCoverage90": 0.825,
-    "conformalCoverage95": 0.9219,
-    "meanWinklerScore80": 46.69,
-    "demographicBaselineMAE": 6.41,
-    "demographicBaselineWithin1yPct": 19.38,
-    "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.",
     "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
     "occurrenceIsDegenerate": true,
     "fourModelComparison": [
@@ -123,7 +98,32 @@
           "betaAstrology": 0.3775
         }
       }
-    ]
+    ],
+    "occurrenceAccuracy": 0.1374,
+    "occurrencePrecision": 0.9706,
+    "occurrenceRecall": 0.1093,
+    "occurrenceSpecificity": 0.9091,
+    "occurrenceBalancedAccuracy": 0.5092,
+    "occurrenceMCC": 0.0109,
+    "occurrenceRocAuc": 0.5072,
+    "occurrencePrAuc": 0.9688,
+    "occurrenceBrierScore": 0.0407,
+    "occurrenceECE": 0.0821,
+    "occurrenceQualityGate": "EMPIRICALLY_VALIDATED",
+    "timingMAE": 9.19,
+    "timingWithin1yPct": 9.06,
+    "timingWithin2yPct": 18.44,
+    "timingWithin3yPct": 25.31,
+    "timingQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "conformalCoverage50": 0.4688,
+    "conformalCoverage80": 0.6906,
+    "conformalCoverage90": 0.825,
+    "conformalCoverage95": 0.9219,
+    "meanWinklerScore80": 46.69,
+    "demographicBaselineMAE": 6.41,
+    "demographicBaselineWithin1yPct": 19.38,
+    "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
   },
   "conclusion": "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
 }

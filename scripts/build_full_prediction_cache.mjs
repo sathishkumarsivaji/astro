@@ -148,8 +148,9 @@ if (isMainThread) {
     } = await import(empiricalPath);
     const { getCurrentHashes, computeInputHash } = await import(cacheManagerPath);
 
-    const { predictionEngineHash, calibrationModelHash } = getCurrentHashes();
+    const { predictionEngineHash, calibrationModelHash, modelCoefficientsHash } = getCurrentHashes();
     const trainSha256 = '7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849';
+    const authoritativeCoeffHash = modelCoefficientsHash || 'ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f';
 
     const results = [];
     const t0 = Date.now();
@@ -181,7 +182,7 @@ if (isMainThread) {
         calibrationModelHash,
         calibrationInputHash: crypto.createHash('sha256').update(trainSha256).digest('hex'),
         trainingDatasetHash: trainSha256,
-        modelCoefficientsHash: null,
+        modelCoefficientsHash: authoritativeCoeffHash,
         astronomyEngineVersion: '4.2.0',
         historicalTimeEngineVersion: '2.1.0',
         predictionSchemaVersion: '3.0',

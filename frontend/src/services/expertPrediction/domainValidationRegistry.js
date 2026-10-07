@@ -40,11 +40,11 @@ export const DOMAIN_VALIDATION_REGISTRY = Object.freeze({
     benchmarkSources: ["VedAstro Public Cohort", "Astro-Databank Rodden A/AA"],
     astronomicalResolution: RESOLUTION.DAY,
     traditionalTimingResolution: RESOLUTION.DATE_RANGE,
-    empiricalPredictiveResolution: RESOLUTION.YEAR,
-    badgeEn: "Calibrated Empirical Benchmark Available (Experimental)",
-    badgeTa: "அளவீடு செய்யப்பட்ட சான்றியல் ஒப்பீடு உள்ளது (பரிசோதனை)",
-    disclaimerEn: "Empirically evaluated against historical cohort datasets with ~4-7y timing MAE. Not an individualized certainty.",
-    disclaimerTa: "வரலாற்று தரவுத்தளங்களில் சரிபார்க்கப்பட்டது (MAE ~4-7 ஆண்டுகள்). இது தனிநபர் உறுதிப்பாடு அல்ல.",
+    empiricalPredictiveResolution: RESOLUTION.MULTI_YEAR_RANGE,
+    badgeEn: "Traditional Jyotisha Rule Timing: DATE_RANGE | Empirical Predictive Timing: MULTI_YEAR_RANGE (Experimental)",
+    badgeTa: "பாரம்பரிய ஜோதிட காலம்: குறிப்பிட்ட நாட்கள் | சான்றியல் கணிக்கப்பட்ட காலம்: பல ஆண்டுகள் (பரிசோதனை)",
+    disclaimerEn: "Traditional rule timing (DATE_RANGE) reflects classical Jyotisha convergence. Empirical predictive resolution is MULTI_YEAR_RANGE (MAE 6.89y internal, 9.19y external). Empirical status: EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.",
+    disclaimerTa: "பாரம்பரிய விதி சார்ந்த காலம் ஜோதிட விதிகளின் இணைப்பை மட்டுமே குறிக்கிறது. சான்றியல் உண்மைத்தன்மை பல ஆண்டு வரம்பிற்கு மட்டுமே (உள் MAE 6.89y, வெளி MAE 9.19y). சான்றியல் நிலை: பரிசோதனை / நிறுவப்படவில்லை.",
     citations: ["Brihat Parasara Hora Sastra Ch. 18 & 46", "Phaladeepika Ch. 10", "Jataka Parijata Ch. 14"]
   },
   [DOMAIN.PROPERTY]: {

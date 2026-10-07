@@ -56,6 +56,7 @@ const TEST_SUITES = [
   { name: "P0 Negative Data Matrix", cwd: FRONTEND_DIR, cmd: "node test_negative_data_matrix.mjs" },
   { name: "Backend Security & Push", cwd: BACKEND_DIR, cmd: "node test_backend.mjs" },
   { name: "Epistemic Architecture Mandates", cwd: FRONTEND_DIR, cmd: "node test_epistemic_architecture_mandates.mjs" },
+  { name: "Cache Coefficient Hash Integrity", cwd: FRONTEND_DIR, cmd: "node test_cache_coefficient_hash_integrity.mjs" },
   { name: "Current Release Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_current_release_manifest.mjs" },
   { name: "Validation Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_validation_manifest_integrity.mjs" }
 ];

@@ -77,7 +77,7 @@ check("Training sample size >= 2,000 (Req 8)", rawModel.trainingSampleN >= 2000)
 check("Timing residual sample size > 0", rawModel.timingResidualSampleN > 0);
 check("Fitted slope is finite positive number", Number.isFinite(rawModel.parameters?.slope) && rawModel.parameters.slope > 0);
 check("Fitted intercept is finite number", Number.isFinite(rawModel.parameters?.intercept));
-check("Classification threshold is 0.50", rawModel.parameters?.classificationThreshold === 0.50);
+check("Classification threshold is unified to frozen validation threshold (0.89)", rawModel.parameters?.classificationThreshold === 0.89);
 check("Model specifies predictionEngineHash", typeof rawModel.predictionEngineHash === "string" && rawModel.predictionEngineHash.length === 64);
 check("Model predictionEngineHash matches CURRENT production engine hash", rawModel.predictionEngineHash === currentPredictionEngineHash);
 check("Model trainingDatasetHash matches CURRENT TRAIN dataset hash", rawModel.trainingDatasetHash === currentTrainSha256);

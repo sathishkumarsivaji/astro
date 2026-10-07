@@ -3,7 +3,8 @@ import { runBirthTimeRectification } from "./src/services/birthTimeRectification
 import { parseTimeToMinutes } from "./src/services/birthTimeRectification/engine/candidateGenerator.js";
 import { getCachedOrComputeChart } from "./src/services/birthTimeRectification/engine/chartEvaluator.js";
 
-console.log("=== Test: Ground Truth Positive Control & Noise Rejection ===");
+console.log("=== SYNTHETIC SELF-CONSISTENCY / GROUND-TRUTH RECOVERY TEST ===");
+console.log("SCIENTIFIC DISCLAIMER: Synthetic ground-truth recovery demonstrates algorithmic self-consistency only and DOES NOT establish real-world prospective accuracy.");
 
 // 1. Compute True Ground Truth Chart at T = 06:14:00
 const trueBirthDate = "1992-08-15";

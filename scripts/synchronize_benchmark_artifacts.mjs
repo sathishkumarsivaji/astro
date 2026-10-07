@@ -34,9 +34,10 @@ console.log(`  BLIND_TEST: ${blindRecords.length} records`);
 console.log(`  INTERNAL_HOLDOUT: ${holdoutRecords.length} records`);
 console.log(`  ASTRO_DATABANK_CERTIFIED: ${adbCertified.length} records`);
 
-const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
-const holdout4Model = evaluate4ModelComparison(holdoutRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
-const adb4Model = evaluate4ModelComparison(adbCertified, trainRecords, { threshold: 0.50, getCachedPrediction });
+const FROZEN_THRESHOLD = 0.89;
+const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { threshold: FROZEN_THRESHOLD, getCachedPrediction });
+const holdout4Model = evaluate4ModelComparison(holdoutRecords, trainRecords, { threshold: FROZEN_THRESHOLD, getCachedPrediction });
+const adb4Model = evaluate4ModelComparison(adbCertified, trainRecords, { threshold: FROZEN_THRESHOLD, getCachedPrediction });
 
 // Helper to set timing resolution separation
 function setTimingResolution(timingObj) {

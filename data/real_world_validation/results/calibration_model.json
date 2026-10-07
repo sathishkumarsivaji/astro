@@ -2,7 +2,7 @@
   "calibratorType": "PLATT_LOGISTIC_SCALING_V2",
   "modelVersion": "2.2.0-actual-model-fitted",
   "predictionEngineVersion": "4.2.0",
-  "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
+  "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
   "calibrationInputHash": "58c1c3b7bb8defa059bc58e11cf1382dad418f216a423a6e8e94dce2b5516db4",
   "trainingSampleHash": "83a97b8b775723f88b5f43b3501b61efc5f24a040b4b066b70e500f6f4ab2357",
   "fitTimestamp": "2026-10-06T07:27:53.508Z",
@@ -21,7 +21,7 @@
   "parameters": {
     "slope": 0.4189,
     "intercept": 1.6736,
-    "classificationThreshold": 0.5,
+    "classificationThreshold": 0.89,
     "validationOptimizedThreshold": 0.89,
     "thresholdSelectionStatus": "CONSTRAINED_OPTIMUM_IDENTIFIED",
     "satisfiesConstraint": true,
@@ -99,8 +99,14 @@
       }
     }
   ],
-  "intervalMethod": "EMPIRICAL_RESIDUAL_QUANTILE_PREDICTION_INTERVALS",
+  "intervalMethod": "EMPIRICAL_RESIDUAL_PREDICTION_INTERVALS",
   "intervalMethodDisclosure": "Prediction intervals are computed directly from empirical quantiles of absolute residuals on authentic astrological model predictions across the TRAIN partition.",
+  "empiricalResidualQuantiles": {
+    "q50": 6,
+    "q80": 10,
+    "q90": 14,
+    "q95": 19
+  },
   "conformalIntervalQuantiles": {
     "q50": 6,
     "q80": 10,

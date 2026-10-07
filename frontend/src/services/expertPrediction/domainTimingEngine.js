@@ -22,6 +22,7 @@ import {
   createTimingWindow, createDomainResult, generateDeterministicId, createResolutionLayers
 } from "./expertPredictionSchema.js";
 import { getDomainValidationInfo } from "./domainValidationRegistry.js";
+import { getMarriageEmpiricalMetrics, getAuthoritativeEmpiricalMetrics } from "../realWorldValidation/authoritativeEmpiricalMetrics.js";
 
 import {
   extractCanonicalFacts, findRelevantDashaPeriods, getHouseLord,
@@ -405,7 +406,8 @@ export function runDomainTiming(domainOrFacts, factsOrConfig, configOrLang, mayb
     empirical: {
       predictiveResolution: valInfo.empiricalPredictiveResolution,
       modelStatus: valInfo.status,
-      validationMAE: valInfo.status === "EMPIRICALLY_VALIDATED" ? 4.28 : null,
+      validationMAE: null,
+      empiricalMetrics: domain === DOMAIN.MARRIAGE ? getMarriageEmpiricalMetrics() : getAuthoritativeEmpiricalMetrics(domain),
       coverage: null
     }
   });

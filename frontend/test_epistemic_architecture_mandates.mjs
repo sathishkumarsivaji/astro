@@ -132,9 +132,9 @@ test("Domain results strictly separate astronomical, traditional, and empirical 
     // Astronomical resolution is calculation-level (DAY)
     assert.equal(res.astronomicalResolution, RESOLUTION.DAY);
 
-    // Empirical resolution for marriage is YEAR; for others is NOT_ESTABLISHED
+    // Empirical resolution for marriage is MULTI_YEAR_RANGE (P0-3); for others is NOT_ESTABLISHED
     if (dom === DOMAIN.MARRIAGE) {
-      assert.equal(res.empiricalPredictiveResolution, RESOLUTION.YEAR);
+      assert.equal(res.empiricalPredictiveResolution, RESOLUTION.MULTI_YEAR_RANGE);
     } else {
       assert.equal(res.empiricalPredictiveResolution, "NOT_ESTABLISHED");
     }
@@ -148,7 +148,7 @@ test("Timing windows carry distinct astronomical and empirical resolutions", () 
 
   assert.equal(win.astronomicalResolution, RESOLUTION.DAY);
   assert.ok([RESOLUTION.YEAR, RESOLUTION.SEASON, RESOLUTION.MONTH_RANGE, RESOLUTION.DATE_RANGE, RESOLUTION.DAY].includes(win.traditionalTimingResolution));
-  assert.equal(win.empiricalPredictiveResolution, RESOLUTION.YEAR);
+  assert.equal(win.empiricalPredictiveResolution, RESOLUTION.MULTI_YEAR_RANGE);
 });
 
 // ─────────────────────────────────────────────────────────────

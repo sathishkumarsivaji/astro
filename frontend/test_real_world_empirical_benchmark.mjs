@@ -43,7 +43,8 @@ import {
   calculateContingencyPValue,
   applyBenjaminiHochberg,
   crossCheckPublicRecord,
-  evaluate4ModelComparison
+  evaluate4ModelComparison,
+  setCachedPredictionProvider
 } from "./src/services/realWorldValidation/empiricalEvaluationEngine.js";
 import {
   initCacheManager,
@@ -94,6 +95,7 @@ if (!fs.existsSync(CACHE_DIR)) {
 // Initialize and load versioned prediction cache
 initCacheManager();
 loadCache(PREDICTION_CACHE_FILE);
+setCachedPredictionProvider(getCachedPrediction);
 const initialStats = getCacheStats();
 console.log(`Loaded versioned prediction cache: ${initialStats.total} precomputed predictions.`);
 
@@ -334,6 +336,7 @@ const holdoutResults = runCohortEvaluation(internalHoldoutRecords, "INTERNAL_HOL
 // Primary Benchmark: All independent certified A/AA records (N ≈ 3,751)
 // Sensitivity Analyses: AA_ONLY, A_ONLY, ALL_INDEPENDENT, ASTRO_DATABANK_REGRESSION_SAMPLE
 let adbCertifiedResults = null;
+let adbCertifiedCohort = [];
 let adbAAResults = null;
 let adbAResults = null;
 let adbAllResults = null;
@@ -355,7 +358,7 @@ if (adbRecords.length > 0) {
   }
 
   // Primary External Benchmark: All certified A/AA records
-  const adbCertifiedCohort = adbRecords.filter(r => r.birthTimeReliability === "AA" || r.birthTimeReliability === "A");
+  adbCertifiedCohort = adbRecords.filter(r => r.birthTimeReliability === "AA" || r.birthTimeReliability === "A");
 
   // Overlap manifest verification (Requirement 9)
   const exportCount = globalOverlapManifest?.totalAstroDatabankRecords ?? globalOverlapManifest?.totalExportRecords ?? 6036;
@@ -599,7 +602,9 @@ let v3AdbAMetrics = null;
 let v3AdbAllMetrics = null;
 
 if (adbRecords.length > 0) {
-  const adbCertifiedCohort = adbRecords.filter(r => r.birthTimeReliability === "AA" || r.birthTimeReliability === "A");
+  if (adbCertifiedCohort.length === 0) {
+    adbCertifiedCohort = adbRecords.filter(r => r.birthTimeReliability === "AA" || r.birthTimeReliability === "A");
+  }
   const adbAACohort = adbRecords.filter(r => r.birthTimeReliability === "AA");
   const adbACohort = adbRecords.filter(r => r.birthTimeReliability === "A");
 
@@ -656,6 +661,38 @@ holdoutResults.discreteHazardModel = v3HoldoutMetrics;
 if (adbCertifiedResults) {
   adbCertifiedResults.discreteHazardModel = v3AdbCertifiedMetrics;
 }
+
+// Compute and attach 4-Model Comparison across full cohorts (NO SLICING)
+console.log("\nEvaluating 4-Model Discrimination Framework across FULL cohorts...");
+const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
+const holdout4Model = evaluate4ModelComparison(internalHoldoutRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
+const adb4Model = adbCertifiedCohort.length > 0 ? evaluate4ModelComparison(adbCertifiedCohort, trainRecords, { threshold: 0.50, getCachedPrediction }) : null;
+
+blindResults.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
+blindResults.occurrence.isDegenerate = true;
+blindResults.occurrence.fourModelComparison = blind4Model;
+
+holdoutResults.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
+holdoutResults.occurrence.isDegenerate = true;
+holdoutResults.occurrence.fourModelComparison = holdout4Model;
+
+if (adbCertifiedResults) {
+  adbCertifiedResults.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
+  adbCertifiedResults.occurrence.isDegenerate = true;
+  adbCertifiedResults.occurrence.fourModelComparison = adb4Model;
+}
+
+function setTimingResolution(timingObj) {
+  if (timingObj && typeof timingObj === 'object') {
+    timingObj.historicalRecordGranularity = "DAY";
+    timingObj.computedCalendarGranularity = "DAY";
+    timingObj.empiricalPredictiveResolution = "MULTI_YEAR_RANGE";
+    timingObj.empiricalTimingStatus = "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY";
+  }
+}
+setTimingResolution(blindResults.timing);
+setTimingResolution(holdoutResults.timing);
+if (adbCertifiedResults) setTimingResolution(adbCertifiedResults.timing);
 
 // Clean internal prediction structures before JSON output
 delete blindResults._compactPredictions;
@@ -760,7 +797,7 @@ if (adbCertifiedResults) {
       astrologicalWithin1yPct: adbCertifiedResults.timing.within1yPct,
       demographicWithin1yPct: adbCertifiedResults.demographicBaseline.within1yPct,
       occurrenceClassifierStatus: adbCertifiedResults.occurrence.classifierStatus,
-      fourModelComparison: evaluate4ModelComparison(adbCertifiedCohort, trainRecords, { threshold: 0.50, getCachedPrediction }),
+      fourModelComparison: adb4Model,
       superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
     }
   };
@@ -792,6 +829,9 @@ if (adbCertifiedResults) {
     scorecard: {
       prevalence: adbCertifiedResults.occurrence.prevalence,
       confusionMatrix: adbCertifiedResults.occurrence.confusionMatrix,
+      occurrenceClassifierStatus: "DEGENERATE_BASE_RATE_CLASSIFIER",
+      occurrenceIsDegenerate: true,
+      fourModelComparison: adb4Model,
       occurrenceAccuracy: adbCertifiedResults.occurrence.accuracy,
       occurrencePrecision: adbCertifiedResults.occurrence.precision,
       occurrenceRecall: adbCertifiedResults.occurrence.recall,

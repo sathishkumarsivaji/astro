@@ -79,12 +79,13 @@ export function createResolutionLayers({ astronomical, traditional, empirical })
     },
     layerC: {
       resolutionType: RESOLUTION_LAYERS.EMPIRICAL_PREDICTIVE_RESOLUTION,
-      predictiveResolution: empirical?.predictiveResolution || RESOLUTION.NOT_DISCRIMINATING,
+      predictiveResolution: empirical?.predictiveResolution || "NOT_ESTABLISHED",
       modelStatus: empirical?.modelStatus || "INSUFFICIENT_VALIDATION",
-      validationMAE: empirical?.validationMAE ?? null,
+      validationMAE: null,
+      empiricalMetrics: empirical?.empiricalMetrics ?? null,
       coverage: empirical?.coverage ?? null,
       exactDateBlocked: true,
-      resolutionDisclaimer: "Astronomical precision cannot be used to infer exact predictive event dates without validated empirical evidence."
+      resolutionDisclaimer: "Astronomical calculation precision and traditional Jyotisha rule convergence must NEVER be conflated with empirical life-event predictive accuracy. Exact predictive day dates are blocked."
     }
   };
 }
@@ -495,7 +496,7 @@ export function createDomainResult({
   const isMarriage = domain === DOMAIN.MARRIAGE || domain === "marriage";
   const finalAstronomicalResolution = astronomicalResolution || (primaryWindows.length > 0 ? (primaryWindows[0].astronomicalResolution || RESOLUTION.DAY) : RESOLUTION.DAY);
   const finalTraditionalTimingResolution = traditionalTimingResolution || resolution;
-  const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || (isMarriage ? RESOLUTION.YEAR : "NOT_ESTABLISHED");
+  const finalEmpiricalPredictiveResolution = empiricalPredictiveResolution || (isMarriage ? RESOLUTION.MULTI_YEAR_RANGE : "NOT_ESTABLISHED");
   const firstWin = primaryWindows[0];
   const finalConvergence = traditionalRuleConvergence ?? (firstWin ? (firstWin.traditionalRuleConvergence ?? firstWin.strength ?? 0.0) : 0.0);
   const finalEvidenceStrength = traditionalEvidenceStrength ?? (firstWin ? (firstWin.traditionalEvidenceStrength ?? firstWin.strength ?? 0.0) : 0.0);

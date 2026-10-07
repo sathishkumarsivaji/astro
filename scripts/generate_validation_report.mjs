@@ -79,8 +79,8 @@ This comprehensive scientific and production remediation enforces:
 - **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of ${v3Blind?.timing?.mae ?? "N/A"}y (vs demographic baseline ${v3Blind?.timing?.timingMAEBaseline ?? "N/A"}y, C-index ${v3Blind?.concordanceIndex ?? "N/A"}) on untouched BLIND_TEST, properly classifying out-of-sample performance as \`${v3Blind?.validationStatus ?? "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"}\`.
 - **Zero Inferred Marriage Types:** Astro-Databank ingestion assigns \`marriageType: 'UNKNOWN'\` by default. Zero love marriages are inferred from documented marriage events.
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = ${indep?.certifiedAAARecords ?? 3751}$).
-- **Complete 4-Way Overlap Removal:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (\`TRAIN\`, \`VAL\`, \`BLIND\`, \`HOLDOUT\`), isolating and excluding ${indep?.vedAstroOverlapExcluded ?? 1238} overlapping persons to yield ${indep?.independentRecords ?? 4798} truly independent records (${indep?.certifiedAAARecords ?? 3751} A/AA).
-- **Actual Production Model Calibration:** Platt scaling and conformal prediction intervals are fitted on actual production model outputs (\`rawRuleScore\` and \`centralEstimateYear\`) from the \`TRAIN\` partition ($N = ${cal?.trainingSampleN ?? 2500}$ sample), yielding true astrological error quantiles ($q_{50} = \\pm ${cal?.conformalIntervalQuantiles?.q50 ?? 6}$y, $q_{80} = \\pm ${cal?.conformalIntervalQuantiles?.q80 ?? 10}$y, $q_{90} = \\pm ${cal?.conformalIntervalQuantiles?.q90 ?? 14}$y, $q_{95} = \\pm ${cal?.conformalIntervalQuantiles?.q95 ?? 19}$y).
+- **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (\`TRAIN\`, \`VAL\`, \`BLIND\`, \`HOLDOUT\`), isolating and excluding ${indep?.vedAstroOverlapExcluded ?? 1238} overlapping persons to yield ${indep?.independentRecords ?? 4798} truly independent records (${indep?.certifiedAAARecords ?? 3751} A/AA).
+- **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (\`rawRuleScore\` and \`centralEstimateYear\`) from the \`TRAIN\` partition ($N = ${cal?.trainingSampleN ?? 2500}$ sample), yielding true astrological error quantiles ($q_{50} = \\pm ${cal?.empiricalResidualQuantiles?.q50 ?? cal?.conformalIntervalQuantiles?.q50 ?? 6}$y, $q_{80} = \\pm ${cal?.empiricalResidualQuantiles?.q80 ?? cal?.conformalIntervalQuantiles?.q80 ?? 10}$y, $q_{90} = \\pm ${cal?.empiricalResidualQuantiles?.q90 ?? cal?.conformalIntervalQuantiles?.q90 ?? 14}$y, $q_{95} = \\pm ${cal?.empiricalResidualQuantiles?.q95 ?? cal?.conformalIntervalQuantiles?.q95 ?? 19}$y).
 - **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (\`${meta?.predictionEngineHash}\`) and calibration model SHA-256 hash (\`${meta?.calibrationModelHash}\`). Cache statistics: \`initialCacheEntries: ${meta?.cacheProvenance?.initialCacheEntries}\`, \`cacheHits: ${meta?.cacheProvenance?.cacheHits}\`, \`cacheMisses: ${meta?.cacheProvenance?.cacheMisses}\`, \`recomputedCount: ${meta?.cacheProvenance?.recomputedCount}\`.
 - **Single Source of Truth:** \`calibrationProvider.js\` serves as the sole runtime provider loading \`calibration_model.json\`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
@@ -100,7 +100,7 @@ Conservation is exact ($15,710 + 87 + 10 = 15,807$).
 
 ---
 
-## SECTION 8: COMPLETE 4-WAY OVERLAP DETECTION & ELIMINATION PROTOCOL
+## SECTION 8: COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES
 
 | Partition | Total Partition Records | Astro-Databank Overlap Found | Overlap Percentage |
 | :--- | :--- | :--- | :--- |
@@ -212,15 +212,15 @@ All models exhibit zero true negatives at the default threshold ($p=0.50$), corr
 A crucial architectural distinction is enforced between calendar calculation granularity and empirical predictive precision:
 - **Historical Record Granularity:** \`DAY\` (Exact dates recorded in registries).
 - **Computed Calendar Granularity:** \`DAY\` (Planetary transits, dashas, and astronomical cusps computed down to the minute/day).
-- **Empirical Predictive Resolution:** \`MULTI_YEAR_RANGE\` (Observed out-of-sample timing error quantiles $q_{50} = \\pm ${cal?.conformalIntervalQuantiles?.q50 ?? 6}\\text{y}$, $q_{80} = \\pm ${cal?.conformalIntervalQuantiles?.q80 ?? 10}\\text{y}$, $\\text{MAE} \\approx ${blind?.timing?.mae ?? 6.89}\\text{y}$).
+- **Empirical Predictive Resolution:** \`MULTI_YEAR_RANGE\` (Observed out-of-sample timing error quantiles $q_{50} = \\pm ${cal?.empiricalResidualQuantiles?.q50 ?? cal?.conformalIntervalQuantiles?.q50 ?? 6}\\text{y}$, $q_{80} = \\pm ${cal?.empiricalResidualQuantiles?.q80 ?? cal?.conformalIntervalQuantiles?.q80 ?? 10}\\text{y}$, $\\text{MAE} \\approx ${blind?.timing?.mae ?? 6.89}\\text{y}$).
 - **Empirical Timing Status:** \`EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY\`.
 
 The platform strictly disallows implying that day-level transit or dasha boundaries confer day-level empirical event predictability.
 
 ### 3. Empirical Residual-Quantile Prediction Intervals
 Prediction intervals are calibrated as empirical residual-quantile intervals on the holdout error distribution:
-- **Methodology:** Conformal empirical residual quantiles fitted on TRAIN error residuals ($|y_i - \\hat{y}_i|$).
-- **Coverage Guarantees:** Nominal 50% ($q_{50} = \\pm ${cal?.conformalIntervalQuantiles?.q50 ?? 6}\\text{y}$), Nominal 80% ($q_{80} = \\pm ${cal?.conformalIntervalQuantiles?.q80 ?? 10}\\text{y}$), Nominal 90% ($q_{90} = \\pm ${cal?.conformalIntervalQuantiles?.q90 ?? 14}\\text{y}$), Nominal 95% ($q_{95} = \\pm ${cal?.conformalIntervalQuantiles?.q95 ?? 19}\\text{y}$).
+- **Methodology:** Empirical residual quantiles fitted on TRAIN error residuals ($|y_i - \\hat{y}_i|$).
+- **Coverage Guarantees:** Nominal 50% ($q_{50} = \\pm ${cal?.empiricalResidualQuantiles?.q50 ?? cal?.conformalIntervalQuantiles?.q50 ?? 6}\\text{y}$), Nominal 80% ($q_{80} = \\pm ${cal?.empiricalResidualQuantiles?.q80 ?? cal?.conformalIntervalQuantiles?.q80 ?? 10}\\text{y}$), Nominal 90% ($q_{90} = \\pm ${cal?.empiricalResidualQuantiles?.q90 ?? cal?.conformalIntervalQuantiles?.q90 ?? 14}\\text{y}$), Nominal 95% ($q_{95} = \\pm ${cal?.empiricalResidualQuantiles?.q95 ?? cal?.conformalIntervalQuantiles?.q95 ?? 19}\\text{y}$).
 - **Disclosure:** Fully disclosed as empirical residual-quantile intervals, not asymptotic Gaussian confidence intervals.
 
 ---

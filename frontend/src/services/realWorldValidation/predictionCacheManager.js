@@ -56,7 +56,7 @@ export function initCacheManager(options = {}) {
   if (fs.existsSync(benchmarkResultsPath)) {
     try {
       const benchData = JSON.parse(fs.readFileSync(benchmarkResultsPath, 'utf8'));
-      currentModelCoefficientsHash = benchData.discreteHazardModelV3?.coefficientHash || benchData.discreteHazardModelV3?.modelFitHash || null;
+      currentModelCoefficientsHash = benchData.provenance?.coefficientHash || benchData.discreteHazardModelV3?.trainFit?.sampleProvenance?.coefficientHash || benchData.discreteHazardModelV3?.coefficientHash || benchData.provenance?.modelFitHash || benchData.discreteHazardModelV3?.modelFitHash || null;
     } catch {
       currentModelCoefficientsHash = null;
     }
@@ -231,6 +231,7 @@ export function getCurrentHashes() {
     calibrationModelHash: currentCalibrationModelHash,
     calibrationInputHash: currentCalibrationInputHash,
     trainingDatasetHash: currentTrainingDatasetHash,
+    modelCoefficientsHash: currentModelCoefficientsHash,
     predictionSchemaVersion,
     astronomyEngineVersion,
     modelVersion

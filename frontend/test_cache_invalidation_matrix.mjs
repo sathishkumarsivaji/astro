@@ -101,6 +101,7 @@ function seedCache(recordId, overrides = {}) {
       calibrationModelHash: overrides.calibrationModelHash !== undefined ? overrides.calibrationModelHash : currentHashes.calibrationModelHash,
       calibrationInputHash: overrides.calibrationInputHash !== undefined ? overrides.calibrationInputHash : currentHashes.calibrationInputHash,
       trainingDatasetHash: overrides.trainingDatasetHash !== undefined ? overrides.trainingDatasetHash : currentHashes.trainingDatasetHash,
+      modelCoefficientsHash: overrides.modelCoefficientsHash !== undefined ? overrides.modelCoefficientsHash : currentHashes.modelCoefficientsHash,
       astronomyEngineVersion: overrides.astronomyEngineVersion !== undefined ? overrides.astronomyEngineVersion : currentHashes.astronomyEngineVersion,
       predictionSchemaVersion: overrides.predictionSchemaVersion !== undefined ? overrides.predictionSchemaVersion : currentHashes.predictionSchemaVersion,
       modelVersion: '2.2.0',
@@ -162,6 +163,12 @@ console.log('\n8. Invalidation upon altered astronomyEngineVersion:');
 seedCache('REC_STALE_ASTRO_VER', { astronomyEngineVersion: '1.0.0-legacy' });
 const missAstroVer = getCachedPrediction('REC_STALE_ASTRO_VER', validHash);
 assert(missAstroVer === null, 'Stale astronomyEngineVersion rejects cache entry');
+
+// Test 9: Model coefficients hash mismatch (P1-1)
+console.log('\n9. Invalidation upon altered modelCoefficientsHash:');
+seedCache('REC_STALE_COEFF_HASH', { modelCoefficientsHash: 'stale_coefficients_hash_55555555555555555555555555555555' });
+const missCoeff = getCachedPrediction('REC_STALE_COEFF_HASH', validHash);
+assert(missCoeff === null, 'Stale modelCoefficientsHash rejects cache entry');
 
 // Clean up
 try {

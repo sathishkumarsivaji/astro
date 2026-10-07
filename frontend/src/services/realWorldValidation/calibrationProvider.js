@@ -141,12 +141,13 @@ export function verifyCalibrationModelFreshness(expectedPredictionEngineHash, ex
  */
 export function getCalibrationParameters() {
   const model = loadCalibrationModel();
+  const frozenThreshold = model.parameters.validationOptimizedThreshold ?? model.parameters.classificationThreshold ?? 0.89;
   return {
     slope: model.parameters.slope,
     intercept: model.parameters.intercept,
-    threshold: model.parameters.classificationThreshold ?? 0.50,
-    classificationThreshold: model.parameters.classificationThreshold ?? 0.50,
-    validationOptimizedThreshold: model.parameters.validationOptimizedThreshold ?? null,
+    threshold: frozenThreshold,
+    classificationThreshold: frozenThreshold,
+    validationOptimizedThreshold: frozenThreshold,
     thresholdSelectionStatus: model.parameters.thresholdSelectionStatus ?? "CONSTRAINED_OPTIMUM_IDENTIFIED",
     satisfiesConstraint: model.parameters.satisfiesConstraint ?? true,
     thresholdSelectionMethod: model.parameters.thresholdSelectionMethod ?? "MAXIMIZE_MCC_ON_VALIDATION",
@@ -156,16 +157,16 @@ export function getCalibrationParameters() {
 }
 
 /**
- * Returns conformal prediction interval error quantiles for astrological timing.
+ * Returns empirical residual prediction interval error quantiles for astrological timing (P0-4).
  * Nominal intervals:
  * - 50%: ±q50
  * - 80%: ±q80
  * - 90%: ±q90
  * - 95%: ±q95
  */
-export function getConformalQuantiles() {
+export function getEmpiricalResidualQuantiles() {
   const model = loadCalibrationModel();
-  const q = model.conformalIntervalQuantiles;
+  const q = model.empiricalResidualQuantiles || model.conformalIntervalQuantiles;
   return {
     q50: q.q50,
     q80: q.q80,
@@ -173,6 +174,11 @@ export function getConformalQuantiles() {
     q95: q.q95
   };
 }
+
+/**
+ * Backwards-compatibility alias for getEmpiricalResidualQuantiles.
+ */
+export const getConformalQuantiles = getEmpiricalResidualQuantiles;
 
 /**
  * Returns demographic baseline metadata strictly fitted from TRAIN partition.

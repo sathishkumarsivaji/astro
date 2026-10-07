@@ -356,16 +356,22 @@ export function fitCalibrationModel(sampleSize = 2500) {
     parameters: {
       slope: parseFloat(slope.toFixed(4)),
       intercept: parseFloat(intercept.toFixed(4)),
-      classificationThreshold: 0.50,
-      validationOptimizedThreshold: thresholdResult.optimalThreshold ?? null,
+      classificationThreshold: thresholdResult.optimalThreshold ?? 0.89,
+      validationOptimizedThreshold: thresholdResult.optimalThreshold ?? 0.89,
       thresholdSelectionStatus: thresholdResult.status,
       satisfiesConstraint: thresholdResult.satisfiesConstraint ?? false,
       thresholdSelectionMethod: thresholdResult.method || 'CONSTRAINED_MCC_WITH_MIN_SPECIFICITY_0.40',
       thresholdFrozen: true
     },
     fourModelComparison: fourModelSummary,
-    intervalMethod: 'EMPIRICAL_RESIDUAL_QUANTILE_PREDICTION_INTERVALS',
+    intervalMethod: 'EMPIRICAL_RESIDUAL_PREDICTION_INTERVALS',
     intervalMethodDisclosure: 'Prediction intervals are computed directly from empirical quantiles of absolute residuals on authentic astrological model predictions across the TRAIN partition.',
+    empiricalResidualQuantiles: {
+      q50,
+      q80,
+      q90,
+      q95
+    },
     conformalIntervalQuantiles: {
       q50,
       q80,

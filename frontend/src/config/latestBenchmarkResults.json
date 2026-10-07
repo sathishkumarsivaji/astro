@@ -13,16 +13,16 @@
     "independentAstroDatabank": 4798,
     "certifiedAstroDatabankAAA": 3751,
     "antiLeakageProtocol": "SHA-256 Pre-Cutoff Commitment Hashing",
-    "predictionEngineHash": "1e0edef2324ae83883294c8e60b5ec5cd5a2757fde8c5efe6e275a836129deae",
-    "calibrationModelHash": "1523adaa0cda8254ba3b919ac5b076bb28266b3ed091272f9ef8620c8d111b59",
+    "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
+    "calibrationModelHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
     "externalDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "modelFitHash": "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03",
     "coefficientHash": "ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f",
-    "benchmarkCodeHash": "5e96a5f7584112917b21077cda36103e37f30fabb18c8ece47998ccaf5134931",
-    "generationTimestamp": "2026-10-06T02:21:21.862Z",
+    "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
+    "generationTimestamp": "2026-10-07T04:31:25.744Z",
     "predictionVersion": "v3.0.0-audited",
     "rulesVersion": "Parashari-v3.0-discrete-hazard"
   },
@@ -60,20 +60,24 @@
           "eventPreHorizonCount": 26
         },
         "prevalence": 0.9122,
-        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "validationStatus": "EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "degeneracyReason": "Non-degenerate discrimination confirmed.",
+        "status": "VALIDATED",
         "confusionMatrix": {
-          "tp": 1445,
-          "fp": 139,
-          "tn": 0,
-          "fn": 0
+          "tp": 160,
+          "fp": 13,
+          "tn": 126,
+          "fn": 1285
         },
-        "accuracy": 0.9122,
-        "precision": 0.9122,
-        "recall": 1,
-        "specificity": 0,
-        "f1": 0.9541,
-        "balancedAccuracy": 0.5,
-        "mcc": 0,
+        "accuracy": 0.1806,
+        "precision": 0.9249,
+        "recall": 0.1107,
+        "specificity": 0.9065,
+        "f1": 0.1978,
+        "balancedAccuracy": 0.5086,
+        "mcc": 0.0156,
         "rocAuc": 0.5569,
         "prAuc": 0.9275,
         "calibrationSlope": 1,
@@ -81,11 +85,9 @@
         "brierScore": 0.0808,
         "ece": 0.0295,
         "ci95": {
-          "lower": 0.8973,
-          "upper": 0.9252
+          "lower": 0.1624,
+          "upper": 0.2003
         },
-        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-        "isDegenerate": true,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -160,6 +162,10 @@
       },
       "timing": {
         "n": 1484,
+        "historicalRecordGranularity": "DAY",
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 1484,
           "monthPrecisionCount": 0,
@@ -197,11 +203,7 @@
           "within90DaysPct": 1.76,
           "within180DaysPct": 4.12,
           "within365DaysPct": 8.98
-        },
-        "historicalRecordGranularity": "DAY",
-        "computedCalendarGranularity": "DAY",
-        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
-        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
+        }
       },
       "demographicBaseline": {
         "n": 1484,
@@ -330,20 +332,24 @@
           "eventPreHorizonCount": 20
         },
         "prevalence": 0.9158,
-        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "validationStatus": "EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "degeneracyReason": "Non-degenerate discrimination confirmed.",
+        "status": "VALIDATED",
         "confusionMatrix": {
-          "tp": 1382,
-          "fp": 127,
-          "tn": 0,
-          "fn": 0
+          "tp": 161,
+          "fp": 12,
+          "tn": 115,
+          "fn": 1221
         },
-        "accuracy": 0.9158,
-        "precision": 0.9158,
-        "recall": 1,
-        "specificity": 0,
-        "f1": 0.9561,
-        "balancedAccuracy": 0.5,
-        "mcc": 0,
+        "accuracy": 0.1829,
+        "precision": 0.9306,
+        "recall": 0.1165,
+        "specificity": 0.9055,
+        "f1": 0.2071,
+        "balancedAccuracy": 0.511,
+        "mcc": 0.0192,
         "rocAuc": 0.5419,
         "prAuc": 0.9298,
         "calibrationSlope": 1,
@@ -351,11 +357,9 @@
         "brierScore": 0.0781,
         "ece": 0.0328,
         "ci95": {
-          "lower": 0.9008,
-          "upper": 0.9288
+          "lower": 0.1642,
+          "upper": 0.2032
         },
-        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-        "isDegenerate": true,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -430,6 +434,10 @@
       },
       "timing": {
         "n": 1419,
+        "historicalRecordGranularity": "DAY",
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 1419,
           "monthPrecisionCount": 0,
@@ -467,11 +475,7 @@
           "within90DaysPct": 1.83,
           "within180DaysPct": 3.74,
           "within365DaysPct": 8.11
-        },
-        "historicalRecordGranularity": "DAY",
-        "computedCalendarGranularity": "DAY",
-        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
-        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
+        }
       },
       "demographicBaseline": {
         "n": 1419,
@@ -600,20 +604,24 @@
           "eventPreHorizonCount": 7
         },
         "prevalence": 0.9649,
-        "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+        "validationStatus": "EMPIRICALLY_VALIDATED",
+        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+        "isDegenerate": true,
+        "degeneracyReason": "Non-degenerate discrimination confirmed.",
+        "status": "VALIDATED",
         "confusionMatrix": {
-          "tp": 302,
-          "fp": 11,
-          "tn": 0,
-          "fn": 0
+          "tp": 33,
+          "fp": 1,
+          "tn": 10,
+          "fn": 269
         },
-        "accuracy": 0.9649,
-        "precision": 0.9649,
-        "recall": 1,
-        "specificity": 0,
-        "f1": 0.9821,
-        "balancedAccuracy": 0.5,
-        "mcc": 0,
+        "accuracy": 0.1374,
+        "precision": 0.9706,
+        "recall": 0.1093,
+        "specificity": 0.9091,
+        "f1": 0.1964,
+        "balancedAccuracy": 0.5092,
+        "mcc": 0.0109,
         "rocAuc": 0.5072,
         "prAuc": 0.9688,
         "calibrationSlope": 1,
@@ -621,11 +629,9 @@
         "brierScore": 0.0407,
         "ece": 0.0821,
         "ci95": {
-          "lower": 0.9382,
-          "upper": 0.9803
+          "lower": 0.1036,
+          "upper": 0.1799
         },
-        "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-        "isDegenerate": true,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -700,6 +706,10 @@
       },
       "timing": {
         "n": 320,
+        "historicalRecordGranularity": "DAY",
+        "computedCalendarGranularity": "DAY",
+        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
+        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY",
         "precisionDistribution": {
           "dayPrecisionCount": 320,
           "monthPrecisionCount": 0,
@@ -737,11 +747,7 @@
           "within90DaysPct": 1.56,
           "within180DaysPct": 2.5,
           "within365DaysPct": 5.94
-        },
-        "historicalRecordGranularity": "DAY",
-        "computedCalendarGranularity": "DAY",
-        "empiricalPredictiveResolution": "MULTI_YEAR_RANGE",
-        "empiricalTimingStatus": "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY"
+        }
       },
       "demographicBaseline": {
         "n": 320,
@@ -1014,7 +1020,7 @@
           "nAvailable": 9366,
           "selectionHash": "FULL_COHORT"
         },
-        "fittedAt": "2026-10-05T13:46:01.766Z"
+        "fittedAt": "2026-10-07T02:46:28.777Z"
       }
     },
     "validationMetrics": {

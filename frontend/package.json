@@ -12,7 +12,7 @@
     "test:rectification": "node test_birth_time_rectification.mjs && node test_rectification_margin.mjs && node test_rectification_null_distribution.mjs && node test_rectification_edge_boundary.mjs && node test_rectification_known_ground_truth.mjs && node test_rectification_multipeak.mjs && node test_rectification_suite.mjs",
     "test:integrity": "node test_release_package_integrity.mjs && node test_differential_prediction_integrity.mjs && node test_no_fabricated_calculated_values.mjs && node test_user_facing_no_fabricated_values.mjs && node test_calculated_value_integrity.mjs && node test_cross_surface_consistency.mjs && node test_feature_registry.mjs",
     "test:reports": "node test_detailed_report_integrity.mjs && node test_pdf_and_fingerprint.mjs && node test_tamil_purity.mjs",
-    "test:followup": "node test_follow_up_qa.mjs && node test_multiturn_qa.mjs && node test_consultation_engine.mjs",
+    "test:followup": "node test_follow_up_qa.mjs && node test_multiturn_qa.mjs && node test_consultation_engine.mjs && node test_advanced_qa_engine.mjs",
     "test:security": "node test_find_claims.mjs && node test_claim_graph.mjs",
     "test:expert": "node --test src/services/expertPrediction/__tests__/expertPrediction.test.mjs",
     "test:negative": "node test_negative_data_matrix.mjs",

@@ -22,17 +22,16 @@ export function classifyResolution(windowData) {
 
   let resolution = RESOLUTION.YEAR;
 
-  // Cross-corroboration requirement:
-  // Fine resolutions (DAY, DATE_RANGE) require independent corroboration.
-  // If explicitly hasIndependentCorroboration === false, resolution cannot be finer than MONTH_RANGE.
+  // Cross-corroboration requirement (P0-1):
+  // Explicit hasIndependentCorroboration === true is strictly required for DAY and DATE_RANGE.
+  // Traditional astrology indicators (transitFacts, vargaFacts, dashaFacts) are NOT statistically independent evidence.
+  // hasIndependentCorroboration === undefined is strictly rejected (not treated as acceptable).
   const hasTransits = Array.isArray(transitFacts) && transitFacts.length > 0;
-  const hasVargas = Array.isArray(vargaFacts) && vargaFacts.length > 0;
-  const isCorroborated = hasIndependentCorroboration !== false &&
-    (hasIndependentCorroboration === true || hasTransits || hasVargas || (!transitFacts && !vargaFacts && !dashaFacts));
+  const isCorroborated = hasIndependentCorroboration === true;
 
   // Narrowing based on duration (from Dasha levels)
   if (durationDays <= 30) {
-    resolution = isCorroborated ? RESOLUTION.DATE_RANGE : RESOLUTION.MONTH_RANGE;
+    resolution = RESOLUTION.DATE_RANGE;
   } else if (durationDays <= 65) {
     resolution = RESOLUTION.MONTH_RANGE;
   } else if (durationDays <= 150) {
@@ -42,13 +41,13 @@ export function classifyResolution(windowData) {
   }
 
   // Cross-confirmation narrowing: DAY precision strictly requires narrow window (<= 10 days)
-  // AND active transit concurrence AND independent corroboration
-  if (hasTransits && durationDays <= 10 && hasIndependentCorroboration !== false) {
+  // AND active transit concurrence AND EXPLICIT hasIndependentCorroboration === true.
+  // Traditional astrology indicators (transitFacts, vargaFacts, dashaFacts) are NOT statistically independent evidence.
+  // hasIndependentCorroboration === undefined is strictly rejected (P0-1).
+  if (hasTransits && durationDays <= 10 && hasIndependentCorroboration === true) {
     resolution = RESOLUTION.DAY;
   } else if (hasTransits && (resolution === RESOLUTION.MONTH_RANGE || resolution === RESOLUTION.SEASON)) {
-    if (isCorroborated) {
-      resolution = RESOLUTION.DATE_RANGE;
-    }
+    resolution = RESOLUTION.DATE_RANGE;
   }
 
   // If there are multiple peaks in a larger window (simplified logic)
@@ -62,6 +61,55 @@ export function classifyResolution(windowData) {
   }
 
   return resolution;
+}
+
+/**
+ * Global Empirical Resolution Gate (P0-1 & P2).
+ * Strictly guarantees that astronomical calculation and traditional Jyotisha interpretation
+ * can NEVER be conflated with empirical predictive validity.
+ *
+ * Rules:
+ * - DAY: Only permitted if specific domain has independently validated day-level predictive performance (None currently).
+ * - DATE_RANGE: Only permitted if domain has demonstrated corresponding out-of-sample empirical discrimination.
+ * - MONTH_RANGE: Only permitted empirically if demonstrated by validation data.
+ * - YEAR: Only permitted empirically if demonstrated by appropriate out-of-sample validation.
+ * - MULTI_YEAR_RANGE: Permitted for Marriage under current historical evidence (~4-9y MAE).
+ * - NOT_ESTABLISHED: Permitted for all domains without certified real-world outcome datasets.
+ *
+ * Traditional timing resolution remains labeled TRADITIONAL_RULE_RESOLUTION and never presented as empirical predictive precision.
+ *
+ * @param {string} domain - Domain name
+ * @param {string} requestedResolution - Proposed resolution
+ * @returns {Object} Empirical resolution decision
+ */
+export function applyGlobalEmpiricalResolutionGate(domain, requestedResolution = null) {
+  const normDomain = (domain || '').toUpperCase();
+
+  if (normDomain === 'MARRIAGE') {
+    return {
+      domain: 'MARRIAGE',
+      empiricalPredictiveResolution: RESOLUTION.MULTI_YEAR_RANGE,
+      empiricalStatus: 'EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED',
+      isDayPrecisionPermitted: false,
+      isDateRangePermitted: false,
+      isYearPermitted: false,
+      isMultiYearRangePermitted: true,
+      traditionalRuleResolution: requestedResolution || RESOLUTION.DATE_RANGE,
+      rationale: 'Marriage empirical prediction exhibits out-of-sample error quantiles (q50=±6y, q80=±10y, MAE 6.89y internal, 9.19y external). Empirical predictive resolution is strictly MULTI_YEAR_RANGE.'
+    };
+  }
+
+  return {
+    domain: normDomain,
+    empiricalPredictiveResolution: 'NOT_ESTABLISHED',
+    empiricalStatus: 'TRADITIONAL_RULE_FRAMEWORK_UNVALIDATED',
+    isDayPrecisionPermitted: false,
+    isDateRangePermitted: false,
+    isYearPermitted: false,
+    isMultiYearRangePermitted: false,
+    traditionalRuleResolution: requestedResolution || RESOLUTION.DATE_RANGE,
+    rationale: 'Empirical real-world predictive validity is NOT_ESTABLISHED for this domain. No prospective, certified historical outcome dataset exists.'
+  };
 }
 
 export function isResolutionAtLeast(resolution, minimumResolution) {
