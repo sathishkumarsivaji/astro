@@ -203,39 +203,62 @@ export function synthesizeAnswer({
 
   // CASE 2.5: SYSTEM COMPARISON (LAHIRI VS KP)
   else if (intentResult.intents?.includes("SYSTEM_COMPARISON") || (rawQ.includes("லஹிரி") && rawQ.includes("கே.பி"))) {
-    const kpData = evidence.kpData || {};
-    const kpSubLords = kpData.subLords || {};
-    const tenthSubLord = kpSubLords[10] || kpSubLords["10"] || kpSubLords["tenth"] || (kpData.cusps || []).find(c => c.house === 10)?.subLord || null;
-    const h10 = hMap[10] || {};
-    const tenthLord = h10.lord || h10.lordName || null;
-    const subLordDisplayEn = tenthSubLord || "Not calculated";
-    const subLordDisplayTa = tenthSubLord || "கணக்கிடப்படவில்லை";
-    const lordDisplayEn = tenthLord || "Not calculated";
-    const lordDisplayTa = tenthLord || "கணக்கிடப்படவில்லை";
-    const lahiriVal = evidence.lahiriAyanamsha != null ? `${Number(evidence.lahiriAyanamsha).toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
-    const kpVal = evidence.kpAyanamsha != null ? `${Number(evidence.kpAyanamsha).toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
-    const lahiriValTa = evidence.lahiriAyanamsha != null ? `${Number(evidence.lahiriAyanamsha).toFixed(2)}°` : "கணக்கிடப்படவில்லை";
-    const kpValTa = evidence.kpAyanamsha != null ? `${Number(evidence.kpAyanamsha).toFixed(2)}°` : "கணக்கிடப்படவில்லை";
+    const comp = evidence.systemComparison;
+    if (comp && comp.status === "SUCCESS") {
+      directAnswer = isTamil ? comp.directAnswerTa : comp.directAnswerEn;
+      reasoningChain = isTamil
+        ? `லஹிரி சித்திரபக்ஷ அயனாம்சம் (${comp.ayanamsha.lahiriFormatted}) மற்றும் கே.பி. அயனாம்சம் (${comp.ayanamsha.kpFormatted}) இடையே ${comp.ayanamsha.diffFormatted} வேறுபாடு துல்லியமாக கணக்கிடப்பட்டது. ${comp.hasMaterialDifference ? "கிரகங்கள் பிளாசிடஸ் பாவக கணிதத்தின்படி பாவ சலித இடப்பெயர்ச்சி பெற்றுள்ளன." : "கிரகங்கள் ராசி அல்லது நட்சத்திர எல்லையைக் கடக்கவில்லை (பொருள் சார்ந்த மாற்றம் இல்லை)."}`
+        : `Calculated exact ayanamsha offset of ${comp.ayanamsha.diffFormatted} (${comp.ayanamsha.lahiriFormatted} vs ${comp.ayanamsha.kpFormatted}). ${comp.hasMaterialDifference ? "Planets underwent Bhava Chalit house shifts under Placidus cusps." : "No planets crossed star boundaries; strictly numerical offset."}`;
+      whatCannotBeConcluded = isTamil
+        ? "சிறிய பாகை வித்தியாசத்தை மட்டும் வைத்து ஒரு கணிப்பு முறை மற்றொன்றை விட சிறந்தது என்றோ தவறானது என்றோ முடிவெடுக்க முடியாது. மேலும் முறையான தசா-கோச்சார அல்லது ஆளும் கிரக விதிகளின்றி தன்னிச்சையான காலக்கணிப்பை (உதாரணமாக 18-24 மாதங்கள்) உருவாக்க முடியாது."
+        : "A small numerical angular offset does not render either system universally superior or invalid. Unsubstantiated timing projections (e.g. arbitrary 18-24 month windows) cannot be inferred without operative Dasha-transit or Ruling Planet convergence.";
 
-    if (isTamil) {
-      directAnswer = `லஹிரி (Chitrapaksha) மற்றும் கே.பி. (Krishnamurti Padhdhati) முறைகளுக்கு இடையே உங்கள் ஜாதகத்தில் உள்ள முக்கிய மாற்றங்கள்:\n\n1. அயனாம்சம்: லஹிரி முறை சித்திரபக்ஷ அயனாம்சத்தையும் (${lahiriValTa}), கே.பி. முறை கிருஷ்ணமூர்த்தி அயனாம்சத்தையும் (${kpValTa}) பயன்படுத்துகிறது; இரண்டும் நிரயன (Sidereal) இராசி மண்டலத்தை அடிப்படையாகக் கொண்டவை.\n2. பாவ ஆரம்ப கணிதம்: லஹிரி மரபு கட்டமைப்பில் தேர்ந்தெடுக்கப்பட்ட பாவக முறை (Whole Sign / Equal / Sripathi) பயன்படுத்தப்படுகிறது; கே.பி. முறை பிளாசிடஸ் (Placidus) அரை-விகித சமன்பாட்டைப் பயன்படுத்தி 12 பாவக ஆரம்பங்களை துல்லியமாக கணக்கிடுகிறது. இதனால் சில கிரகங்கள் ராசி சக்கரத்தை விட பாவ சலித சக்கரத்தில் முந்தைய அல்லது பிந்தைய பாவகத்திற்கு மாறக்கூடும்.\n3. பலன் காணும் நெறிமுறை: லஹிரி முறையில் 10-ம் அதிபதி (${lordDisplayTa}) மற்றும் D10 தசாம்ச வர்க்க பலம் முதன்மையாக ஆராயப்படுகிறது; கே.பி. முறையில் 10-ம் பாவ உப அதிபதி (Sub-Lord: ${subLordDisplayTa}) மற்றும் 2, 6, 10, 11-ம் பாவ காரகத்துவங்கள் மூலம் தொழில் பலன்கள் முடிவெடுக்கப்படுகின்றன.\n\nசுருக்கமாக: லஹிரி முறை பாரம்பரிய வர்க்க மற்றும் பார்வைகளுக்கு முக்கியத்துவம் அளிக்கிறது; கே.பி. முறை 249 உப அதிபதிகள் மற்றும் நட்சத்திர காரகத்துவங்களை மட்டுமே முதன்மையாகக் கொள்கிறது.`;
-      reasoningChain = `இரு முறைகளின் கணித வேறுபாடுகள்: (1) அயனாம்சம் (${lahiriValTa} vs ${kpValTa}), (2) சம பாவகம் vs பிளாசிடஸ் முனைய பாகைகள், (3) பராசர அதிபதி (${lordDisplayTa}) vs கே.பி. உப அதிபதி (${subLordDisplayTa}) கோட்பாடு.`;
-      whatCannotBeConcluded = "ஒரு முறை மட்டுமே சரியானது என்றும் மற்றொன்று தவறானது என்றும் கூற முடியாது. லஹிரி முறை பாரம்பரிய வாழ்வியல் மேலோட்டத்திற்கும், கே.பி. முறை நிகழ்வுகளின் கால நிர்ணய நுட்பத்திற்கும் பயன்படுத்தப்படுகின்றன.";
+      astroEvidenceList = [
+        `Lahiri Ayanamsha: ${comp.ayanamsha.lahiriFormatted}`,
+        `KP Ayanamsha: ${comp.ayanamsha.kpFormatted}`,
+        `Ayanamsha Difference: ${comp.ayanamsha.diffFormatted}`,
+        `KP 1st Cusp (Lagna) Sub-Lord: ${comp.ascendantSubLord || "Not calculated"}`,
+        `KP 7th Cusp (Kalatra) Sub-Lord: ${comp.seventhSubLord || "Not calculated"}`,
+        `KP 10th Cusp (Karma) Sub-Lord: ${comp.tenthSubLord || "Not calculated"}`,
+        `Material Difference Status: ${comp.hasMaterialDifference ? "MATERIAL_BOUNDARY_CROSSINGS_DETECTED" : "NO_MATERIAL_DIFFERENCE_IN_LONGITUDES"}`
+      ];
+      relevantSections = ["multiSystemComparison", "technicalAppendix", "blueprint"];
+      evidenceIds = ["AYANAMSHA_LAHIRI_KP", "HOUSE_CUSPS_PLACIDUS", "KP_CUSP_SUB_LORD_10", "KP_CUSP_SUB_LORD_7", "KP_CUSP_SUB_LORD_1", "MATERIAL_DIFFERENCE_CLASSIFIER"];
     } else {
-      directAnswer = `The foundational differences between the Lahiri (Chitrapaksha) and KP (Krishnamurti Padhdhati) systems for your chart are:\n\n1. Ayanamsha: Both systems operate in the Sidereal zodiac. Lahiri applies Chitrapaksha sidereal ayanamsha (${lahiriVal}), whereas KP applies Krishnamurti sidereal ayanamsha (${kpVal}).\n2. House Cuspal System: Lahiri/Parashari analysis applies the configured classical house division (Whole Sign / Equal / Sripathi), while KP strictly applies Placidus semi-arc cusp divisions. Consequently, planets near house boundaries may shift houses in the KP Bhava Chalit chart relative to the Lahiri Rashi chart.\n3. Predictive Methodology: In Lahiri, career is judged via the 10th house lord (${lordDisplayEn}), aspects, and D10 Dashamsha divisional chart. In KP, events depend strictly on the 10th cusp Sub-Lord (${subLordDisplayEn}) and its star lord signifying the 2-6-10-11 houses.\n\nSummary: Lahiri emphasizes classical Vargas, Shadbala, and mutual aspects; KP relies entirely on the 249 Cuspal Sub-Lords and 4-tier house significators.`;
-      reasoningChain = `Synthesized Ayanamsha offset (${lahiriVal} vs ${kpVal}), Placidus semi-arc boundary calculation, and KP 10th cusp sub-lord (${subLordDisplayEn}) against Lahiri 10th lord (${lordDisplayEn}).`;
-      whatCannotBeConcluded = "Neither system is objectively 'superior'; Lahiri provides qualitative archetypal depth via Vargas, while KP offers event-level binary timing via sub-lords.";
-    }
+      const kpData = evidence.kpData || {};
+      const kpSubLords = kpData.subLords || {};
+      const tenthSubLord = kpSubLords[10] || kpSubLords["10"] || kpSubLords["tenth"] || (kpData.cusps || []).find(c => c.house === 10)?.subLord || null;
+      const h10 = hMap[10] || {};
+      const tenthLord = h10.lord || h10.lordName || null;
+      const subLordDisplayEn = tenthSubLord || "Not calculated";
+      const subLordDisplayTa = tenthSubLord || "கணக்கிடப்படவில்லை";
+      const lordDisplayEn = tenthLord || "Not calculated";
+      const lordDisplayTa = tenthLord || "கணக்கிடப்படவில்லை";
+      const lahiriVal = evidence.lahiriAyanamsha != null ? `${Number(evidence.lahiriAyanamsha).toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
+      const kpVal = evidence.kpAyanamsha != null ? `${Number(evidence.kpAyanamsha).toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
+      const lahiriValTa = evidence.lahiriAyanamsha != null ? `${Number(evidence.lahiriAyanamsha).toFixed(2)}°` : "கணக்கிடப்படவில்லை";
+      const kpValTa = evidence.kpAyanamsha != null ? `${Number(evidence.kpAyanamsha).toFixed(2)}°` : "கணக்கிடப்படவில்லை";
 
-    astroEvidenceList = [
-      `Lahiri Ayanamsha: Chitrapaksha (${lahiriVal})`,
-      `KP Ayanamsha: Krishnamurti (${kpVal})`,
-      `KP 10th Cusp Sub-Lord: ${subLordDisplayEn}`,
-      `Lahiri 10th House Lord: ${lordDisplayEn}`,
-      `House System: Equal/Whole Sign (Lahiri) vs Placidus Semi-Arc (KP)`
-    ];
-    relevantSections = ["multiSystemComparison", "technicalAppendix", "blueprint"];
-    evidenceIds = ["AYANAMSHA_LAHIRI_KP", "HOUSE_CUSPS_PLACIDUS", "KP_CUSP_SUB_LORD_10", "HOUSE_FACT_H10"];
+      if (isTamil) {
+        directAnswer = `லஹிரி (Chitrapaksha) மற்றும் கே.பி. (Krishnamurti Padhdhati) முறைகளுக்கு இடையே உங்கள் ஜாதகத்தில் உள்ள முக்கிய மாற்றங்கள்:\n\n1. அயனாம்சம்: லஹிரி முறை சித்திரபக்ஷ அயனாம்சத்தையும் (${lahiriValTa}), கே.பி. முறை கிருஷ்ணமூர்த்தி அயனாம்சத்தையும் (${kpValTa}) பயன்படுத்துகிறது; இரண்டும் நிரயன (Sidereal) இராசி மண்டலத்தை அடிப்படையாகக் கொண்டவை.\n2. பாவ ஆரம்ப கணிதம்: லஹிரி மரபு கட்டமைப்பில் தேர்ந்தெடுக்கப்பட்ட பாவக முறை (Whole Sign / Equal / Sripathi) பயன்படுத்தப்படுகிறது; கே.பி. முறை பிளாசிடஸ் (Placidus) அரை-விகித சமன்பாட்டைப் பயன்படுத்தி 12 பாவக ஆரம்பங்களை துல்லியமாக கணக்கிடுகிறது.\n3. பலன் காணும் நெறிமுறை: லஹிரி முறையில் 10-ம் அதிபதி (${lordDisplayTa}) மற்றும் D10 தசாம்ச வர்க்க பலம் முதன்மையாக ஆராயப்படுகிறது; கே.பி. முறையில் 10-ம் பாவ உப அதிபதி (Sub-Lord: ${subLordDisplayTa}) மற்றும் 2, 6, 10, 11-ம் பாவ காரகத்துவங்கள் மூலம் தொழில் பலன்கள் முடிவெடுக்கப்படுகின்றன.\n\nசுருக்கமாக: லஹிரி முறை பாரம்பரிய வர்க்க மற்றும் பார்வைகளுக்கு முக்கியத்துவம் அளிக்கிறது; கே.பி. முறை 249 உப அதிபதிகள் மற்றும் நட்சத்திர காரகத்துவங்களை மட்டுமே முதன்மையாகக் கொள்கிறது.`;
+        reasoningChain = `இரு முறைகளின் கணித வேறுபாடுகள்: (1) அயனாம்சம் (${lahiriValTa} vs ${kpValTa}), (2) சம பாவகம் vs பிளாசிடஸ் முனைய பாகைகள், (3) பராசர அதிபதி (${lordDisplayTa}) vs கே.பி. உப அதிபதி (${subLordDisplayTa}) கோட்பாடு.`;
+        whatCannotBeConcluded = "ஒரு முறை மட்டுமே சரியானது என்றும் மற்றொன்று தவறானது என்றும் கூற முடியாது. லஹிரி முறை பாரம்பரிய வாழ்வியல் மேலோட்டத்திற்கும், கே.பி. முறை நிகழ்வுகளின் கால நிர்ணய நுட்பத்திற்கும் பயன்படுத்தப்படுகின்றன.";
+      } else {
+        directAnswer = `The foundational differences between the Lahiri (Chitrapaksha) and KP (Krishnamurti Padhdhati) systems for your chart are:\n\n1. Ayanamsha: Both systems operate in the Sidereal zodiac. Lahiri applies Chitrapaksha sidereal ayanamsha (${lahiriVal}), whereas KP applies Krishnamurti sidereal ayanamsha (${kpVal}).\n2. House Cuspal System: Lahiri/Parashari analysis applies configured classical house division (Whole Sign / Equal / Sripathi), while KP strictly applies Placidus semi-arc cusp divisions.\n3. Predictive Methodology: In Lahiri, career is judged via the 10th house lord (${lordDisplayEn}), aspects, and D10 Dashamsha divisional chart. In KP, events depend strictly on the 10th cusp Sub-Lord (${subLordDisplayEn}) and its star lord signifying the 2-6-10-11 houses.\n\nSummary: Lahiri emphasizes classical Vargas, Shadbala, and mutual aspects; KP relies entirely on the 249 Cuspal Sub-Lords and 4-tier house significators.`;
+        reasoningChain = `Synthesized Ayanamsha offset (${lahiriVal} vs ${kpVal}), Placidus semi-arc boundary calculation, and KP 10th cusp sub-lord (${subLordDisplayEn}) against Lahiri 10th lord (${lordDisplayEn}).`;
+        whatCannotBeConcluded = "Neither system is objectively 'superior'; Lahiri provides qualitative archetypal depth via Vargas, while KP offers event-level binary timing via sub-lords.";
+      }
+
+      astroEvidenceList = [
+        `Lahiri Ayanamsha: Chitrapaksha (${lahiriVal})`,
+        `KP Ayanamsha: Krishnamurti (${kpVal})`,
+        `KP 10th Cusp Sub-Lord: ${subLordDisplayEn}`,
+        `Lahiri 10th House Lord: ${lordDisplayEn}`,
+        `House System: Equal/Whole Sign (Lahiri) vs Placidus Semi-Arc (KP)`
+      ];
+      relevantSections = ["multiSystemComparison", "technicalAppendix", "blueprint"];
+      evidenceIds = ["AYANAMSHA_LAHIRI_KP", "HOUSE_CUSPS_PLACIDUS", "KP_CUSP_SUB_LORD_10", "HOUSE_FACT_H10"];
+    }
   }
 
   // CASE 2.6: TOP REPORT HEADINGS (DYNAMIC DOMAIN PROMINENCE)

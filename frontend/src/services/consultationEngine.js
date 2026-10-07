@@ -29,6 +29,7 @@ import {
   cleanEnglishParentheses
 } from "./tamilAstrologyUtils.js";
 import { calculatePersonalizedRemedies } from "./astroEngine.js";
+import { compareAstrologySystems } from "./questionAnswer/comparisonEngine.js";
 
 /**
  * Canonical accessor helpers for chart Lagna & Moon signs across differing schema representations
@@ -474,6 +475,29 @@ export function classifyConsultationIntent(questionText = "", conversationHistor
   }
   if (/\b(my\s+parents|father|mother|family|பெற்றோர்|அம்மா|அப்பா)\b/i.test(qLower)) {
     targetSubject = "parents";
+  }
+
+  // High-Priority Semantic Mapping: System Comparison (Lahiri vs KP)
+  const isSysComparison =
+    /(lahiri|chitrapaksha).*(kp|krishnamurti)|(kp|krishnamurti).*(lahiri|chitrapaksha)/i.test(qLower) ||
+    /difference.*between.*(lahiri|kp|raman|tropical)|compare.*(lahiri|kp|raman|tropical)|(changes?|switch).*(between|from).*(lahiri|kp)|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(qLower) ||
+    /(லஹிரி|சித்திரபக்ஷ).*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி)|(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*(லஹிரி|சித்திரபக்ஷ)/i.test(qLower) ||
+    /((லஹிரி|சித்திரபக்ஷ).*மற்றும்.*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி))|((கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*மற்றும்.*(லஹிரி|சித்திரபக்ஷ))/i.test(qLower) ||
+    /(லஹிரி|கே\.?பி|கேபி).*முறைகளுக்கு\s*இடையே.*(மாற்றங்கள்|வேறுபாடு|ஒப்பீடு)/i.test(qLower) ||
+    /முறை.*ஒப்பீடு|வேறுபாடு.*(லஹிரி|கே\.?பி)|system.*comparison|between\s+(lahiri|kp)\s+and\s+(lahiri|kp)/i.test(qLower) ||
+    ((/லஹிரி|சித்திரபக்ஷ/i.test(qLower) || /\blahiri\b/i.test(qLower)) && (/கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி/i.test(qLower) || /\bkp\b/i.test(qLower)));
+
+  if (isSysComparison) {
+    return {
+      domain: "SYSTEM_COMPARISON",
+      questionType: "SYSTEM_COMPARISON",
+      subdomain: "MULTI_SYSTEM",
+      targetEntity: "system",
+      targetSubject: "systems",
+      rawQuestion: rawClean,
+      resolvedText: "Astrological System Comparison (Lahiri vs KP)",
+      confidence: 0.99
+    };
   }
 
   // 2. High-Priority Semantic Mapping: Education & Research
@@ -1734,6 +1758,12 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   const distEval = evaluateSpouseGeographicDistance(chartData);
   const dirEval = evaluateSpouseDirection(chartData);
   const resEval = evaluateJointVsSeparateResidence(chartData);
+  const isSysComparison = intent.domain === "SYSTEM_COMPARISON" || intent.questionType === "SYSTEM_COMPARISON";
+  const sysComparison = isSysComparison ? compareAstrologySystems({
+    chart: chartData,
+    multiSystemBundle: options.multiSystemBundle,
+    isTamil
+  }) : null;
 
   // Derive dynamic timing windows from Mahadasha/Antardasha
   const dashaTable = Array.isArray(chartData.dashaTable) ? chartData.dashaTable : [];
@@ -1759,7 +1789,10 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let directAnswerEn = "";
   let directAnswerTa = "";
 
-  if (intent.questionType === "JOINT_VS_SEPARATE") {
+  if (sysComparison && sysComparison.status === "SUCCESS") {
+    directAnswerEn = sysComparison.directAnswerEn;
+    directAnswerTa = sysComparison.directAnswerTa;
+  } else if (intent.questionType === "JOINT_VS_SEPARATE") {
     directAnswerEn = resEval.synthesisEn;
     directAnswerTa = resEval.synthesisTa;
   } else if (intent.questionType === "SPOUSE_FAMILY_WEALTH") {
@@ -1827,8 +1860,16 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswerEn = `6th Bhava (Shatru/Pratiyogita) configurations along with Mars placement during the ${currentDasha} period are traditionally associated with dispute management and contestation themes; no court verdict or legal outcome is inferred.`;
     directAnswerTa = `உங்கள் 6-ம் பாவக அமைப்பும் செவ்வாயின் நிலையும் நடப்பு ${currentDashaTa} தசா காலத்தில் பாரம்பரியமாக வழக்கு மற்றும் எதிர்ப்பு விவகாரங்களை கையாளும் சூழல்களுடன் தொடர்புடையவை; எவ்வித நீதிமன்றத் தீர்ப்பும் உறுதிப்படுத்தப்படவில்லை.`;
   } else {
-    directAnswerEn = `Your chart demonstrates strong astrological activation for ${intent.ontologyEntry?.title || "this life milestone"} during the current ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle.`;
-    directAnswerTa = `உங்கள் ஜாதகத்தில் தற்போது நடைபெறும் ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலகட்டத்தில் இதற்கான சாதகமான யோக காலங்கள் தீவிரமாக செயல்படுகின்றன.`;
+    const isTimingQuery = /(when|timing|time|period|year|month|date|age|எப்போது|காலம்|எந்த\s*வயது)/i.test(questionText);
+    if (isTimingQuery && currentDasha) {
+      directAnswerEn = `Your chart demonstrates astrological timing windows for ${intent.ontologyEntry?.title || "this life milestone"} during the current ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle.`;
+      directAnswerTa = `உங்கள் ஜாதகத்தில் தற்போது நடைபெறும் ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலகட்டத்தில் இதற்கான காலக்கணிப்பு சுப அமைப்புகள் செயல்படுகின்றன.`;
+    } else {
+      const topicLabelEn = intent.ontologyEntry?.title || "this inquiry";
+      const topicLabelTa = intent.ontologyEntry?.titleTa || "இந்த ஆய்வு";
+      directAnswerEn = `Astrological examination of ${topicLabelEn} reveals that planetary influences align across the key relevant houses. Detailed analysis of natal promise and planetary dignity provides the core foundation.`;
+      directAnswerTa = `உங்கள் ஜாதகத்தில் ${topicLabelTa} குறித்த ஆய்வில், சம்பந்தப்பட்ட பாவகங்களின் கிரக அமைப்புகள் மற்றும் அவற்றின் சுப/அசுப நிலைகள் முதன்மையாகப் பரிசீலிக்கப்படுகின்றன. ஜாதக அடிப்படை பலமே இதற்கான முக்கிய வழிகாட்டியாகும்.`;
+    }
   }
 
   sections.push({
@@ -1842,7 +1883,10 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   // Section 3: Executive Summary
   let summaryEn = "";
   let summaryTa = "";
-  if (intent.domain === "HEALTH") {
+  if (sysComparison && sysComparison.status === "SUCCESS") {
+    summaryEn = sysComparison.summaryEn;
+    summaryTa = sysComparison.summaryTa;
+  } else if (intent.domain === "HEALTH") {
     summaryEn = "Synthesized evaluation across Lagna (Deha Bala vitality), 6th Bhava (traditional 6th-house health symbolism), Sun (vitality karaka), Moon (mental calm), and D30 Trimsamsha supports traditional constitutional/vitality correspondence.";
     summaryTa = "லக்ன பலம் (தேக பலம்), 6-ம் பாவகம் (பாரம்பரிய உடலியல் சமநிலை), மற்றும் சூரியன் (உயிர் சக்தி), சந்திரன் (மன அமைதி) பலங்கள் இணைந்து பாரம்பரிய தேக நல்வாழ்வுக் குறியீடுகளை வெளிப்படுத்துகின்றன.";
   } else if (intent.domain === "CAREER") {
@@ -1895,14 +1939,21 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     ? natalPromise.positiveIndicators[0]
     : "Key planetary configurations provide constructive foundational promise.";
 
-  let natalIndicationEn = ascSignName && moonSignName
-    ? `Ascendant: ${ascSignName} | Moon Sign: ${moonSignName}. ${primaryNatalIndicator}`
-    : `Primary Natal Indication: ${primaryNatalIndicator}`;
-  let natalIndicationTa = ascSignName && moonSignName
-    ? `ஜன்ம லக்னம்: ${toTamilRasi(ascSignName)} | சந்திர ராசி: ${toTamilRasi(moonSignName)}. `
-    : `முக்கிய ஜாதக அமைப்பு: `;
+  let natalIndicationEn = "";
+  let natalIndicationTa = "";
 
-  if (intent.domain === "HEALTH") {
+  if (sysComparison && sysComparison.status === "SUCCESS") {
+    natalIndicationEn = "Astronomical calculation across Lahiri Chitrapaksha and KP New Ayanamsha frameworks using identical birth coordinates.";
+    natalIndicationTa = "ஒரே பிறந்த நேரம் மற்றும் அட்சரேகை/தீர்க்கரேகைகளின் அடிப்படையில் லஹிரி சித்திரபக்ஷ மற்றும் கே.பி. புதிய அயனாம்ச வழியிலான ஒப்பீட்டுக் கணிதம்.";
+  } else {
+    natalIndicationEn = ascSignName && moonSignName
+      ? `Ascendant: ${ascSignName} | Moon Sign: ${moonSignName}. ${primaryNatalIndicator}`
+      : `Primary Natal Indication: ${primaryNatalIndicator}`;
+    natalIndicationTa = ascSignName && moonSignName
+      ? `ஜன்ம லக்னம்: ${toTamilRasi(ascSignName)} | சந்திர ராசி: ${toTamilRasi(moonSignName)}. `
+      : `முக்கிய ஜாதக அமைப்பு: `;
+
+    if (intent.domain === "HEALTH") {
     natalIndicationTa += `லக்னாதிபதி மற்றும் 6-ம் பாவக பலங்கள் இயல்பான உடல் வலிமையையும் நோயெதிர்ப்பு ஆற்றலையும் அளிக்கின்றன.`;
   } else if (intent.domain === "CAREER") {
     natalIndicationTa += `10-ம் மற்றும் 11-ம் பாவக சுப அமைப்புகள் நிலையான தொழில் மேன்மையையும் சுயமுயற்சி வெற்றியையும் அளிக்கின்றன.`;
@@ -1925,6 +1976,7 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   } else {
     natalIndicationTa += `லக்ன, கேந்திர மற்றும் திரிகோண பாவகங்கள் சாதகமான ஜாதக வாக்குறுதியை வெளிப்படுத்துகின்றன.`;
   }
+}
 
   sections.push({
     sectionNumber: 4,
@@ -1938,7 +1990,10 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let reasoningEn = "";
   let reasoningTa = "";
 
-  if (intent.domain === "HEALTH") {
+  if (sysComparison && sysComparison.status === "SUCCESS") {
+    reasoningEn = "Lahiri (Chitrapaksha) uses the fixed star Spica at 180° tropical longitude as the anchor, with Whole Sign / Equal house division. Krishnamurti Paddhati (KP) uses the New KP Ayanamsha coupled with Placidus semi-arc cusp geometry and divides each constellation into 249 unequal sub-divisions governed by proportional Vimshottari Dasha spans.";
+    reasoningTa = "லஹிரி முறை சித்திரா நட்சத்திரத்தை (180° அயனாம்ச ஆரம்ப புள்ளி) மையமாகக் கொண்டு சம பாவக முறையில் இயங்குகிறது. கே.பி. முறை புதிய கே.பி. அயனாம்சத்தை மற்றும் பிளாசிடஸ் பாவக ஆரம்பங்களை அடிப்படையாகக் கொண்டு, ஒவ்வொரு நட்சத்திரத்தையும் விம்சோத்தரி தசா விகிதப்படி 249 உப-பிரிவுகளாகப் பிரிக்கிறது.";
+  } else if (intent.domain === "HEALTH") {
     reasoningEn = "1st Bhava lord dignity and benefic aspects align with traditional physical vitality symbolism. 6th Bhava configurations provide traditional health symbolism and vitality preservation (Roga Nashana), while 8th Bhava indicators correspond to endurance and longevity.";
     reasoningTa = "சுப கிரகங்களின் லக்ன பார்வை மற்றும் 6-ம் பாவகத்தின் மீதுள்ள தாக்கம் பாரம்பரிய உடலியல் சமநிலையை சுட்டிக்காட்டுகிறது. 8-ம் பாவக ஆயுள் பலமும் சனியின் நன்னிலையும் பாரம்பரிய முறைப்படி நீண்ட ஆயுளையும் மீளும் ஆற்றலையும் குறிக்கின்றன (இது மருத்துவ முடிவல்ல; பாரம்பரிய ஜோதிட வழிகாட்டல் மட்டுமே).";
   } else if (intent.domain === "CAREER") {
@@ -1985,14 +2040,22 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   });
 
   // Section 6: Timing Windows
+  let timingContentEn = "";
+  let timingContentTa = "";
+  if (sysComparison && sysComparison.status === "SUCCESS") {
+    timingContentEn = "Timing systems diverge fundamentally: Lahiri relies on classical Vimshottari Mahadasha-Antardasha cycles confirmed by Gochar transits crossing natal sign points. KP relies on the Cuspal Sub-Lord's significator activation combined with the Ruling Planets (Lagna Lord, Moon Star Lord, Day Lord) operative at the moment of query.";
+    timingContentTa = "காலக்கணிப்பு முறைமையில் இரு அமைப்புகளும் வேறுபடுகின்றன: லஹிரி முறையில் விம்சோத்தரி தசா-புக்தி மற்றும் கோச்சாரப் பெயர்ச்சிகள் பாரம்பரியமாக ஆராயப்படுகின்றன; கே.பி. முறையில் உப-அதிபதி குறிக்கும் பாவக காரகத்துவங்கள் (Significators) மற்றும் ஆளும் கிரகங்கள் (Ruling Planets) கொண்டு நிகழ்வுகளின் காலக்கோடு துல்லியப்படுத்தப்படுகிறது.";
+  } else {
+    timingContentEn = `Primary Activation Window: Active under ${currentDasha || "Operating"} Mahadasha — ${currentAntar || "Operating"} Antardasha. Secondary supportive window aligns with the subsequent Antardasha transition and transit triggers.`;
+    timingContentTa = `முதன்மையான சுப காலம்: ${currentDashaTa || "நடப்பு"} தசை - ${currentAntarTa || "நடப்பு"} புக்தி காலகட்டம். மாற்றுச் சுப காலம் அடுத்த புக்தி மாற்றம் மற்றும் கோச்சார சுப சேர்க்கை மூலம் அமைகிறது.`;
+  }
+
   sections.push({
     sectionNumber: 6,
     titleEn: "Timing Windows & Planetary Periods",
     titleTa: "காலக்கணிப்பு மற்றும் திசா புக்தி வரம்புகள்",
     layer: CERTAINTY_LAYERS.LAYER_D.id,
-    content: isTamil
-      ? `முதன்மையான சுப காலம்: ${currentDashaTa} தசை - ${currentAntarTa} புக்தி காலகட்டம். மாற்றுச் சுப காலம் அடுத்த 18–24 மாதங்களுக்குள் அமைகிறது.`
-      : `Primary Activation Window: Active under ${currentDasha} Mahadasha — ${currentAntar} Antardasha. Secondary supportive window extends across the subsequent 18–24 months.`
+    content: isTamil ? timingContentTa : timingContentEn
   });
 
   // Section 7: Supporting Vargas
@@ -2319,8 +2382,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswer: isTamil ? directAnswerTa : directAnswerEn,
     natalPromise,
     timingWindows: {
-      primary: `${currentDasha} - ${currentAntar}`,
-      secondary: "Subsequent 18–24 Months"
+      primary: (sysComparison && sysComparison.status === "SUCCESS") ? "Multi-System Epistemic Model" : `${currentDasha || "Operating"} - ${currentAntar || "Operating"}`,
+      secondary: (sysComparison && sysComparison.status === "SUCCESS") ? "KP Cuspal Sub-Lord & Ruling Planets" : "Subsequent Antardasha Transition & Transit Alignment Window"
     },
     specializedEvals: {
       wealth: wealthEval,

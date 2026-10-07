@@ -26,6 +26,7 @@ import {
   buildRuleId
 } from "./evidenceGraph.js";
 import { computeTimingWindows } from "./timingEngine.js";
+import { compareAstrologySystems } from "./comparisonEngine.js";
 
 const SIGN_DIRECTIONS = {
   Aries: "EAST", Leo: "EAST", Sagittarius: "EAST",
@@ -416,11 +417,34 @@ export function retrieveEvidence(plan, context) {
     };
   }
 
-  // 10. KP and Multi-System Data
+  // 10. KP and Multi-System Data (Dedicated Material Difference Comparison)
+  let systemComparison = null;
+  if (plan.requiredMultiSystem || plan.specificFactors?.includes("LAHIRI_VS_KP_AYANAMSHA") || plan.primaryIntent === "SYSTEM_COMPARISON") {
+    systemComparison = compareAstrologySystems({
+      chart,
+      multiSystemBundle: context.multiSystemBundle,
+      isTamil: context.lang === "ta"
+    });
+    if (systemComparison.status === "SUCCESS") {
+      const sysFactId = "SYSTEM_COMPARISON_LAHIRI_KP";
+      calculatedFacts.push({
+        id: sysFactId,
+        factor: "System_Comparison_Lahiri_KP",
+        value: systemComparison
+      });
+      evidenceGraph.addNode({
+        id: sysFactId,
+        category: EVIDENCE_CATEGORIES.CHART_FACT,
+        label: `Lahiri vs KP Ayanamsha: ${systemComparison.ayanamsha.diffFormatted}`,
+        value: systemComparison
+      });
+    }
+  }
+
   const kpData = getKPData(context);
   const bundleSystems = context.multiSystemBundle?.systems || {};
-  const lahiriAyanVal = bundleSystems.lahiri?.ayanamshaValue ?? bundleSystems.lahiri?.ayanamsa ?? (context.system?.id === "lahiri" ? (context.chart?.ayanamshaValue ?? context.chart?.ayanamsa ?? null) : null);
-  const kpAyanVal = bundleSystems.kp?.ayanamshaValue ?? bundleSystems.kp?.ayanamsa ?? bundleSystems.kp?.system?.ayanamshaValue ?? (context.system?.id === "kp" ? (context.chart?.ayanamshaValue ?? context.chart?.ayanamsa ?? null) : null);
+  const lahiriAyanVal = systemComparison?.ayanamsha?.lahiri ?? bundleSystems.lahiri?.ayanamshaValue ?? bundleSystems.lahiri?.ayanamsa ?? (context.system?.id === "lahiri" ? (context.chart?.ayanamshaValue ?? context.chart?.ayanamsa ?? null) : null);
+  const kpAyanVal = systemComparison?.ayanamsha?.kp ?? bundleSystems.kp?.ayanamshaValue ?? bundleSystems.kp?.ayanamsa ?? bundleSystems.kp?.system?.ayanamshaValue ?? (context.system?.id === "kp" ? (context.chart?.ayanamshaValue ?? context.chart?.ayanamsa ?? null) : null);
 
   // 11. Traditional Rules Association (Fact / Interpretation Separation)
   if (plan.primaryDomain === "marriage") {
@@ -444,7 +468,8 @@ export function retrieveEvidence(plan, context) {
   // 12. Relevant Report Sections
   const reportSections = [];
   const domain = plan.primaryDomain;
-  if (domain === "career" || domain === "job" || domain === "business") reportSections.push("career", "vocation");
+  if (plan.primaryIntent === "SYSTEM_COMPARISON") reportSections.push("multiSystemComparison", "technicalAppendix", "blueprint");
+  else if (domain === "career" || domain === "job" || domain === "business") reportSections.push("career", "vocation");
   else if (domain === "marriage") reportSections.push("relationships", "marriage");
   else if (domain === "property" || domain === "vehicle") reportSections.push("property", "assets");
   else if (domain === "finance") reportSections.push("finance", "wealth");
@@ -480,6 +505,7 @@ export function retrieveEvidence(plan, context) {
     vargaMissing,
     dashaInteraction,
     kpData,
+    systemComparison,
     lahiriAyanamsha: lahiriAyanVal,
     kpAyanamsha: kpAyanVal,
     reportSections,

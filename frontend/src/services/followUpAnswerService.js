@@ -33,6 +33,7 @@ import {
   formatTamilDegree,
   cleanEnglishParentheses
 } from "./tamilAstrologyUtils.js";
+import { compareAstrologySystems } from "./questionAnswer/comparisonEngine.js";
 
 /**
  * Unified helper to retrieve D9 Navamsha data from context
@@ -891,10 +892,43 @@ function generateDeterministicAnswer(questionText, context, route) {
   );
 
   const isReportQuery = /in\s+my\s+report|my\s+report\s+indicate|from\s+my\s+report|show\s+my\s+report|அறிக்கையில்/i.test(cleanQ);
-  const isSystemComparison = route.type === "SYSTEM_COMPARISON" || /compare|difference\s+between|versus|vs\.?|வேறுபாடு/i.test(cleanQ);
+  const isSystemComparison =
+    route.type === "SYSTEM_COMPARISON" ||
+    /(lahiri|chitrapaksha).*(kp|krishnamurti)|(kp|krishnamurti).*(lahiri|chitrapaksha)/i.test(cleanQ) ||
+    /difference.*between.*(lahiri|kp|raman|tropical)|compare.*(lahiri|kp|raman|tropical)|(changes?|switch).*(between|from).*(lahiri|kp)|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(cleanQ) ||
+    /(லஹிரி|சித்திரபக்ஷ).*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி)|(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*(லஹிரி|சித்திரபக்ஷ)/i.test(cleanQ) ||
+    /((லஹிரி|சித்திரபக்ஷ).*மற்றும்.*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி))|((கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*மற்றும்.*(லஹிரி|சித்திரபக்ஷ))/i.test(cleanQ) ||
+    /(லஹிரி|கே\.?பி|கேபி).*முறைகளுக்கு\s*இடையே.*(மாற்றங்கள்|வேறுபாடு|ஒப்பீடு)/i.test(cleanQ) ||
+    /முறை.*ஒப்பீடு|வேறுபாடு.*(லஹிரி|கே\.?பி)|system.*comparison|between\s+(lahiri|kp)\s+and\s+(lahiri|kp)/i.test(cleanQ) ||
+    ((/லஹிரி|சித்திரபக்ஷ/i.test(cleanQ) || /\blahiri\b/i.test(cleanQ)) && (/கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி/i.test(cleanQ) || /\bkp\b/i.test(cleanQ)));
+
   const isTopHeadings = route.type === "TOP_HEADINGS" || /top\s+(?:three|3)?\s*(?:report\s+)?(?:headings?|sections?|topics?|chapters?)|three\s+(?:main\s+|key\s+)?(?:headings?|sections?|topics?)|முக்கிய\s*(?:3|மூன்று)?\s*தலைப்புகள்?/i.test(cleanQ);
 
   if (isSystemComparison) {
+    const comp = compareAstrologySystems({
+      chart: context.chart,
+      multiSystemBundle: context.multiSystemBundle,
+      isTamil
+    });
+
+    if (comp && comp.status === "SUCCESS") {
+      body = isTamil ? comp.directAnswerTa : comp.directAnswerEn;
+      return {
+        answer: formatWithDisclaimers(body, ["multiSystemComparison", "technicalAppendix"]),
+        system: sysId,
+        relevantSections: ["multiSystemComparison", "technicalAppendix"],
+        evidenceIds: ["AYANAMSHA_LAHIRI_KP", "HOUSE_CUSPS_PLACIDUS", "KP_CUSP_SUB_LORD_10", "KP_CUSP_SUB_LORD_7", "KP_CUSP_SUB_LORD_1", "MATERIAL_DIFFERENCE_CLASSIFIER"],
+        dataUsed: [
+          `Lahiri Ayanamsha: ${comp.ayanamsha.lahiriFormatted}`,
+          `KP Ayanamsha: ${comp.ayanamsha.kpFormatted}`,
+          `Ayanamsha Difference: ${comp.ayanamsha.diffFormatted}`,
+          `KP 10th Sub-Lord: ${comp.tenthSubLord || "Not calculated"}`
+        ],
+        status: "REPORT_SUPPORTED",
+        limitations: []
+      };
+    }
+
     const kpData = getKPData(context);
     const kpSubLords = kpData.subLords || {};
     const tenthSubLord = kpSubLords.cusp_10 || kpSubLords[10] || kpSubLords["10"] || kpSubLords["tenth"] || (kpData.cusps || []).find(c => c.house === 10)?.subLord || null;
@@ -1780,7 +1814,11 @@ export async function answerFollowUpQuestion({
   const rawQ = typeof question === "string" ? question : (question.text || "");
   const route = routeFollowUpQuestion(rawQ, context, conversationHistory);
 
-  // 1. If Deterministic Factual or Unsupported System or Ambiguous, return instantly!
+  // 1. If Deterministic Factual or Unsupported System or Ambiguous or System Comparison, return instantly!
+  if (route.type === "SYSTEM_COMPARISON") {
+    return generateDeterministicAnswer(route.resolvedText || rawQ, context, route);
+  }
+
   if (route.type === "FACTUAL" || route.type === "UNSUPPORTED_SYSTEM" || route.type === "AMBIGUOUS" || route.type === "INSUFFICIENT_CONTEXT") {
     return {
       answer: route.answer || route.clarification || "Insufficient report data.",

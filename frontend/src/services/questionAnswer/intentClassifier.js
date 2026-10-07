@@ -163,7 +163,8 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.CAUTION);
   }
 
-  if (/milestone|next\s*\d+\s*years|life\s*stages|அடுத்த\s*\d+\s*(?:வருட|ஆண்டு)|முக்கியமான\s*மாற்றங்கள்|மைல்கல்|திருப்புமுனை/i.test(text)) {
+  const isSystemMentioned = /lahiri|chitrapaksha|raman|tropical|\bkp\b|krishnamurti|லஹிரி|சித்திரபக்ஷ|கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி/i.test(text);
+  if (!isSystemMentioned && (/milestone|next\s*\d+\s*years|life\s*stages|அடுத்த\s*\d+\s*(?:வருட|ஆண்டு)|வாழ்வில்\s*முக்கியமான\s*மாற்றங்கள்|மைல்கல்|திருப்புமுனை/i.test(text))) {
     detectedIntents.add(QUESTION_INTENTS.MAJOR_MILESTONE);
   }
 
@@ -196,9 +197,17 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.COMPARISON);
   }
 
-  // System Comparison (Lahiri vs KP)
-  if (/lahiri.*kp|kp.*lahiri|லஹிரி.*கே\.?பி|கே\.?பி.*லஹிரி|முறை.*ஒப்பீடு|வேறுபாடு.*(லஹிரி|கே\.?பி)|system.*comparison|difference.*between.*(lahiri|kp)/i.test(text) ||
-      (/லஹிரி/i.test(text) && /கே\.?பி/i.test(text))) {
+  // System Comparison (Lahiri vs KP vs other systems)
+  const isSystemComparisonDetected =
+    /(lahiri|chitrapaksha).*(kp|krishnamurti)|(kp|krishnamurti).*(lahiri|chitrapaksha)/i.test(text) ||
+    /difference.*between.*(lahiri|kp|raman|tropical)|compare.*(lahiri|kp|raman|tropical)|(changes?|switch).*(between|from).*(lahiri|kp)/i.test(text) ||
+    /(லஹிரி|சித்திரபக்ஷ).*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி)|(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*(லஹிரி|சித்திரபக்ஷ)/i.test(text) ||
+    /((லஹிரி|சித்திரபக்ஷ).*மற்றும்.*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி))|((கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*மற்றும்.*(லஹிரி|சித்திரபக்ஷ))/i.test(text) ||
+    /(லஹிரி|கே\.?பி|கேபி).*முறைகளுக்கு\s*இடையே.*(மாற்றங்கள்|வேறுபாடு|ஒப்பீடு)/i.test(text) ||
+    /முறை.*ஒப்பீடு|வேறுபாடு.*(லஹிரி|கே\.?பி)|system.*comparison|between\s+(lahiri|kp)\s+and\s+(lahiri|kp)/i.test(text) ||
+    ((/லஹிரி|சித்திரபக்ஷ/i.test(text) || /\blahiri\b/i.test(text)) && (/கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி/i.test(text) || /\bkp\b/i.test(text)));
+
+  if (isSystemComparisonDetected) {
     detectedIntents.add(QUESTION_INTENTS.SYSTEM_COMPARISON);
     detectedIntents.add(QUESTION_INTENTS.COMPARISON);
   }

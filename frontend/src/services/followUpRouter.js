@@ -358,7 +358,16 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   }
 
   // 4. System Comparison Router
-  if (/compare|difference\s+between|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(qLower)) {
+  const isSysCompQuery =
+    /(lahiri|chitrapaksha).*(kp|krishnamurti)|(kp|krishnamurti).*(lahiri|chitrapaksha)/i.test(qLower) ||
+    /difference.*between.*(lahiri|kp|raman|tropical)|compare.*(lahiri|kp|raman|tropical)|(changes?|switch).*(between|from).*(lahiri|kp)|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(qLower) ||
+    /(லஹிரி|சித்திரபக்ஷ).*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி)|(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*(லஹிரி|சித்திரபக்ஷ)/i.test(qLower) ||
+    /((லஹிரி|சித்திரபக்ஷ).*மற்றும்.*(கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி))|((கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி).*மற்றும்.*(லஹிரி|சித்திரபக்ஷ))/i.test(qLower) ||
+    /(லஹிரி|கே\.?பி|கேபி).*முறைகளுக்கு\s*இடையே.*(மாற்றங்கள்|வேறுபாடு|ஒப்பீடு)/i.test(qLower) ||
+    /முறை.*ஒப்பீடு|வேறுபாடு.*(லஹிரி|கே\.?பி)|system.*comparison|between\s+(lahiri|kp)\s+and\s+(lahiri|kp)/i.test(qLower) ||
+    ((/லஹிரி|சித்திரபக்ஷ/i.test(qLower) || /\blahiri\b/i.test(qLower)) && (/கே\.?பி|கேபி|கிருஷ்ணமூர்த்தி/i.test(qLower) || /\bkp\b/i.test(qLower)));
+
+  if (isSysCompQuery) {
     return {
       type: "SYSTEM_COMPARISON",
       status: "REPORT_SUPPORTED",
