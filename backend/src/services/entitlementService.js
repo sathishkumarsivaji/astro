@@ -140,6 +140,19 @@ export function processPaymentWebhook({ orderId, paymentId, signature, secretKey
     };
   }
 
+  // Atomic claim of paymentId to prevent race conditions during concurrent webhook deliveries
+  if (!db.claimPaymentId(paymentId)) {
+    return {
+      success: true,
+      alreadyProcessed: true,
+      idempotent: true,
+      orderId,
+      paymentId,
+      status: "paid",
+      message: "Webhook already processed or currently processing. Idempotent acknowledgment returned."
+    };
+  }
+
   // 5. Atomic Entitlement Mutation & Ledger Commit
   const user = getOrCreateEntitlements(order.userId);
   const now = new Date();

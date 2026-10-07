@@ -15,8 +15,13 @@ import {
   EVIDENCE_STRENGTH,
   EMPIRICAL_STATUS,
   EMPIRICAL_RESOLUTION,
-  STATUTORY_NOTICES
+  STATUTORY_NOTICES,
+  getCachedLifeReport,
+  getLifeReportCacheStats,
+  configureReportCacheBindings,
+  DEFAULT_PREDICTION_ENGINE_HASH
 } from "./src/services/customerReport/index.js";
+import { processEvidenceLinkedQA } from "./src/services/questionAnswer/qaEngine.js";
 
 console.log("\n============================================================");
 console.log(" ASTROVERSE — CUSTOMER REPORT REVAMP VERIFICATION SUITE");
@@ -214,6 +219,57 @@ const wellnessTa = reportTa.domainReports.find(d => d.domainId === "wellness");
 assert(wellnessTa.domainName.ta.includes("ஆரோக்கியம்"), "Wellness domain name must be localized in Tamil");
 assert(wellnessTa.statutoryNotice.includes("மருத்துவ"), "Wellness statutory notice must be localized in Tamil");
 console.log("   ✓ Tamil localization completeness verified.");
+
+// ─────────────────────────────────────────────────────────────
+// 10. Multi-Tier Deterministic Report Caching & Performance Gates
+// ─────────────────────────────────────────────────────────────
+console.log("\n10. Testing Multi-Tier Deterministic Report Caching & Performance Gates...");
+
+// 1. Chart calculation performance gate (<300ms)
+const chartStart = performance.now();
+const freshChart = calculatePlanetaryPositions("1990-10-15", "06:30", 13.0827, 80.2707, "vedic", 5.5);
+const chartDuration = performance.now() - chartStart;
+assert(freshChart && freshChart.planets.length === 9, "Chart calculation succeeded");
+assert(chartDuration < 300, `Chart calculation must be <300ms (got ${chartDuration.toFixed(1)}ms)`);
+console.log(`   ✓ Chart calculation latency: ${chartDuration.toFixed(1)}ms (<300ms gate).`);
+
+// 2. Cached report retrieval performance gate (<500ms)
+const cachedStart = performance.now();
+const cachedReport = getCachedLifeReport(sampleChart, { lang: "en" });
+const cachedDuration = performance.now() - cachedStart;
+assert(cachedReport !== null, "Cached report must be retrieved from memory");
+assert(cachedReport.isCertified, "Cached report must be certified LifeReportModel");
+assert(cachedDuration < 500, `Cached report retrieval must be <500ms (got ${cachedDuration.toFixed(2)}ms)`);
+console.log(`   ✓ Cached report latency: ${cachedDuration.toFixed(2)}ms (<500ms gate).`);
+
+// 3. Cache stats tracking
+const stats = getLifeReportCacheStats();
+assert(stats.hits >= 1, `Cache hits must be >= 1 (got ${stats.hits})`);
+assert(stats.size >= 1, `Cache size must be >= 1 (got ${stats.size})`);
+console.log(`   ✓ Cache stats verified: hits=${stats.hits}, misses=${stats.misses}, size=${stats.size}.`);
+
+// 4. Invalidation on predictionEngineHash divergence
+configureReportCacheBindings({ predictionEngineHash: "tampered_engine_hash_xyz" });
+const invalidatedReport = getCachedLifeReport(sampleChart, { lang: "en" });
+assert.strictEqual(invalidatedReport, null, "Cache must invalidate and return null if predictionEngineHash changes");
+configureReportCacheBindings({ predictionEngineHash: DEFAULT_PREDICTION_ENGINE_HASH }); // restore
+console.log("   ✓ Cryptographic cache invalidation on hash divergence verified.");
+
+// 5. Subsequent Q&A requests reuse cached expert report
+// Re-cache report after invalidation test
+generateLifeIntelligenceReport(sampleChart, { lang: "en" });
+const qaContext = { chart: sampleChart };
+const qaStart = performance.now();
+const qaRes = await processEvidenceLinkedQA({
+  question: "What is my Lagna and 10th house lord?",
+  context: qaContext,
+  mode: "expert"
+});
+const qaDuration = performance.now() - qaStart;
+assert(qaRes && qaRes.answer, "QA response generated");
+assert(qaDuration < 1000, `Evidence Q&A must be <1000ms (got ${qaDuration.toFixed(1)}ms)`);
+assert(qaContext.report !== undefined, "Q&A context must populate context.report from cached report");
+console.log(`   ✓ Evidence Q&A latency: ${qaDuration.toFixed(1)}ms (<1000ms gate), cached report reused.`);
 
 console.log("\n============================================================");
 console.log(" ALL CUSTOMER REPORT REVAMP TESTS PASSED 100%!");

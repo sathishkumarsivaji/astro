@@ -38,8 +38,8 @@ export function calculateBusinessExpert(chartData, lang) {
           const isStartup = (activeHouses.includes(3) || (h3Lord && activePlanets.includes(h3Lord))) && activePlanets.includes('Mercury');
           return {
             status: isStartup ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isStartup ? (isTamil ? '3-ம் பாவக துணிவு மற்றும் புதன் காரகத்துவம் புதிய தொழில் தொடங்குவதை ஆதரிக்கிறது.' : '3rd house initiative and Mercury commercial significations strongly support enterprise startup.') : '',
-            whyNot: isStartup ? [] : [isTamil ? '3-ம் பாவகம் மற்றும் புதன் சேர்க்கை அமையவில்லை.' : 'Lacks 3rd house initiative and Mercury commercial synergy.']
+            why: isStartup ? (isTamil ? '3-ம் பாவக முயற்சி மற்றும் புதனின் காரகத்துவம் பாரம்பரியமாக வணிகத் தொடக்க விவகாரங்களுடன் தொடர்புடையது; எவ்வித வணிக அல்லது தொழில் முடிவும் உறுதிப்படுத்தப்படவில்லை.' : '3rd house initiative and Mercury commercial significations are traditionally associated with enterprise initiative; no commercial outcome or startup success is inferred.') : '',
+            whyNot: isStartup ? [] : [isTamil ? '3-ம் பாவகம் மற்றும் புதன் சேர்க்கை அமையவில்லை; எவ்வித வணிக முடிவும் உறுதிப்படுத்தப்படவில்லை.' : 'Lacks 3rd house initiative and Mercury commercial synergy; no commercial outcome is inferred.']
           };
         }
       },
@@ -51,7 +51,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isLaunch = (activeHouses.includes(10) || (h10Lord && activePlanets.includes(h10Lord))) && (activePlanets.includes('Sun') || activePlanets.includes('Jupiter'));
           return {
             status: isLaunch ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isLaunch ? (isTamil ? '10-ம் பாவ இயக்கம் மற்றும் குரு/சூரியன் சுப பார்வை வணிக அறிமுகத்திற்கு சாதகமாக உள்ளது.' : '10th house executive standing with Sun/Jupiter supports public commercial launch.') : '',
+            why: isLaunch ? (isTamil ? '10-ம் பாவ இயக்கம் மற்றும் குரு/சூரியன் பாரம்பரியமாக வெளிப்படையான தொழில் முயற்சிகளுடன் தொடர்புடையது; எவ்வித வணிக முடிவும் உத்தரவாதம் செய்யப்படவில்லை.' : '10th house executive standing with Sun/Jupiter is traditionally associated with public commercial endeavors; no market launch outcome is guaranteed.') : '',
             whyNot: isLaunch ? [] : [isTamil ? 'வணிக அறிமுகத்திற்கான 10-ம் பாவ ஒருங்கிணைவு இல்லை.' : 'Lacks 10th house convergence for formal market launch.']
           };
         }
@@ -64,7 +64,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isExpansion = (activeHouses.includes(9) || (h9Lord && activePlanets.includes(h9Lord))) && activePlanets.includes('Jupiter');
           return {
             status: isExpansion ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isExpansion ? (isTamil ? '9-ம் பாவ பாக்கிய ஸ்தானம் மற்றும் குரு தொழில் விரிவாக்கத்திற்கு துணைபுரிகிறது.' : '9th house fortune and Jupiter expansion karaka signify commercial scaling.') : '',
+            why: isExpansion ? (isTamil ? '9-ம் பாவகம் மற்றும் குரு பாரம்பரியமாக விரிவாக்க சூழல்களுடன் தொடர்புடையது; எவ்வித வணிக வளர்ச்சியும் உறுதிப்படுத்தப்படவில்லை.' : '9th house and Jupiter expansion karaka are traditionally associated with scaling themes; no business expansion outcome is guaranteed.') : '',
             whyNot: isExpansion ? [] : [isTamil ? 'விரிவாக்கத்திற்கான குரு-9ம் பாவ யோகம் இல்லை.' : 'Lacks 9th house and Jupiter expansion alignment.']
           };
         }
@@ -77,7 +77,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isPartnership = activeHouses.includes(7) || (h7Lord && activePlanets.includes(h7Lord));
           return {
             status: isPartnership ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isPartnership ? (isTamil ? '7-ம் பாவக தொடர்பு வணிக கூட்டாண்மைக்கு வழிகோலுகிறது.' : '7th house commercial partnership activation indicates joint venture alliances.') : '',
+            why: isPartnership ? (isTamil ? '7-ம் பாவக தொடர்பு பாரம்பரியமாக வணிகக் கூட்டு சூழல்களுடன் தொடர்புடையது; எவ்வித கூட்டாண்மை முடிவும் உறுதிப்படுத்தப்படவில்லை.' : '7th house commercial axis is traditionally associated with joint venture considerations; no partnership outcome is inferred.') : '',
             whyNot: isPartnership ? [] : [isTamil ? 'கூட்டுத்தொழிலுக்கான 7-ம் பாவ தொடர்பு இல்லை.' : '7th house partnership axis not actively triggered.']
           };
         }
@@ -92,7 +92,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isContract = has10or11 && hasComm;
           return {
             status: isContract ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isContract ? (isTamil ? '10/11-ம் பாவகம் மற்றும் புதன் முக்கிய வணிக ஒப்பந்தங்களுக்கு வழிவகுக்கிறது.' : '10th/11th houses with Mercury commercial agility support signing major contracts.') : '',
+            why: isContract ? (isTamil ? '10/11-ம் பாவகம் மற்றும் புதன் பாரம்பரியமாக ஒப்பந்த விவகாரங்களுடன் தொடர்புடையது; எவ்வித ஒப்பந்த முடிவும் உத்தரவாதம் செய்யப்படவில்லை.' : '10th/11th houses with Mercury commercial agility are traditionally associated with contract considerations; no deal or agreement outcome is inferred.') : '',
             whyNot: isContract ? [] : [isTamil ? 'ஒப்பந்தத்திற்கான ஒருங்கிணைவு அமையவில்லை.' : 'Lacks commercial contract convergence indicators.']
           };
         }
@@ -105,7 +105,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isCap = (activeHouses.includes(2) || activeHouses.includes(5) || activeHouses.includes(11)) && (activePlanets.includes('Jupiter') || activePlanets.includes('Mars'));
           return {
             status: isCap ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isCap ? (isTamil ? '2/11-ம் பாவகங்கள் மற்றும் குரு முதலீடுகளை ஈர்க்க சாதகமாக உள்ளன.' : 'Wealth houses (2nd/11th) with Jupiter signify capital allocation and investment inflows.') : '',
+            why: isCap ? (isTamil ? '2/11-ம் பாவகங்கள் மற்றும் குரு பாரம்பரியமாக மூலதன ஒதுக்கீட்டு விவகாரங்களுடன் தொடர்புடையவை; எவ்வித நிதி அல்லது முதலீட்டு முடிவும் உறுதிப்படுத்தப்படவில்லை.' : 'Wealth houses (2nd/11th) with Jupiter are traditionally associated with capital allocation considerations; no investment outcome or financial return is inferred.') : '',
             whyNot: isCap ? [] : [isTamil ? 'முதலீட்டிற்கான நிதி பாவக ஒருங்கிணைவு இல்லை.' : 'Lacks investment capital alignment.']
           };
         }
@@ -120,7 +120,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isGrowth = has2nd && has11th;
           return {
             status: isGrowth ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isGrowth ? (isTamil ? '2 மற்றும் 11-ம் பாவகங்களின் இணைப்பு வலுவான வருவாய் வளர்ச்சியை சுட்டிக்காட்டுகிறது.' : 'Direct connection of 2nd (dhana) and 11th (labha) indicates robust revenue acceleration.') : '',
+            why: isGrowth ? (isTamil ? '2 மற்றும் 11-ம் பாவகங்களின் இணைப்பு பாரம்பரியமாக நிதி ஈட்டல் விவகாரங்களுடன் தொடர்புடையது; எவ்வித வருவாய் உயர்வும் உத்தரவாதம் செய்யப்படவில்லை.' : 'Direct connection of 2nd (dhana) and 11th (labha) is traditionally associated with revenue themes; no revenue surge or financial outcome is guaranteed.') : '',
             whyNot: isGrowth ? [] : [isTamil ? '2 மற்றும் 11-ம் பாவ கூட்டு வருவாய் யோகம் இல்லை.' : 'Lacks dual wealth-house confluence for revenue surge.']
           };
         }

@@ -36,6 +36,14 @@ import { generateAlgorithmicNarrative } from "./customerNarrativeEngine.js";
 import { validateLifeReport } from "./reportValidator.js";
 import { extractCanonicalFacts } from "../expertPrediction/canonicalFactAdapter.js";
 import { generateChartFingerprint, ZODIAC_SIGNS } from "../astroEngine.js";
+import {
+  getCachedLifeReport,
+  setCachedLifeReport,
+  clearLifeReportCache,
+  getLifeReportCacheStats,
+  configureReportCacheBindings,
+  computeReportInputHash
+} from "./reportCacheManager.js";
 
 // Re-export key components for clean public API
 export * from "./lifeReportModel.js";
@@ -46,19 +54,28 @@ export * from "./antiRepetitionEngine.js";
 export * from "./reportSafetyGate.js";
 export * from "./customerNarrativeEngine.js";
 export * from "./reportValidator.js";
+export * from "./reportCacheManager.js";
 
 /**
  * Generates an authoritative, certified LifeReportModel for a customer chart.
  *
  * @param {Object} chartData - Complete chart data from calculateChartBySystem()
- * @param {Object} [options={}] - Options { lang: "en" | "ta", currentDate: Date, clientName: string }
+ * @param {Object} [options={}] - Options { lang: "en" | "ta", currentDate: Date, clientName: string, bypassCache: boolean }
  * @returns {Object} Certified LifeReportModel with validation audit
  */
 export function generateLifeIntelligenceReport(chartData, options = {}) {
   const lang = options.lang || "en";
   const isTamil = lang === "ta";
   const currentDate = options.currentDate || new Date();
-  const clientName = options.clientName || chartData.clientName || (isTamil ? "மதிப்பிற்குரிய ஜாதகர்" : "Valued Client");
+  const clientName = options.clientName || chartData?.clientName || (isTamil ? "மதிப்பிற்குரிய ஜாதகர்" : "Valued Client");
+
+  // Fast-path: check deterministic report cache first
+  if (!options.bypassCache && chartData) {
+    const cached = getCachedLifeReport(chartData, options);
+    if (cached) {
+      return cached;
+    }
+  }
 
   if (!chartData || !Array.isArray(chartData.planets)) {
     throw new Error("Invalid or missing chartData provided to generateLifeIntelligenceReport.");
@@ -282,6 +299,9 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
   const validationAudit = validateLifeReport(lifeReport, { lang });
   lifeReport.validationAudit = validationAudit;
   lifeReport.isCertified = validationAudit.isValid;
+
+  // Persist into deterministic cache
+  setCachedLifeReport(chartData, options, lifeReport);
 
   return lifeReport;
 }

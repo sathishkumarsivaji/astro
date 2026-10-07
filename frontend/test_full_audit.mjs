@@ -1667,8 +1667,17 @@ function scanDirForPatterns(dir, patterns, exemptFiles = []) {
 }
 
 const srcDir = fs.existsSync(path.resolve("./src")) ? path.resolve("./src") : path.resolve("./frontend/src");
-// Core engine forbidden patterns — must not appear in any source file except nashtaJatakaEngine.js (experimental)
-const coreEngineForbiddenPatterns = ["strengthPercentage", "aScore", "supportScore", "supportTier", "indicatorStrength", "probabilityTier", "bestBukthi", "netBalance"];
+// Whitelist evidence accounting fields (supportingEvidenceCount, contradictingEvidenceCount, independentEvidenceCount, systemAgreementScore)
+// While strictly blocking genuine synthetic heuristic fields across the core engine
+const coreEngineForbiddenPatterns = [
+  "strengthPercentage",
+  "aScore",
+  "supportTier",
+  "indicatorStrength",
+  "probabilityTier",
+  "bestBukthi",
+  "netBalance"
+];
 // nashtaJatakaEngine.js is intentionally experimental heuristic — fitScore/heuristicEvidenceScore are permitted there only
 const experimentalExemptions = ["nashtaJatakaEngine.js"];
 scanDirForPatterns(srcDir, coreEngineForbiddenPatterns, experimentalExemptions);

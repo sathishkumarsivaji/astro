@@ -194,7 +194,7 @@ export function getAyanamshaForSystem(jd, systemOrConfig, includeNutation = fals
     return 0.0;
   }
   
-  throw new Error(`Unknown astrological system for ayanamsha: "${sysNorm}". Valid systems are lahiri, kp, raman, tropical.`);
+  throw new Error(`INVALID_ASTROLOGY_SYSTEM: "${sysNorm}". Valid systems: lahiri, kp, raman, tropical.`);
 }
 
 /**
@@ -208,7 +208,8 @@ export function getAyanamshaMetadata(system) {
   if (sysNorm === "kp") return AYANAMSHA_MODELS.KP_ORIGINAL;
   if (sysNorm === "raman") return AYANAMSHA_MODELS.RAMAN_SIDEREAL;
   if (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana") return AYANAMSHA_MODELS.TROPICAL_SAYANA;
-  return AYANAMSHA_MODELS.LAHIRI_CHITRAPAKSHA;
+  if (sysNorm === "vedic" || sysNorm === "lahiri") return AYANAMSHA_MODELS.LAHIRI_CHITRAPAKSHA;
+  throw new Error(`INVALID_ASTROLOGY_SYSTEM: "${sysNorm}". Valid systems: lahiri, kp, raman, tropical.`);
 }
 
 export function getKPAyanamshaVariantMetadata(variantId = 'KP_ORIGINAL') {

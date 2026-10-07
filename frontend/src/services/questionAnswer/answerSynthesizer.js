@@ -11,6 +11,7 @@ import { evaluateComparison } from "./comparisonEngine.js";
 import { evaluatePersonCharacteristic } from "./personCharacteristicEngine.js";
 import { calculateDomainImportanceScores } from "./domainRanker.js";
 import { generateMilestoneTimeline } from "./milestoneTimelineEngine.js";
+import { buildTimingWindowId, buildHouseFactId } from "./evidenceGraph.js";
 
 /**
  * Synthesizes a structured 9-section answer based on retrieved evidence.
@@ -241,27 +242,51 @@ export function synthesizeAnswer({
   else if (intentResult.intents?.includes("TOP_HEADINGS") || /three.*(heading|section|topic)|முக்கிய.*தலைப்பு/i.test(rawQ)) {
     const rawChart = evidence.chart || {};
     const rankedDomains = calculateDomainImportanceScores(rawChart);
-    const top3 = (rankedDomains && rankedDomains.length >= 3) ? rankedDomains.slice(0, 3) : [
-      { domain: "CAREER", titleEn: "Career, Leadership & Vocation", titleTa: "தொழில், தலைமைத்துவம் மற்றும் வாழ்வியல் சாதனை", score: 0.91, primaryHouse: "House 10", reasonsEn: "10th house karmic potential under active planetary cycles", reasonsTa: "10-ம் கர்ம பாவகம் மற்றும் நடப்பு தசா சுழற்சி" },
-      { domain: "MARRIAGE", titleEn: "Marriage, Family & Partnerships", titleTa: "இல்லற நல்வாழ்வு, திருமணம் மற்றும் உறவுகள்", score: 0.84, primaryHouse: "House 7", reasonsEn: "7th house and Navamsha (D9) spousal indicators", reasonsTa: "7-ம் களத்திர பாவகம் மற்றும் நவாம்சம் (D9)" },
-      { domain: "FINANCE", titleEn: "Finance, Wealth & Real Estate", titleTa: "நிதி மேலாண்மை, செல்வ வளம் மற்றும் சொத்துக்கள்", score: 0.78, primaryHouse: "House 2/11", reasonsEn: "2nd/11th Dhana yogas and capital accumulation", reasonsTa: "2-ம் தன பாவகம் மற்றும் 11-ம் லாப பாவகம்" }
-    ];
 
-    if (isTamil) {
-      directAnswer = `உங்கள் ஜாதகக் கணிதத்தின்படி (கிரக ஆதிபத்தியங்கள், அஷ்டகவர்க்க பலம் மற்றும் தசா இயக்கம்) உங்கள் வாழ்க்கை நுண்ணறிவு அறிக்கையில் உள்ள 3 மிக முக்கியமான முதன்மைத் தலைப்புகள்:\n\n` +
-        top3.map((d, i) => `${i + 1}. ${d.titleTa} (${d.titleEn}):\n• முக்கியத்துவ மதிப்பீடு: ${d.score} (${d.primaryHouse})\n• காரணம்: ${d.reasonsTa}`).join("\n\n");
-      reasoningChain = `உங்கள் ஜாதகத்தின் நடப்பு தசா நாதரின் ஆதிபத்தியங்கள், பாவக அஷ்டகவர்க்க பரல்கள் மற்றும் கிரக செறிவின் அடிப்படையில் 17 தலைப்புகளில் இந்த 3 முதன்மைப் பிரிவுகள் கணித ரீதியாக வரிசைப்படுத்தப்பட்டன.`;
-      whatCannotBeConcluded = "இந்த 3 தலைப்புகள் உங்கள் ஜாதகத்தில் அதிக கிரக ஆற்றல் குவிந்துள்ள துறைகளாகும்; ஏனைய 14 பிரிவுகளின் வாழ்வியல் ஆலோசனைகளை இது குறைக்காது.";
+    if (!rankedDomains || rankedDomains.length === 0) {
+      if (isTamil) {
+        directAnswer = "முக்கிய தலைப்புகளைத் தரவரிசைப்படுத்த போதுமான ஜாதகத் தரவுகள் கிடைக்கவில்லை.";
+        reasoningChain = "தலைப்புகள் தரவரிசைக்கு பாவக மற்றும் தசா கணித விவரங்கள் தேவை.";
+        whatCannotBeConcluded = "ஜாதகத் தரவின்றி முக்கிய பிரிவுகளை நிர்ணயிக்க முடியாது.";
+      } else {
+        directAnswer = "INSUFFICIENT_DATA: Sufficient chart data is not available to rank report headings dynamically.";
+        reasoningChain = "Dynamic domain ranking requires calculated house positions and Dasha cycles.";
+        whatCannotBeConcluded = "Cannot establish prominent domains without chart calculations.";
+      }
+      astroEvidenceList = ["Domain Ranking: INSUFFICIENT_DATA"];
+      relevantSections = ["blueprint"];
+      evidenceIds = [];
     } else {
-      directAnswer = `Based on your calculated natal configuration (active dasha rulership, planetary density, and bhava prominence), the three most important headings in your report are:\n\n` +
-        top3.map((d, i) => `${i + 1}. ${d.titleEn} (${d.titleTa}):\n• Prominence Score: ${d.score} (${d.primaryHouse})\n• Reason: ${d.reasonsEn}`).join("\n\n");
-      reasoningChain = `Evaluated mathematical domain prominence across all 17 report sections using active dasha lords, bhava Ashtakavarga strength, and planetary occupancy.`;
-      whatCannotBeConcluded = "These represent the three most structurally activated domains in your chart; supplementary sections provide necessary complementary context.";
-    }
+      const top3 = rankedDomains.slice(0, 3);
+      if (isTamil) {
+        directAnswer = `உங்கள் ஜாதகக் கணிதத்தின்படி (கிரக ஆதிபத்தியங்கள், அஷ்டகவர்க்க பலம் மற்றும் தசா இயக்கம்) உங்கள் வாழ்க்கை நுண்ணறிவு அறிக்கையில் உள்ள ${top3.length} மிக முக்கியமான முதன்மைத் தலைப்புகள்:\n\n` +
+          top3.map((d, i) => `${i + 1}. ${d.titleTa} (${d.titleEn}):\n• முக்கியத்துவ மதிப்பீடு: ${d.score} (${d.primaryHouse})\n• காரணம்: ${d.reasonsTa}`).join("\n\n");
+        reasoningChain = `உங்கள் ஜாதகத்தின் நடப்பு தசா நாதரின் ஆதிபத்தியங்கள், பாவக அஷ்டகவர்க்க பரல்கள் மற்றும் கிரக செறிவின் அடிப்படையில் 17 தலைப்புகளில் இந்த முதன்மைப் பிரிவுகள் கணித ரீதியாக வரிசைப்படுத்தப்பட்டன.`;
+        whatCannotBeConcluded = "இந்த தலைப்புகள் உங்கள் ஜாதகத்தில் அதிக கிரக ஆற்றல் குவிந்துள்ள துறைகளாகும்; ஏனைய பிரிவுகளின் வாழ்வியல் ஆலோசனைகளை இது குறைக்காது.";
+      } else {
+        directAnswer = `Based on your calculated natal configuration (active dasha rulership, planetary density, and bhava prominence), the top ${top3.length} most important headings in your report are:\n\n` +
+          top3.map((d, i) => `${i + 1}. ${d.titleEn} (${d.titleTa}):\n• Prominence Score: ${d.score} (${d.primaryHouse})\n• Reason: ${d.reasonsEn}`).join("\n\n");
+        reasoningChain = `Evaluated mathematical domain prominence across report sections using active dasha lords, bhava strength, and planetary occupancy.`;
+        whatCannotBeConcluded = "These represent the most structurally activated domains in your chart; supplementary sections provide necessary complementary context.";
+      }
 
-    astroEvidenceList = top3.map((d, i) => `Rank ${i + 1}: ${d.titleEn} (Score: ${d.score}, ${d.primaryHouse})`);
-    relevantSections = top3.map(d => d.domain.toLowerCase());
-    evidenceIds = top3.map(d => `REPORT_HEADING_${d.domain}_SCORE_${Math.round(d.score * 100)}`);
+      astroEvidenceList = top3.map((d, i) => `Rank ${i + 1}: ${d.titleEn} (Score: ${d.score}, ${d.primaryHouse})`);
+      relevantSections = top3.map(d => d.domain.toLowerCase());
+
+      const domainHouseMap = {
+        CAREER: "HOUSE_FACT_H10",
+        MARRIAGE: "HOUSE_FACT_H7",
+        FINANCE: "HOUSE_FACT_H2",
+        PROPERTY: "HOUSE_FACT_H4",
+        WELLNESS: "HOUSE_FACT_H6",
+        EDUCATION: "HOUSE_FACT_H4",
+        CHILDREN: "HOUSE_FACT_H5",
+        FOREIGN_TRAVEL: "HOUSE_FACT_H9",
+        SPIRITUALITY: "HOUSE_FACT_H9",
+        LEGAL: "HOUSE_FACT_H6"
+      };
+      evidenceIds = top3.map(d => domainHouseMap[d.domain] || `HOUSE_FACT_H${d.primaryHouse.replace(/[^0-9]/g, "")}`);
+    }
   }
 
   // CASE 3: VARGA INTERPRETATION (e.g. D10 CANCER LAGNA CAREER)
@@ -589,29 +614,48 @@ export function synthesizeAnswer({
     const durationYears = entities.durationYears || 3;
     const timelineRes = generateMilestoneTimeline({ chart: rawChart, startYear: curYear, durationYears, isTamil });
 
-    if (isTamil) {
-      directAnswer = `அடுத்த ${durationYears} வருடங்களில் (${curYear}–${curYear + durationYears - 1}), உங்கள் ஜாதகத்தில் தசா கால மாற்றங்களும் குரு மற்றும் சனி பகவானின் முக்கிய கோச்சார பெயர்ச்சிகளும் தொழில் முன்னேற்றம், சமூக அங்கீகாரம், நிதி வளர்ச்சி மற்றும் குடும்பப் பொறுப்புகளில் கணிசமான வாழ்வியல் மாற்றங்களை ஏற்படுத்துகின்றன.\n\n${timelineRes.narrativeTa}`;
-      reasoningChain = `அடுத்த ${durationYears} ஆண்டுகளின் காலவரிசைப்படி நடப்பு தசா-அந்தர்தசைகள், குரு மற்றும் சனி கோச்சார சஞ்சாரங்கள் இணைக்கப்பட்டு இந்த பல்துறை மைல்கல் தொகுப்பு உருவாக்கப்பட்டது.`;
-      timingWindow = `${curYear} - ${curYear + durationYears - 1} (ஆண்டுவாரியான பல்துறை மைல்கல் காலக்கோடு)`;
-      whatCannotBeConcluded = "காலக்கோடு வாழ்வியல் வாய்ப்புகளின் போக்கை விவரிக்கிறது; தனிப்பட்ட முடிவுகளின்றி தானியங்கி மாற்றங்களை உறுதி செய்ய முடியாது.";
+    if (timelineRes.status === "INSUFFICIENT_DATA") {
+      if (isTamil) {
+        directAnswer = timelineRes.narrativeTa;
+        reasoningChain = "மைல்கல் காலக்கோடு நிர்ணயிக்க முழுமையான விம்சோத்தரி தசா கணக்கீடுகள் தேவைப்படுகின்றன.";
+        whatCannotBeConcluded = "தசா காலங்கள் இன்றி காலவரிசை வாழ்வியல் நிகழ்வுகளை உறுதியாக கணிக்க முடியாது.";
+      } else {
+        directAnswer = timelineRes.narrativeEn;
+        reasoningChain = "Chronological milestone timeline requires verified Vimshottari Dasha periods.";
+        whatCannotBeConcluded = "Cannot establish multi-year milestones without authentic Dasha periods.";
+      }
+      timingWindow = "NOT_ESTABLISHED";
+      astroEvidenceList = ["Vimshottari Dasha: INSUFFICIENT_DATA"];
+      relevantSections = ["timeline", "milestones"];
+      evidenceIds = [];
     } else {
-      directAnswer = `Across the upcoming ${durationYears} years (${curYear}–${curYear + durationYears - 1}), chronological Dasha progressions combined with major Saturn and Jupiter transits indicate meaningful developmental milestones across career trajectory, asset acquisition, finance, and relationships:\n\n${timelineRes.narrativeEn}`;
-      reasoningChain = `Mapped progressive sub-dasha horizons and major planet ingress dates to construct an integrated chronological milestone continuum.`;
-      timingWindow = `${curYear} - ${curYear + durationYears - 1} (Chronological Milestone Continuum)`;
-      whatCannotBeConcluded = "Milestone horizons outline optimal developmental cycles; real-world actualization depends on human agency.";
-    }
+      if (isTamil) {
+        directAnswer = `அடுத்த ${durationYears} வருடங்களில் (${curYear}–${curYear + durationYears - 1}), உங்கள் ஜாதகத்தில் தசா கால மாற்றங்களும் குரு மற்றும் சனி பகவானின் முக்கிய கோச்சார பெயர்ச்சிகளும் தொழில் முன்னேற்றம், சமூக அங்கீகாரம், நிதி வளர்ச்சி மற்றும் குடும்பப் பொறுப்புகளில் கணிசமான வாழ்வியல் மாற்றங்களை ஏற்படுத்துகின்றன.\n\n${timelineRes.narrativeTa}`;
+        reasoningChain = `அடுத்த ${durationYears} ஆண்டுகளின் காலவரிசைப்படி நடப்பு தசா-அந்தர்தசைகள், குரு மற்றும் சனி கோச்சார சஞ்சாரங்கள் இணைக்கப்பட்டு இந்த பல்துறை மைல்கல் தொகுப்பு உருவாக்கப்பட்டது.`;
+        timingWindow = `${curYear} - ${curYear + durationYears - 1} (ஆண்டுவாரியான பல்துறை மைல்கல் காலக்கோடு)`;
+        whatCannotBeConcluded = "காலக்கோடு வாழ்வியல் வாய்ப்புகளின் போக்கை விவரிக்கிறது; தனிப்பட்ட முடிவுகளின்றி தானியங்கி மாற்றங்களை உறுதி செய்ய முடியாது.";
+      } else {
+        directAnswer = `Across the upcoming ${durationYears} years (${curYear}–${curYear + durationYears - 1}), chronological Dasha progressions combined with major Saturn and Jupiter transits indicate meaningful developmental milestones across career trajectory, asset acquisition, finance, and relationships:\n\n${timelineRes.narrativeEn}`;
+        reasoningChain = `Mapped progressive sub-dasha horizons and major planet ingress dates to construct an integrated chronological milestone continuum.`;
+        timingWindow = `${curYear} - ${curYear + durationYears - 1} (Chronological Milestone Continuum)`;
+        whatCannotBeConcluded = "Milestone horizons outline optimal developmental cycles; real-world actualization depends on human agency.";
+      }
 
-    astroEvidenceList = [
-      `Chronological Horizon: ${curYear} to ${curYear + durationYears - 1}`,
-      `Active Dasha: ${evidence.activeDasha?.mahadasha || "Ascendant Lord"} Mahadasha`,
-      `Transit Regimes: Saturn & Jupiter cyclical ingress mapped per year`,
-      ...timelineRes.years.map(y => isTamil
-        ? `ஆண்டு ${y.year}: ${y.dashaPeriodTa} (${y.transitsTa})`
-        : `Year ${y.year}: ${y.dashaPeriod} (${y.transitsEn})`
-      )
-    ];
-    relevantSections = ["timeline", "milestones", "career"];
-    evidenceIds = ["TIMING_TIMELINE_3Y", "DASHA_PROGRESSION", ...timelineRes.evidenceIds];
+      astroEvidenceList = [
+        `Chronological Horizon: ${curYear} to ${curYear + durationYears - 1}`,
+        `Active Dasha: ${evidence.activeDasha?.mahadasha || "Ascendant Lord"} Mahadasha`,
+        `Transit Regimes: Saturn & Jupiter cyclical ingress mapped per year`,
+        ...(timelineRes.years || []).map(y => isTamil
+          ? `ஆண்டு ${y.year}: ${y.dashaPeriodTa} (${y.transitsTa})`
+          : `Year ${y.year}: ${y.dashaPeriod} (${y.transitsEn})`
+        )
+      ];
+      relevantSections = ["timeline", "milestones", "career"];
+      evidenceIds = Array.from(new Set([
+        buildTimingWindowId(curYear, curYear + durationYears - 1),
+        ...(timelineRes.evidenceIds || [])
+      ]));
+    }
   }
 
   // DEFAULT / GENERAL / FACTUAL FALLBACK

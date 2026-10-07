@@ -81,15 +81,18 @@ test("Calendar engine returns INSUFFICIENT_DATA for null chart", () => {
 // ---------------------------------------------------------------------------
 console.log("\n2. Testing Consultation Engine Sub-Evaluators on Empty Inputs...");
 
-test("Spouse direction evaluator handles null/empty chart safely with INDETERMINATE", () => {
+test("Spouse direction evaluator handles null/empty chart safely with INSUFFICIENT_DATA", () => {
   const resNull = evaluateSpouseDirection(null);
   assert.ok(resNull);
-  assert.equal(resNull.primaryDirection, "INDETERMINATE");
-  assert.match(resNull.directionName, /Missing Ascendant/i);
+  assert.equal(resNull.primaryDirection, null);
+  assert.equal(resNull.secondaryDirection, null);
+  assert.equal(resNull.confidenceCategory, "INSUFFICIENT_DATA");
 
   const resEmpty = evaluateSpouseDirection({});
   assert.ok(resEmpty);
-  assert.equal(resEmpty.primaryDirection, "INDETERMINATE");
+  assert.equal(resEmpty.primaryDirection, null);
+  assert.equal(resEmpty.secondaryDirection, null);
+  assert.equal(resEmpty.confidenceCategory, "INSUFFICIENT_DATA");
 });
 
 test("Spouse geographic distance evaluator handles null/empty chart safely with INSUFFICIENT_DATA", () => {

@@ -39,6 +39,7 @@ import { decomposeQuestion, combineAtomicAnswers } from "./questionDecomposer.js
 import { resolveFollowUpContext } from "./followUpMemory.js";
 import { verifyGeneratedAnswer } from "./qaFirewall.js";
 import { calculateQAScore } from "./qualityScorer.js";
+import { getCachedLifeReport } from "../customerReport/reportCacheManager.js";
 
 /**
  * Executes a single atomic question through the full evidence verification pipeline.
@@ -246,6 +247,15 @@ export async function processEvidenceLinkedQA({ question, context, conversationH
   }
   if (!context || (!context.chart && !context.planets)) {
     throw new Error("Valid chart context is required for evidence retrieval.");
+  }
+
+  // Reuse cached expert report if available to prevent recomputing 17 domains
+  const rawChart = context.chart || (context.planets ? context : null);
+  if (rawChart && !context.report) {
+    const cachedReport = getCachedLifeReport(rawChart, { lang: mode === "tamil" ? "ta" : "en" });
+    if (cachedReport) {
+      context.report = cachedReport;
+    }
   }
 
   // 1. Follow-Up Context Resolution (Section 18)

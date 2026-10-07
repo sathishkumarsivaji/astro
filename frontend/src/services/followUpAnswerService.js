@@ -1478,7 +1478,7 @@ function generateDeterministicAnswer(questionText, context, route) {
           ? (isTamil ? `[அறிக்கை முடிவு] ஆரோக்கிய ஆய்வு குறித்த சுருக்கமான உரை முடிவு கிடைக்கவில்லை.` : `[Report Finding] The report contains wellness indicators, but no narrative wellness conclusion was generated.`)
           : (isTamil 
               ? `[அறிக்கை முடிவு] உங்கள் ஜாதகத்தில் ஆரோக்கியக் கூறுகள்: 6-ம் ரோக பாவகம் (${toTamilRasi(h6?.signName) || 'ராசி'}, அதிபதி: ${toTamilPlanet(h6?.lordName) || 'அதிபதி'}), 8-ம் ஆயுள் பாவகம் (${toTamilRasi(h8?.signName) || 'ராசி'}). உடல் பல காரகனான சூரியன் ${toTamilRasi(sunPl?.sign) || 'ராசி'} ராசியில் அமைந்துள்ளது.`
-              : `[Report Finding] Vitality and health indicators in your chart: 6th House of Immunity/Ailments in ${h6?.signName || 'sign'} (Lord: ${h6?.lordName || 'lord'}), 8th House of Longevity in ${h8?.signName || 'sign'}. Vitality significator Sun is in ${sunPl?.sign || 'sign'}.`));
+              : `[Report Finding] Vitality and health indicators in your chart: 6th House of Traditional Health Symbolism/Ailments in ${h6?.signName || 'sign'} (Lord: ${h6?.lordName || 'lord'}), 8th House of Longevity in ${h8?.signName || 'sign'}. Vitality significator Sun is in ${sunPl?.sign || 'sign'}.`));
     const doshaNote = doshaData ? (isTamil ? ` முதன்மை ஆயுர்வேத பிரகிருதி: ${doshaData}.` : ` Primary Ayurvedic Constitution: ${doshaData}.`) : "";
 
     body = isTamil

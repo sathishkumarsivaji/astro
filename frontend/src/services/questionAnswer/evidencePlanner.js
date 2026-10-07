@@ -193,7 +193,7 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
     plan.requiredPlanets.add("Sun");
     plan.requiredPlanets.add("Moon");
     plan.requiredPlanets.add("Saturn");
-    plan.specificFactors.push("PHYSICAL_VITALITY", "IMMUNE_RESILIENCE", "TRADITIONAL_WELLNESS_ONLY");
+    plan.specificFactors.push("PHYSICAL_VITALITY", "CONSTITUTIONAL_VITALITY", "TRADITIONAL_WELLNESS_ONLY");
   }
 
   // 10. Legal / Caution

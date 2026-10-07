@@ -11,6 +11,13 @@
  * 7. Outcome Definition Registry invariants.
  */
 
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import {
   generatePredictionBenchmarkDataset,
   partitionDataset,
@@ -57,13 +64,39 @@ assert(cohort[0].datasetType === "SYNTHETIC_SIMULATION_BENCHMARK", "Dataset expl
 assert(cohort[0].predictionCutoffDate.length === 10, "Prediction cutoff date present and formatted");
 assert(["AA", "A", "B", "C", "D"].includes(cohort[0].dataQuality), `Data quality rating is valid synthetic birth-time quality label (${cohort[0].dataQuality})`);
 
-// 3. Dataset Partitioning (60/20/20)
-console.log("\n3. Testing Strict 60/20/20 Partitioning...");
+// 3. Dataset Partitioning (60/20/20 for synthetic benchmark)
+console.log("\n3. Testing Strict 60/20/20 Partitioning (Synthetic Benchmark)...");
 const parts = partitionDataset(cohort, 0.6, 0.2);
 assert(parts.trainCount === 60, `Train set is 60% (got ${parts.trainCount})`);
 assert(parts.valCount === 20, `Validation set is 20% (got ${parts.valCount})`);
 assert(parts.blindTestCount === 20, `Blind test set is 20% (got ${parts.blindTestCount})`);
 assert(parts.trainSet.length + parts.valSet.length + parts.blindTestSet.length === 100, "Dataset partitioning conserves all samples");
+
+// 3b. Production Real-World Partition Consistency (split_manifest.json: 60/20/10/10)
+console.log("\n3b. Testing Production Real-World Split Manifest Consistency (60/20/10/10)...");
+const splitManifestPath = path.resolve(__dirname, "../data/real_world_validation/splits/split_manifest.json");
+if (fs.existsSync(splitManifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(splitManifestPath, "utf-8"));
+  assert(manifest.ratios.train === 0.6, "Production train ratio must be 0.60 (60%)");
+  assert(manifest.ratios.validation === 0.2, "Production validation ratio must be 0.20 (20%)");
+  assert(manifest.ratios.blindTest === 0.1, "Production blind test ratio must be 0.10 (10%)");
+  assert(manifest.ratios.internalHoldout === 0.1, "Production internal holdout ratio must be 0.10 (10%)");
+
+  const sumRatios = manifest.ratios.train + manifest.ratios.validation + manifest.ratios.blindTest + manifest.ratios.internalHoldout;
+  assert(Math.abs(sumRatios - 1.0) < 1e-6, "Production partition ratios must sum exactly to 1.0 (100%)");
+
+  const trainCount = manifest.splits.TRAIN.recordCount;
+  const valCount = manifest.splits.VALIDATION.recordCount;
+  const blindCount = manifest.splits.BLIND_TEST.recordCount;
+  const holdoutCount = manifest.splits.INTERNAL_HOLDOUT.recordCount;
+  const total = manifest.totalRecords;
+
+  assert(trainCount + valCount + blindCount + holdoutCount === total, "All split records must sum exactly to totalRecords");
+  assert(trainCount / total >= 0.58 && trainCount / total <= 0.62, "Train set must be ~60% of total");
+  assert(valCount / total >= 0.18 && valCount / total <= 0.22, "Validation set must be ~20% of total");
+  assert(blindCount / total >= 0.08 && blindCount / total <= 0.12, "Blind test set must be ~10% of total");
+  assert(holdoutCount / total >= 0.08 && holdoutCount / total <= 0.12, "Internal holdout set must be ~10% of total");
+}
 
 // 4. Deterministic Anti-Leakage Hashing & Known-Answer SHA-256 Tests
 console.log("\n4. Testing Anti-Leakage Protocol & Cryptographic Reproducibility...");

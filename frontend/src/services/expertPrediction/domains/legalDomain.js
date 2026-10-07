@@ -55,9 +55,9 @@ export function calculateLegalExpert(chartData, lang = 'en') {
         return {
           status: isFavorable ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
           why: isFavorable
-            ? (isTamil ? "குருவின் சுப பார்வை வழக்குகளில் சாதகமான முடிவுக்கு வழிவகுக்கும்." : "Jupiter benefic alignment supports favorable outcome or settlement.")
+            ? (isTamil ? "குருவின் சுப பார்வை பாரம்பரிய ஜோதிடத்தில் சமரச மற்றும் தீர்வு சூழல்களுடன் தொடர்புடையதாகக் கருதப்படுகிறது; எவ்வித நீதிமன்ற முடிவும் உறுதிப்படுத்தப்படவில்லை." : "Jupiter benefic alignment is traditionally associated with resolution or settlement themes; no specific court or legal outcome is inferred.")
             : "",
-          whyNot: isFavorable ? [] : [isTamil ? "சாதகமான முடிவுக்கான குறிப்பிட்ட நேரம் இல்லை." : "No explicit favorable outcome window isolated."]
+          whyNot: isFavorable ? [] : [isTamil ? "சாதகமான சூழலுக்கான குறிப்பிட்ட ஜோதிட அமைப்பு அமையவில்லை; எவ்வித நீதிமன்ற முடிவும் உறுதிப்படுத்தப்படவில்லை." : "No explicit resolution alignment isolated; no legal outcome is inferred."]
         };
       },
       resolutionWindow: (windows) => {

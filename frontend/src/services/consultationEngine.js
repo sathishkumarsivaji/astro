@@ -107,14 +107,14 @@ export const QUESTION_ONTOLOGY = {
       HEALTH_WELLNESS: {
         id: "HEALTH_WELLNESS",
         title: "Physical Constitution, Vitality & Health Outlook",
-        titleTa: "உடல் அமைப்பு, எதிர்ப்பு சக்தி & ஆரோக்கிய நிலை",
+        titleTa: "உடல் அமைப்பு, பாரம்பரிய பிராண பலம் & ஆரோக்கிய நிலை",
         subdomain: "VITALITY",
-        keywords: ["health", "wellness", "physical vitality", "immunity", "रोग", "உடல்நலம்", "ஆரோக்கியம்", "உடல் நலம்", "உடம்பு"]
+        keywords: ["health", "wellness", "physical vitality", "vitality", "रोग", "உடல்நலம்", "ஆரோக்கியம்", "உடல் நலம்", "உடம்பு"]
       },
       DISEASE_RECOVERY: {
         id: "DISEASE_RECOVERY",
         title: "Vulnerability, Roga Sthana & Healing Periods",
-        titleTa: "நோய் எதிர்ப்பு பலம் & நிவாரண காலங்கள்",
+        titleTa: "பாரம்பரிய ரோக ஸ்தானம் & நிவாரண காலங்கள்",
         subdomain: "HEALING",
         keywords: ["disease", "illness", "recovery", "medical", "hospital", "நோய்", "மருத்துவம்", "சிகிச்சை", "மருத்துவமனை"]
       },
@@ -1371,7 +1371,7 @@ export function evaluateNatalPromise(chartData, domain = "MARRIAGE", questionTyp
 
     const maleficInSixth = sixthHousePlanets.filter(p => ["Mars", "Saturn", "Rahu", "Sun"].includes(p.name));
     if (maleficInSixth.length > 0) {
-      positive.push(`Natural malefics in 6th Bhava (${maleficInSixth.map(p => p.name).join(", ")}) conquer ailments and confer formidable immune fighting power (Roga Nashana).`);
+      positive.push(`Natural malefics in 6th Bhava (${maleficInSixth.map(p => p.name).join(", ")}) align with classical indicators for traditional vitality preservation and overcoming ailments (Roga Nashana).`);
     }
 
     if (sat.house === 8 || ["Exalted", "Own Sign"].includes(sat.dignity)) {
@@ -1785,8 +1785,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswerEn = gemEval.directAnswerEn;
     directAnswerTa = gemEval.directAnswerTa;
   } else if (intent.domain === "HEALTH" || intent.questionType === "HEALTH_WELLNESS" || intent.questionType === "DISEASE_RECOVERY" || intent.questionType === "LONGEVITY_AYUR") {
-    directAnswerEn = `Your Lagna vitality (1st house), immune resilience (6th house), and planetary vitality karakas indicate constitutional stability during the active ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle. Disciplined lifestyle habits and preventive care provide strong support.`;
-    directAnswerTa = `உங்கள் லக்ன தேக பலம் (1-ம் பாவகம்), நோய் எதிர்ப்புத் திறன் (6-ம் பாவகம்), மற்றும் சூரியன்/சந்திரனின் நிலைகள் நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலத்தில் சீரான ஆரோக்கியம் மற்றும் சிறப்பான உடல்நல அமைப்பை சுட்டிக்காட்டுகின்றன. முறையான உணவுப்பழக்கம் மற்றும் உடற்பயிற்சி உடலமைப்பை மேலும் வலுப்படுத்தும்.`;
+    directAnswerEn = `Your Lagna vitality (1st house), traditional 6th-house health symbolism (6th house), and planetary vitality karakas indicate traditional constitutional/vitality correspondence during the active ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle. Disciplined lifestyle habits and preventive care provide strong support.`;
+    directAnswerTa = `உங்கள் லக்ன தேக பலம் (1-ம் பாவகம்), பாரம்பரிய 6-ம் பாவக நல்வாழ்வுக் குறியீடுகள், மற்றும் சூரியன்/சந்திரனின் நிலைகள் நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலத்தில் பாரம்பரிய உடலியல் சமநிலையை சுட்டிக்காட்டுகின்றன (இது மருத்துவ முடிவல்ல; பாரம்பரிய ஜோதிட வழிகாட்டல் மட்டுமே). முறையான உணவுப்பழக்கம் மற்றும் உடற்பயிற்சி உடலமைப்பை மேலும் வலுப்படுத்தும்.`;
   } else if (intent.questionType === "PROMOTION_TIMING" || (intent.domain === "CAREER" && intent.questionType !== "BUSINESS_GROWTH")) {
     directAnswerEn = `Active planetary configurations in your 10th house of career during the current ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle present strong astrological timing for professional advancement, skill recognition, and new executive responsibilities.`;
     directAnswerTa = `உங்கள் 10-ம் கர்ம பாவக அமைப்பும், நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலமும் தொழில் முன்னேற்றம், பதவி உயர்வு மற்றும் புதிய பொறுப்புகள் கிடைப்பதற்கான சாதகமான காலக்கட்டத்தை சுட்டிக்காட்டுகின்றன.`;
@@ -1797,8 +1797,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswerEn = `Your chart demonstrates potent foundational Dhana Yogas and strong financial multipliers. Classical Shastras indicate that extreme wealth accumulation is catalyzed during the operating ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle through disciplined enterprise, strategic investments, and compounding assets.`;
     directAnswerTa = `உங்கள் ஜாதகத்தில் வலுவான தன யோகங்களும் பெருஞ்செல்வ சேர்க்கைக்கான சாத்தியக்கூறுகளும் அமைந்துள்ளன. சாஸ்திர விதிகளின்படி, நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலத்தில் புதிய முதலீடுகள், தொழில் விரிவாக்கம் மற்றும் நிலையான சொத்து பெருக்கம் மூலம் பெரும் பொருளாதார வளர்ச்சி உண்டாகும் யோகம் உள்ளது.`;
   } else if (intent.questionType === "INVESTMENT_MARKETS") {
-    directAnswerEn = `Harmonious connections between your 5th house of intellect/speculation and 11th house of gains favor strategic equity investments, portfolio growth, and market gains during the ${currentDasha} Mahadasha — ${currentAntar} Antardasha period.`;
-    directAnswerTa = `உங்கள் 5-ம் புத்தி/யூகம் மற்றும் 11-ம் லாப பாவக சுப அமைப்புகள் நடப்பு ${currentDashaTa} தசா காலத்தில் திட்டமிட்ட பங்குச்சந்தை முதலீடுகள், நிதி வர்த்தகம் மற்றும் மூலதன பெருக்கத்திற்கு சாதகமான யோகத்தை உருவாக்குகின்றன.`;
+    directAnswerEn = `Traditional connections between your 5th house of intellect/speculation and 11th house of gains are traditionally associated with financial analysis and resource planning during the ${currentDasha} Mahadasha — ${currentAntar} Antardasha period; no financial market return or investment outcome is inferred.`;
+    directAnswerTa = `உங்கள் 5-ம் புத்தி/யூகம் மற்றும் 11-ம் லாப பாவக தொடர்புகள் நடப்பு ${currentDashaTa} தசா காலத்தில் பாரம்பரியமாக நிதி பகுப்பாய்வு மற்றும் திட்டமிடலுடன் தொடர்புடையவை; எவ்வித சந்தை லாபமும் அல்லது முதலீட்டு முடிவும் உறுதிப்படுத்தப்படவில்லை.`;
   } else if (intent.questionType === "PROPERTY_ACQUISITION" || (intent.domain === "WEALTH" && intent.questionType !== "MEGA_WEALTH_BILLIONAIRE")) {
     directAnswerEn = `Planetary influences on your 4th house of real estate combined with Mars (Bhoomikaraka) indicate favorable windows for property acquisition, home investment, or asset expansion during the operating ${currentDasha} period.`;
     directAnswerTa = `உங்கள் 4-ம் சுக மற்றும் சொத்து பாவக அமைப்பும், பூமி காரகனான செவ்வாயின் பலமும் நடப்பு ${currentDashaTa} தசா காலத்தில் சொந்த வீடு, நிலம் அல்லது நிலையான சொத்துக்கள் வாங்குவதற்கான யோகங்களை செயல்படுத்துகின்றன.`;
@@ -1824,8 +1824,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswerEn = `Alignments across the 9th (Dharma) and 12th (Moksha) houses under ${currentDasha} Mahadasha facilitate deep meditative evolution, spiritual sadhana, and guru mentorship.`;
     directAnswerTa = `9-ம் தர்ம மற்றும் 12-ம் மோட்ச பாவக சுப இணைப்புகள் நடப்பு ${currentDashaTa} தசா காலத்தில் ஆழமான ஆன்மீக சாதனை, தியான ஞானம் மற்றும் குருவின் நல்லாசியை நல்குகின்றன.`;
   } else if (intent.domain === "LEGAL") {
-    directAnswerEn = `6th Bhava (Shatru Jaya) strength along with Mars placement during the ${currentDasha} period indicates positive resolution of legal disputes and clear advantage over adversaries.`;
-    directAnswerTa = `உங்கள் 6-ம் சத்ரு ஜெய ஸ்தானமும் செவ்வாயின் பலமும் நடப்பு ${currentDashaTa} தசா காலத்தில் வழக்கு விவகாரங்களில் சாதகமான தீர்வு மற்றும் எதிரிகள் மீதான வெற்றியை சுட்டிக்காட்டுகின்றன.`;
+    directAnswerEn = `6th Bhava (Shatru/Pratiyogita) configurations along with Mars placement during the ${currentDasha} period are traditionally associated with dispute management and contestation themes; no court verdict or legal outcome is inferred.`;
+    directAnswerTa = `உங்கள் 6-ம் பாவக அமைப்பும் செவ்வாயின் நிலையும் நடப்பு ${currentDashaTa} தசா காலத்தில் பாரம்பரியமாக வழக்கு மற்றும் எதிர்ப்பு விவகாரங்களை கையாளும் சூழல்களுடன் தொடர்புடையவை; எவ்வித நீதிமன்றத் தீர்ப்பும் உறுதிப்படுத்தப்படவில்லை.`;
   } else {
     directAnswerEn = `Your chart demonstrates strong astrological activation for ${intent.ontologyEntry?.title || "this life milestone"} during the current ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle.`;
     directAnswerTa = `உங்கள் ஜாதகத்தில் தற்போது நடைபெறும் ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலகட்டத்தில் இதற்கான சாதகமான யோக காலங்கள் தீவிரமாக செயல்படுகின்றன.`;
@@ -1843,8 +1843,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let summaryEn = "";
   let summaryTa = "";
   if (intent.domain === "HEALTH") {
-    summaryEn = "Synthesized evaluation across Lagna (Deha Bala vitality), 6th Bhava (immune resilience), Sun (vitality karaka), Moon (mental calm), and D30 Trimsamsha supports foundational constitutional stability.";
-    summaryTa = "லக்ன பலம் (தேக பலம்), 6-ம் பாவகம் (நோய் எதிர்ப்புத் திறன்), மற்றும் சூரியன் (உயிர் சக்தி), சந்திரன் (மன அமைதி) பலங்கள் இணைந்து உங்கள் உடல் நலனைப் பாதுகாக்க உதவுகின்றன.";
+    summaryEn = "Synthesized evaluation across Lagna (Deha Bala vitality), 6th Bhava (traditional 6th-house health symbolism), Sun (vitality karaka), Moon (mental calm), and D30 Trimsamsha supports traditional constitutional/vitality correspondence.";
+    summaryTa = "லக்ன பலம் (தேக பலம்), 6-ம் பாவகம் (பாரம்பரிய உடலியல் சமநிலை), மற்றும் சூரியன் (உயிர் சக்தி), சந்திரன் (மன அமைதி) பலங்கள் இணைந்து பாரம்பரிய தேக நல்வாழ்வுக் குறியீடுகளை வெளிப்படுத்துகின்றன.";
   } else if (intent.domain === "CAREER") {
     summaryEn = "Synthesized evaluation across 10th Bhava (Karma Sthana), 11th Bhava (gains), Mercury (commerce karaka), Sun (executive authority), and D10 Dashamsha indicates positive career and business growth momentum.";
     summaryTa = "10-ம் கர்ம பாவகம், 11-ம் லாப ஸ்தானம், புதன் (வியாபார காரகன்), சூரியன் (நிர்வாக அதிகாரம்), மற்றும் D10 தசாம்ச பலங்கள் இணைந்து தொழில் வளர்ச்சிக்கான சுப யோகங்களை சுட்டிக்காட்டுகின்றன.";
@@ -1939,8 +1939,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let reasoningTa = "";
 
   if (intent.domain === "HEALTH") {
-    reasoningEn = "1st Bhava lord dignity and benefic aspects shield physical vitality against chronic afflictions. 6th Bhava configurations signify strong immunological fighting power (Roga Nashana), while 8th Bhava indicators support endurance and longevity.";
-    reasoningTa = "சுப கிரகங்களின் லக்ன பார்வை மற்றும் 6-ம் பாவகத்தின் மீதுள்ள தாக்கம் உடலின் நோய் எதிர்ப்பு சக்தியை (Immunity) வலுப்படுத்துகிறது. 8-ம் பாவக ஆயுள் பலமும் சனியின் நன்னிலையும் நீண்ட ஆயுளையும், நோய்களிலிருந்து விரைந்து மீளும் ஆற்றலையும் (Recuperative Strength) வழங்குகின்றன.";
+    reasoningEn = "1st Bhava lord dignity and benefic aspects align with traditional physical vitality symbolism. 6th Bhava configurations provide traditional health symbolism and vitality preservation (Roga Nashana), while 8th Bhava indicators correspond to endurance and longevity.";
+    reasoningTa = "சுப கிரகங்களின் லக்ன பார்வை மற்றும் 6-ம் பாவகத்தின் மீதுள்ள தாக்கம் பாரம்பரிய உடலியல் சமநிலையை சுட்டிக்காட்டுகிறது. 8-ம் பாவக ஆயுள் பலமும் சனியின் நன்னிலையும் பாரம்பரிய முறைப்படி நீண்ட ஆயுளையும் மீளும் ஆற்றலையும் குறிக்கின்றன (இது மருத்துவ முடிவல்ல; பாரம்பரிய ஜோதிட வழிகாட்டல் மட்டுமே).";
   } else if (intent.domain === "CAREER") {
     reasoningEn = "Bhavat Bhavam principles (10th from 10th = 7th house of trade, client transactions, and public dealings) combined with 11th house of revenue establish a robust commercial foundation. Mercury and Jupiter placements enhance strategic decision-making and profit margins.";
     reasoningTa = "10-ம் இடத்திற்கு 10-ம் இடமான 7-ம் பாவகம் (வர்த்தகம், வாடிக்கையாளர்கள் மற்றும் கூட்டாண்மை) மற்றும் 11-ம் லாப ஸ்தானம் சுப தொடர்புகள் பெற்றுள்ளன. புதன் மற்றும் குருவின் சுப அமைப்புகள் தொலைநோக்கு வணிகத் திட்டமிடல் மற்றும் நிதி மேலாண்மையை பலப்படுத்துகின்றன.";
@@ -2361,7 +2361,7 @@ export function generateDynamicFollowUpQuestions(domain = "MARRIAGE", currentTyp
     }
     list.push({
       id: "q_h_vitality",
-      text: isTamil ? "உடல் புத்துணர்ச்சியையும் நோய் எதிர்ப்பு சக்தியையும் அதிகரிக்க என்ன செய்ய வேண்டும்?" : "How can I enhance my vitality and immune fighting power?",
+      text: isTamil ? "பாரம்பரிய முறைப்படி உடலியல் சமநிலையை பேண என்ன செய்ய வேண்டும்?" : "How can I align with traditional vitality and lifestyle balance?",
       type: "HEALTH_WELLNESS"
     });
     list.push({

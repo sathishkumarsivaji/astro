@@ -7,7 +7,7 @@
  * Core Standards & Capabilities:
  * 1. Verified Native/Event Benchmark Cohort Architecture with Provenance & Synthetic Birth-Time Quality Labels (AA/A/B/C/D)
  * 2. Explicit Ground-Truth Outcome Registry (SPOUSE_FAMILY_WEALTH_V1, JOINT_RESIDENCE_V1, DIRECTION_V1, DISTANCE_BAND_V1)
- * 3. Strict 60/20/20 Train/Validation/Blind Test Partitioning with Non-Contamination Guarantees
+ * 3. Strict Dataset Partitioning: 60/20/20 (Synthetic Benchmark) & 60/20/10/10 (Production Real-World Dataset: Train 60%, Val 20%, Blind Test 10%, Internal Holdout 10%) with Non-Contamination Guarantees
  * 4. Cryptographic Anti-Leakage Protocol (Deterministic SHA-256 Hashing of Pre-Cutoff Calculation State)
  * 5. 7-Stage Architectural Ablation Pipeline (Model A: D1 -> Model G: Full Multi-System Ensemble)
  * 6. Classical 10-Bin Partitioned Expected Calibration Error (ECE) & Brier Decomposition
@@ -333,7 +333,10 @@ export function generatePredictionBenchmarkDataset(count = 1000, seed = 108) {
 }
 
 /**
- * Splits dataset strictly into 60% Training, 20% Validation, 20% Blind Test sets.
+ * Splits dataset into Training, Validation, and Blind Test sets.
+ * Default 60/20/20 ratios are used for synthetic simulation benchmarks.
+ * Production real-world dataset uses 60/20/10/10 (Train 60%, Val 20%, Blind Test 10%, Internal Holdout 10%)
+ * as defined in data/real_world_validation/splits/split_manifest.json.
  */
 export function partitionDataset(dataset, trainRatio = 0.6, valRatio = 0.2) {
   const total = dataset.length;

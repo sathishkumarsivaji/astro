@@ -187,7 +187,7 @@ class AstroDatabase {
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       CREATE INDEX IF NOT EXISTS idx_saved_charts_user ON saved_charts(user_id);
       CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders(user_id);
-      CREATE INDEX IF NOT EXISTS idx_payment_tx_payment_id ON payment_transactions(payment_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_tx_payment_id ON payment_transactions(payment_id);
       CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id);
     `;
 
@@ -475,6 +475,15 @@ class AstroDatabase {
     return Boolean(this.state.processed_payment_ids[paymentId]);
   }
 
+  claimPaymentId(paymentId) {
+    if (!paymentId) return false;
+    if (this.state.processed_payment_ids[paymentId]) {
+      return false;
+    }
+    this.state.processed_payment_ids[paymentId] = "CLAIMED_PROCESSING";
+    return true;
+  }
+
   recordPaymentTransaction(txData) {
     const txId = txData.txId || `tx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
     const record = {
@@ -501,7 +510,7 @@ class AstroDatabase {
           tx_id, order_id, payment_id, user_id, type, amount_inr, currency,
           credits_added, plan_id, status, timestamp, details
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        ON CONFLICT (tx_id) DO NOTHING`,
+        ON CONFLICT (payment_id) DO NOTHING`,
         [
           record.txId,
           record.orderId || null,

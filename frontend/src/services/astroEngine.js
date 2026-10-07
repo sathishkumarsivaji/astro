@@ -1970,21 +1970,20 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   // Exact Julian Day of birth instant derived directly from resolved UTC instant Date
   const jd = getJulianDateFromUtc(utcDate);
   const T = (jd - 2451545.0) / 36525.0;
-  const sysNorm = (system || "vedic").toLowerCase();
+  if (!system) {
+    throw new Error('INVALID_ASTROLOGY_SYSTEM: system is required. Valid systems: lahiri, kp, raman, tropical.');
+  }
   let ayanamsha = 0;
-  if (sysNorm === "vedic" || sysNorm === "lahiri") {
-    ayanamsha = getLahiriAyanamsha(jd);
-  } else if (sysNorm === "kp") {
-    ayanamsha = getKPAyanamsha(jd);
-  } else if (sysNorm === "raman") {
-    ayanamsha = getRamanAyanamsha(jd);
-  } else if (sysNorm === "tropical" || sysNorm === "western" || sysNorm === "sayana") {
-    ayanamsha = 0;
-  } else if (typeof options?.ayanamshaValue === "number") {
+  if (typeof options?.ayanamshaValue === "number") {
+    const sysCheck = String(system).toLowerCase();
+    if (sysCheck !== "vedic" && sysCheck !== "lahiri" && sysCheck !== "kp" && sysCheck !== "raman" && sysCheck !== "tropical" && sysCheck !== "western" && sysCheck !== "sayana") {
+      throw new Error(`INVALID_ASTROLOGY_SYSTEM: "${system}". Valid systems: lahiri, kp, raman, tropical.`);
+    }
     ayanamsha = options.ayanamshaValue;
   } else {
-    ayanamsha = getLahiriAyanamsha(jd);
+    ayanamsha = getAyanamshaForSystem(jd, system);
   }
+  const sysNorm = (typeof system === "string" ? system : (system?.id || system?.system || "vedic")).toLowerCase();
   const adjustLong = (deg) => norm360(deg - ayanamsha);
 
   const utcPlus1Hour = new Date(utcDate.getTime() + 3600000);
@@ -2800,7 +2799,7 @@ export function calculate12BhavasDetailed(ascendantLong, planets, lang = "en") {
     3: { name: "Mars", nameTa: "செவ்வாய்", role: "Valor, Siblings & Initiatives (Bhratri Karaka)" },
     4: { name: "Moon / Venus / Mars", nameTa: "சந்திரன் / சுக்கிரன் / செவ்வாய்", role: "Mother, Comforts & Land (Matru/Vahana/Bhoomi Karakas)" },
     5: { name: "Jupiter", nameTa: "குரு", role: "Intellect, Progeny & Purva Punya (Putra Karaka)" },
-    6: { name: "Mars / Saturn", nameTa: "செவ்வாய் / சனி", role: "Competitions, Service & Immunity (Shatru/Roga Karakas)" },
+    6: { name: "Mars / Saturn", nameTa: "செவ்வாய் / சனி", role: "Competitions, Service & Vitality Balance (Shatru/Roga Karakas)" },
     7: { name: "Venus", nameTa: "சுக்கிரன்", role: "Spouse, Marriage & Public Alliances (Kalatra Karaka)" },
     8: { name: "Saturn", nameTa: "சனி", role: "Longevity, Transformation & Mysticism (Ayur Karaka)" },
     9: { name: "Jupiter / Sun", nameTa: "குரு / சூரியன்", role: "Dharma, Higher Wisdom & Paternal Blessings (Bhagya Karakas)" },
@@ -11667,7 +11666,7 @@ export function calculateHealthVulnerabilityEvents(chartOrPlanets, maybeAscLong,
     { zone: "Shoulders, Arms & Respiratory (Vata)", tamil: "தோள்பட்டை, கைகள் & வாத சமநிலை" },
     { zone: "Chest, Lungs & Cardiac Rhythm (Kapha/Agni)", tamil: "மார்பு, நுரையீரல் & இதய இயக்கம்" },
     { zone: "Upper Abdomen, Gastric & Digestion (Agni)", tamil: "வயிற்றுப்பகுதி, செரிமானம் & பித்த அக்னி" },
-    { zone: "Intestinal & Natural Immunity (Vata/Pitta)", tamil: "குடல் பகுதி & நோய் எதிர்ப்பு சக்தி" },
+    { zone: "Intestinal & Traditional Vitality (Vata/Pitta)", tamil: "குடல் பகுதி & பாரம்பரிய உடலியல் சமநிலை" },
     { zone: "Lower Abdomen & Hydration Balance (Apana Vata)", tamil: "அடிவயிறு & நீர்ச்சத்து சமநிலை" },
     { zone: "Pelvic & Enduring Vitality (Shukra/Ojas)", tamil: "இடுப்புப் பகுதி & ஓஜஸ் பலம்" },
     { zone: "Thighs & Muscular Circulation (Vata)", tamil: "தொடைகள் & ரத்த ஓட்டம்" },

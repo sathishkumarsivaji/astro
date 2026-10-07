@@ -50,9 +50,9 @@ export function calculateFinanceExpert(chartData, lang) {
             },
             financialOpportunity: (ctx) => {
                 if (ctx.activeHouses.includes(9) || ctx.activeHouses.includes(11)) {
-                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: 'Favorable activation of 9th or 11th houses provides opportunities.', whyNot: [] };
+                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: 'Traditional activation of 9th or 11th houses corresponds to expansive themes; no material outcome is guaranteed.', whyNot: [] };
                 }
-                return { status: SUB_PHASE_STATUS.NOT_ESTABLISHED, why: '', whyNot: ['No strong indicators for sudden opportunities.'] };
+                return { status: SUB_PHASE_STATUS.NOT_ESTABLISHED, why: '', whyNot: ['No strong indicators for expansive financial themes.'] };
             },
             investmentSupport: (ctx) => {
                 // needs 5th + Mercury/Jupiter
@@ -60,7 +60,7 @@ export function calculateFinanceExpert(chartData, lang) {
                 const hasMercJup = ctx.activePlanets.includes('Mercury') || ctx.activePlanets.includes('Jupiter');
                 
                 if (has5th && hasMercJup) {
-                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: '5th house activation combined with Mercury/Jupiter supports calculated investments.', whyNot: [] };
+                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: '5th house activation combined with Mercury/Jupiter is traditionally associated with analytical and resource evaluations; no financial or investment outcome is inferred.', whyNot: [] };
                 }
                 return { status: SUB_PHASE_STATUS.NOT_ESTABLISHED, why: '', whyNot: ['Requires 5th house and Mercury or Jupiter activation.'] };
             },
@@ -76,13 +76,13 @@ export function calculateFinanceExpert(chartData, lang) {
             },
             recoveryPeriod: (ctx) => {
                 if (ctx.activeHouses.includes(11) && ctx.activePlanets.includes('Jupiter')) {
-                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: 'Jupiter influencing gains supports recovery from financial strain.', whyNot: [] };
+                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: 'Jupiter influencing 11th house is traditionally associated with easing financial strain; no economic outcome is guaranteed.', whyNot: [] };
                 }
                 return { status: SUB_PHASE_STATUS.NOT_ESTABLISHED, why: '', whyNot: ['Recovery indicators are currently weak.'] };
             },
             assetAccumulation: (ctx) => {
                 if (ctx.activeHouses.includes(4) && ctx.activeHouses.includes(2)) {
-                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: 'Connection of 2nd and 4th houses supports tangible asset growth.', whyNot: [] };
+                    return { status: SUB_PHASE_STATUS.SUPPORTED, why: 'Connection of 2nd and 4th houses is traditionally associated with asset consolidation; no physical asset acquisition is guaranteed.', whyNot: [] };
                 }
                 return { status: SUB_PHASE_STATUS.NOT_ESTABLISHED, why: '', whyNot: ['Asset building houses (2, 4) lack combined activation.'] };
             }

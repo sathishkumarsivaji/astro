@@ -176,7 +176,7 @@ const q8 = "என் health எப்படி இருக்கும்?";
 const res8 = await processEvidenceLinkedQA({ question: q8, context });
 console.log("Direct Answer Preview:\n", res8.directAnswer);
 
-testCheck("T8.1: Evaluates 1st house vitality and 6th house immunity",
+testCheck("T8.1: Evaluates 1st house vitality and traditional 6th house health symbolism",
   res8.answer.includes("1-ம்") || res8.answer.includes("6-ம்") || res8.answer.includes("1st") || res8.answer.includes("6th"));
 testCheck("T8.2: Includes mandatory non-medical disclaimer",
   res8.answer.includes("மருத்துவ ஆலோசனை அல்ல") || res8.answer.includes("not medical advice"));
