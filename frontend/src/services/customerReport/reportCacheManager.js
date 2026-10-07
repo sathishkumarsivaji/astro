@@ -18,62 +18,19 @@
  * - Full forensic traceability and zero synthetic or stale data leaks.
  */
 
-import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 import { generateChartFingerprint } from "../astroEngine.js";
 
 // Authoritative frozen baseline versions and hashes
 export const DEFAULT_ENGINE_VERSION = "ASTROVERSE Core v4.2.0";
-export const DEFAULT_PREDICTION_ENGINE_HASH = "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
-export const DEFAULT_CALIBRATION_MODEL_HASH = "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277";
-export const DEFAULT_SCHEMA_VERSION = "3.0";
+export const DEFAULT_PREDICTION_ENGINE_HASH = releaseManifest?.authoritativeHashes?.predictionEngineHash || "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
+export const DEFAULT_CALIBRATION_MODEL_HASH = releaseManifest?.authoritativeHashes?.calibrationModelHash || "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277";
+export const DEFAULT_SCHEMA_VERSION = releaseManifest?.schemaVersion || "3.0";
 
 let activeEngineVersion = DEFAULT_ENGINE_VERSION;
 let activePredictionEngineHash = DEFAULT_PREDICTION_ENGINE_HASH;
 let activeCalibrationModelHash = DEFAULT_CALIBRATION_MODEL_HASH;
 let activeSchemaVersion = DEFAULT_SCHEMA_VERSION;
-
-function loadReleaseManifest() {
-  try {
-    const currentDir = typeof __dirname !== "undefined"
-      ? __dirname
-      : (typeof import.meta !== "undefined" && import.meta.url ? path.dirname(fileURLToPath(import.meta.url)) : "");
-    if (!currentDir) return null;
-
-    const candidatePaths = [
-      path.resolve(currentDir, "../../../../current_release_manifest.json"),
-      path.resolve(currentDir, "../../config/current_release_manifest.json")
-    ];
-
-    for (const p of candidatePaths) {
-      if (fs.existsSync(p)) {
-        return JSON.parse(fs.readFileSync(p, "utf-8"));
-      }
-    }
-  } catch (err) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(`RELEASE_MANIFEST_REQUIRED: Failed to load release manifest in production: ${err.message}`);
-    }
-  }
-  return null;
-}
-
-const manifest = loadReleaseManifest();
-if (manifest) {
-  if (manifest.authoritativeHashes?.predictionEngineHash) {
-    activePredictionEngineHash = manifest.authoritativeHashes.predictionEngineHash;
-  }
-  if (manifest.authoritativeHashes?.calibrationModelHash) {
-    activeCalibrationModelHash = manifest.authoritativeHashes.calibrationModelHash;
-  }
-  if (manifest.schemaVersion) {
-    activeSchemaVersion = manifest.schemaVersion;
-  }
-} else if (process.env.NODE_ENV === "production") {
-  throw new Error("RELEASE_MANIFEST_REQUIRED: Release manifest must be present in production to bind report cache");
-}
 
 const reportCache = new Map();
 const cacheStats = {
@@ -84,10 +41,29 @@ const cacheStats = {
 };
 
 /**
- * Computes deterministic SHA-256 hash.
+ * Computes deterministic 64-bit/128-bit hex hash safe for browser and Node.
  */
 function sha256(str) {
-  return crypto.createHash("sha256").update(String(str), "utf8").digest("hex");
+  const s = String(str);
+  let h1 = 0xdeadbeef ^ s.length;
+  let h2 = 0x41c6ce57 ^ s.length;
+  let h3 = 0x9e3779b9 ^ s.length;
+  let h4 = 0x85ebca6b ^ s.length;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+    h3 = Math.imul(h3 ^ ch, 2246822507);
+    h4 = Math.imul(h4 ^ ch, 3266489909);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  h3 = Math.imul(h3 ^ (h3 >>> 16), 1597334677) ^ Math.imul(h4 ^ (h4 >>> 13), 2654435761);
+  h4 = Math.imul(h4 ^ (h4 >>> 16), 1597334677) ^ Math.imul(h3 ^ (h3 >>> 13), 2654435761);
+  return (h1 >>> 0).toString(16).padStart(8, '0') +
+         (h2 >>> 0).toString(16).padStart(8, '0') +
+         (h3 >>> 0).toString(16).padStart(8, '0') +
+         (h4 >>> 0).toString(16).padStart(8, '0');
 }
 
 /**

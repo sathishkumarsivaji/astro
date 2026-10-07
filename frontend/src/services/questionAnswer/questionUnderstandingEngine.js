@@ -8,11 +8,24 @@
  * Implements Section 2, Section 18, and Section 19 of the Precision Q&A Engine Mandate.
  */
 
-import crypto from "node:crypto";
 import { normalizeQuestion } from "./questionNormalizer.js";
 import { classifyIntent, QUESTION_INTENTS } from "./intentClassifier.js";
 import { classifyDomains, DOMAINS } from "./domainClassifier.js";
 import { extractEntities } from "./entityExtractor.js";
+
+function hashString(str) {
+  const s = String(str);
+  let h1 = 0xdeadbeef ^ s.length;
+  let h2 = 0x41c6ce57 ^ s.length;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+}
 
 /**
  * Evaluates whether a question is syntactically or conceptually malformed.
@@ -117,7 +130,7 @@ export function understandQuestion({ question, conversationHistory = [], context
   const lang = normalizedQ.lang;
 
   // Generate deterministic question ID
-  const questionId = "Q_" + crypto.createHash("sha256").update(raw.toLowerCase(), "utf8").digest("hex").slice(0, 12);
+  const questionId = "Q_" + hashString(raw.toLowerCase()).slice(0, 12);
 
   // Check malformed structure
   const malformed = checkMalformedQuestion(raw);

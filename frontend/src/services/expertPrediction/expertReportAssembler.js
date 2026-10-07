@@ -9,10 +9,7 @@
  *   chartData → canonicalFactAdapter → domainAdapters → narrativeBuilder → ExpertReport
  */
 
-import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 import { createExpertReport, DOMAIN, ALL_DOMAINS, RESOLUTION, RESOLUTION_RANK, RESOLUTION_LAYERS } from "./expertPredictionSchema.js";
 import { DOMAIN_VALIDATION_REGISTRY } from "./domainValidationRegistry.js";
 import { extractCanonicalFacts } from "./canonicalFactAdapter.js";
@@ -355,37 +352,11 @@ function getDomainLabelTa(domainId) {
 // EXPERT REPORT MEMOIZATION & CACHE LAYER
 // ─────────────────────────────────────────────────────────────
 
-export const DEFAULT_PREDICTION_ENGINE_HASH = "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
-export const DEFAULT_CALIBRATION_MODEL_HASH = "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277";
+export const DEFAULT_PREDICTION_ENGINE_HASH = releaseManifest?.authoritativeHashes?.predictionEngineHash || "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
+export const DEFAULT_CALIBRATION_MODEL_HASH = releaseManifest?.authoritativeHashes?.calibrationModelHash || "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277";
 
 let activePredictionEngineHash = DEFAULT_PREDICTION_ENGINE_HASH;
 let activeCalibrationModelHash = DEFAULT_CALIBRATION_MODEL_HASH;
-
-try {
-  const currentDir = typeof __dirname !== "undefined"
-    ? __dirname
-    : (typeof import.meta !== "undefined" && import.meta.url ? path.dirname(fileURLToPath(import.meta.url)) : "");
-  if (currentDir) {
-    const candidatePaths = [
-      path.resolve(currentDir, "../../../../current_release_manifest.json"),
-      path.resolve(currentDir, "../../config/current_release_manifest.json")
-    ];
-    for (const p of candidatePaths) {
-      if (fs.existsSync(p)) {
-        const manifest = JSON.parse(fs.readFileSync(p, "utf-8"));
-        if (manifest.authoritativeHashes?.predictionEngineHash) {
-          activePredictionEngineHash = manifest.authoritativeHashes.predictionEngineHash;
-        }
-        if (manifest.authoritativeHashes?.calibrationModelHash) {
-          activeCalibrationModelHash = manifest.authoritativeHashes.calibrationModelHash;
-        }
-        break;
-      }
-    }
-  }
-} catch {
-  // Retain frozen authoritative defaults
-}
 
 const expertReportCache = new Map();
 const expertCacheStats = {
@@ -414,11 +385,6 @@ export function getExpertChartFingerprint(chartData) {
       chartData.longitude ?? chartData.lng ?? "",
       chartData.timezoneId || chartData.tz || chartData.utcOffset || ""
     ].join("|");
-    try {
-      if (crypto && crypto.createHash) {
-        return crypto.createHash("sha256").update(rawKey, "utf8").digest("hex");
-      }
-    } catch {}
     let h = 0;
     for (let i = 0; i < rawKey.length; i++) {
       h = ((h << 5) - h) + rawKey.charCodeAt(i);
