@@ -8,6 +8,7 @@
     "build": "vite build",
     "test": "npm run test:smoke && npm run test:core && npm run test:security && npm run test:expert && npm run test:full",
     "test:smoke": "node test_validation_manifest_integrity.mjs && node test_p0_p1_remediation_audit.mjs && node test_no_fabricated_calculated_values.mjs && node test_user_facing_no_fabricated_values.mjs",
+    "test:certification": "node test_release_certification_gate.mjs",
     "test:core": "npm run test:astronomy && npm run test:rectification && npm run test:integrity && npm run test:reports && npm run test:followup",
     "test:astronomy": "node test_validation_manifest_integrity.mjs && node test_swiss_ephemeris_benchmark.mjs && node test_true_node_independent_benchmark.mjs && node test_cross_system_astronomical_consistency.mjs && node test_independent_ephemeris_reference.mjs && node test_independent_ephemeris_500_cases.mjs && node test_golden_astronomy.mjs",
     "test:validation": "node test_calibration_artifact_matches_runtime.mjs && node test_external_dataset_not_synthetic.mjs && node test_external_dataset_provenance.mjs && node test_backtesting_validation.mjs && node test_regression.mjs",
