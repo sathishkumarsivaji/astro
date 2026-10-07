@@ -64,6 +64,8 @@ export const ASTROLOGICAL_FEATURE_DEFINITIONS = Object.freeze([
   { id: "ASHTAKAVARGA_7TH_SAV", name: "7th House Ashtakavarga Bindus >= 28" }
 ]);
 
+export const FROZEN_TRAIN_BETA_ASTRO = 0.0912;
+
 export const FEATURE_STATE = Object.freeze({
   CALCULATED_ZERO: "CALCULATED_ZERO",       // Evaluated and confirmed absent/zero
   CALCULATED_NONZERO: "CALCULATED_NONZERO", // Evaluated and present (> 0)
@@ -1627,7 +1629,7 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   // Use TRAIN-fitted model if provided
   const modelFit = options.modelFit || null;
   const rawBeta = options.betaAstro ?? modelFit?.coefficients?.betaAstro ?? options.coefficients?.betaAstro;
-  if (rawBeta === undefined || rawBeta === null) {
+  if (rawBeta === undefined || rawBeta === null || !Number.isFinite(Number(rawBeta))) {
     return {
       status: "MODEL_ARTIFACT_MISSING",
       error: "Missing required fitted beta coefficients (betaAstro)",

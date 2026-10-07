@@ -1,18 +1,31 @@
 /**
- * ASTROVERSE — Resolution Classifier
- * ====================================
+ * ASTROVERSE — Resolution & Answerability Classifier
+ * ====================================================
  * Clamps timing resolution to epistemically validated boundaries:
- * YEAR, SEASON, MONTH_RANGE, DATE_RANGE, NOT_DISCRIMINATING, INSUFFICIENT_DATA.
- * Prevents false precision in customer-facing answers.
+ * YEAR, YEAR_RANGE, SEASON, MONTH_RANGE, DATE_RANGE, DATE, TIME, NOT_DISCRIMINATING, INSUFFICIENT_DATA.
+ * Determines answerability state: ANSWERABLE, PARTIALLY_ANSWERABLE, INSUFFICIENT_DATA, NOT_DISCRIMINATING, CONTRADICTORY.
+ *
+ * Implements Section 9 and Section 10 of the Precision Q&A Engine Mandate.
  */
 
 export const TIMING_RESOLUTIONS = Object.freeze({
   YEAR: "YEAR",
+  YEAR_RANGE: "YEAR_RANGE",
   SEASON: "SEASON",
   MONTH_RANGE: "MONTH_RANGE",
   DATE_RANGE: "DATE_RANGE",
+  DATE: "DATE",
+  TIME: "TIME",
   NOT_DISCRIMINATING: "NOT_DISCRIMINATING",
   INSUFFICIENT_DATA: "INSUFFICIENT_DATA"
+});
+
+export const ANSWERABILITY_STATES = Object.freeze({
+  ANSWERABLE: "ANSWERABLE",
+  PARTIALLY_ANSWERABLE: "PARTIALLY_ANSWERABLE",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA",
+  NOT_DISCRIMINATING: "NOT_DISCRIMINATING",
+  CONTRADICTORY: "CONTRADICTORY"
 });
 
 export const EVIDENCE_STATUSES = Object.freeze({
@@ -26,6 +39,30 @@ export const EVIDENCE_STATUSES = Object.freeze({
   EMPIRICALLY_VALIDATED: "EMPIRICALLY_VALIDATED",
   EXPERIMENTAL: "EXPERIMENTAL"
 });
+
+/**
+ * Classifies the answerability of the inquiry given current chart evidence.
+ *
+ * @param {Object} plan - Evidence plan
+ * @param {Object} evidence - Retrieved evidence
+ * @param {Object} contradictions - Detected contradictions
+ * @returns {string} One of ANSWERABILITY_STATES
+ */
+export function classifyAnswerability(plan, evidence, contradictions = {}) {
+  if (!evidence || evidence.status === "INSUFFICIENT_DATA") {
+    return ANSWERABILITY_STATES.INSUFFICIENT_DATA;
+  }
+  if (contradictions?.hasContradictions && contradictions?.netSignal === "CHALLENGING") {
+    return ANSWERABILITY_STATES.CONTRADICTORY;
+  }
+  if (plan?.primaryIntent === "SPOUSE_DISTANCE" || evidence?.distanceAnalysis?.distanceStatus === "NOT_ESTABLISHED") {
+    return ANSWERABILITY_STATES.NOT_DISCRIMINATING;
+  }
+  if (plan?.requestedPrecision === "EXACT_DATE") {
+    return ANSWERABILITY_STATES.PARTIALLY_ANSWERABLE;
+  }
+  return ANSWERABILITY_STATES.ANSWERABLE;
+}
 
 /**
  * Classifies timing resolution and evidence status for a given query and evidence payload.
@@ -52,16 +89,16 @@ export function classifyResolution(plan, evidence) {
     evidenceStatus = EVIDENCE_STATUSES.TRADITIONAL_ONLY;
   } else if (evidence.directionAnalysis?.confidenceCategory === "MIXED_DIRECTIONAL_INDICATION") {
     evidenceStatus = EVIDENCE_STATUSES.MIXED;
-  } else if (plan.primaryIntent === "FACTUAL" || plan.requiredHouses.length === 1 && !plan.includeTiming) {
+  } else if (plan.primaryIntent === "FACTUAL" || (plan.requiredHouses && plan.requiredHouses.size === 1 && !plan.includeTiming)) {
     evidenceStatus = EVIDENCE_STATUSES.FACT;
   }
 
   // Determine Timing Resolution
   let timingResolution = TIMING_RESOLUTIONS.NOT_DISCRIMINATING;
-  if (plan.includeTiming || plan.targetYears.length > 0 || plan.durationYears) {
-    // If we have precise dasha/transit dates with month ranges
+  if (plan.includeTiming || (plan.targetYears && plan.targetYears.length > 0) || plan.durationYears) {
     if (evidence.timingWindows && evidence.timingWindows.length > 0) {
-      timingResolution = TIMING_RESOLUTIONS.MONTH_RANGE;
+      const firstWin = evidence.timingWindows[0];
+      timingResolution = firstWin.resolution || TIMING_RESOLUTIONS.MONTH_RANGE;
     } else if (evidence.activeDasha) {
       timingResolution = TIMING_RESOLUTIONS.YEAR;
     } else {

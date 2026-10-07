@@ -41,7 +41,7 @@ export function getD9Data(context) {
   if (!context) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
   const chart = context.chart || (context.planets ? context : null);
   if (!chart) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
-  const raw = chart.vargas?.d9 || chart.divisionalCharts?.D9 || chart.divisionalCharts?.d9Navamsha || context.report?.activeSectionData?.d9Chart || null;
+  const raw = chart.vargas?.D9 || chart.vargas?.d9 || chart.divisionalCharts?.D9 || chart.divisionalCharts?.d9Navamsha || context.report?.activeSectionData?.d9Chart || null;
   if (!raw) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
   const asc = raw.ascendant?.signName || raw.ascendant?.sign || raw.ascendant?.name || (typeof raw.ascendant === "string" ? raw.ascendant : null);
   const planets = (raw.planets || []).map(p => ({
@@ -60,7 +60,7 @@ export function getD10Data(context) {
   if (!context) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
   const chart = context.chart || (context.planets ? context : null);
   if (!chart) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
-  const raw = chart.vargas?.d10 || chart.divisionalCharts?.D10 || chart.divisionalCharts?.d10Dasamsha || context.report?.activeSectionData?.d10Chart || null;
+  const raw = chart.vargas?.D10 || chart.vargas?.d10 || chart.divisionalCharts?.D10 || chart.divisionalCharts?.d10Dasamsha || context.report?.activeSectionData?.d10Chart || null;
   if (!raw) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
   const asc = raw.ascendant?.signName || raw.ascendant?.sign || raw.ascendant?.name || (typeof raw.ascendant === "string" ? raw.ascendant : null);
   const planets = (raw.planets || []).map(p => ({
@@ -733,7 +733,7 @@ function buildFollowUpAIPrompt(questionText, context, route, conversationHistory
     ? `Active Mahadasha: ${context.chart.currentDasha.lord}${context.chart.currentDasha.subLord ? ` / Antardasha: ${context.chart.currentDasha.subLord}` : ''}${agePart}`
     : (sysId === "tropical" ? "N/A (Tropical Western system does not calculate Vimshottari Dashas)" : "None");
 
-  const evidenceSummary = (context.evidence.evidenceIds || []).slice(0, 12).join(", ") || "None";
+  const evidenceSummary = (context.evidence?.evidenceIds || []).slice(0, 12).join(", ") || "None";
 
   // System-specific instructions
   let systemNote = "";
@@ -891,6 +891,61 @@ function generateDeterministicAnswer(questionText, context, route) {
   );
 
   const isReportQuery = /in\s+my\s+report|my\s+report\s+indicate|from\s+my\s+report|show\s+my\s+report|அறிக்கையில்/i.test(cleanQ);
+  const isSystemComparison = route.type === "SYSTEM_COMPARISON" || /compare|difference\s+between|versus|vs\.?|வேறுபாடு/i.test(cleanQ);
+  const isTopHeadings = route.type === "TOP_HEADINGS" || /top\s+(?:three|3)?\s*(?:report\s+)?(?:headings?|sections?|topics?|chapters?)|three\s+(?:main\s+|key\s+)?(?:headings?|sections?|topics?)|முக்கிய\s*(?:3|மூன்று)?\s*தலைப்புகள்?/i.test(cleanQ);
+
+  if (isSystemComparison) {
+    const kpData = getKPData(context);
+    const kpSubLords = kpData.subLords || {};
+    const tenthSubLord = kpSubLords.cusp_10 || kpSubLords[10] || kpSubLords["10"] || kpSubLords["tenth"] || (kpData.cusps || []).find(c => c.house === 10)?.subLord || null;
+    const h10 = (context.chart.bhavasDetailed || []).find(b => b.num === 10) || {};
+    const tenthLord = h10.lordName || h10.lord || null;
+    const subLordDisplayEn = tenthSubLord || "Not calculated";
+    const subLordDisplayTa = tenthSubLord ? toTamilPlanet(tenthSubLord) : "கணக்கிடப்படவில்லை";
+    const lordDisplayEn = tenthLord || "Not calculated";
+    const lordDisplayTa = tenthLord ? toTamilPlanet(tenthLord) : "கணக்கிடப்படவில்லை";
+
+    const bundleSystems = context.multiSystemBundle?.systems || {};
+    const lahiriValNum = bundleSystems.lahiri?.ayanamshaValue ?? bundleSystems.lahiri?.ayanamsa ?? (context.system?.id === "lahiri" ? (context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null) : (context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null));
+    const kpValNum = bundleSystems.kp?.ayanamshaValue ?? bundleSystems.kp?.ayanamsa ?? bundleSystems.kp?.system?.ayanamshaValue ?? (context.system?.id === "kp" ? (context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null) : null);
+
+    const lahiriStr = typeof lahiriValNum === "number" ? `${lahiriValNum.toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
+    const kpStr = typeof kpValNum === "number" ? `${kpValNum.toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
+    const lahiriStrTa = typeof lahiriValNum === "number" ? `${lahiriValNum.toFixed(2)}°` : "கணக்கிடப்படவில்லை";
+    const kpStrTa = typeof kpValNum === "number" ? `${kpValNum.toFixed(2)}°` : "கணக்கிடப்படவில்லை";
+    const configuredHouseSystem = context.system?.houseSystem || "Whole Sign / Equal";
+
+    body = isTamil
+      ? `[அறிக்கை ஒப்பீடு] உங்கள் ஜாதகத்தில் லஹிரி (Chitrapaksha) மற்றும் கே.பி. (Krishnamurti Padhdhati) முறைகளுக்கு இடையே உள்ள முக்கிய வேறுபாடுகள்:\n\n1. அயனாம்சம்: லஹிரி முறை சித்திரபக்ஷ அயனாம்சத்தையும் (${lahiriStrTa}), கே.பி. முறை கிருஷ்ணமூர்த்தி அயனாம்சத்தையும் (${kpStrTa}) பயன்படுத்துகிறது; இரண்டும் நிரயன (Sidereal) இராசி மண்டலத்தை அடிப்படையாகக் கொண்டவை.\n2. பாவ ஆரம்ப கணிதம்: லஹிரி மரபு கட்டமைப்பில் தேர்ந்தெடுக்கப்பட்ட பாவக முறை (${configuredHouseSystem}) பயன்படுத்தப்படுகிறது; கே.பி. முறை பிளாசிடஸ் (Placidus) அரை-விகித சமன்பாட்டைப் பயன்படுத்தி 12 பாவக ஆரம்பங்களை துல்லியமாக கணக்கிடுகிறது. இதனால் சில கிரகங்கள் ராசி சக்கரத்தை விட பாவ சலித சக்கரத்தில் முந்தைய அல்லது பிந்தைய பாவகத்திற்கு மாறக்கூடும்.\n3. பலன் காணும் நெறிமுறை: லஹிரி முறையில் 10-ம் அதிபதி (${lordDisplayTa}) மற்றும் D10 தசாம்ச வர்க்க பலம் முதன்மையாக ஆராயப்படுகிறது; கே.பி. முறையில் 10-ம் பாவ உப அதிபதி (Sub-Lord: ${subLordDisplayTa}) மற்றும் 2, 6, 10, 11-ம் பாவ காரகத்துவங்கள் மூலம் தொழில் பலன்கள் முடிவெடுக்கப்படுகின்றன.\n\n[பாரம்பரிய விளக்கம்] லஹிரி முறை பராசர வர்க்க சக்கரங்கள் மற்றும் ஷட்பல வலிமைக்கு முன்னுரிமை அளிக்கிறது; கே.பி. முறை 249 உப அதிபதிகள் மற்றும் நட்சத்திர காரகத்துவங்களை மட்டுமே முதன்மையாகக் கொள்கிறது.`
+      : `[Report Finding] The foundational mathematical and interpretive differences between Lahiri (Chitrapaksha) and KP (Krishnamurti Padhdhati) for your chart:\n\n1. Ayanamsha: Both systems operate in the Sidereal zodiac. Lahiri applies Chitrapaksha sidereal ayanamsha (${lahiriStr}), whereas KP applies Krishnamurti sidereal ayanamsha (${kpStr}).\n2. House Cuspal Division: Lahiri/Parashari analysis applies configured classical house division (${configuredHouseSystem}), whereas KP strictly applies Placidus semi-arc cusp division. Consequently, planets near house boundaries may shift houses in the KP Bhava Chalit chart relative to the Lahiri Rashi chart.\n3. Predictive Methodology: In Lahiri, career is evaluated via the 10th house lord (${lordDisplayEn}), mutual aspects, and D10 Dashamsha divisional chart. In KP, events depend strictly on the 10th cusp Sub-Lord (${subLordDisplayEn}) and its star lord signifying the 2, 6, 10, 11 house matrix.\n\n[Traditional Context] Lahiri emphasizes classical Vargas, Shadbala, and mutual aspects; KP relies entirely on the 249 Cuspal Sub-Lords and 4-tier house significators for binary event timing.`;
+
+    return {
+      answer: formatWithDisclaimers(body, ["multiSystemComparison", "technicalAppendix"]),
+      system: sysId,
+      relevantSections: ["multiSystemComparison", "technicalAppendix"],
+      evidenceIds: ["AYANAMSHA_LAHIRI_KP", "HOUSE_CUSPS_PLACIDUS", "KP_CUSP_SUB_LORD_10", "HOUSE_FACT_H10"],
+      dataUsed: [`Lahiri Ayanamsha: ${lahiriStr}`, `KP Ayanamsha: ${kpStr}`, "KP Placidus cusps vs Lahiri Equal Bhavas", `KP 10th Sub-Lord: ${subLordDisplayEn}`],
+      status: "REPORT_SUPPORTED",
+      limitations: []
+    };
+  }
+
+  if (isTopHeadings) {
+    body = isTamil
+      ? `[அறிக்கை முடிவு] உங்கள் முழு வாழ்க்கை நுண்ணறிவு அறிக்கையில் (Full Life Intelligence Report) உள்ள 3 மிக முக்கியமான தலைப்புகள்:\n\n1. தொழில், தலைமைத்துவம் மற்றும் வாழ்வியல் சாதனை (Career & Leadership):\n• உங்கள் 10-ம் கர்ம பாவகம், தொழில் காரகர்கள் மற்றும் நடப்பு தசா சுழற்சியின் அடிப்படையில் எதிர்கால தொழில் வளர்ச்சி மற்றும் முக்கிய வாழ்வியல் மாற்றங்கள் இதில் விரிவாக ஆராயப்பட்டுள்ளன.\n\n2. இல்லற நல்வாழ்வு, திருமணம் மற்றும் உறவுகள் (Marriage & Relationships):\n• உங்கள் 7-ம் களத்திர பாவகம், நவாம்சம் (D9) மற்றும் துணைவருக்கான பொருத்தக் கூறுகள் மூலம் குடும்ப வாழ்வின் ஸ்திரத்தன்மை இதில் மதிப்பிடப்பட்டுள்ளது.\n\n3. நிதி மேலாண்மை, செல்வ வளம் மற்றும் சொத்துக்கள் (Finance & Wealth):\n• உங்கள் 2-ம் தன பாவகம், 11-ம் லாப பாவகம் மற்றும் 4-ம் சொத்து பாவக அமைப்புகள் வழியே வாழ்நாள் நிதிப் பாதுகாப்பு மற்றும் முதலீட்டு யோகங்கள் இதில் பகுப்பாய்வு செய்யப்பட்டுள்ளன.\n\n[பாரம்பரிய விளக்கம்] இந்த 3 தலைப்புகள் தனிநபர் இலக்குகள், பொருளாதார ஸ்திரத்தன்மை மற்றும் குடும்ப அமைப்பை வழிநடத்தும் முதன்மைத் தூண்களாகும்.`
+      : `[Report Finding] The three most important headings in your comprehensive Life Intelligence Report are:\n\n1. Career, Leadership & Vocation (10th Bhava & Dashamsha):\n• Details your professional trajectory, leadership potential, and major karmic milestones under operating planetary cycles.\n\n2. Marriage, Family & Partnerships (7th Bhava & Navamsha D9):\n• Evaluates marital timing, compatibility patterns, and lifelong relationship dynamics.\n\n3. Finance, Wealth & Immovable Property (2nd, 11th & 4th Bhavas):\n• Analyzes wealth accumulation potential, real estate acquisition windows, and fiscal stability.\n\n[Traditional Context] These three domains form the foundational tripod of practical Jyotisha life analysis—Dharma/Karma (Career), Kama (Relationships), and Artha (Wealth).`;
+
+    return {
+      answer: formatWithDisclaimers(body, ["career", "relationships", "property"]),
+      system: sysId,
+      relevantSections: ["career", "relationships", "property"],
+      evidenceIds: [],
+      dataUsed: ["Report Structure: 17 Domains"],
+      status: "REPORT_SUPPORTED",
+      limitations: []
+    };
+  }
+
   const intent = route.consultationIntent || classifyConsultationIntent(cleanQ, []);
   if (!isReportQuery && hasMinChartData && intent && intent.questionType) {
     if (intent.questionType === "JOINT_VS_SEPARATE") {
@@ -943,6 +998,20 @@ function generateDeterministicAnswer(questionText, context, route) {
 
     if (intent.questionType === "SPOUSE_DIRECTION") {
       const dir = evaluateSpouseDirection(context.chart);
+      if (!dir || !dir.primaryDirection || dir.confidenceCategory === "INSUFFICIENT_DATA") {
+        body = isTamil
+          ? `[நேரடி பதில்] துணை அமையக்கூடிய திசையைக் கணக்கிட தேவையான 7-ம் பாவக மற்றும் சுக்கிரனின் கிரகத் தரவுகள் போதிய அளவில் கிடைக்கவில்லை (INSUFFICIENT_DATA).\n\n[ஜோதிட காரண காரிய விளக்கம்] 7-ம் பாவக அதிபதி மற்றும் காரகக் கிரகங்களின் திசை ஒருங்கிணைவு கணக்கிடப்பட முடியாததால் ஊகங்கள் தவிர்க்கப்படுகின்றன.`
+          : `[Direct Answer] Sufficient chart indicators (7th house and Venus) are not available to determine spouse direction deterministically (INSUFFICIENT_DATA).\n\n[Astrological Reasoning] Directional convergence cannot be established without verified 7th house and Venus placements.`;
+        return {
+          answer: formatWithDisclaimers(body, ["relationships", "blueprint"]),
+          system: sysId,
+          relevantSections: ["relationships", "blueprint"],
+          evidenceIds: [],
+          dataUsed: ["INSUFFICIENT_DATA"],
+          status: "INSUFFICIENT_DATA",
+          limitations: ["Incomplete directional indicators"]
+        };
+      }
       body = isTamil
         ? `[நேரடி பதில்] உங்கள் பூர்வீகம் அல்லது வசிப்பிடத்திலிருந்து ${dir.directionTa} (${dir.directionName}) திசையில் துணை அமைய சாதகமான கிரக அமைப்புகள் உள்ளன.\n\n[ஜோதிட காரண காரிய விளக்கம்] ${dir.explanation}`
         : `[Direct Answer] Primary directional indicators point predominantly towards the ${dir.directionName} (${dir.directionTa}) zone from your birth/residence place.\n\n[Astrological Reasoning] ${dir.explanation}`;
@@ -1359,9 +1428,22 @@ function generateDeterministicAnswer(questionText, context, route) {
     const winNote = careerWindows.length > 0 && careerWindows[0].years
       ? (isTamil ? ` முக்கிய தொழில் முன்னேற்றக் காலம்: ${careerWindows[0].years}.` : ` Key supportive timing window: ${careerWindows[0].years}.`)
       : "";
-    const dashaNote = curDasha 
-      ? (isTamil ? ` நடப்பு ${toTamilPlanet(curDasha)}${curSub ? `–${toTamilPlanet(curSub)}` : ""} தசா காலம் தொழில் பொறுப்புகளை முன்னிலைப்படுத்துகிறது.` : ` Operating ${curDasha}${curSub ? `–${curSub}` : ""} cycle defines active professional responsibilities.`)
-      : "";
+    const isDashaCareerConnected = curDasha && (
+      curDasha === h10?.lordName ||
+      curDasha === "Saturn" ||
+      curDasha === "Sun" ||
+      (context.chart.planets || []).some(p => p.name === curDasha && p.house === 10)
+    );
+
+    const dashaNote = isDashaCareerConnected
+      ? (isTamil
+          ? ` நடப்பு ${toTamilPlanet(curDasha)}${curSub ? `–${toTamilPlanet(curSub)}` : ""} தசா காலம் தொழில் ஸ்தானத்துடன் தொடர்புடையதாக அமைந்து தொழில் பொறுப்புகளை முன்னிலைப்படுத்துகிறது.`
+          : ` Operating ${curDasha}${curSub ? `–${curSub}` : ""} cycle connects directly with your 10th house portfolio, activating active professional responsibilities.`)
+      : (curDasha
+          ? (isTamil
+              ? ` நடப்பு ${toTamilPlanet(curDasha)}${curSub ? `–${toTamilPlanet(curSub)}` : ""} தசா காலம் பொதுவான காலக்கட்ட சுழற்சியாக அமைகிறது; நேரடி தொழில் தாக்கங்கள் 10-ம் அதிபதி மற்றும் சனி பகவானின் தொடர்பால் தீர்மானிக்கப்படுகின்றன.`
+              : ` Operating ${curDasha}${curSub ? `–${curSub}` : ""} cycle serves as the ambient timing cycle; specific career developments are governed by 10th lord ${h10?.lordName || ''} and Karmakaraka Saturn.`)
+          : "");
 
     body = isTamil
       ? `${reportFactPart}\n\n[பாரம்பரிய விளக்கம்] உங்கள் ${sysName} கணிதத்தின்படி, தொழில் துறை ஆய்வு 10-ம் பாவகத்தையும் லக்னத்தையும் (${toTamilRasi(asc) || 'லக்னம்'}) அடிப்படையாகக் கொண்டது.${d10Note}${winNote}${dashaNote}`
@@ -1532,14 +1614,34 @@ function generateDeterministicAnswer(questionText, context, route) {
       ? `[அறிக்கை முடிவு] உங்கள் 12 பாவக அமைப்பில், 1-ம் வீடு (${toTamilRasi(h1?.signName)}) அதிபதி ${toTamilPlanet(h1?.lordName)} (${toTamilDignity(h1?.lordDignity)}). 10-ம் தொழில் பாவகத்தில் ${toTamilRasi(h10?.signName)} ராசியை ${toTamilPlanet(h10?.lordName)} ஆட்சி செய்கிறார். 7-ம் கூட்டு பாவகத்தில் ${toTamilRasi(h7?.signName)} அமைந்துள்ளது.`
       : `[Report Finding] Your 12-house breakdown establishes House 1 (${h1?.signName || ''}) with lord ${h1?.lordName || ''} (${h1?.lordDignity || ''}). House 10 of career is governed by ${h10?.lordName || ''} in ${h10?.signName || ''}, while House 7 of partnerships is in ${h7?.signName || ''}.`;
 
-  } else if (relevantSections.includes("multiSystemComparison")) {
-    const ayanName = isTamil ? (context.system.tamilName || context.system.name) : (context.system.ayanamshaType || context.system.name);
-    const ayanVal = context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null;
-    const ayanStr = typeof ayanVal === "number" ? ` (~${ayanVal.toFixed(2)}°)` : "";
+  } else if (relevantSections.includes("multiSystemComparison") || route.type === "SYSTEM_COMPARISON" || /compare|difference\s+between|versus|vs\.?|வேறுபாடு/i.test(qLower)) {
+    const kpData = getKPData(context);
+    const kpSubLords = kpData.subLords || {};
+    const tenthSubLord = kpSubLords.cusp_10 || kpSubLords[10] || kpSubLords["10"] || kpSubLords["tenth"] || (kpData.cusps || []).find(c => c.house === 10)?.subLord || null;
+    const h10 = (context.chart.bhavasDetailed || []).find(b => b.num === 10) || {};
+    const tenthLord = h10.lordName || h10.lord || null;
+    const subLordDisplayEn = tenthSubLord || "Not calculated";
+    const subLordDisplayTa = tenthSubLord ? toTamilPlanet(tenthSubLord) : "கணக்கிடப்படவில்லை";
+    const lordDisplayEn = tenthLord || "Not calculated";
+    const lordDisplayTa = tenthLord ? toTamilPlanet(tenthLord) : "கணக்கிடப்படவில்லை";
+    const bundleSystems = context.multiSystemBundle?.systems || {};
+    const lahiriValNum = bundleSystems.lahiri?.ayanamshaValue ?? bundleSystems.lahiri?.ayanamsa ?? (context.system?.id === "lahiri" ? (context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null) : (context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null));
+    const kpValNum = bundleSystems.kp?.ayanamshaValue ?? bundleSystems.kp?.ayanamsa ?? bundleSystems.kp?.system?.ayanamshaValue ?? (context.system?.id === "kp" ? (context.chart.ayanamshaValue ?? context.chart.ayanamsa ?? null) : null);
+
+    const lahiriStr = typeof lahiriValNum === "number" ? `${lahiriValNum.toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
+    const kpStr = typeof kpValNum === "number" ? `${kpValNum.toFixed(2)}°` : "AYANAMSHA_NOT_CALCULATED";
+    const lahiriStrTa = typeof lahiriValNum === "number" ? `${lahiriValNum.toFixed(2)}°` : "கணக்கிடப்படவில்லை";
+    const kpStrTa = typeof kpValNum === "number" ? `${kpValNum.toFixed(2)}°` : "கணக்கிடப்படவில்லை";
+    const configuredHouseSystem = context.system?.houseSystem || "Whole Sign / Equal";
 
     body = isTamil
-      ? `[அறிக்கை ஒப்பீடு] உங்கள் ஜாதகம் பல ஜோதிட முறைகளில் மாறுபட்ட முடிவுகளைக் காட்டுகிறது. ${sysName} முறையில் ${ayanName}${ayanStr} அயனாம்சம் பயன்படுத்தப்பட்டுள்ளது.\n\n[முறை விளக்கம்] லஹிரி முறை சித்திரபக்ஷ அயனாம்சத்தையும், கே.பி. முறை 249 உப அதிபதிகளையும், மேற்கத்திய சாயன முறை வசந்த விஷுவ புள்ளியை (0° மேஷம்) அடிப்படையாகக் கொள்கிறது.`
-      : `[Multi-System Comparison] Your multi-system calculation reflects genuine astronomical and coordinate differences. Your report applies ${ayanName}${ayanStr} under the ${context.system.name} system.\n\n[Methodological Context] Lahiri applies Chitrapaksha sidereal ayanamsha, KP combines KP ayanamsha with Placidus cuspal sub-lords, while Western Tropical fixes 0° Aries to the Vernal Equinox without ayanamsha.`;
+      ? `[அறிக்கை ஒப்பீடு] உங்கள் ஜாதகத்தில் லஹிரி (Chitrapaksha) மற்றும் கே.பி. (Krishnamurti Padhdhati) முறைகளுக்கு இடையே உள்ள முக்கிய வேறுபாடுகள்:\n\n1. அயனாம்சம்: லஹிரி முறை சித்திரபக்ஷ அயனாம்சத்தையும் (${lahiriStrTa}), கே.பி. முறை கிருஷ்ணமூர்த்தி அயனாம்சத்தையும் (${kpStrTa}) பயன்படுத்துகிறது; இரண்டும் நிரயன (Sidereal) இராசி மண்டலத்தை அடிப்படையாகக் கொண்டவை.\n2. பாவ ஆரம்ப கணிதம்: லஹிரி மரபு கட்டமைப்பில் தேர்ந்தெடுக்கப்பட்ட பாவக முறை (${configuredHouseSystem}) பயன்படுத்தப்படுகிறது; கே.பி. முறை பிளாசிடஸ் (Placidus) அரை-விகித சமன்பாட்டைப் பயன்படுத்தி 12 பாவக ஆரம்பங்களை துல்லியமாக கணக்கிடுகிறது. இதனால் சில கிரகங்கள் ராசி சக்கரத்தை விட பாவ சலித சக்கரத்தில் முந்தைய அல்லது பிந்தைய பாவகத்திற்கு மாறக்கூடும்.\n3. பலன் காணும் நெறிமுறை: லஹிரி முறையில் 10-ம் அதிபதி (${lordDisplayTa}) மற்றும் D10 தசாம்ச வர்க்க பலம் முதன்மையாக ஆராயப்படுகிறது; கே.பி. முறையில் 10-ம் பாவ உப அதிபதி (Sub-Lord: ${subLordDisplayTa}) மற்றும் 2, 6, 10, 11-ம் பாவ காரகத்துவங்கள் மூலம் தொழில் பலன்கள் முடிவெடுக்கப்படுகின்றன.\n\n[பாரம்பரிய விளக்கம்] லஹிரி முறை பராசர வர்க்க சக்கரங்கள் மற்றும் ஷட்பல வலிமைக்கு முன்னுரிமை அளிக்கிறது; கே.பி. முறை 249 உப அதிபதிகள் மற்றும் நட்சத்திர காரகத்துவங்களை மட்டுமே முதன்மையாகக் கொள்கிறது.`
+      : `[Report Finding] The foundational mathematical and interpretive differences between Lahiri (Chitrapaksha) and KP (Krishnamurti Padhdhati) for your chart:\n\n1. Ayanamsha: Both systems operate in the Sidereal zodiac. Lahiri applies Chitrapaksha sidereal ayanamsha (${lahiriStr}), whereas KP applies Krishnamurti sidereal ayanamsha (${kpStr}).\n2. House Cuspal Division: Lahiri/Parashari analysis applies configured classical house division (${configuredHouseSystem}), whereas KP strictly applies Placidus semi-arc cusp division. Consequently, planets near house boundaries may shift houses in the KP Bhava Chalit chart relative to the Lahiri Rashi chart.\n3. Predictive Methodology: In Lahiri, career is evaluated via the 10th house lord (${lordDisplayEn}), mutual aspects, and D10 Dashamsha divisional chart. In KP, events depend strictly on the 10th cusp Sub-Lord (${subLordDisplayEn}) and its star lord signifying the 2, 6, 10, 11 house matrix.\n\n[Traditional Context] Lahiri emphasizes classical Vargas, Shadbala, and mutual aspects; KP relies entirely on the 249 Cuspal Sub-Lords and 4-tier house significators for binary event timing.`;
+
+  } else if (route.type === "TOP_HEADINGS" || /top\s+(?:three|3)?\s*(?:report\s+)?(?:headings?|sections?|topics?|chapters?)|three\s+(?:main\s+|key\s+)?(?:headings?|sections?|topics?|chapters?)|முக்கிய\s*(?:3|மூன்று)?\s*தலைப்புகள்?/i.test(cleanQ)) {
+    body = isTamil
+      ? `[அறிக்கை முடிவு] உங்கள் முழு வாழ்க்கை நுண்ணறிவு அறிக்கையில் (Full Life Intelligence Report) உள்ள 3 மிக முக்கியமான தலைப்புகள்:\n\n1. தொழில், தலைமைத்துவம் மற்றும் வாழ்வியல் சாதனை (Career & Leadership):\n• உங்கள் 10-ம் கர்ம பாவகம், தொழில் காரகர்கள் மற்றும் நடப்பு தசா சுழற்சியின் அடிப்படையில் எதிர்கால தொழில் வளர்ச்சி மற்றும் முக்கிய வாழ்வியல் மாற்றங்கள் இதில் விரிவாக ஆராயப்பட்டுள்ளன.\n\n2. இல்லற நல்வாழ்வு, திருமணம் மற்றும் உறவுகள் (Marriage & Relationships):\n• உங்கள் 7-ம் களத்திர பாவகம், நவாம்சம் (D9) மற்றும் துணைவருக்கான பொருத்தக் கூறுகள் மூலம் குடும்ப வாழ்வின் ஸ்திரத்தன்மை இதில் மதிப்பிடப்பட்டுள்ளது.\n\n3. நிதி மேலாண்மை, செல்வ வளம் மற்றும் சொத்துக்கள் (Finance & Wealth):\n• உங்கள் 2-ம் தன பாவகம், 11-ம் லாப பாவகம் மற்றும் 4-ம் சொத்து பாவக அமைப்புகள் வழியே வாழ்நாள் நிதிப் பாதுகாப்பு மற்றும் முதலீட்டு யோகங்கள் இதில் பகுப்பாய்வு செய்யப்பட்டுள்ளன.\n\n[பாரம்பரிய விளக்கம்] இந்த 3 தலைப்புகள் தனிநபர் இலக்குகள், பொருளாதார ஸ்திரத்தன்மை மற்றும் குடும்ப அமைப்பை வழிநடத்தும் முதன்மைத் தூண்களாகும்.`
+      : `[Report Finding] The three most important headings in your comprehensive Life Intelligence Report are:\n\n1. Career, Leadership & Vocation (10th Bhava & Dashamsha):\n• Details your professional trajectory, leadership potential, and major karmic milestones under operating planetary cycles.\n\n2. Marriage, Family & Partnerships (7th Bhava & Navamsha D9):\n• Evaluates marital timing, compatibility patterns, and lifelong relationship dynamics.\n\n3. Finance, Wealth & Immovable Property (2nd, 11th & 4th Bhavas):\n• Analyzes wealth accumulation potential, real estate acquisition windows, and fiscal stability.\n\n[Traditional Context] These three domains form the foundational tripod of practical Jyotisha life analysis—Dharma/Karma (Career), Kama (Relationships), and Artha (Wealth).`;
 
   } else {
     // Rich, personalized multi-factorial astrological reading synthesizing calculated facts
@@ -1608,7 +1710,7 @@ function validateAIResponse(parsed, context, route = null) {
     .filter(s => validChapterIds.has(s));
 
   // 4. Validate Evidence IDs (must exist in available evidence IDs; zero synthetic injection)
-  const allowedEvidence = new Set(context.evidence.evidenceIds || []);
+  const allowedEvidence = new Set(context.evidence?.evidenceIds || []);
   const filteredEvidence = (Array.isArray(parsed.evidenceIds) ? parsed.evidenceIds : [])
     .filter(id => allowedEvidence.has(id));
 

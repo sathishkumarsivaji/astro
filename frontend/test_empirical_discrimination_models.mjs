@@ -72,6 +72,18 @@ test("detectDegenerateClassifier confirms non-degenerate discriminative classifi
   assert.equal(res.status, EMPIRICAL_STATUS.VALIDATED);
 });
 
+test("detectDegenerateClassifier classifies as NON_DISCRIMINATIVE when TN > 0 but MCC < 0.10", () => {
+  const weakMatrix = { tp: 70, fp: 2, tn: 137, fn: 1375 };
+  const weakMetrics = { specificity: 0.9856, mcc: 0.0463, balancedAccuracy: 0.517, accuracy: 0.1307 };
+
+  const res = detectDegenerateClassifier(weakMatrix, weakMetrics);
+  assert.equal(res.isDegenerate, false);
+  assert.equal(res.classifierStatus, "NON_DISCRIMINATIVE");
+  assert.equal(res.empiricallyValidated, false);
+  assert.equal(res.status, EMPIRICAL_STATUS.NOT_DISCRIMINATIVE);
+  assert.ok(res.reason.includes("Non-discriminative classifier"));
+});
+
 // -------------------------------------------------------------------------
 // 2. Partition Non-Leakage Audits
 // -------------------------------------------------------------------------

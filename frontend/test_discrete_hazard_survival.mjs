@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import {
   SURVIVAL_AGE_BINS,
   TRAIN_DEMOGRAPHIC_BASELINE_HAZARD,
+  FROZEN_TRAIN_BETA_ASTRO,
   extractIntervalAstrologicalFeatures,
   predictDiscreteHazardSurvival,
   evaluateCohortDiscreteHazardSurvival,
@@ -59,7 +60,7 @@ const sampleChart = calculatePlanetaryPositions("1985-05-15", "10:30", 13.08, 80
 const timingEvents = calculateMarriageTimingEvents(sampleChart);
 const windows = timingEvents?.candidateWindows || [];
 
-const predCombined = predictDiscreteHazardSurvival(sampleChart, windows, { modelType: "COMBINED_HAZARD" });
+const predCombined = predictDiscreteHazardSurvival(sampleChart, windows, { modelType: "COMBINED_HAZARD", betaAstro: FROZEN_TRAIN_BETA_ASTRO });
 assert(Number.isFinite(predCombined.occurrenceProbability), "Occurrence probability is finite number");
 assert(predCombined.occurrenceProbability > 0 && predCombined.occurrenceProbability < 1, "Occurrence probability in (0, 1)");
 assert(predCombined.intervals.length === 16, "Output contains all 16 interval hazard rates");
@@ -83,7 +84,7 @@ function getChart(rec) {
   return c;
 }
 
-const cohortEval = evaluateCohortDiscreteHazardSurvival(trainRecords, getChart);
+const cohortEval = evaluateCohortDiscreteHazardSurvival(trainRecords, getChart, { betaAstro: FROZEN_TRAIN_BETA_ASTRO });
 assert(cohortEval.cohortEvaluatedN > 0, `Evaluated sample cohort subjects: ${cohortEval.cohortEvaluatedN}`);
 assert(Number.isFinite(cohortEval.likelihood.logLikNullModel), "Null model log-likelihood is finite");
 assert(Number.isFinite(cohortEval.likelihood.logLikCombinedModel), "Combined model log-likelihood is finite");

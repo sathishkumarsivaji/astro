@@ -28,6 +28,7 @@ import {
   formatTamilDegree,
   cleanEnglishParentheses
 } from "./tamilAstrologyUtils.js";
+import { calculatePersonalizedRemedies } from "./astroEngine.js";
 
 /**
  * Canonical accessor helpers for chart Lagna & Moon signs across differing schema representations
@@ -1079,42 +1080,75 @@ export function evaluateSpouseDirection(chartData) {
   const ascSign = getAscendantSignName(chartData);
   const SIGN_NAMES = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
   const ascIdx = ascSign ? SIGN_NAMES.indexOf(ascSign) : -1;
-  if (ascIdx === -1) {
+  const planets = chartData?.planets || [];
+
+  if (ascIdx === -1 || planets.length === 0) {
     return {
-      primaryDirection: "INDETERMINATE",
-      directionName: "Indeterminate (Missing Ascendant)",
-      directionTa: "குறிப்பிடப்படாத திசை",
-      methodA: "INDETERMINATE",
-      methodB: "INDETERMINATE",
-      methodC: "INDETERMINATE",
-      explanation: "Ascendant sign is missing or indeterminate.",
-      confidence: "LOW"
+      primaryDirection: null,
+      secondaryDirection: null,
+      directionName: "Insufficient Data",
+      directionTa: "கணக்கிடப்படவில்லை",
+      methodA: null,
+      methodB: null,
+      methodC: null,
+      convergenceScore: null,
+      confidenceCategory: "INSUFFICIENT_DATA",
+      explanation: "Ascendant sign or planetary placements are missing or indeterminate.",
+      confidence: "INSUFFICIENT_DATA"
     };
   }
+
   const seventhSign = SIGN_NAMES[(ascIdx + 6) % 12];
-  const venus = (chartData.planets || []).find(p => p.name === "Venus") || {};
+  const venus = planets.find(p => p.name === "Venus") || null;
 
-  const methodA = SIGN_DIRECTIONS[seventhSign] || "EAST";
-  const methodB = PLANET_DIRECTIONS[venus.name] || "SOUTH_EAST";
-  const methodC = SIGN_DIRECTIONS[venus.sign] || methodA;
+  const methodA = SIGN_DIRECTIONS[seventhSign] || null;
+  const methodB = (venus && venus.name) ? (PLANET_DIRECTIONS[venus.name] || null) : null;
+  const methodC = (venus && venus.sign) ? (SIGN_DIRECTIONS[venus.sign] || null) : null;
 
-  let primaryDirection = methodA;
-  let directionTa = predictionConfig.cardinalDirections[primaryDirection]?.tamil || "கிழக்கு";
+  const validMethods = [methodA, methodB, methodC].filter(Boolean);
+  if (validMethods.length < 2 || !venus || !venus.sign) {
+    return {
+      primaryDirection: null,
+      secondaryDirection: null,
+      directionName: "Insufficient Data",
+      directionTa: "கணக்கிடப்படவில்லை",
+      methodA: methodA || null,
+      methodB: methodB || null,
+      methodC: methodC || null,
+      convergenceScore: null,
+      confidenceCategory: "INSUFFICIENT_DATA",
+      explanation: "Directional indicators (7th house, 7th lord, Venus) are absent or uncalculated.",
+      confidence: "INSUFFICIENT_DATA"
+    };
+  }
+
+  // Frequency count of valid directional methods
+  const counts = {};
+  validMethods.forEach(d => { counts[d] = (counts[d] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const primaryDirection = sorted[0][0];
+  const secondaryDirection = sorted[1] ? sorted[1][0] : null;
+  const convergenceScore = parseFloat((sorted[0][1] / validMethods.length).toFixed(2));
+
+  let directionTa = predictionConfig.cardinalDirections[primaryDirection]?.tamil || primaryDirection;
   let explanation = "";
 
-  if (methodA === methodC) {
-    explanation = `High convergence: 7th house sign (${seventhSign}) and Venus sign (${venus.sign || seventhSign}) both align to the ${primaryDirection} quadrant. Method B (Venus Karaka): ${methodB}.`;
+  if (methodA && methodC && methodA === methodC) {
+    explanation = `High convergence: 7th house sign (${seventhSign}) and Venus sign (${venus?.sign || seventhSign}) both align to the ${primaryDirection} quadrant. Method B (Venus Karaka): ${methodB || "N/A"}.`;
   } else {
-    explanation = `Method A (7th Rashi ${seventhSign}): ${methodA} | Method B (Venus Karaka): ${methodB} | Method C (Venus Sign ${venus.sign || seventhSign}): ${methodC}. Primary convergence zone spans ${methodA} to ${methodC}.`;
+    explanation = `Method A (7th Rashi ${seventhSign || "N/A"}): ${methodA || "N/A"} | Method B (Venus Karaka): ${methodB || "N/A"} | Method C (Venus Sign ${venus?.sign || "N/A"}): ${methodC || "N/A"}. Primary convergence zone points towards ${primaryDirection}.`;
   }
 
   return {
     primaryDirection,
+    secondaryDirection,
     directionName: predictionConfig.cardinalDirections[primaryDirection]?.name || primaryDirection,
     directionTa,
     methodA,
     methodB,
     methodC,
+    convergenceScore,
+    confidenceCategory: convergenceScore >= 0.6 ? "HIGH_CONVERGENCE" : "MIXED_DIRECTIONAL_INDICATION",
     explanation,
     confidence: (methodA === methodB || methodA === methodC) ? "HIGH" : "MODERATE"
   };
@@ -1190,8 +1224,32 @@ export function evaluateJointVsSeparateResidence(chartData) {
  * 4.4b VEDIC GEMSTONE & REMEDIES ENGINE (Ratna Shastra Synthesis)
  */
 export function evaluateGemstoneRemedies(chartData) {
-  const remedies = chartData?.personalizedRemedies || chartData?.remedies || {};
   const ascSign = getAscendantSignName(chartData);
+  if (!ascSign) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      recommendationStatus: "INSUFFICIENT_DATA",
+      primaryGemstone: null,
+      primaryLord: null,
+      finger: null,
+      metal: null,
+      mantra: null,
+      contraindicatedList: [],
+      contraindicatedSummaryEn: "None (Insufficient chart data)",
+      contraindicatedSummaryTa: "இல்லை (போதிய ஜாதக தரவு இல்லை)",
+      directAnswerEn: "Gemstone recommendations unavailable due to missing Ascendant.",
+      directAnswerTa: "லக்னம் கிடைக்காததால் ரத்தின பரிந்துரை வழங்க இயலவில்லை."
+    };
+  }
+
+  let remedies = chartData?.personalizedRemedies || chartData?.remedies || null;
+  if (!remedies || !remedies.contraindicatedGemstones) {
+    try {
+      remedies = calculatePersonalizedRemedies(ascSign, chartData?.planets || [], "en", chartData?.currentDasha, chartData?.shadbala);
+    } catch {
+      remedies = remedies || {};
+    }
+  }
 
   const LAGNA_GEM_MAP = {
     Aries: { gem: "Red Coral (Moonga / பவளம்)", lord: "Mars", metal: "Copper/Gold", finger: "Ring finger", mantra: "Om Kram Kreem Kroum Sah Bhaumaya Namah" },
@@ -1208,37 +1266,60 @@ export function evaluateGemstoneRemedies(chartData) {
     Pisces: { gem: "Yellow Sapphire (Pukhraj / புஷ்பராகம்)", lord: "Jupiter", metal: "Gold/Brass", finger: "Index finger", mantra: "Om Gram Greem Groum Sah Gurave Namah" }
   };
 
-  const lagnaInfo = ascSign ? (LAGNA_GEM_MAP[ascSign] || null) : null;
-  const primaryGem = remedies.primaryGemstone?.gemstone || remedies.primaryGemstone?.name || remedies.primaryGemstone || lagnaInfo?.gem || null;
-  const primaryLord = remedies.primaryGemstone?.lord || remedies.gemLord || lagnaInfo?.lord || null;
+  const lagnaInfo = LAGNA_GEM_MAP[ascSign] || null;
+  const primaryGem = remedies?.primaryGemstone?.gemstone || remedies?.primaryGemstone?.name || remedies?.primaryGemstone || lagnaInfo?.gem || null;
+  const primaryLord = remedies?.primaryGemstone?.lord || remedies?.gemLord || lagnaInfo?.lord || null;
 
-  const contraindicated = remedies.contraindicatedGemstones || [
-    { gemstone: "Blue Sapphire / Neelam", reason: "Governs trik/dusthana houses for this Lagna", lord: "Saturn" },
-    { gemstone: "Diamond / White Sapphire", reason: "Maraka/dusthana lordship conflict", lord: "Venus" }
-  ];
+  // Evaluate planetary strength, dignity, combustion, house placement for primary gemstone
+  const planets = chartData?.planets || [];
+  const primaryPlanet = planets.find(p => p.name === primaryLord);
+  let recommendationStatus = "RECOMMENDED";
+  let statusNoteEn = "";
+  let statusNoteTa = "";
 
-  const contraTextEn = Array.isArray(contraindicated)
+  if (primaryPlanet) {
+    if (primaryPlanet.isCombust) {
+      recommendationStatus = "CONDITIONALLY_RECOMMENDED";
+      statusNoteEn = " (Planet is combust with Sun; use caution or prioritize mantra japa)";
+      statusNoteTa = " (சூரியனுடன் அஸ்தமனம்; கவனமுடன் பரிசீலிக்கவும் அல்லது மந்திர ஜபத்திற்கு முன்னுரிமை அளிக்கக்கவும்)";
+    } else if ([6, 8, 12].includes(primaryPlanet.house)) {
+      recommendationStatus = "CONDITIONALLY_RECOMMENDED";
+      statusNoteEn = ` (Planet placed in House ${primaryPlanet.house} Dusthana; evaluate carefully)`;
+      statusNoteTa = ` (${primaryPlanet.house}-ம் மறைவு ஸ்தான இருப்பு; விழிப்புணர்வுடன் அணுகவும்)`;
+    } else if (primaryPlanet.dignity === "Debilitated" || primaryPlanet.dignity === "Neecha") {
+      recommendationStatus = "NOT_RECOMMENDED";
+      statusNoteEn = " (Planet is debilitated; direct gemstone intensification not recommended)";
+      statusNoteTa = " (நீச நிலை; ரத்தினம் மூலம் வீரியப்படுத்துவது பரிந்துரைக்கப்படவில்லை)";
+    }
+  }
+
+  // Strictly use dynamically computed or verified contraindicated gemstones; NEVER generic fallback!
+  const rawContra = remedies?.contraindicatedGemstones || remedies?.traditionallyDiscouragedGemstones || [];
+  const contraindicated = Array.isArray(rawContra) ? rawContra : [];
+
+  const contraTextEn = contraindicated.length > 0
     ? contraindicated.map(c => typeof c === "string" ? c : `${c.gemstone || c.name} (${c.reason || c.lord})`).join(", ")
-    : String(contraindicated);
+    : "None explicitly contraindicated";
 
-  const contraTextTa = Array.isArray(contraindicated)
+  const contraTextTa = contraindicated.length > 0
     ? contraindicated.map(c => typeof c === "string" ? cleanEnglishParentheses(c) : `${cleanEnglishParentheses(c.gemstone || c.name || "")} (${cleanEnglishParentheses(c.reason || "") || toTamilPlanet(c.lord)})`).join(", ")
-    : String(contraindicated);
+    : "வெளிப்படையான தடைகள் ஏதுமில்லை";
 
   return {
+    recommendationStatus,
     primaryGemstone: primaryGem,
     primaryLord,
     finger: lagnaInfo?.finger || null,
     metal: lagnaInfo?.metal || null,
-    mantra: remedies.mantra || lagnaInfo?.mantra || null,
+    mantra: remedies?.mantra || lagnaInfo?.mantra || null,
     contraindicatedList: contraindicated,
     contraindicatedSummaryEn: contraTextEn,
     contraindicatedSummaryTa: contraTextTa,
     directAnswerEn: primaryGem
-      ? `Your primary prescribed gemstone is ${primaryGem} (ruled by Lagna lord ${primaryLord}). Contraindicated gemstones to strictly avoid: ${contraTextEn}.`
+      ? `Your primary traditionally assessed gemstone is ${primaryGem} (ruled by Lagna lord ${primaryLord})${statusNoteEn}. Contraindicated gemstones: ${contraTextEn}. (Traditional Ratna Shastra advisory only; examine personal tolerance and physical stone quality).`
       : "Gemstone recommendations unavailable due to missing Ascendant.",
     directAnswerTa: primaryGem
-      ? `உங்கள் ஜாதகத்திற்கு பரிந்துரைக்கப்படும் முதன்மை ரத்தினம்: ${cleanEnglishParentheses(primaryGem)} (லக்னாதிபதி ${toTamilPlanet(primaryLord)}). கண்டிப்பாக தவிர்க்க வேண்டிய ரத்தினங்கள்: ${contraTextTa}.`
+      ? `உங்கள் ஜாதகத்திற்கு பாரம்பரிய முறையில் ஆராயப்பட்ட முதன்மை ரத்தினம்: ${cleanEnglishParentheses(primaryGem)} (லக்னாதிபதி ${toTamilPlanet(primaryLord)})${statusNoteTa}. தவிர்க்க வேண்டிய ரத்தினங்கள்: ${contraTextTa}. (பாரம்பரிய ரத்தின சாஸ்திர வழிகாட்டல் மட்டுமே; அணிவதற்கு முன் தகுதியை சோதிக்கவும்).`
       : "லக்னம் கிடைக்காததால் ரத்தின பரிந்துரை வழங்க இயலவில்லை."
   };
 }
@@ -1692,13 +1773,13 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswerTa = `உங்கள் பூர்வீகம் அல்லது வசிப்பிடத்திலிருந்து ${dirEval.directionTa} திசையில் துணை அமைய சாதகமான கிரக அமைப்புகள் உள்ளன.`;
   } else if (intent.questionType === "FAMILY_PRESTIGE") {
     directAnswerEn = "The chart indicates that the spouse will hold high regard for familial values, respect elders, and uphold ancestral reputation, supported by favorable 9th and 2nd house configurations.";
-    directAnswerTa = "துணை உங்கள் குடும்ப பாரம்பரிய விழுமியங்கள் மற்றும் பெரியோரை மதித்து நடக்கும் நற்குணங்களைப் பெற்றிருப்பார். 9-ம் மற்றும் 2-ம் பாவக சுப அமைப்புகள் குடும்ப நல்லிணக்கத்தையும் கௌரவத்தையும் உறுதி செய்கின்றன.";
+    directAnswerTa = "துணை உங்கள் குடும்ப பாரம்பரிய விழுமியங்கள் மற்றும் பெரியோரை மதித்து நடக்கும் நற்குணங்களைப் பெற்றிருப்பார். 9-ம் மற்றும் 2-ம் பாவக சுப அமைப்புகள் குடும்ப நல்லிணக்கத்தையும் கௌரவத்தையும் சுட்டிக்காட்டுகின்றன.";
   } else if (intent.questionType === "LOVE_VS_ARRANGED") {
     directAnswerEn = "Planetary alignments between the 5th house of affection and 7th house of matrimony indicate favorable conditions for a well-matched, mutually respected alliance with active family involvement.";
     directAnswerTa = "ஜாதகத்தில் 5-ம் பாவகம் (காதல்) மற்றும் 7-ம் பாவகம் (திருமணம்) ஆகியவற்றின் சுப பார்வைகள் பரஸ்பர அன்பும் பெரியோர்களின் ஆசியும் இணைந்த சுமுகமான திருமண அமைப்பை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "MARRIAGE" || intent.questionType === "MARRIAGE_TIMING" || intent.questionType === "MARRIAGE_AGE") {
-    directAnswerEn = `Your 7th house of matrimony, Navamsha (D9), and active ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle present strong astrological timing for marriage, harmonious companionship, and auspicious life partnership.`;
-    directAnswerTa = `உங்கள் 7-ம் களத்திர பாவகம், நவாம்சம் (D9), மற்றும் நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலமும் திருமணம் மற்றும் சுப தாம்பத்திய இணைப்பிற்கான மிகச் சாதகமான காலக்கட்டத்தை சுட்டிக்காட்டுகின்றன.`;
+    directAnswerEn = `Your 7th house of matrimony and Navamsha (D9) traditionally indicate partnership potential. Supportive timing depends on alignment between operating dasha cycles and transit triggers; this represents qualitative astrological timing rather than guaranteed event certainty.`;
+    directAnswerTa = `உங்கள் 7-ம் களத்திர பாவகம் மற்றும் நவாம்சம் (D9) பாரம்பரிய ஜோதிட விளக்கத்தில் சாதகமான தாம்பத்திய சாத்தியத்தை சுட்டிக்காட்டுகின்றன; தசா மற்றும் கோச்சார பெயர்ச்சிகள் இணையும் காலமே இதற்கான உகந்த காலக்கட்டமாகும். இதை உறுதியான வாழ்க்கை நிகழ்வு எனக் கருத முடியாது.`;
   } else if (intent.questionType === "GEMSTONE_PRESCRIPTION" || intent.domain === "REMEDIES") {
     const gemEval = evaluateGemstoneRemedies(chartData);
     directAnswerEn = gemEval.directAnswerEn;
@@ -1710,8 +1791,8 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
     directAnswerEn = `Active planetary configurations in your 10th house of career during the current ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle present strong astrological timing for professional advancement, skill recognition, and new executive responsibilities.`;
     directAnswerTa = `உங்கள் 10-ம் கர்ம பாவக அமைப்பும், நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலமும் தொழில் முன்னேற்றம், பதவி உயர்வு மற்றும் புதிய பொறுப்புகள் கிடைப்பதற்கான சாதகமான காலக்கட்டத்தை சுட்டிக்காட்டுகின்றன.`;
   } else if (intent.questionType === "BUSINESS_GROWTH" || intent.domain === "CAREER") {
-    directAnswerEn = `Your 10th house of commerce and 11th house of profits indicate positive business expansion, new market ventures, and lucrative returns during the operating ${currentDasha} Mahadasha — ${currentAntar} Antardasha period.`;
-    directAnswerTa = `உங்கள் 10-ம் கர்ம பாவக அமைப்பும், 11-ம் லாப ஸ்தானமும் நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலமும் தொழில் வளர்ச்சி, புதிய சந்தை வாய்ப்புகள் மற்றும் வர்த்தக லாபங்களுக்கான சாதகமான காலக்கட்டத்தை சுட்டிக்காட்டுகின்றன.`;
+    directAnswerEn = `Your 10th house of vocation and 11th house of gains outline commercial inclinations in traditional astrology. Real-world business outcomes depend on market reality and sound planning rather than unconditional guarantees.`;
+    directAnswerTa = `உங்கள் 10-ம் கர்ம பாவகம் மற்றும் 11-ம் லாப பாவக அமைப்புகள் பாரம்பரிய ஜோதிட நெறிமுறைகளின்படி தொழில் முயற்சி சாத்தியங்களை சுட்டிக்காட்டுகின்றன. சந்தை சூழல் மற்றும் நடைமுறை வணிகத் திட்டமிடல் மூலமே முன்னேற்றம் சாத்தியமாகும்; ஜோதிடம் வணிக வெற்றியை உத்தரவாதம் செய்ய முடியாது.`;
   } else if (intent.questionType === "MEGA_WEALTH_BILLIONAIRE") {
     directAnswerEn = `Your chart demonstrates potent foundational Dhana Yogas and strong financial multipliers. Classical Shastras indicate that extreme wealth accumulation is catalyzed during the operating ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle through disciplined enterprise, strategic investments, and compounding assets.`;
     directAnswerTa = `உங்கள் ஜாதகத்தில் வலுவான தன யோகங்களும் பெருஞ்செல்வ சேர்க்கைக்கான சாத்தியக்கூறுகளும் அமைந்துள்ளன. சாஸ்திர விதிகளின்படி, நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலத்தில் புதிய முதலீடுகள், தொழில் விரிவாக்கம் மற்றும் நிலையான சொத்து பெருக்கம் மூலம் பெரும் பொருளாதார வளர்ச்சி உண்டாகும் யோகம் உள்ளது.`;
@@ -1830,11 +1911,11 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   } else if (intent.domain === "WEALTH") {
     natalIndicationTa += `2-ம் மற்றும் 11-ம் பாவக சுப பார்வைகள் நிதி நிலைத்தன்மையையும் சேமிப்புத் திறனையும் உருவாக்குகின்றன.`;
   } else if (intent.domain === "MARRIAGE") {
-    natalIndicationTa += `லக்னாதிபதி மற்றும் 7-ம் பாவாதிபதி சுப பார்வை பெற்று இல்லற நல்வாழ்வை உறுதி செய்கின்றனர்.`;
+    natalIndicationTa += `லக்னாதிபதி மற்றும் 7-ம் பாவாதிபதி அமைப்புகள் பாரம்பரிய ஜோதிட விளக்கத்தில் சாதகமான தாம்பத்திய சாத்தியத்தை சுட்டிக்காட்டுகின்றன; இதை உறுதியான வாழ்க்கை நிகழ்வு எனக் கருத முடியாது.`;
   } else if (intent.questionType === "RESEARCH_PHD") {
     natalIndicationTa += `5-ம் புத்தி ஸ்தானம் மற்றும் 8-ம்/9-ம் பாவக சுப தொடர்புகள் ஆழ்ந்த ஆராய்ச்சித் திறன் மற்றும் முனைவர் பட்ட வெற்றியை அளிக்கின்றன.`;
   } else if (intent.domain === "EDUCATION") {
-    natalIndicationTa += `4-ம் கல்வி ஸ்தானம் மற்றும் 5-ம் புத்தி ஸ்தான அமைப்புகள் சிறந்த கல்வித் தேர்ச்சி மற்றும் அறிவுசார் வளர்ச்சியை உறுதி செய்கின்றன.`;
+    natalIndicationTa += `4-ம் கல்வி ஸ்தானம் மற்றும் 5-ம் புத்தி ஸ்தான அமைப்புகள் சிறந்த கல்வித் தேர்ச்சி மற்றும் அறிவுசார் வளர்ச்சிக்கான சாத்தியங்களை சுட்டிக்காட்டுகின்றன.`;
   } else if (intent.domain === "CHILDREN") {
     natalIndicationTa += `5-ம் பாவக பலமும் குருவின் நிலையும் சந்தான யோகத்தையும் குழந்தைகள் வழியிலான மகிழ்ச்சியையும் அளிக்கின்றன.`;
   } else if (intent.domain === "SPIRITUALITY") {
@@ -2029,30 +2110,30 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   });
 
   // Section 10: Multi-System Cross-Check
-  let crossCheckEn = "Jaimini Karakas and KP Cusp Sub-Lord significators independently confirm favorable connectivity.";
-  let crossCheckTa = "ஜெமினி காரகங்கள் மற்றும் கே.பி உப-அதிபதி (Sub-Lord) நிலைகள் சாதகமான பாவக தொடர்புகளை உறுதி செய்கின்றன.";
+  let crossCheckEn = "Jaimini Karakas and KP Cusp Sub-Lord significators provide supportive comparative alignment.";
+  let crossCheckTa = "ஜெமினி காரகங்கள் மற்றும் கே.பி உப-அதிபதி (Sub-Lord) நிலைகள் பாரம்பரிய முறைப்படி சாதகமான பாவக தொடர்புகளை சுட்டிக்காட்டுகின்றன.";
 
   if (intent.domain === "HEALTH") {
     crossCheckEn = "Jaimini Atmakaraka (AK), Gnatikaraka (GK), and KP 1st/6th Cusp Sub-Lord configurations corroborate stable constitutional equilibrium.";
-    crossCheckTa = "ஜெமினி ஆத்மகாரகன் (AK) மற்றும் ஞானாதிகாரகன் (GK) நிலைகளும், கே.பி 1-ம் மற்றும் 6-ம் உப-அதிபதி (Sub-Lord) தொடர்புகளும் ஆரோக்கிய சமநிலையை உறுதி செய்கின்றன.";
+    crossCheckTa = "ஜெமினி ஆத்மகாரகன் (AK) மற்றும் ஞானாதிகாரகன் (GK) நிலைகளும், கே.பி 1-ம் மற்றும் 6-ம் உப-அதிபதி (Sub-Lord) தொடர்புகளும் ஆரோக்கிய சமநிலையை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "CAREER") {
     crossCheckEn = "Jaimini Amatyakaraka (AmK) and KP 10th/11th Cusp Sub-Lord significators independently corroborate career advancement and financial gains.";
-    crossCheckTa = "ஜெமினி அமத்தியகாரகன் (AmK) மற்றும் கே.பி 10-ம்/11-ம் பாவக உப-அதிபதி (Sub-Lord) தொடர்புகள் தொழில் வளர்ச்சியை உறுதி செய்கின்றன.";
+    crossCheckTa = "ஜெமினி அமத்தியகாரகன் (AmK) மற்றும் கே.பி 10-ம்/11-ம் பாவக உப-அதிபதி (Sub-Lord) தொடர்புகள் தொழில் வளர்ச்சிக்கான வாய்ப்புகளை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "MARRIAGE") {
-    crossCheckEn = "Jaimini Dara Karaka (DK) and KP 7th Cusp Sub-Lord significators (Level 1–4) independently confirm favorable connectivity.";
-    crossCheckTa = "ஜெமினி தாரகாரகர் மற்றும் கே.பி உப-அதிபதி (Sub-Lord) நிலைகள் 2, 7, 11-ம் பாவக தொடர்புகளை உறுதி செய்கின்றன.";
+    crossCheckEn = "Jaimini Dara Karaka (DK) and KP 7th Cusp Sub-Lord significators (Level 1–4) provide supportive partnership indicators.";
+    crossCheckTa = "ஜெமினி தாரகாரகர் மற்றும் கே.பி உப-அதிபதி (Sub-Lord) நிலைகள் 2, 7, 11-ம் பாவக தொடர்புகளை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "EDUCATION") {
     crossCheckEn = "Jaimini Putrakaraka (PK / intellect) and KP 4th/9th/11th Cusp Sub-Lord significators independently corroborate scholarly distinction and academic fruition.";
-    crossCheckTa = "ஜெமினி புத்திரகாரகன் (PK - புத்தி காரகர்) மற்றும் கே.பி 4, 9, 11-ம் உப-அதிபதி (Sub-Lord) தொடர்புகள் கல்வித் தேர்ச்சி மற்றும் அறிவுசார் அங்கீகாரத்தை உறுதி செய்கின்றன.";
+    crossCheckTa = "ஜெமினி புத்திரகாரகன் (PK - புத்தி காரகர்) மற்றும் கே.பி 4, 9, 11-ம் உப-அதிபதி (Sub-Lord) தொடர்புகள் கல்வித் தேர்ச்சிக்கான பாரம்பரிய பலன்களை சுட்டிக்காட்டுகின்றன.";
   } else if (intent.domain === "WEALTH") {
-    crossCheckEn = "Jaimini Indu Lagna and KP 2nd/11th Cusp Sub-Lord significators independently confirm high liquid capital and asset growth.";
-    crossCheckTa = "ஜெமினி இந்து லக்னம் மற்றும் கே.பி 2-ம்/11-ம் பாவக உப-அதிபதி (Sub-Lord) தொடர்புகள் நிலையான தன வரவையும் நிதி பெருக்கத்தையும் உறுதி செய்கின்றன.";
+    crossCheckEn = "Jaimini Indu Lagna and KP 2nd/11th Cusp Sub-Lord significators indicate supportive capital and asset trends.";
+    crossCheckTa = "ஜெமினி இந்து லக்னம் மற்றும் கே.பி 2-ம்/11-ம் பாவக உப-அதிபதி (Sub-Lord) தொடர்புகள் தன வரவு மற்றும் நிதி பெருக்கத்திற்கான அமைப்புகளை சுட்டிக்காட்டுகின்றன.";
   }
 
   sections.push({
     sectionNumber: 10,
-    titleEn: "Multi-System Cross-Check (Jaimini & KP Confirmation)",
-    titleTa: "பன்முக முறை சரிபார்ப்பு (ஜெமினி மற்றும் கே.பி உறுதிப்படுத்தல்)",
+    titleEn: "Multi-System Cross-Check (Jaimini & KP Comparative Analysis)",
+    titleTa: "பன்முக முறை சரிபார்ப்பு (ஜெமினி மற்றும் கே.பி ஒப்பீடு)",
     layer: CERTAINTY_LAYERS.LAYER_B.id,
     content: isTamil ? crossCheckTa : crossCheckEn
   });

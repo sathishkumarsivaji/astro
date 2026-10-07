@@ -44,7 +44,8 @@ import {
   applyBenjaminiHochberg,
   crossCheckPublicRecord,
   evaluate4ModelComparison,
-  setCachedPredictionProvider
+  setCachedPredictionProvider,
+  DEFAULT_FROZEN_VALIDATION_THRESHOLDS
 } from "./src/services/realWorldValidation/empiricalEvaluationEngine.js";
 import {
   initCacheManager,
@@ -664,21 +665,15 @@ if (adbCertifiedResults) {
 
 // Compute and attach 4-Model Comparison across full cohorts (NO SLICING)
 console.log("\nEvaluating 4-Model Discrimination Framework across FULL cohorts...");
-const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
-const holdout4Model = evaluate4ModelComparison(internalHoldoutRecords, trainRecords, { threshold: 0.50, getCachedPrediction });
-const adb4Model = adbCertifiedCohort.length > 0 ? evaluate4ModelComparison(adbCertifiedCohort, trainRecords, { threshold: 0.50, getCachedPrediction }) : null;
+const modelThresholds = { ...DEFAULT_FROZEN_VALIDATION_THRESHOLDS };
+const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { modelThresholds, getCachedPrediction });
+const holdout4Model = evaluate4ModelComparison(internalHoldoutRecords, trainRecords, { modelThresholds, getCachedPrediction });
+const adb4Model = adbCertifiedCohort.length > 0 ? evaluate4ModelComparison(adbCertifiedCohort, trainRecords, { modelThresholds, getCachedPrediction }) : null;
 
-blindResults.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-blindResults.occurrence.isDegenerate = true;
 blindResults.occurrence.fourModelComparison = blind4Model;
-
-holdoutResults.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-holdoutResults.occurrence.isDegenerate = true;
 holdoutResults.occurrence.fourModelComparison = holdout4Model;
 
 if (adbCertifiedResults) {
-  adbCertifiedResults.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-  adbCertifiedResults.occurrence.isDegenerate = true;
   adbCertifiedResults.occurrence.fourModelComparison = adb4Model;
 }
 

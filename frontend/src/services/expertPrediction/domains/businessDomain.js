@@ -120,7 +120,7 @@ export function calculateBusinessExpert(chartData, lang) {
           const isGrowth = has2nd && has11th;
           return {
             status: isGrowth ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isGrowth ? (isTamil ? '2 மற்றும் 11-ம் பாவகங்களின் இணைப்பு வலுவான வருவாய் வளர்ச்சியை உறுதி செய்கிறது.' : 'Direct connection of 2nd (dhana) and 11th (labha) indicates robust revenue acceleration.') : '',
+            why: isGrowth ? (isTamil ? '2 மற்றும் 11-ம் பாவகங்களின் இணைப்பு வலுவான வருவாய் வளர்ச்சியை சுட்டிக்காட்டுகிறது.' : 'Direct connection of 2nd (dhana) and 11th (labha) indicates robust revenue acceleration.') : '',
             whyNot: isGrowth ? [] : [isTamil ? '2 மற்றும் 11-ம் பாவ கூட்டு வருவாய் யோகம் இல்லை.' : 'Lacks dual wealth-house confluence for revenue surge.']
           };
         }

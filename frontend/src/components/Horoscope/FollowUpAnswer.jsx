@@ -27,6 +27,7 @@ export default function FollowUpAnswer({
 
   const getStatusBadge = () => {
     switch (status) {
+      case "CALCULATED_FACT":
       case "DETERMINISTIC_FACT":
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase bg-blue-50 text-blue-800 border border-blue-200">
@@ -34,14 +35,33 @@ export default function FollowUpAnswer({
             {isTamil ? "கணக்கீட்டு உண்மை (FACT)" : "CALCULATED FACT"}
           </span>
         );
+      case "SUPPORTED_INTERPRETATION":
       case "REPORT_SUPPORTED":
+      case "SUPPORTED":
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            {isTamil ? "அறிக்கை ஆதரவுள்ளது (SUPPORTED)" : "REPORT-SUPPORTED"}
+            {isTamil ? "சான்றுகளால் ஆதரிக்கப்பட்ட விளக்கம் (SUPPORTED)" : "SUPPORTED INTERPRETATION"}
+          </span>
+        );
+      case "TRADITIONAL_INTERPRETATION":
+      case "TRADITIONAL":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase bg-indigo-50 text-indigo-800 border border-indigo-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+            {isTamil ? "பாரம்பரிய ஜோதிட விளக்கம் (TRADITIONAL)" : "TRADITIONAL INTERPRETATION"}
+          </span>
+        );
+      case "PARTIALLY_SUPPORTED":
+      case "MIXED":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase bg-orange-50 text-orange-900 border border-orange-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+            {isTamil ? "பகுதி சான்றாதார விளக்கம் (PARTIAL)" : "PARTIALLY SUPPORTED"}
           </span>
         );
       case "INSUFFICIENT_DATA":
+      case "INSUFFICIENT":
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase bg-amber-50 text-amber-900 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>

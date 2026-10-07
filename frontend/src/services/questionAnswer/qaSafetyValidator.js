@@ -30,6 +30,11 @@ const FORBIDDEN_CHILDREN_PATTERNS = [
   /ஆண்\s*குழந்தை\s*மட்டுமே|பெண்\s*குழந்தை\s*மட்டுமே|பாலின\s*உறுதி/
 ];
 
+const FORBIDDEN_DETERMINISTIC_PATTERNS = [
+  /\b(proves\s+that|proves\s+definitively|guarantees\s+that|guarantees\s+success|will\s+definitely\s+occur|confirmed\s+outcome|absolute\s+certainty)\b/i,
+  /நிச்சயமாக\s*நடக்கும்|உறுதியாக\s*நிரூபிக்கிறது|விதியை\s*மாற்ற\s*முடியாது|கட்டாயம்\s*நடக்கும்/
+];
+
 /**
  * Validates text against safety protocols.
  *
@@ -74,6 +79,14 @@ export function validateSafety(text, domain) {
     if (pattern.test(sanitizedText)) {
       violations.push(`Forbidden gender prediction detected: ${pattern}`);
       sanitizedText = sanitizedText.replace(pattern, "சந்தான பாக்கிய அமைப்புகள்");
+    }
+  }
+
+  // 5. Deterministic language safety (Mandate 12)
+  for (const pattern of FORBIDDEN_DETERMINISTIC_PATTERNS) {
+    if (pattern.test(sanitizedText)) {
+      violations.push(`Forbidden deterministic assertion detected: ${pattern}`);
+      sanitizedText = sanitizedText.replace(pattern, "பாரம்பரிய ஜோதிட கணிப்பு வழிகாட்டுகிறது");
     }
   }
 

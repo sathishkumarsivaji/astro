@@ -38,6 +38,8 @@ export const QUESTION_INTENTS = Object.freeze({
   HOUSE_INTERPRETATION: "HOUSE_INTERPRETATION",
   YOGA_INTERPRETATION: "YOGA_INTERPRETATION",
   REMEDY: "REMEDY",
+  SYSTEM_COMPARISON: "SYSTEM_COMPARISON",
+  TOP_HEADINGS: "TOP_HEADINGS",
   FOLLOW_UP: "FOLLOW_UP",
   CLARIFICATION: "CLARIFICATION"
 });
@@ -194,6 +196,18 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.COMPARISON);
   }
 
+  // System Comparison (Lahiri vs KP)
+  if (/lahiri.*kp|kp.*lahiri|லஹிரி.*கே\.?பி|கே\.?பி.*லஹிரி|முறை.*ஒப்பீடு|வேறுபாடு.*(லஹிரி|கே\.?பி)|system.*comparison|difference.*between.*(lahiri|kp)/i.test(text) ||
+      (/லஹிரி/i.test(text) && /கே\.?பி/i.test(text))) {
+    detectedIntents.add(QUESTION_INTENTS.SYSTEM_COMPARISON);
+    detectedIntents.add(QUESTION_INTENTS.COMPARISON);
+  }
+
+  // Top Report Headings
+  if (/three.*(important|major|key).*(heading|section|topic|chapter)|3.*முக்கிய.*(தலைப்பு|பிரிவு)|முக்கியமான.*தலைப்புகள்|most\s+important\s+headings|top\s+headings/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.TOP_HEADINGS);
+  }
+
   if (cues.isWhy) {
     detectedIntents.add(QUESTION_INTENTS.WHY_QUESTION);
   }
@@ -210,6 +224,8 @@ export function classifyIntent(normalizedQ, history = []) {
   // Prioritize primary intent
   let primaryIntent = QUESTION_INTENTS.GENERAL_INTERPRETATION;
   const priorityList = [
+    QUESTION_INTENTS.SYSTEM_COMPARISON,
+    QUESTION_INTENTS.TOP_HEADINGS,
     QUESTION_INTENTS.SPOUSE_FAMILY,
     QUESTION_INTENTS.SPOUSE_DIRECTION,
     QUESTION_INTENTS.SPOUSE_DISTANCE,

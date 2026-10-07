@@ -98,36 +98,89 @@ export const EMPIRICAL_STATUS = Object.freeze({
   PROVENANCE_INVALID: "PROVENANCE_INVALID"
 });
 
+export const DEFAULT_FROZEN_VALIDATION_THRESHOLDS = Object.freeze({
+  MODEL_0_NULL: 0.91,
+  MODEL_1_DEMOGRAPHIC: 0.93,
+  MODEL_2_ASTROLOGY: 0.91,
+  MODEL_3_COMBINED: 0.93
+});
+
 /**
- * Hard gate detector for degenerate classifiers (e.g. TN = 0, Specificity = 0%, MCC = 0)
+ * Dynamic classifier status detector:
+ * - DEGENERATE_BASE_RATE_CLASSIFIER: TN = 0 || Specificity = 0 || PredPosRate >= 0.999 || (TP = 0 && FP = 0)
+ * - NON_DISCRIMINATIVE: Non-degenerate (TN > 0, Specificity > 0) but MCC < 0.10 or Specificity < 0.40
+ * - DISCRIMINATIVE_CLASSIFIER: Non-degenerate with MCC >= 0.10 and Specificity >= 0.40
  */
 export function detectDegenerateClassifier(confusionMatrix, metrics = {}) {
   const { tp = 0, fp = 0, tn = 0, fn = 0 } = confusionMatrix || {};
   const total = tp + fp + tn + fn;
   const specificity = typeof metrics.specificity === "number" ? metrics.specificity : ((tn + fp) > 0 ? tn / (tn + fp) : 0);
+  const recall = typeof metrics.recall === "number" ? metrics.recall : ((tp + fn) > 0 ? tp / (tp + fn) : 0);
   const mcc = typeof metrics.mcc === "number" ? metrics.mcc : 0;
   const balancedAccuracy = typeof metrics.balancedAccuracy === "number" ? metrics.balancedAccuracy : 0.5;
+  const rocAuc = typeof metrics.rocAuc === "number" ? metrics.rocAuc : null;
+  const rocAucCi95 = metrics.rocAucCi95 || null;
   const predictedPositiveRate = total > 0 ? (tp + fp) / total : 0;
 
+  if (total === 0) {
+    return {
+      isDegenerate: false,
+      classifierStatus: "INSUFFICIENT_DATA",
+      empiricallyValidated: false,
+      status: EMPIRICAL_STATUS.INSUFFICIENT_DATA,
+      reason: "No evaluation records provided."
+    };
+  }
+
   const isDegenerate = (
-    total > 0 &&
-    (
-      tn === 0 ||
-      specificity === 0 ||
-      mcc <= 0 ||
-      balancedAccuracy <= 0.50 ||
-      predictedPositiveRate >= 0.999
-    )
+    tn === 0 ||
+    specificity === 0 ||
+    predictedPositiveRate >= 0.999 ||
+    predictedPositiveRate <= 0.001 ||
+    (tp === 0 && fp === 0)
   );
 
+  if (isDegenerate) {
+    return {
+      isDegenerate: true,
+      classifierStatus: "DEGENERATE_BASE_RATE_CLASSIFIER",
+      empiricallyValidated: false,
+      status: EMPIRICAL_STATUS.BASE_RATE_DOMINATED,
+      reason: `Degenerate base-rate classification detected: Specificity=${(specificity * 100).toFixed(1)}%, TN=${tn}, MCC=${mcc.toFixed(3)}, PredPosRate=${(predictedPositiveRate * 100).toFixed(1)}%. Model fails to discriminate actual negative outcomes.`
+    };
+  }
+
+  // Discrimination criteria:
+  // - MCC >= 0.15 (material correlation)
+  // - Specificity >= 0.40
+  // - Recall >= 0.10
+  // - Balanced Accuracy >= 0.55
+  // - ROC-AUC >= 0.60 AND ROC-AUC 95% CI lower bound > 0.50 (statistically excludes chance, if rocAuc provided)
+  const aucExcludesChance = rocAuc !== null ? (rocAuc >= 0.60 && (rocAucCi95 ? rocAucCi95.lower > 0.50 : rocAuc > 0.55)) : true;
+  const isDiscriminative = (
+    mcc >= 0.15 &&
+    specificity >= 0.40 &&
+    recall >= 0.10 &&
+    balancedAccuracy >= 0.55 &&
+    aucExcludesChance
+  );
+
+  if (isDiscriminative) {
+    return {
+      isDegenerate: false,
+      classifierStatus: "DISCRIMINATIVE_CLASSIFIER",
+      empiricallyValidated: true,
+      status: EMPIRICAL_STATUS.VALIDATED,
+      reason: `Discriminative classification confirmed: Specificity=${(specificity * 100).toFixed(1)}%, MCC=${mcc.toFixed(3)}${rocAuc !== null ? `, ROC-AUC=${rocAuc}` : ''}${rocAucCi95 ? ` (95% CI [${rocAucCi95.lower}, ${rocAucCi95.upper}] excludes chance)` : ''}.`
+    };
+  }
+
   return {
-    isDegenerate,
-    classifierStatus: isDegenerate ? "DEGENERATE_BASE_RATE_CLASSIFIER" : "DISCRIMINATIVE_CLASSIFIER",
-    empiricallyValidated: !isDegenerate && mcc > 0.10 && specificity > 0.10,
-    status: isDegenerate ? EMPIRICAL_STATUS.BASE_RATE_DOMINATED : EMPIRICAL_STATUS.VALIDATED,
-    reason: isDegenerate
-      ? `Degenerate base-rate classification detected: Specificity=${(specificity * 100).toFixed(1)}%, TN=${tn}, MCC=${mcc.toFixed(3)}, PredPosRate=${(predictedPositiveRate * 100).toFixed(1)}%. Model fails to discriminate actual negative outcomes.`
-      : "Non-degenerate discrimination confirmed."
+    isDegenerate: false,
+    classifierStatus: "NON_DISCRIMINATIVE",
+    empiricallyValidated: false,
+    status: EMPIRICAL_STATUS.NOT_DISCRIMINATIVE,
+    reason: `Non-discriminative classifier: Specificity=${(specificity * 100).toFixed(1)}%, MCC=${mcc.toFixed(3)}, ROC-AUC=${rocAuc ?? 'N/A'}${rocAucCi95 ? ` (95% CI [${rocAucCi95.lower}, ${rocAucCi95.upper}])` : ''}. Meets basic non-degeneracy criteria (TN=${tn}) but performance does not statistically or substantively exceed chance level.`
   };
 }
 
@@ -257,6 +310,8 @@ export function selectValidationThreshold(probActualPairs, options = {}) {
     optimalThreshold: best.threshold,
     method,
     metricValue: Number(best.score.toFixed(4)),
+    mcc: Number(best.mcc.toFixed(4)),
+    balancedAccuracy: Number(best.balancedAccuracy.toFixed(4)),
     status: "CONSTRAINED_OPTIMUM_IDENTIFIED",
     satisfiesConstraint: true,
     specificity: Number(best.specificity.toFixed(4)),
@@ -810,6 +865,24 @@ export function evaluateOccurrence(predictions, groundTruths) {
     }
   }
 
+  let rocAucCi95 = null;
+  if (rocAuc !== null && probPairs.length > 0) {
+    const totalPos = probPairs.filter(p => p.actual === 1).length;
+    const totalNeg = probPairs.length - totalPos;
+    if (totalPos > 0 && totalNeg > 0) {
+      const a = rocAuc;
+      const q1 = a / (2 - a);
+      const q2 = (2 * a * a) / (1 + a);
+      const num = a * (1 - a) + (totalPos - 1) * (q1 - a * a) + (totalNeg - 1) * (q2 - a * a);
+      const seAuc = Math.sqrt(Math.max(0, num) / (totalPos * totalNeg));
+      rocAucCi95 = {
+        lower: Math.max(0, Number((a - 1.96 * seAuc).toFixed(4))),
+        upper: Math.min(1, Number((a + 1.96 * seAuc).toFixed(4))),
+        standardError: Number(seAuc.toFixed(4))
+      };
+    }
+  }
+
   // Calibration slope and intercept
   const validBins = bins.filter(b => b.count > 0);
   let calibrationSlope = 1.0;
@@ -849,18 +922,17 @@ export function evaluateOccurrence(predictions, groundTruths) {
     upper: Math.min(1, Number((center + margin).toFixed(4)))
   };
 
-  // Quality gate & Degenerate classifier hard gate (Parts 1.11 & 1.13)
-  const degeneracyCheck = detectDegenerateClassifier({ tp, fp, tn, fn }, { specificity, mcc, balancedAccuracy, accuracy });
-  const isOccurrenceValidated = (
-    !degeneracyCheck.isDegenerate &&
-    evaluatedCount > 0 &&
-    noEventCount > 0 &&
-    specificity > 0 &&
-    mcc > 0 &&
-    rocAuc > 0.50 &&
-    balancedAccuracy > 0.50
-  );
-  const validationStatus = isOccurrenceValidated ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED";
+  // Quality gate & Degenerate classifier hard gate (Derived strictly from unified discrimination check)
+  const degeneracyCheck = detectDegenerateClassifier({ tp, fp, tn, fn }, {
+    specificity,
+    recall,
+    mcc,
+    balancedAccuracy,
+    accuracy,
+    rocAuc,
+    rocAucCi95
+  });
+  const validationStatus = degeneracyCheck.empiricallyValidated ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED";
 
   return {
     n,
@@ -889,6 +961,7 @@ export function evaluateOccurrence(predictions, groundTruths) {
     balancedAccuracy: Number(balancedAccuracy.toFixed(4)),
     mcc: Number(mcc.toFixed(4)),
     rocAuc,
+    rocAucCi95,
     prAuc,
     calibrationSlope,
     calibrationIntercept,
@@ -1561,18 +1634,49 @@ export function fitCombinedOccurrenceModel(trainCohort, options = {}) {
   };
 }
 
-export function evaluate4ModelComparison(evalCohort, trainCohort, options = 0.50) {
-  const valThreshold = typeof options === "number" ? options : (options?.threshold ?? 0.50);
-  const fitOpts = typeof options === "object" ? options : {};
+export function evaluate4ModelComparison(evalCohort, trainCohort, options = {}) {
+  const isNumberOpt = typeof options === "number";
+  const fitOpts = (!isNumberOpt && typeof options === "object") ? options : {};
+
   const m0 = fitNullOccurrenceModel(trainCohort);
   const m1 = fitDemographicOccurrenceModel(trainCohort, fitOpts);
   const m2 = fitAstrologyOccurrenceModel(trainCohort, fitOpts);
   const m3 = fitCombinedOccurrenceModel(trainCohort, fitOpts);
 
   const models = [m0, m1, m2, m3];
+
+  let thresholdsByModel = {};
+  if (fitOpts.modelThresholds && typeof fitOpts.modelThresholds === "object") {
+    thresholdsByModel = { ...fitOpts.modelThresholds };
+  } else if (fitOpts.validationCohort && Array.isArray(fitOpts.validationCohort)) {
+    for (const m of models) {
+      const pairs = [];
+      for (const r of fitOpts.validationCohort) {
+        const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
+        if (["RIGHT_CENSORED", "UNKNOWN", "MISSING_OUTCOME", "EVENT_PRE_HORIZON"].includes(status)) continue;
+        const y = status === "EVENT" ? 1 : 0;
+        let p;
+        if (m.modelId === "MODEL_0_NULL") p = m.predict();
+        else if (m.modelId === "MODEL_1_DEMOGRAPHIC") p = m.predict(r);
+        else if (m.modelId === "MODEL_2_ASTROLOGY") p = m.predict(r, getRecordAstrologicalScore(r, fitOpts));
+        else p = m.predict(r, getRecordAstrologicalScore(r, fitOpts));
+        pairs.push({ prob: p, actual: y });
+      }
+      const sel = selectValidationThreshold(pairs, { minSpecificity: fitOpts.minSpecificity ?? 0.40 });
+      thresholdsByModel[m.modelId] = sel.optimalThreshold ?? DEFAULT_FROZEN_VALIDATION_THRESHOLDS[m.modelId] ?? 0.50;
+    }
+  } else if (isNumberOpt) {
+    for (const m of models) thresholdsByModel[m.modelId] = options;
+  } else if (typeof fitOpts.threshold === "number") {
+    for (const m of models) thresholdsByModel[m.modelId] = fitOpts.threshold;
+  } else {
+    thresholdsByModel = { ...DEFAULT_FROZEN_VALIDATION_THRESHOLDS };
+  }
+
   const summary = [];
 
   for (const m of models) {
+    const valThreshold = thresholdsByModel[m.modelId] ?? 0.50;
     const preds = [];
     for (const r of evalCohort) {
       let p = 0.5;
@@ -1599,14 +1703,19 @@ export function evaluate4ModelComparison(evalCohort, trainCohort, options = 0.50
     summary.push({
       modelId: m.modelId,
       modelName: m.modelName,
+      appliedThreshold: Number(valThreshold.toFixed(4)),
       accuracy: evalRes.accuracy,
       recall: evalRes.recall,
+      sensitivity: evalRes.recall,
       specificity: evalRes.specificity,
       mcc: evalRes.mcc,
       balancedAccuracy: evalRes.balancedAccuracy,
       rocAuc: evalRes.rocAuc,
+      prAuc: evalRes.prAuc,
       brierScore: evalRes.brierScore,
+      confusionMatrix: evalRes.confusionMatrix,
       classifierStatus: evalRes.classifierStatus,
+      isDegenerate: evalRes.isDegenerate,
       validationStatus: evalRes.validationStatus,
       fittedParameters: {
         intercept: m.intercept,

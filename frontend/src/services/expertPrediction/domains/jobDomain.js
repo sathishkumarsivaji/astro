@@ -105,7 +105,7 @@ export function calculateJobExpert(chartData, lang) {
           const isGrowth = has2nd && has11th;
           return {
             status: isGrowth ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
-            why: isGrowth ? (isTamil ? '2 மற்றும் 11-ம் பாவக தொடர்பு சம்பள உயர்வை உறுதி செய்கிறது.' : 'Convergence on 2nd (earned income) and 11th (gains) supports salary hike or appraisal benefits.') : '',
+            why: isGrowth ? (isTamil ? '2 மற்றும் 11-ம் பாவக தொடர்பு சம்பள உயர்வை ஆதரிக்கிறது.' : 'Convergence on 2nd (earned income) and 11th (gains) supports salary hike or appraisal benefits.') : '',
             whyNot: isGrowth ? [] : [isTamil ? 'சம்பள உயர்வுக்கான 2-11 பாவக தொடர்பு இல்லை.' : 'Lacks wealth houses (2nd/11th) convergence for compensation increase.']
           };
         }

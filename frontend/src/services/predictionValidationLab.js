@@ -1106,7 +1106,7 @@ export function replayHistoricalCase(caseData, cutoffYear = null) {
   }
 
   // 2. Blind Astrological Predictions (Zero Outcome Leakage)
-  const dirEval = chart ? evaluateSpouseDirection(chart) : { directionName: "North", directionTa: "வடக்கு" };
+  const dirEval = chart && Object.keys(chart).length > 0 ? evaluateSpouseDirection(chart) : { primaryDirection: null, directionName: null, directionTa: null, confidenceCategory: "INSUFFICIENT_DATA" };
   const distEval = chart ? evaluateSpouseGeographicDistance(chart) : { estimatedBand: "Regional" };
   const wealthEval = chart ? evaluateSpouseFamilyWealth(chart) : { verdictEn: "Similar socio-economic status" };
   const resEval = chart ? evaluateJointVsSeparateResidence(chart) : { synthesisEn: "Likely Continued Joint Family Residence" };

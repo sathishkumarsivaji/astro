@@ -1,7 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluate4ModelComparison, setCachedPredictionProvider } from '../frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js';
+import {
+  evaluate4ModelComparison,
+  setCachedPredictionProvider,
+  detectDegenerateClassifier,
+  DEFAULT_FROZEN_VALIDATION_THRESHOLDS
+} from '../frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js';
 import { getCurrentHashes, initCacheManager, loadCache, getCachedPrediction } from '../frontend/src/services/realWorldValidation/predictionCacheManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,15 +34,16 @@ const holdoutRecords = JSON.parse(fs.readFileSync(INTERNAL_HOLDOUT_PATH, 'utf8')
 const adbRecords = JSON.parse(fs.readFileSync(ADB_PATH, 'utf8'));
 const adbCertified = adbRecords.filter(r => r.birthTimeReliability === 'AA' || r.birthTimeReliability === 'A');
 
-console.log(`Evaluating 4-model comparison across FULL cohorts (NO SLICING):`);
+console.log(`Evaluating 4-model comparison across FULL cohorts with model-specific validation-frozen thresholds:`);
+console.log(`  Thresholds:`, DEFAULT_FROZEN_VALIDATION_THRESHOLDS);
 console.log(`  BLIND_TEST: ${blindRecords.length} records`);
 console.log(`  INTERNAL_HOLDOUT: ${holdoutRecords.length} records`);
 console.log(`  ASTRO_DATABANK_CERTIFIED: ${adbCertified.length} records`);
 
-const FROZEN_THRESHOLD = 0.89;
-const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { threshold: FROZEN_THRESHOLD, getCachedPrediction });
-const holdout4Model = evaluate4ModelComparison(holdoutRecords, trainRecords, { threshold: FROZEN_THRESHOLD, getCachedPrediction });
-const adb4Model = evaluate4ModelComparison(adbCertified, trainRecords, { threshold: FROZEN_THRESHOLD, getCachedPrediction });
+const modelThresholds = { ...DEFAULT_FROZEN_VALIDATION_THRESHOLDS };
+const blind4Model = evaluate4ModelComparison(blindRecords, trainRecords, { modelThresholds, getCachedPrediction });
+const holdout4Model = evaluate4ModelComparison(holdoutRecords, trainRecords, { modelThresholds, getCachedPrediction });
+const adb4Model = evaluate4ModelComparison(adbCertified, trainRecords, { modelThresholds, getCachedPrediction });
 
 // Helper to set timing resolution separation
 function setTimingResolution(timingObj) {
@@ -46,6 +52,25 @@ function setTimingResolution(timingObj) {
     timingObj.computedCalendarGranularity = "DAY";
     timingObj.empiricalPredictiveResolution = "MULTI_YEAR_RANGE";
     timingObj.empiricalTimingStatus = "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY";
+  }
+}
+
+// Helper to dynamically calculate occurrence status from confusion matrix without hardcoded overrides
+function syncOccurrenceStatus(occurrenceObj, fourModelSummary) {
+  if (!occurrenceObj || typeof occurrenceObj !== 'object') return;
+  const statusCheck = detectDegenerateClassifier(occurrenceObj.confusionMatrix, {
+    specificity: occurrenceObj.specificity,
+    mcc: occurrenceObj.mcc,
+    balancedAccuracy: occurrenceObj.balancedAccuracy,
+    accuracy: occurrenceObj.accuracy
+  });
+  occurrenceObj.classifierStatus = statusCheck.classifierStatus;
+  occurrenceObj.isDegenerate = statusCheck.isDegenerate;
+  occurrenceObj.degeneracyReason = statusCheck.reason;
+  occurrenceObj.status = statusCheck.status;
+  occurrenceObj.validationStatus = statusCheck.empiricallyValidated ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED";
+  if (fourModelSummary) {
+    occurrenceObj.fourModelComparison = fourModelSummary;
   }
 }
 
@@ -60,23 +85,17 @@ if (fs.existsSync(BENCHMARK_PATH)) {
     bench.metadata.cacheProvenance.calibrationHash = calibrationModelHash;
   }
   if (bench.splits?.BLIND_TEST?.occurrence) {
-    bench.splits.BLIND_TEST.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    bench.splits.BLIND_TEST.occurrence.isDegenerate = true;
-    bench.splits.BLIND_TEST.occurrence.fourModelComparison = blind4Model;
+    syncOccurrenceStatus(bench.splits.BLIND_TEST.occurrence, blind4Model);
   }
   setTimingResolution(bench.splits?.BLIND_TEST?.timing);
 
   if (bench.splits?.INTERNAL_HOLDOUT?.occurrence) {
-    bench.splits.INTERNAL_HOLDOUT.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    bench.splits.INTERNAL_HOLDOUT.occurrence.isDegenerate = true;
-    bench.splits.INTERNAL_HOLDOUT.occurrence.fourModelComparison = holdout4Model;
+    syncOccurrenceStatus(bench.splits.INTERNAL_HOLDOUT.occurrence, holdout4Model);
   }
   setTimingResolution(bench.splits?.INTERNAL_HOLDOUT?.timing);
 
   if (bench.splits?.EXTERNAL_ASTRO_DATABANK_CERTIFIED?.occurrence) {
-    bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence.isDegenerate = true;
-    bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence.fourModelComparison = adb4Model;
+    syncOccurrenceStatus(bench.splits.EXTERNAL_ASTRO_DATABANK_CERTIFIED.occurrence, adb4Model);
   }
   setTimingResolution(bench.splits?.EXTERNAL_ASTRO_DATABANK_CERTIFIED?.timing);
 
@@ -95,12 +114,17 @@ if (fs.existsSync(ADB_BENCHMARK_PATH)) {
     adbBench.metadata.cacheProvenance.calibrationHash = calibrationModelHash;
   }
   if (adbBench.primaryBenchmark?.occurrence) {
-    adbBench.primaryBenchmark.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    adbBench.primaryBenchmark.occurrence.isDegenerate = true;
+    syncOccurrenceStatus(adbBench.primaryBenchmark.occurrence, null);
   }
   if (adbBench.primaryBenchmark?.comparativeSummary) {
-    adbBench.primaryBenchmark.comparativeSummary.occurrenceClassifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
+    adbBench.primaryBenchmark.comparativeSummary.occurrenceClassifierStatus = adbBench.primaryBenchmark?.occurrence?.classifierStatus || "NON_DISCRIMINATIVE";
+    adbBench.primaryBenchmark.comparativeSummary.occurrenceIsDegenerate = adbBench.primaryBenchmark?.occurrence?.isDegenerate ?? false;
     adbBench.primaryBenchmark.comparativeSummary.fourModelComparison = adb4Model;
+  }
+  if (adbBench.primaryBenchmarkMetrics) {
+    adbBench.primaryBenchmarkMetrics.occurrenceClassifierStatus = adbBench.primaryBenchmark?.occurrence?.classifierStatus || "NON_DISCRIMINATIVE";
+    adbBench.primaryBenchmarkMetrics.occurrenceIsDegenerate = adbBench.primaryBenchmark?.occurrence?.isDegenerate ?? false;
+    adbBench.primaryBenchmarkMetrics.occurrenceQualityGate = adbBench.primaryBenchmark?.occurrence?.validationStatus || "NOT_EMPIRICALLY_VALIDATED";
   }
   setTimingResolution(adbBench.primaryBenchmark?.timing);
 
@@ -115,8 +139,15 @@ if (fs.existsSync(EXT_REPORT_PATH)) {
   extReport.metadata.predictionEngineHash = predictionEngineHash;
   extReport.metadata.calibrationModelHash = calibrationModelHash;
   if (extReport.scorecard) {
-    extReport.scorecard.occurrenceClassifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    extReport.scorecard.occurrenceIsDegenerate = true;
+    const statusCheck = detectDegenerateClassifier(extReport.scorecard.confusionMatrix, {
+      specificity: extReport.scorecard.occurrenceSpecificity,
+      mcc: extReport.scorecard.occurrenceMCC,
+      balancedAccuracy: extReport.scorecard.occurrenceBalancedAccuracy,
+      accuracy: extReport.scorecard.occurrenceAccuracy
+    });
+    extReport.scorecard.occurrenceClassifierStatus = statusCheck.classifierStatus;
+    extReport.scorecard.occurrenceIsDegenerate = statusCheck.isDegenerate;
+    extReport.scorecard.occurrenceQualityGate = statusCheck.empiricallyValidated ? "EMPIRICALLY_VALIDATED" : "NOT_EMPIRICALLY_VALIDATED";
     extReport.scorecard.fourModelComparison = adb4Model;
   }
   fs.writeFileSync(EXT_REPORT_PATH, JSON.stringify(extReport, null, 2) + '\n', 'utf8');
@@ -130,23 +161,17 @@ if (fs.existsSync(LATEST_BENCHMARK_PATH)) {
   latestBench.provenance.predictionEngineHash = predictionEngineHash;
   latestBench.provenance.calibrationModelHash = calibrationModelHash;
   if (latestBench.metrics?.blindTest?.occurrence) {
-    latestBench.metrics.blindTest.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    latestBench.metrics.blindTest.occurrence.isDegenerate = true;
-    latestBench.metrics.blindTest.occurrence.fourModelComparison = blind4Model;
+    syncOccurrenceStatus(latestBench.metrics.blindTest.occurrence, blind4Model);
   }
   setTimingResolution(latestBench.metrics?.blindTest?.timing);
 
   if (latestBench.metrics?.holdout?.occurrence) {
-    latestBench.metrics.holdout.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    latestBench.metrics.holdout.occurrence.isDegenerate = true;
-    latestBench.metrics.holdout.occurrence.fourModelComparison = holdout4Model;
+    syncOccurrenceStatus(latestBench.metrics.holdout.occurrence, holdout4Model);
   }
   setTimingResolution(latestBench.metrics?.holdout?.timing);
 
   if (latestBench.metrics?.astroDatabankCertifiedAAA?.occurrence) {
-    latestBench.metrics.astroDatabankCertifiedAAA.occurrence.classifierStatus = "DEGENERATE_BASE_RATE_CLASSIFIER";
-    latestBench.metrics.astroDatabankCertifiedAAA.occurrence.isDegenerate = true;
-    latestBench.metrics.astroDatabankCertifiedAAA.occurrence.fourModelComparison = adb4Model;
+    syncOccurrenceStatus(latestBench.metrics.astroDatabankCertifiedAAA.occurrence, adb4Model);
   }
   setTimingResolution(latestBench.metrics?.astroDatabankCertifiedAAA?.timing);
 

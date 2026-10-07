@@ -6,8 +6,8 @@
     "generatedAt": "2026-10-07T04:31:25.583Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
-    "calibrationModelHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f",
+    "predictionEngineHash": "5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca",
+    "calibrationModelHash": "0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
@@ -30,8 +30,8 @@
       "cacheMisses": 0,
       "recomputedCount": 7987,
       "invalidatedEntries": 7987,
-      "predictionEngineHash": "85465fd2aa7f5f5b707cd4b31ead5c7ab9d4be6e33486b4aae678955117fb03d",
-      "calibrationHash": "76c9280de3a0b182590d1485bd13994178e2834199ca5e5a37f7ca97a1eb486f"
+      "predictionEngineHash": "5b039a3b847640df1f2586c7777657ad0e034fae27afc19e568a86f43634b1ca",
+      "calibrationHash": "0cbba3b95c89d5184742fc805f45e07daa9cc6eb43a13b6a1c509f0ac657d4bd"
     }
   },
   "primaryBenchmark": {
@@ -59,11 +59,11 @@
         "eventPreHorizonCount": 7
       },
       "prevalence": 0.9649,
-      "validationStatus": "EMPIRICALLY_VALIDATED",
-      "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-      "isDegenerate": true,
-      "degeneracyReason": "Non-degenerate discrimination confirmed.",
-      "status": "VALIDATED",
+      "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+      "classifierStatus": "NON_DISCRIMINATIVE",
+      "isDegenerate": false,
+      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+      "status": "NOT_DISCRIMINATIVE",
       "confusionMatrix": {
         "tp": 33,
         "fp": 1,
@@ -337,9 +337,9 @@
     "occurrencePrAuc": 0.9688,
     "occurrenceBrierScore": 0.0407,
     "occurrenceECE": 0.0821,
-    "occurrenceQualityGate": "EMPIRICALLY_VALIDATED",
-    "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-    "occurrenceIsDegenerate": true,
+    "occurrenceQualityGate": "NOT_EMPIRICALLY_VALIDATED",
+    "occurrenceClassifierStatus": "NON_DISCRIMINATIVE",
+    "occurrenceIsDegenerate": false,
     "timingMAE": 9.19,
     "timingWithin1yPct": 9.06,
     "timingWithin2yPct": 18.44,

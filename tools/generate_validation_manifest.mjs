@@ -58,6 +58,12 @@ const TEST_SUITES = [
   { name: "Epistemic Architecture Mandates", cwd: FRONTEND_DIR, cmd: "node test_epistemic_architecture_mandates.mjs" },
   { name: "Cache Coefficient Hash Integrity", cwd: FRONTEND_DIR, cmd: "node test_cache_coefficient_hash_integrity.mjs" },
   { name: "Current Release Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_current_release_manifest.mjs" },
+  { name: "Forensic Integrity Mandates", cwd: FRONTEND_DIR, cmd: "node test_forensic_integrity_mandates.mjs" },
+  { name: "Customer Report Pipeline", cwd: FRONTEND_DIR, cmd: "node test_customer_report_pipeline.mjs" },
+  { name: "Precision Q&A Engine Complete Verification", cwd: FRONTEND_DIR, cmd: "node test_precision_qa_engine.mjs" },
+  { name: "Advanced Q&A Engine", cwd: FRONTEND_DIR, cmd: "node test_advanced_qa_engine.mjs" },
+  { name: "Follow-Up Q&A Engine", cwd: FRONTEND_DIR, cmd: "node test_follow_up_qa.mjs" },
+  { name: "Q&A Scientific Grounding", cwd: FRONTEND_DIR, cmd: "node test_qa_scientific_grounding.mjs" },
   { name: "Validation Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_validation_manifest_integrity.mjs" }
 ];
 

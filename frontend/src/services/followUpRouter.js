@@ -63,7 +63,8 @@ export function resolveConversationalReferences(questionText, conversationHistor
     /bhava|chalit|kendra|trikona|dusthana|house\s+breakdown|பாவகம்|\b(1st|2nd|3rd|4th|5th|6th|7th|8th|9th|10th|11th|12th)\s*(house|bhava)\b/i.test(qLower) ||
     /yoga|raja\s+yoga|dhana\s+yoga|gajakesari|pancha\s+mahapurusha|யோகம்/i.test(qLower) ||
     /shadbala|virupa|planetary\s+strength|ashtakavarga|bindu|sav|sarvashtakavarga/i.test(qLower) ||
-    /compare|difference\s+between|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(qLower);
+    /compare|difference\s+between|why\s+do\s+(lahiri|kp|raman|tropical)\s+(and|differ)|changes?\s+signs?/i.test(qLower) ||
+    /top\s+(?:three|3)?\s*(?:report\s+)?(?:headings?|sections?|topics?|chapters?)|three\s+(?:main\s+|key\s+)?(?:headings?|sections?|topics?)|முக்கிய\s*(?:3|மூன்று)?\s*தலைப்புகள்?/i.test(qLower);
 
   // If question has its own explicit topic, it is an independent query — DO NOT inherit previous dialogue domain!
   if (hasExplicitTopic) {
@@ -336,6 +337,22 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
       answer: isTamil
         ? `இந்த அறிக்கையில் பயன்படுத்தப்படும் அயனாம்சம்: ${context.system.tamilName || context.system.name} (${context.system.ayanamshaType || 'சித்திரபக்ஷ அயனாம்சம்'}).`
         : `The ayanamsha convention applied in this report is ${context.system.ayanamshaType} under the ${context.system.name} system.`,
+      limitations: []
+    };
+  }
+
+  // J. Top 3 Report Headings
+  if (/top\s+(?:three|3)?\s*(?:report\s+)?(?:headings?|sections?|topics?|chapters?)|three\s+(?:main\s+|key\s+)?(?:headings?|sections?|topics?|chapters?)|முக்கிய\s*(?:3|மூன்று)?\s*தலைப்புகள்?/i.test(qLower)) {
+    return {
+      type: "FACTUAL",
+      status: "REPORT_SUPPORTED",
+      system: sysId,
+      relevantSections: ["career", "relationships", "property", "blueprint"],
+      evidenceIds: [],
+      dataUsed: ["Report Structure: 17 Domains"],
+      answer: isTamil
+        ? `[அறிக்கை முடிவு] உங்கள் முழு வாழ்க்கை நுண்ணறிவு அறிக்கையில் (Full Life Intelligence Report) உள்ள 3 மிக முக்கியமான தலைப்புகள்:\n\n1. தொழில், தலைமைத்துவம் மற்றும் வாழ்வியல் சாதனை (Career & Leadership):\n• உங்கள் 10-ம் கர்ம பாவகம், தொழில் காரகர்கள் மற்றும் நடப்பு தசா சுழற்சியின் அடிப்படையில் எதிர்கால தொழில் வளர்ச்சி மற்றும் முக்கிய வாழ்வியல் மாற்றங்கள் இதில் விரிவாக ஆராயப்பட்டுள்ளன.\n\n2. இல்லற நல்வாழ்வு, திருமணம் மற்றும் உறவுகள் (Marriage & Relationships):\n• உங்கள் 7-ம் களத்திர பாவகம், நவாம்சம் (D9) மற்றும் துணைவருக்கான பொருத்தக் கூறுகள் மூலம் குடும்ப வாழ்வின் ஸ்திரத்தன்மை இதில் மதிப்பிடப்பட்டுள்ளது.\n\n3. நிதி மேலாண்மை, செல்வ வளம் மற்றும் சொத்துக்கள் (Finance & Wealth):\n• உங்கள் 2-ம் தன பாவகம், 11-ம் லாப பாவகம் மற்றும் 4-ம் சொத்து பாவக அமைப்புகள் வழியே வாழ்நாள் நிதிப் பாதுகாப்பு மற்றும் முதலீட்டு யோகங்கள் இதில் பகுப்பாய்வு செய்யப்பட்டுள்ளன.\n\n[பாரம்பரிய விளக்கம்] இந்த 3 தலைப்புகள் தனிநபர் இலக்குகள், பொருளாதார ஸ்திரத்தன்மை மற்றும் குடும்ப அமைப்பை வழிநடத்தும் முதன்மைத் தூண்களாகும்.`
+        : `[Report Finding] The three most important headings in your comprehensive Life Intelligence Report are:\n\n1. Career, Leadership & Vocation (10th Bhava & Dashamsha):\n• Details your professional trajectory, leadership potential, and major karmic milestones under operating planetary cycles.\n\n2. Marriage, Family & Partnerships (7th Bhava & Navamsha D9):\n• Evaluates marital timing, compatibility patterns, and lifelong relationship dynamics.\n\n3. Finance, Wealth & Immovable Property (2nd, 11th & 4th Bhavas):\n• Analyzes wealth accumulation potential, real estate acquisition windows, and fiscal stability.\n\n[Traditional Context] These three domains form the foundational tripod of practical Jyotisha life analysis—Dharma/Karma (Career), Kama (Relationships), and Artha (Wealth).`,
       limitations: []
     };
   }

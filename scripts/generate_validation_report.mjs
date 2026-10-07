@@ -75,7 +75,7 @@ const md = `# ASTROVERSE — SCIENTIFIC VALIDATION, REAL-WORLD EMPIRICAL ACCURAC
 ### 2. Core Remediation Mandates Enforced
 This comprehensive scientific and production remediation enforces:
 - **Zero Fabricated Accuracy:** Real-world predictive performance is documented exactly as calculated from the data. No claims of 90%+ or 98% prediction accuracy for astrology.
-- **Demographic Baseline Transparency:** We explicitly disclose that an empirical demographic cohort baseline predicting population median marriage age ($\approx 26.0$ years, $\\text{MAE} = ${blind?.demographicBaseline?.mae ?? 4.28} years, within $\\pm 1$y = ${blind?.demographicBaseline?.within1yPct ?? 28.71}%) substantially outperforms the raw astrological timing model ($\\text{MAE} = ${blind?.timing?.mae ?? 6.89} years, within $\\pm 1$y = ${blind?.timing?.within1yPct ?? 13.01}%), and that the raw astrological occurrence rule exhibits 0.00% specificity.
+- **Demographic Baseline Transparency:** We explicitly disclose that an empirical demographic cohort baseline predicting population median marriage age ($\approx 26.0$ years, $\\text{MAE} = ${blind?.demographicBaseline?.mae ?? 4.28} years, within $\\pm 1$y = ${blind?.demographicBaseline?.within1yPct ?? 28.71}%) substantially outperforms the raw astrological timing model ($\\text{MAE} = ${blind?.timing?.mae ?? 6.89} years, within $\\pm 1$y = ${blind?.timing?.within1yPct ?? 13.01}%), and that the raw uncalibrated astrological occurrence rule exhibited 0.00% specificity, whereas the calibrated production occurrence model (threshold 0.89) achieves 90.65% specificity with MCC = 0.0156 (classified as \`NON_DISCRIMINATIVE\`).
 - **Discrete-Time Hazard Survival Model (V3):** The V3 time-to-event architecture fits an actuarial demographic baseline across 16 discrete 2-year age intervals [18, 50] modulated by shastric astrological activations (Dasha, Transit, Navamsha, Ashtakavarga). Fitted on TRAIN via Newton-Raphson IRLS, the model achieves timing MAE of ${v3Blind?.timing?.mae ?? "N/A"}y (vs demographic baseline ${v3Blind?.timing?.timingMAEBaseline ?? "N/A"}y, C-index ${v3Blind?.concordanceIndex ?? "N/A"}) on untouched BLIND_TEST, properly classifying out-of-sample performance as \`${v3Blind?.validationStatus ?? "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"}\`.
 - **Zero Inferred Marriage Types:** Astro-Databank ingestion assigns \`marriageType: 'UNKNOWN'\` by default. Zero love marriages are inferred from documented marriage events.
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = ${indep?.certifiedAAARecords ?? 3751}$).
@@ -174,12 +174,13 @@ Every cached prediction entry contains:
 | :--- | :--- | :--- |
 | **Evaluated Cohort (Occurrence)** | ${blind?.occurrence?.censoringBreakdown?.evaluatedCount} (${blind?.occurrence?.censoringBreakdown?.rightCensoredCount} right-censored excl.) | ${holdout?.occurrence?.censoringBreakdown?.evaluatedCount} (${holdout?.occurrence?.censoringBreakdown?.rightCensoredCount} right-censored excl.) |
 | **Occurrence Prevalence** | ${(blind?.occurrence?.prevalence * 100).toFixed(2)}% | ${(holdout?.occurrence?.prevalence * 100).toFixed(2)}% |
-| **Occurrence Confusion Matrix** | TP=${blind?.occurrence?.confusionMatrix?.tp}, FP=${blind?.occurrence?.confusionMatrix?.fp}, TN=0, FN=0 | TP=${holdout?.occurrence?.confusionMatrix?.tp}, FP=${holdout?.occurrence?.confusionMatrix?.fp}, TN=0, FN=0 |
+| **Occurrence Confusion Matrix** | TP=${blind?.occurrence?.confusionMatrix?.tp}, FP=${blind?.occurrence?.confusionMatrix?.fp}, TN=${blind?.occurrence?.confusionMatrix?.tn}, FN=${blind?.occurrence?.confusionMatrix?.fn} | TP=${holdout?.occurrence?.confusionMatrix?.tp}, FP=${holdout?.occurrence?.confusionMatrix?.fp}, TN=${holdout?.occurrence?.confusionMatrix?.tn}, FN=${holdout?.occurrence?.confusionMatrix?.fn} |
 | **Occurrence Accuracy** | **${(blind?.occurrence?.accuracy * 100).toFixed(2)}%** | **${(holdout?.occurrence?.accuracy * 100).toFixed(2)}%** |
-| **Occurrence Specificity** | **0.00%** | **0.00%** |
-| **Balanced Accuracy / MCC** | **50.00% / 0.0000** | **50.00% / 0.0000** |
+| **Occurrence Specificity** | **${(blind?.occurrence?.specificity * 100).toFixed(2)}%** | **${(holdout?.occurrence?.specificity * 100).toFixed(2)}%** |
+| **Occurrence Recall (Sensitivity)** | **${(blind?.occurrence?.recall * 100).toFixed(2)}%** | **${(holdout?.occurrence?.recall * 100).toFixed(2)}%** |
+| **Balanced Accuracy / MCC** | **${(blind?.occurrence?.balancedAccuracy * 100).toFixed(2)}% / ${blind?.occurrence?.mcc?.toFixed(4)}** | **${(holdout?.occurrence?.balancedAccuracy * 100).toFixed(2)}% / ${holdout?.occurrence?.mcc?.toFixed(4)}** |
 | **ROC-AUC / PR-AUC** | **${blind?.occurrence?.rocAuc} / ${blind?.occurrence?.prAuc}** | **${holdout?.occurrence?.rocAuc} / ${holdout?.occurrence?.prAuc}** |
-| **Occurrence Quality Gate** | **NOT_EMPIRICALLY_VALIDATED** | **NOT_EMPIRICALLY_VALIDATED** |
+| **Occurrence Quality Gate** | **${blind?.occurrence?.validationStatus} (\`${blind?.occurrence?.classifierStatus}\`)** | **${holdout?.occurrence?.validationStatus} (\`${holdout?.occurrence?.classifierStatus}\`)** |
 | **Timing Evaluated ($N$)** | ${blind?.timing?.n} | ${holdout?.timing?.n} |
 | **Timing MAE** | **${blind?.timing?.mae} years** | **${holdout?.timing?.mae} years** |
 | **Timing Within $\\pm 1$ Year** | **${blind?.timing?.within1yPct}%** | **${holdout?.timing?.within1yPct}%** |
@@ -191,22 +192,46 @@ Every cached prediction entry contains:
 
 ## SECTION 16B: 4-MODEL DISCRIMINATIVE OCCURRENCE FRAMEWORK & TIMING RESOLUTION SEPARATION
 
-### 1. 4-Model Comparative Occurrence Framework (Fitted via IRLS on TRAIN)
-To evaluate whether astrological rule scores add any discriminative value over demographic base rates, 4 comparative models were fitted on the TRAIN partition ($N=9,366$) and evaluated out-of-sample:
-1. **Model 0 (Null Baseline):** Intercept-only logistic model predicting empirical base rate ($\\text{logit}(p) = \\beta_0$).
-2. **Model 1 (Demographic Baseline):** Cohort birth-year demographic model ($\\text{logit}(p) = \\beta_0 + \\beta_{\\text{demo}} x_{\\text{demo}}$).
-3. **Model 2 (Astrology-Only Model):** Authentic per-subject astrological score model ($\\text{logit}(p) = \\beta_0 + \\beta_{\\text{astro}} x_{\\text{astro}}$).
-4. **Model 3 (Combined Model):** Bivariate model ($\\text{logit}(p) = \\beta_0 + \\beta_{\\text{demo}} x_{\\text{demo}} + \\beta_{\\text{astro}} x_{\\text{astro}}$).
+### 1. Production Model Architecture vs. Comparative Empirical Layer
+- **Production Occurrence Model:** Real-world occurrence prediction (\`predictMarriageOccurrence\`) is governed by the frozen Platt-calibrated logistic scaling model ($P(\\text{marriage}) = \\text{sigmoid}(a \\cdot s + b)$) operating at the validation-optimized classification threshold of **0.89** (derived strictly on the VALIDATION partition with a minimum specificity constraint $\\ge 40\\%$). On untouched BLIND_TEST out-of-sample data, this model yields an observed specificity of **${(blind?.occurrence?.specificity * 100).toFixed(2)}%** ($TN = ${blind?.occurrence?.confusionMatrix?.tn}, TP = ${blind?.occurrence?.confusionMatrix?.tp}, FP = ${blind?.occurrence?.confusionMatrix?.fp}, FN = ${blind?.occurrence?.confusionMatrix?.fn}$), properly classified dynamically as \`${blind?.occurrence?.classifierStatus}\` rather than an unconditional base-rate classifier.
+- **Comparative Empirical Baseline Framework:** The 4-Model Comparative Framework functions as an empirical validation layer to isolate whether astrological rule scores provide incremental predictive discrimination beyond actuarial demographic baselines.
 
-#### Out-of-Sample Performance Comparison (BLIND_TEST):
-| Model ID | Model Description | Accuracy | Specificity | Sensitivity | Balanced Acc | ROC-AUC | Brier Score | Classifier Status |
+### 2. Sample Size & Model-Fitting Eligibility
+- **TRAIN partition total:** $N = 9,366$;
+- **Model-fitting eligible:** $N = 9,104$ (records with \`UNKNOWN\`, \`RIGHT_CENSORED\`, \`MISSING_OUTCOME\`, or \`EVENT_PRE_HORIZON\` strictly excluded in accordance with anti-leakage and censoring protocols).
+
+### 3. Model-Specific Validation-Frozen Thresholds
+To prevent threshold confounding across disparate probability distributions, each comparative model has its operating threshold optimized strictly on the **VALIDATION** partition (enforcing a minimum specificity constraint $\\ge 40\\%$ and maximizing Matthews Correlation Coefficient, MCC) and subsequently frozen for all out-of-sample evaluations:
+- **Model 0 (Null Baseline):** Frozen threshold = **0.91** (Validation specificity: 100.0%, MCC: 0.0000)
+- **Model 1 (Demographic Baseline):** Frozen threshold = **0.93** (Validation specificity: 97.67%, MCC: 0.0353)
+- **Model 2 (Astrology-Only Model):** Frozen threshold = **0.91** (Validation specificity: 72.48%, MCC: 0.0118)
+- **Model 3 (Combined Model):** Frozen threshold = **0.93** (Validation specificity: 96.51%, MCC: 0.0246)
+
+#### Out-of-Sample Performance Comparison (BLIND_TEST, $N = 1,634$):
+
+**Threshold-Independent Metrics:**
+| Model ID | Model Description | ROC-AUC | PR-AUC | Brier Score |
+| :--- | :--- | :--- | :--- | :--- |
+${(blind?.occurrence?.fourModelComparison || []).map(m => `| **${m.modelId}** | ${m.modelName} | ${m.rocAuc} | ${m.prAuc} | ${m.brierScore} |`).join("\n")}
+
+**Validation-Frozen Threshold Metrics:**
+| Model ID | Frozen Threshold | Accuracy | Specificity | Sensitivity | Balanced Acc | MCC | Confusion Matrix (TP/FP/TN/FN) | Classifier Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-${(blind?.occurrence?.fourModelComparison || latestBench?.metrics?.blindTest?.occurrence?.fourModelComparison || []).map(m => `| **${m.modelId}** | ${m.modelName} | ${(m.accuracy * 100).toFixed(2)}% | ${(m.specificity * 100).toFixed(2)}% | ${(m.recall * 100).toFixed(2)}% | ${(m.balancedAccuracy * 100).toFixed(2)}% | ${m.rocAuc} | ${m.brierScore} | \`${m.classifierStatus}\` |`).join("\n")}
+${(blind?.occurrence?.fourModelComparison || []).map(m => `| **${m.modelId}** | ${m.appliedThreshold} | ${(m.accuracy * 100).toFixed(2)}% | ${(m.specificity * 100).toFixed(2)}% | ${(m.recall * 100).toFixed(2)}% | ${(m.balancedAccuracy * 100).toFixed(2)}% | ${m.mcc?.toFixed(4)} | ${m.confusionMatrix?.tp} / ${m.confusionMatrix?.fp} / ${m.confusionMatrix?.tn} / ${m.confusionMatrix?.fn} | \`${m.classifierStatus}\` |`).join("\n")}
 
-All models exhibit zero true negatives at the default threshold ($p=0.50$), correctly flagged as \`DEGENERATE_BASE_RATE_CLASSIFIER\`. When evaluated against a minimum specificity constraint ($\\text{specificity} \\ge 0.40$), threshold optimization returns:
-- \`status: "THRESHOLD_NOT_IDENTIFIABLE"\`
-- \`satisfiesConstraint: false\`
-- \`optimalThreshold: null\`
+#### Out-of-Sample Performance Comparison (INTERNAL_HOLDOUT, $N = 1,555$):
+| Model ID | Frozen Threshold | Accuracy | Specificity | Sensitivity | Balanced Acc | MCC | ROC-AUC | Confusion Matrix (TP/FP/TN/FN) | Classifier Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+${(holdout?.occurrence?.fourModelComparison || []).map(m => `| **${m.modelId}** | ${m.appliedThreshold} | ${(m.accuracy * 100).toFixed(2)}% | ${(m.specificity * 100).toFixed(2)}% | ${(m.recall * 100).toFixed(2)}% | ${(m.balancedAccuracy * 100).toFixed(2)}% | ${m.mcc?.toFixed(4)} | ${m.rocAuc} | ${m.confusionMatrix?.tp} / ${m.confusionMatrix?.fp} / ${m.confusionMatrix?.tn} / ${m.confusionMatrix?.fn} | \`${m.classifierStatus}\` |`).join("\n")}
+
+#### Out-of-Sample Performance Comparison (Astro-Databank Certified A/AA, $N = 3,751$):
+| Model ID | Frozen Threshold | Accuracy | Specificity | Sensitivity | Balanced Acc | MCC | ROC-AUC | Confusion Matrix (TP/FP/TN/FN) | Classifier Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+${(adb?.fourModelComparison || []).map(m => `| **${m.modelId}** | ${m.appliedThreshold} | ${(m.accuracy * 100).toFixed(2)}% | ${(m.specificity * 100).toFixed(2)}% | ${(m.recall * 100).toFixed(2)}% | ${(m.balancedAccuracy * 100).toFixed(2)}% | ${m.mcc?.toFixed(4)} | ${m.rocAuc} | ${m.confusionMatrix?.tp} / ${m.confusionMatrix?.fp} / ${m.confusionMatrix?.tn} / ${m.confusionMatrix?.fn} | \`${m.classifierStatus}\` |`).join("\n")}
+
+### 4. Dynamic Degeneracy vs. Non-Discriminative Classification Audit
+- **Model 0 (Null Baseline):** Because it predicts the constant empirical base rate, setting the decision threshold to 0.91 results in 100% negative classifications ($TP = 0, FP = 0$). It is dynamically classified as \`DEGENERATE_BASE_RATE_CLASSIFIER\` ($isDegenerate = true$).
+- **Models 1, 2, and 3:** When evaluated at their respective frozen validation thresholds, all three models predict both positive and negative classes out-of-sample ($TN > 0, TP > 0$), achieving non-zero specificities (Model 1: ${(blind?.occurrence?.fourModelComparison?.[1]?.specificity * 100).toFixed(2)}%, Model 2: ${(blind?.occurrence?.fourModelComparison?.[2]?.specificity * 100).toFixed(2)}%, Model 3: ${(blind?.occurrence?.fourModelComparison?.[3]?.specificity * 100).toFixed(2)}% on BLIND_TEST). They are **not** degenerate base-rate classifiers ($isDegenerate = false$). However, because out-of-sample MCC remains below 0.10, they fail the threshold for empirical predictive validation and are dynamically classified as \`NON_DISCRIMINATIVE\`.
 
 ### 2. Timing Granularity vs. Empirical Precision Separation
 A crucial architectural distinction is enforced between calendar calculation granularity and empirical predictive precision:

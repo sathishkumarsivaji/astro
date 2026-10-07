@@ -3,6 +3,9 @@
  * =================================
  * Retrieves structured chart facts, divisional placements, planetary periods,
  * directional convergence, and report findings strictly aligned with the Evidence Plan.
+ * Populates canonical EvidenceGraph, calculatedFacts, and traditionalRules.
+ *
+ * Implements Section 4, Section 5, Section 6, and Section 7 of the Mandate.
  */
 
 import {
@@ -10,7 +13,19 @@ import {
   evaluateSpouseDirection,
   evaluateSpouseGeographicDistance
 } from "../consultationEngine.js";
-import { getD9Data, getD10Data, getDashaData, getTimingWindows } from "../followUpAnswerService.js";
+import { getD9Data, getD10Data, getDashaData, getTimingWindows, getKPData } from "../followUpAnswerService.js";
+import {
+  EvidenceGraph,
+  EVIDENCE_CATEGORIES,
+  buildChartFactId,
+  buildHouseFactId,
+  buildLordFactId,
+  buildPlanetFactId,
+  buildVargaFactId,
+  buildDashaFactId,
+  buildRuleId
+} from "./evidenceGraph.js";
+import { computeTimingWindows } from "./timingEngine.js";
 
 const SIGN_DIRECTIONS = {
   Aries: "EAST", Leo: "EAST", Sagittarius: "EAST",
@@ -48,6 +63,10 @@ export function retrieveEvidence(plan, context) {
   const ascendant = chart?.ascendant || chart?.lagna || null;
   const ascSign = ascendant?.signName || ascendant?.sign || (typeof ascendant === "string" ? ascendant : null);
 
+  const evidenceGraph = new EvidenceGraph(plan?.primaryIntent || "QA");
+  const calculatedFacts = [];
+  const traditionalRules = [];
+
   // If no planets and no ascendant, evidence is insufficient
   if (!chart || (rawPlanets.length === 0 && !ascSign)) {
     return {
@@ -60,7 +79,10 @@ export function retrieveEvidence(plan, context) {
       distanceAnalysis: null,
       comparisonAnalysis: null,
       vargaAnalysis: null,
-      reportSections: []
+      reportSections: [],
+      calculatedFacts: [],
+      traditionalRules: [],
+      evidenceGraph
     };
   }
 
@@ -69,16 +91,36 @@ export function retrieveEvidence(plan, context) {
   for (const p of rawPlanets) {
     const pName = p.name || p.planetName;
     if (pName) {
-      planetMap[pName] = {
+      const pFact = {
         name: pName,
         sign: p.signName || p.sign,
         house: p.house || p.bhava,
         degree: typeof p.degree === "number" ? p.degree : (p.longitude ? p.longitude % 30 : null),
-        dignity: p.dignity || "Neutral",
+        dignity: p.dignity || null,
+        dignityStatus: p.dignity ? "CALCULATED" : "NOT_CALCULATED",
         isRetrograde: Boolean(p.isRetrograde || p.speed < 0),
         nakshatra: p.nakshatra || null,
         pada: p.pada || null
       };
+      planetMap[pName] = pFact;
+
+      // Add to canonical calculatedFacts & evidenceGraph
+      const factId = buildPlanetFactId(pName, pFact.dignity || "POS");
+      calculatedFacts.push({
+        id: factId,
+        factor: pName,
+        sign: pFact.sign,
+        house: pFact.house,
+        dignity: pFact.dignity,
+        dignityStatus: pFact.dignityStatus,
+        degree: pFact.degree
+      });
+      evidenceGraph.addNode({
+        id: factId,
+        category: EVIDENCE_CATEGORIES.PLANET_FACT,
+        label: `${pName} in ${pFact.sign} (House ${pFact.house})`,
+        value: pFact
+      });
     }
   }
 
@@ -92,13 +134,29 @@ export function retrieveEvidence(plan, context) {
         const sign = SIGN_ORDER[signIdx];
         const lord = SIGN_LORDS[sign];
         const occupants = rawPlanets.filter(p => (p.house || p.bhava) === h).map(p => p.name || p.planetName);
-        houseMap[h] = {
+        const hFact = {
           house: h,
           sign,
           lord,
           occupants,
           lordPlanet: planetMap[lord] || null
         };
+        houseMap[h] = hFact;
+
+        const houseFactId = buildHouseFactId(h);
+        calculatedFacts.push({
+          id: houseFactId,
+          factor: `House_${h}`,
+          sign,
+          lord,
+          occupants
+        });
+        evidenceGraph.addNode({
+          id: houseFactId,
+          category: EVIDENCE_CATEGORIES.HOUSE_FACT,
+          label: `House ${h} in ${sign} ruled by ${lord}`,
+          value: hFact
+        });
       }
     }
   }
@@ -111,23 +169,58 @@ export function retrieveEvidence(plan, context) {
     D10: d10Info
   };
 
+  if (d9Info?.ascendant) {
+    const d9Id = buildVargaFactId("D9", "ASC");
+    calculatedFacts.push({ id: d9Id, factor: "D9_Ascendant", sign: d9Info.ascendant });
+    evidenceGraph.addNode({ id: d9Id, category: EVIDENCE_CATEGORIES.VARGA_FACT, label: `D9 Navamsha Lagna ${d9Info.ascendant}`, value: d9Info.ascendant });
+  }
+
   // 4. Dashas & Timing Windows
   const activeDasha = getDashaData(context);
-  const timingWindows = getTimingWindows(context);
+  let timingWindows = getTimingWindows(context);
+
+  // If report timing windows are empty, evaluate dynamically via timingEngine
+  if ((!timingWindows || timingWindows.length === 0) && (chart.dashas || chart.dashaTimeline)) {
+    const dynTiming = computeTimingWindows({
+      domain: plan.primaryDomain,
+      chart,
+      dashaTimeline: chart.dashaTimeline || chart.dashas || [],
+      vargas
+    });
+    if (dynTiming.timingWindows && dynTiming.timingWindows.length > 0) {
+      timingWindows = dynTiming.timingWindows;
+    }
+  }
+
+  if (activeDasha?.mahadasha) {
+    const dashaId = buildDashaFactId(activeDasha.mahadasha, activeDasha.antardasha);
+    calculatedFacts.push({
+      id: dashaId,
+      factor: "Active_Dasha",
+      mahadasha: activeDasha.mahadasha,
+      antardasha: activeDasha.antardasha
+    });
+    evidenceGraph.addNode({
+      id: dashaId,
+      category: EVIDENCE_CATEGORIES.DASHA_FACT,
+      label: `Active Dasha: ${activeDasha.mahadasha} - ${activeDasha.antardasha}`,
+      value: activeDasha
+    });
+  }
 
   // 5. Direction Analysis
   let directionAnalysis = null;
   if (plan.requiredDirectionAnalysis) {
     const seventhSign = houseMap[7]?.sign || null;
     const seventhLord = houseMap[7]?.lord || null;
-    const seventhLordPlacement = planetMap[seventhLord]?.sign || null;
-    const venusPlacement = planetMap["Venus"]?.sign || null;
+    const seventhLordPlacement = (seventhLord && planetMap[seventhLord]) ? planetMap[seventhLord].sign : null;
+    const venusPlacement = (planetMap["Venus"] && planetMap["Venus"].sign) ? planetMap["Venus"].sign : null;
 
     const houseDir = seventhSign ? SIGN_DIRECTIONS[seventhSign] : null;
     const lordDir = seventhLordPlacement ? SIGN_DIRECTIONS[seventhLordPlacement] : null;
-    const venusDir = PLANET_DIRECTIONS["Venus"] || "SOUTH_EAST";
+    const venusDir = planetMap["Venus"] ? (PLANET_DIRECTIONS["Venus"] || "SOUTH_EAST") : null;
     const venusSignDir = venusPlacement ? SIGN_DIRECTIONS[venusPlacement] : null;
-    const d9LagnaDir = d9Info?.ascendant ? SIGN_DIRECTIONS[d9Info.ascendant] : null;
+    const d9LagnaDir = (d9Info && d9Info.ascendant) ? SIGN_DIRECTIONS[d9Info.ascendant] : null;
 
     const indicators = [
       { factor: "7th House Sign", sign: seventhSign, direction: houseDir },
@@ -137,33 +230,42 @@ export function retrieveEvidence(plan, context) {
       { factor: "D9 Navamsha Lagna", sign: d9Info?.ascendant, direction: d9LagnaDir }
     ].filter(i => Boolean(i.direction));
 
-    // Count direction frequency
-    const dirCounts = {};
-    indicators.forEach(i => {
-      dirCounts[i.direction] = (dirCounts[i.direction] || 0) + 1;
-    });
+    if (indicators.length < 2 || !planetMap["Venus"] || !seventhLordPlacement) {
+      directionAnalysis = {
+        primaryDirection: null,
+        secondaryDirection: null,
+        convergenceScore: null,
+        indicators: indicators,
+        conflictingIndicators: [],
+        confidenceCategory: "INSUFFICIENT_DATA"
+      };
+    } else {
+      const dirCounts = {};
+      indicators.forEach(i => {
+        dirCounts[i.direction] = (dirCounts[i.direction] || 0) + 1;
+      });
 
-    const sortedDirs = Object.entries(dirCounts).sort((a, b) => b[1] - a[1]);
-    const primaryDirection = sortedDirs[0] ? sortedDirs[0][0] : "NORTH";
-    const secondaryDirection = sortedDirs[1] ? sortedDirs[1][0] : null;
-    const convergenceScore = indicators.length > 0 ? ((dirCounts[primaryDirection] || 1) / indicators.length) : 0.5;
+      const sortedDirs = Object.entries(dirCounts).sort((a, b) => b[1] - a[1]);
+      const primaryDirection = sortedDirs[0] ? sortedDirs[0][0] : null;
+      const secondaryDirection = sortedDirs[1] ? sortedDirs[1][0] : null;
+      const convergenceScore = indicators.length > 0 ? ((dirCounts[primaryDirection] || 0) / indicators.length) : null;
 
-    const conflicting = indicators.filter(i => i.direction !== primaryDirection);
+      const conflicting = indicators.filter(i => i.direction !== primaryDirection);
 
-    directionAnalysis = {
-      primaryDirection,
-      secondaryDirection,
-      convergenceScore: parseFloat(convergenceScore.toFixed(2)),
-      indicators,
-      conflictingIndicators: conflicting,
-      confidenceCategory: convergenceScore >= 0.6 ? "HIGH_CONVERGENCE" : "MIXED_DIRECTIONAL_INDICATION"
-    };
+      directionAnalysis = {
+        primaryDirection,
+        secondaryDirection,
+        convergenceScore: convergenceScore != null ? parseFloat(convergenceScore.toFixed(2)) : null,
+        indicators,
+        conflictingIndicators: conflicting,
+        confidenceCategory: (convergenceScore != null && convergenceScore >= 0.6) ? "HIGH_CONVERGENCE" : "MIXED_DIRECTIONAL_INDICATION"
+      };
+    }
   }
 
   // 6. Distance Analysis (Strict Invariant: No fabrication of km)
   let distanceAnalysis = null;
   if (plan.requiredDistanceAnalysis) {
-    // Check consultation engine distance helper
     const rawDist = evaluateSpouseGeographicDistance(chart);
     distanceAnalysis = {
       distanceStatus: "NOT_ESTABLISHED",
@@ -178,20 +280,18 @@ export function retrieveEvidence(plan, context) {
   let comparisonAnalysis = null;
   if (plan.requiredComparison) {
     const rawWealth = evaluateSpouseFamilyWealth(chart);
-    // User Family indicators: 2nd house from Lagna, 2nd lord, Jupiter
     const user2nd = houseMap[2] || {};
     const user2ndLord = planetMap[user2nd.lord] || {};
     const userFamilyFactors = [
-      `2nd House in ${user2nd.sign || "unknown"} (lord: ${user2nd.lord || "unknown"})`,
+      user2nd.sign ? `2nd House in ${user2nd.sign} (Lord: ${user2nd.lord || "Unspecified"})` : "2nd House data not calculated",
       user2nd.occupants?.length ? `Occupants in 2nd: ${user2nd.occupants.join(", ")}` : "2nd House unoccupied",
       user2ndLord.dignity ? `2nd Lord dignity: ${user2ndLord.dignity}` : null
     ].filter(Boolean);
 
-    // Spouse Family indicators: 8th house (2nd from 7th), 8th lord, Venus
     const spouse8th = houseMap[8] || {};
     const spouse8thLord = planetMap[spouse8th.lord] || {};
     const spouseFamilyFactors = [
-      `8th House (2nd from 7th) in ${spouse8th.sign || "unknown"} (lord: ${spouse8th.lord || "unknown"})`,
+      spouse8th.sign ? `8th House (2nd from 7th) in ${spouse8th.sign} (Lord: ${spouse8th.lord || "Unspecified"})` : "8th House data not calculated",
       spouse8th.occupants?.length ? `Occupants in 8th: ${spouse8th.occupants.join(", ")}` : "8th House unoccupied",
       spouse8thLord.dignity ? `8th Lord dignity: ${spouse8thLord.dignity}` : null
     ].filter(Boolean);
@@ -218,36 +318,66 @@ export function retrieveEvidence(plan, context) {
 
   // 8. D10 Analysis
   let vargaAnalysis = null;
+  let vargaMissing = false;
   if (plan.requiredVargas.includes("D10") || plan.primaryIntent === "VARGA_INTERPRETATION") {
-    const d10Asc = plan.specifiedSign || d10Info.ascendant || (ascSign ? "Cancer" : null); // D10 Lagna
-    let d1010thSign = null;
-    let d10LagnaLord = null;
-    let d1010thLord = null;
-    if (d10Asc) {
-      const d10AscIdx = SIGN_ORDER.indexOf(d10Asc);
+    const calculatedD10Asc = d10Info.ascendant || null;
+    const userClaimedSign = plan.userClaimedSign || null;
+
+    if (!calculatedD10Asc) {
+      vargaMissing = true;
+      vargaAnalysis = {
+        varga: "D10",
+        lagna: null,
+        userClaimedSign,
+        userClaimMismatch: false,
+        status: "INSUFFICIENT_DATA"
+      };
+    } else {
+      let d1010thSign = null;
+      let d10LagnaLord = null;
+      let d1010thLord = null;
+      const d10AscIdx = SIGN_ORDER.indexOf(calculatedD10Asc);
       if (d10AscIdx !== -1) {
-        d10LagnaLord = SIGN_LORDS[d10Asc];
+        d10LagnaLord = SIGN_LORDS[calculatedD10Asc];
         const tenthIdx = (d10AscIdx + 9) % 12;
         d1010thSign = SIGN_ORDER[tenthIdx];
         d1010thLord = SIGN_LORDS[d1010thSign];
       }
-    }
-    const d10Planets = d10Info.planets || [];
+      const d10Planets = d10Info.planets || [];
 
-    vargaAnalysis = {
-      varga: "D10",
-      lagna: d10Asc,
-      lagnaLord: d10LagnaLord,
-      tenthHouseSign: d1010thSign,
-      tenthLord: d1010thLord,
-      planetsInD10: d10Planets,
-      sunPlacement: planetMap["Sun"] || null,
-      saturnPlacement: planetMap["Saturn"] || null,
-      mercuryPlacement: planetMap["Mercury"] || null
-    };
+      const d10Sun = d10Planets.find(p => (p.name || p.planetName) === "Sun") || null;
+      const d10Saturn = d10Planets.find(p => (p.name || p.planetName) === "Saturn") || null;
+      const d10Mercury = d10Planets.find(p => (p.name || p.planetName) === "Mercury") || null;
+
+      const userClaimMismatch = Boolean(userClaimedSign && userClaimedSign.toLowerCase() !== calculatedD10Asc.toLowerCase());
+
+      vargaAnalysis = {
+        varga: "D10",
+        lagna: calculatedD10Asc,
+        lagnaLord: d10LagnaLord,
+        tenthHouseSign: d1010thSign,
+        tenthLord: d1010thLord,
+        planetsInD10: d10Planets,
+        userClaimedSign,
+        userClaimMismatch,
+        d10SunPlacement: d10Sun,
+        d10SaturnPlacement: d10Saturn,
+        d10MercuryPlacement: d10Mercury,
+        d1SunPlacement: planetMap["Sun"] || null,
+        d1SaturnPlacement: planetMap["Saturn"] || null,
+        d1MercuryPlacement: planetMap["Mercury"] || null,
+        sunPlacement: d10Sun,
+        saturnPlacement: d10Saturn,
+        mercuryPlacement: d10Mercury
+      };
+
+      const d10Id = buildVargaFactId("D10", "ASC");
+      calculatedFacts.push({ id: d10Id, factor: "D10_Ascendant", sign: calculatedD10Asc, lord: d10LagnaLord });
+      evidenceGraph.addNode({ id: d10Id, category: EVIDENCE_CATEGORIES.VARGA_FACT, label: `D10 Dashamsha Lagna ${calculatedD10Asc}`, value: calculatedD10Asc });
+    }
   }
 
-  // 9. Dasha Interaction Analysis (e.g. Moon-Venus or Active Dasha)
+  // 9. Dasha Interaction Analysis
   let dashaInteraction = null;
   const p1Name = plan.dashaPair?.mahadasha || activeDasha?.mahadasha || null;
   const p2Name = plan.dashaPair?.antardasha || activeDasha?.antardasha || null;
@@ -267,7 +397,6 @@ export function retrieveEvidence(plan, context) {
     else if ((Math.abs(h1 - h2) === 5 || Math.abs(h1 - h2) === 7)) axisRelationship = "6/8_SHADASHTAKA";
     else if ((Math.abs(h1 - h2) === 1 || Math.abs(h1 - h2) === 11)) axisRelationship = "2/12_DWIRDWADASA";
 
-    // Activated domains based on houses
     const activatedHouses = [h1, h2];
     const activatedDomains = [];
     if (activatedHouses.includes(1)) activatedDomains.push("vitality_identity");
@@ -287,7 +416,32 @@ export function retrieveEvidence(plan, context) {
     };
   }
 
-  // 10. Relevant Report Sections
+  // 10. KP and Multi-System Data
+  const kpData = getKPData(context);
+  const bundleSystems = context.multiSystemBundle?.systems || {};
+  const lahiriAyanVal = bundleSystems.lahiri?.ayanamshaValue ?? bundleSystems.lahiri?.ayanamsa ?? (context.system?.id === "lahiri" ? (context.chart?.ayanamshaValue ?? context.chart?.ayanamsa ?? null) : null);
+  const kpAyanVal = bundleSystems.kp?.ayanamshaValue ?? bundleSystems.kp?.ayanamsa ?? bundleSystems.kp?.system?.ayanamshaValue ?? (context.system?.id === "kp" ? (context.chart?.ayanamshaValue ?? context.chart?.ayanamsa ?? null) : null);
+
+  // 11. Traditional Rules Association (Fact / Interpretation Separation)
+  if (plan.primaryDomain === "marriage") {
+    traditionalRules.push({
+      id: buildRuleId("MARRIAGE", "7TH_LORD_ACTIVATION"),
+      ruleName: "Kalatra Bhava Activation",
+      shastra: "Brihat Parashara Hora Shastra",
+      condition: "7th house lord dasha activates alliance potential",
+      traditionalInterpretation: "Dasha of 7th lord or planets associated with 7th house brings relational opportunities."
+    });
+  } else if (plan.primaryDomain === "career") {
+    traditionalRules.push({
+      id: buildRuleId("CAREER", "10TH_LORD_D10_ALIGNMENT"),
+      ruleName: "Dashamsha Karma Varga Rule",
+      shastra: "Phaladeepika Chapter 15",
+      condition: "D10 Lagna and 10th lord signify professional execution",
+      traditionalInterpretation: "D10 divisional strength indicates vocational leadership and workplace execution."
+    });
+  }
+
+  // 12. Relevant Report Sections
   const reportSections = [];
   const domain = plan.primaryDomain;
   if (domain === "career" || domain === "job" || domain === "business") reportSections.push("career", "vocation");
@@ -299,8 +453,20 @@ export function retrieveEvidence(plan, context) {
   else if (domain === "dasha" || domain === "milestones") reportSections.push("timeline", "dasha");
   else reportSections.push("blueprint", "overview");
 
+  let status = "SUPPORTED";
+  const isDashaQuery = Boolean(plan.requiredDashas || plan.primaryIntent === "CURRENT_DASHA" || plan.primaryIntent === "DASHA_EFFECT");
+  const dashaMissing = isDashaQuery && !activeDasha && !dashaInteraction;
+  const isDirQuery = Boolean(plan.primaryIntent === "SPOUSE_DIRECTION" || plan.requiredDirectionAnalysis);
+  const dirMissing = isDirQuery && (!directionAnalysis || directionAnalysis.confidenceCategory === "INSUFFICIENT_DATA" || !directionAnalysis.primaryDirection);
+
+  if (vargaMissing || dashaMissing || dirMissing || !ascSign) {
+    status = "INSUFFICIENT_DATA";
+  } else if (plan.primaryIntent === "SPOUSE_DISTANCE" || distanceAnalysis?.distanceStatus === "NOT_ESTABLISHED") {
+    status = "NOT_DISCRIMINATING";
+  }
+
   return {
-    status: "SUPPORTED",
+    status,
     ascendant: ascSign,
     planetMap,
     houseMap,
@@ -311,7 +477,15 @@ export function retrieveEvidence(plan, context) {
     distanceAnalysis,
     comparisonAnalysis,
     vargaAnalysis,
+    vargaMissing,
     dashaInteraction,
-    reportSections
+    kpData,
+    lahiriAyanamsha: lahiriAyanVal,
+    kpAyanamsha: kpAyanVal,
+    reportSections,
+    calculatedFacts,
+    traditionalRules,
+    evidenceGraph,
+    chart
   };
 }

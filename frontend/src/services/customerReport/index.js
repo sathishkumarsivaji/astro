@@ -66,6 +66,13 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
 
   const canonicalFacts = extractCanonicalFacts(chartData, lang);
 
+  const tzResolved = chartData.timezoneId || chartData.ianaTimezone || chartData.tz ||
+    (Number.isFinite(chartData.sourceUtcOffset) ? `UTC${chartData.sourceUtcOffset >= 0 ? '+' : ''}${chartData.sourceUtcOffset}` :
+    (Number.isFinite(chartData.utcOffset) ? `UTC${chartData.utcOffset >= 0 ? '+' : ''}${chartData.utcOffset}` : null));
+  if (!tzResolved) {
+    throw new Error("INSUFFICIENT_DATA: Missing required timezone in chartData.");
+  }
+
   // 1. Client Profile & Calculation Metadata
   const clientProfile = {
     name: clientName,
@@ -75,7 +82,7 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
     birthPlace: chartData.birthPlace || chartData.locationName || "N/A",
     latitude: chartData.latitude ?? chartData.lat ?? null,
     longitude: chartData.longitude ?? chartData.lng ?? null,
-    timezone: chartData.timezoneId || chartData.ianaTimezone || chartData.tz || "Asia/Kolkata"
+    timezone: tzResolved
   };
 
   const reportFingerprint = generateChartFingerprint ? generateChartFingerprint(chartData) : "CANONICAL_FINGERPRINT";

@@ -36,7 +36,7 @@ export function calculateMarriageExpert(chartData, lang) {
           return {
             status: hasPromise ? SUB_PHASE_STATUS.SUPPORTED : SUB_PHASE_STATUS.NOT_ESTABLISHED,
             why: hasPromise
-              ? (isTamil ? 'ஜாதகத்தில் 7-ம் பாவ அமைப்பு மற்றும் சுக்கிரன் நிலை திருமண வாய்ப்பை உறுதி செய்கிறது.' : 'Natal 7th house disposition and Venus signify relationship promise.')
+              ? (isTamil ? 'ஜாதகத்தில் 7-ம் பாவ அமைப்பு மற்றும் சுக்கிரன் நிலை திருமண வாய்ப்பை சுட்டிக்காட்டுகிறது.' : 'Natal 7th house disposition and Venus signify relationship promise.')
               : '',
             whyNot: hasPromise ? [] : [isTamil ? '7-ம் பாவகத்தில் கடுமையான பலவீனம் காணப்படுகிறது.' : '7th house or its lord exhibits notable affliction.']
           };
