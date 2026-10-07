@@ -345,7 +345,14 @@ try {
     npmCiClean = false;
     npmCiDetail = "package.json missing build or lint scripts";
   } else {
-    npmCiDetail = "package.json and package-lock.json verified; zero node_modules in distribution";
+    // If node_modules is missing (clean fresh distribution), execute npm ci to establish runtime
+    const nodeModulesExists = fs.existsSync(path.join(FRONTEND_DIR, "node_modules"));
+    if (!nodeModulesExists) {
+      execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
+      npmCiDetail = "clean npm ci executed successfully; zero node_modules in distribution archive";
+    } else {
+      npmCiDetail = "package.json and package-lock.json verified; zero node_modules in distribution";
+    }
   }
 } catch (err) {
   npmCiClean = false;
