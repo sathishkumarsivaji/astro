@@ -23,6 +23,25 @@ const { predictionEngineHash, calibrationModelHash } = getCurrentHashes();
 console.log('Current predictionEngineHash:', predictionEngineHash);
 console.log('Current calibrationModelHash:', calibrationModelHash);
 
+// Strict Provenance Guard: Assert calibration_model.json is fitted to current engine
+const CALIBRATION_MODEL_PATH = path.join(ROOT, 'data/real_world_validation/results/calibration_model.json');
+if (!fs.existsSync(CALIBRATION_MODEL_PATH)) {
+  console.error('FATAL: calibration_model.json missing. Cannot synchronize benchmark artifacts.');
+  process.exit(1);
+}
+const calModel = JSON.parse(fs.readFileSync(CALIBRATION_MODEL_PATH, 'utf8'));
+if (calModel.predictionEngineHash !== predictionEngineHash) {
+  console.error('========================================================================');
+  console.error('FATAL PROVENANCE FAILURE: calibration_model.json is STALE!');
+  console.error(`  calibration_model.json.predictionEngineHash: ${calModel.predictionEngineHash}`);
+  console.error(`  current runtime predictionEngineHash:        ${predictionEngineHash}`);
+  console.error('DO NOT SYNCHRONIZE! Refit calibration model on TRAIN partition first:');
+  console.error('  node scripts/fit_calibration_model.mjs');
+  console.error('========================================================================');
+  process.exit(1);
+}
+console.log('✓ Provenance check passed: calibration_model.json is fitted to current prediction engine.');
+
 const TRAIN_PATH = path.join(ROOT, 'data/real_world_validation/splits/train.json');
 const BLIND_TEST_PATH = path.join(ROOT, 'data/real_world_validation/splits/blind_test.json');
 const INTERNAL_HOLDOUT_PATH = path.join(ROOT, 'data/real_world_validation/splits/internal_holdout.json');

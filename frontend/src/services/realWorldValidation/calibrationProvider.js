@@ -14,6 +14,7 @@
 
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 
 let cachedModel = null;
@@ -33,9 +34,40 @@ export function clearTestCalibrationFixture() {
 }
 
 /**
+ * Resolves the path to release manifest across both CLI and bundler environments.
+ */
+export function resolveReleaseManifestPath() {
+  let baseDir = null;
+  try {
+    if (typeof __dirname !== "undefined") {
+      baseDir = __dirname;
+    } else if (import.meta?.url) {
+      baseDir = path.dirname(fileURLToPath(import.meta.url));
+    }
+  } catch (_e) {
+    // ignore
+  }
+
+  const candidates = [
+    baseDir ? path.resolve(baseDir, "../../../../current_release_manifest.json") : null,
+    baseDir ? path.resolve(baseDir, "../../config/current_release_manifest.json") : null,
+    path.resolve(process.cwd(), "current_release_manifest.json"),
+    path.resolve(process.cwd(), "../current_release_manifest.json"),
+    path.resolve(process.cwd(), "frontend/src/config/current_release_manifest.json")
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return candidates[0] || null;
+}
+
+/**
  * Resolves the path to calibration_model.json across both CLI and bundler environments.
  */
-function resolveCalibrationModelPath() {
+export function resolveCalibrationModelPath() {
   let baseDir = null;
   try {
     if (typeof __dirname !== "undefined") {
@@ -64,15 +96,52 @@ function resolveCalibrationModelPath() {
 }
 
 /**
+ * Extracts expected engine and training hashes from manifest when not explicitly provided.
+ */
+function getExpectedHashes(options = {}) {
+  let expectedPredictionEngineHash = options.expectedPredictionEngineHash || null;
+  let expectedTrainingDatasetHash = options.expectedTrainingDatasetHash || null;
+
+  if (!expectedPredictionEngineHash || !expectedTrainingDatasetHash) {
+    try {
+      const manifestPath = resolveReleaseManifestPath();
+      if (manifestPath && fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+        if (!expectedPredictionEngineHash && manifest.authoritativeHashes?.predictionEngineHash) {
+          expectedPredictionEngineHash = manifest.authoritativeHashes.predictionEngineHash;
+        }
+        if (!expectedTrainingDatasetHash && manifest.datasetHashes?.trainSplitHash) {
+          expectedTrainingDatasetHash = manifest.datasetHashes.trainSplitHash;
+        }
+      }
+    } catch (_e) {
+      // ignore
+    }
+  }
+
+  return { expectedPredictionEngineHash, expectedTrainingDatasetHash };
+}
+
+/**
  * Loads the calibration model artifact from disk, caching it in memory.
  * If forceReload is true, clears cache and re-reads from disk.
  * FAILS CLOSED: Never silently substitutes embedded constants.
+ * Automatically verifies freshness against release manifest or runtime engine hashes.
  */
 export function loadCalibrationModel(forceReload = false, options = {}) {
   if (testFixtureOverride) {
     return testFixtureOverride;
   }
-  if (cachedModel && !forceReload && !options.expectedPredictionEngineHash && !options.expectedTrainingDatasetHash) {
+
+  const { expectedPredictionEngineHash, expectedTrainingDatasetHash } = getExpectedHashes(options);
+
+  if (cachedModel && !forceReload) {
+    if (expectedPredictionEngineHash && cachedModel.predictionEngineHash && cachedModel.predictionEngineHash !== expectedPredictionEngineHash) {
+      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model predictionEngineHash (${cachedModel.predictionEngineHash}) does not match runtime engine hash (${expectedPredictionEngineHash}). Re-fit calibration model.`);
+    }
+    if (expectedTrainingDatasetHash && cachedModel.trainingDatasetHash && cachedModel.trainingDatasetHash !== expectedTrainingDatasetHash) {
+      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model trainingDatasetHash (${cachedModel.trainingDatasetHash}) does not match current dataset hash (${expectedTrainingDatasetHash}). Re-fit calibration model.`);
+    }
     return cachedModel;
   }
 
@@ -97,12 +166,12 @@ export function loadCalibrationModel(forceReload = false, options = {}) {
       throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing conformal interval quantiles (q80).");
     }
 
-    // Fail-closed staleness verification if expected hashes are supplied
-    if (options.expectedPredictionEngineHash && parsed.predictionEngineHash && parsed.predictionEngineHash !== options.expectedPredictionEngineHash) {
-      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model predictionEngineHash (${parsed.predictionEngineHash}) does not match runtime engine hash (${options.expectedPredictionEngineHash}). Re-fit calibration model.`);
+    // Fail-closed staleness verification if expected hashes are resolved or supplied
+    if (expectedPredictionEngineHash && parsed.predictionEngineHash && parsed.predictionEngineHash !== expectedPredictionEngineHash) {
+      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model predictionEngineHash (${parsed.predictionEngineHash}) does not match runtime engine hash (${expectedPredictionEngineHash}). Re-fit calibration model.`);
     }
-    if (options.expectedTrainingDatasetHash && parsed.trainingDatasetHash && parsed.trainingDatasetHash !== options.expectedTrainingDatasetHash) {
-      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model trainingDatasetHash (${parsed.trainingDatasetHash}) does not match current dataset hash (${options.expectedTrainingDatasetHash}). Re-fit calibration model.`);
+    if (expectedTrainingDatasetHash && parsed.trainingDatasetHash && parsed.trainingDatasetHash !== expectedTrainingDatasetHash) {
+      throw new Error(`CALIBRATION_ARTIFACT_STALE: Model trainingDatasetHash (${parsed.trainingDatasetHash}) does not match current dataset hash (${expectedTrainingDatasetHash}). Re-fit calibration model.`);
     }
 
     cachedModel = parsed;
@@ -197,3 +266,52 @@ export function getDemographicBaselineMetadata() {
 export function getCompleteCalibrationModel() {
   return loadCalibrationModel();
 }
+
+/**
+ * Validates all three calibration integrity invariants at startup:
+ * 1. calibration.predictionEngineHash === manifest.predictionEngineHash
+ * 2. calibration.trainingDatasetHash === manifest.trainSplitHash
+ * 3. SHA256(calibration_model.json) === manifest.calibrationModelHash
+ * All three must pass.
+ */
+export function validateCalibrationAtStartup(manifest = null) {
+  if (!manifest) {
+    const manifestPath = resolveReleaseManifestPath();
+    if (!manifestPath || !fs.existsSync(manifestPath)) {
+      throw new Error("CALIBRATION_STARTUP_VALIDATION_FAILED: Release manifest not found.");
+    }
+    manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  }
+
+  const modelPath = resolveCalibrationModelPath();
+  if (!fs.existsSync(modelPath)) {
+    throw new Error(`CALIBRATION_STARTUP_VALIDATION_FAILED: calibration_model.json missing at ${modelPath}`);
+  }
+
+  const rawBytes = fs.readFileSync(modelPath);
+  const actualFileSha = crypto.createHash("sha256").update(rawBytes).digest("hex");
+  const model = JSON.parse(rawBytes.toString("utf8"));
+
+  const authHashes = manifest.authoritativeHashes || {};
+  const datasetHashes = manifest.datasetHashes || {};
+
+  if (model.predictionEngineHash !== authHashes.predictionEngineHash) {
+    throw new Error(`CALIBRATION_STARTUP_VALIDATION_FAILED: calibration.predictionEngineHash (${model.predictionEngineHash}) !== manifest.predictionEngineHash (${authHashes.predictionEngineHash})`);
+  }
+
+  if (model.trainingDatasetHash !== datasetHashes.trainSplitHash) {
+    throw new Error(`CALIBRATION_STARTUP_VALIDATION_FAILED: calibration.trainingDatasetHash (${model.trainingDatasetHash}) !== manifest.trainSplitHash (${datasetHashes.trainSplitHash})`);
+  }
+
+  if (actualFileSha !== authHashes.calibrationModelHash) {
+    throw new Error(`CALIBRATION_STARTUP_VALIDATION_FAILED: SHA256(calibration_model.json) (${actualFileSha}) !== manifest.calibrationModelHash (${authHashes.calibrationModelHash})`);
+  }
+
+  return {
+    valid: true,
+    predictionEngineHash: model.predictionEngineHash,
+    trainingDatasetHash: model.trainingDatasetHash,
+    calibrationModelHash: actualFileSha
+  };
+}
+

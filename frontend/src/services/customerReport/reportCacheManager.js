@@ -27,7 +27,7 @@ import { generateChartFingerprint } from "../astroEngine.js";
 // Authoritative frozen baseline versions and hashes
 export const DEFAULT_ENGINE_VERSION = "ASTROVERSE Core v4.2.0";
 export const DEFAULT_PREDICTION_ENGINE_HASH = "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
-export const DEFAULT_CALIBRATION_MODEL_HASH = "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea";
+export const DEFAULT_CALIBRATION_MODEL_HASH = "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277";
 export const DEFAULT_SCHEMA_VERSION = "3.0";
 
 let activeEngineVersion = DEFAULT_ENGINE_VERSION;

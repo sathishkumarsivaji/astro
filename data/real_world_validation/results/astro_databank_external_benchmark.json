@@ -7,7 +7,7 @@
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
     "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
-    "calibrationModelHash": "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea",
+    "calibrationModelHash": "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
@@ -31,7 +31,7 @@
       "recomputedCount": 7987,
       "invalidatedEntries": 7987,
       "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
-      "calibrationHash": "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea"
+      "calibrationHash": "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277"
     }
   },
   "primaryBenchmark": {

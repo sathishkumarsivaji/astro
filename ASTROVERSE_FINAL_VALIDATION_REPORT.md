@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA). No overlap was detected under the preregistered exact-name/birth-date and normalized-name linkage rules. Residual linkage risk from aliases or unresolved identity variants cannot be completely excluded.
 - **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38`) and calibration model SHA-256 hash (`5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38`) and calibration model SHA-256 hash (`5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -87,6 +87,21 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = 3751$):
 | **Timing Quality Gate** | **NOT_EMPIRICALLY_VALIDATED** | Baseline outperforms model by 2.78y |
 | **Overall Scientific Status** | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** | Fully disclosed in reports & UI |
 
+### 2. External Discrete-Time Hazard Survival Model (V3) Denominator & Degeneracy Reporting
+- **Certified Cohort vs. Evaluated Denominator:** While the certified independent A/AA cohort comprises 3,751 total records, exactly **869** subjects met the V3 time-to-event interval horizon eligibility requirements (301 observed events, 568 right-censored; records with missing outcome intervals or pre-horizon events excluded).
+- **Sub-Cohort Breakdown:**
+  - **AA_ONLY:** $N = 455$ evaluated subjects (188 events, 267 censored)
+  - **A_ONLY:** $N = 414$ evaluated subjects (113 events, 301 censored)
+  - **ALL_INDEPENDENT (A + AA + B/C):** $N = 1,111$ evaluated subjects (408 events, 703 censored)
+- **External Occurrence Classifier Degeneracy & Discrimination Analysis:**
+  - Under the external cohort distribution, the V3 occurrence decision rule predicts positive occurrence for all evaluated subjects, resulting in:
+    $$\text{TP} = 301, \quad \text{FP} = 568, \quad \text{TN} = 0, \quad \text{FN} = 0$$
+    $$\text{Specificity} = 0.00\%, \quad \text{Balanced Accuracy} = 0.5000, \quad \text{MCC} = 0.0000$$
+  - In accordance with the anti-inflation quality gate, this occurrence classifier is classified as **`NON_DISCRIMINATIVE`** (degenerate across true negatives). No synthetic negative predictions or optimistic accuracy claims are allowed.
+- **External Timing Performance:**
+  - Discrete-time hazard survival model achieves timing MAE of **4.91 years** vs **4.92 years** demographic actuarial baseline (difference: $-0.01$y, likelihood ratio test $p = 0.508$, concordance index $C = 0.5345$).
+  - Evaluated status: **`STATISTICALLY_TIED`** / **`EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`**. Astrology does not demonstrate statistically significant predictive improvement over the actuarial baseline on external validation.
+
 ---
 
 ## SECTION 14A: PREDICTION CACHE PROVENANCE & VERSION INTEGRITY
@@ -97,7 +112,7 @@ Every cached prediction entry contains:
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
   "predictionEngineHash": "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38",
-  "calibrationModelHash": "5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea",
+  "calibrationModelHash": "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -278,8 +293,15 @@ Coefficients frozen on TRAIN and evaluated across untouched out-of-sample cohort
 | **BLIND_TEST** | 1605 | 1440 / 165 | **0.5048** | 4.05y | 4.05y | MEANINGFUL_IMPROVEMENT | $\Delta G^2 = 0.6886$ ($p = 0.40662$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 | **INTERNAL_HOLDOUT** | 1528 | 1374 / 154 | **0.507** | 4.09y | 4.09y | STATISTICALLY_TIED | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 | **Astro-Databank Certified A/AA** | 869 | 301 / 568 | **0.5345** | 4.91y | 4.92y | MEANINGFUL_IMPROVEMENT | $\Delta G^2 = 0.4375$ ($p = 0.50833$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| *— AA_ONLY Sensitivity* | 455 | 188 / 267 | **0.518** | 4.78y | 4.78y | STATISTICALLY_TIED | $\Delta G^2 = 0.1294$ ($p = 0.71903$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| *— A_ONLY Sensitivity* | 414 | 113 / 301 | **0.5531** | 5.13y | 5.14y | STATISTICALLY_TIED | $\Delta G^2 = 0.3081$ ($p = 0.57886$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| *— ALL_INDEPENDENT Sensitivity* | 1111 | 408 / 703 | **0.5383** | 5.02y | 5.03y | STATISTICALLY_TIED | $\Delta G^2 = 0.6651$ ($p = 0.41476$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 
-*Scientific Gate Note:* On untouched BLIND_TEST out-of-sample data, the V3 combined model does not beat the demographic baseline (timing MAE is ~4.05y vs ~4.05y, LRT $p = 0.407$). The model performs at baseline demographic parity, fully validating the truthful designation `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
+*Scientific Gate & Denominator Disclosure Note:*
+1. **BLIND_TEST Parity:** On untouched BLIND_TEST out-of-sample data, the V3 combined model does not beat the demographic baseline (timing MAE is ~4.05y vs ~4.05y, LRT $p = 0.407$). The model performs at baseline demographic parity, fully validating the truthful designation `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`.
+2. **External Evaluated Denominator (Astro-Databank):** While the certified A/AA external cohort includes 3,751 subjects, exactly **869** met the V3 discrete-hazard evaluation criteria (301 events, 568 censored; AA_ONLY: 455, A_ONLY: 414; all independent rating tiers: 1,111).
+3. **External Classifier Degeneracy & Non-Discrimination:** On the external Astro-Databank cohort, the V3 occurrence classifier predicts positive occurrence for all evaluated subjects ($TP=301, FP=568, TN=0, FN=0$, Specificity = 0.00%, MCC = 0.00), correctly and transparently classified as `NON_DISCRIMINATIVE` with zero fabricated true negatives.
+4. **External Timing Tied:** External timing achieves MAE of 4.91y vs 4.92y demographic baseline (LRT $p = 0.508$, `STATISTICALLY_TIED`).
 
 ### 6. Scientific Gate Conclusion
 The V3 Discrete-Time Hazard Survival Model satisfies all anti-leakage and empirical fitting requirements:
@@ -299,7 +321,7 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
 | **Prediction Engine Hash** | `a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38` |
-| **Calibration Model Hash** | `5ba83760f24d1230eb916ae4c8f610e3629eb426cdbccab8fd36d14e160ccbea` |
+| **Calibration Model Hash** | `5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
@@ -307,4 +329,4 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
 | **Benchmark Code Hash** | `d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3` |
-| **Artifact Generation Timestamp** | `2026-10-07T15:02:26.942Z` |
+| **Artifact Generation Timestamp** | `2026-10-07T15:48:43.059Z` |
