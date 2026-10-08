@@ -77,9 +77,9 @@ export function classifyMaterialDifference(lahiriBody, kpBody) {
     explanationEn = `Nakshatra pada changed: Pada ${lahiriBody.pada} in Lahiri vs Pada ${kpBody.pada} in KP (alters D9 Navamsha).`;
     explanationTa = `நட்சத்திர பாதம் மாறியுள்ளது: லஹிரியில் பாதம் ${lahiriBody.pada}, கே.பி.யில் பாதம் ${kpBody.pada} (நவாம்ச நிலையை மாற்றுகிறது).`;
   } else if (houseChanged) {
-    classification = "HOUSE_SHIFT";
-    explanationEn = `House cusp shift under Placidus geometry: House ${lahiriBody.house} in Lahiri vs House ${kpBody.house} in KP Bhava Chalit.`;
-    explanationTa = `பிளாசிடஸ் பாவக கணிதத்தால் பாவ சலித மாற்றம்: லஹிரியில் ${lahiriBody.house}-ம் பாவகம், கே.பி.யில் ${kpBody.house}-ம் பாவகம்.`;
+    classification = "HOUSE_SYSTEM_DIFFERENCE";
+    explanationEn = `House placement diverges due to fundamentally different house systems: Lahiri uses Whole Sign / Rāśi Bhava (House ${lahiriBody.house}), whereas KP uses Placidus semi-arc cusp boundaries (House ${kpBody.house}).`;
+    explanationTa = `அடிப்படையில் வேறுபட்ட பாவக முறைகளால் பாவகம் மாறுகிறது: லஹிரி ராசி பாவக முறையையும் (ராசி/பாவகம் ${lahiriBody.house}), கே.பி. பிளாசிடஸ் அரை-விகித பாவக ஆரம்பங்களையும் (பாவகம் ${kpBody.house}) பயன்படுத்துகின்றன.`;
   }
 
   const isMaterial = signChanged || nakshatraChanged || padaChanged || houseChanged;
@@ -164,7 +164,7 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     };
   }
 
-  // 1. Ayanamsha Comparison
+  // 1. Ayanamsha Comparison & Precision Model Declaration
   const lahiriAyanVal = lahiriChart.ayanamsaValue ?? lahiriChart.ayanamshaValue ?? lahiriChart.ayanamsa ?? lahiriChart.ayanamsha ?? bundle?.observations?.ayanamshas?.lahiri;
   const kpAyanVal = kpChart.ayanamsaValue ?? kpChart.ayanamshaValue ?? kpChart.ayanamsa ?? kpChart.ayanamsha ?? bundle?.observations?.ayanamshas?.kp;
 
@@ -177,10 +177,17 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     ? `${ayanamshaDiff.toFixed(4)}° (${formatDms(ayanamshaDiff)})`
     : "கணக்கிடப்படவில்லை";
 
-  // 2. Body Ledger Comparison
+  // Effective House Systems actually configured and used
+  const lahiriEffectiveHouse = "Whole Sign / Rāśi Bhava (Classical Parashari)";
+  const lahiriEffectiveHouseTa = "முழு ராசி / ராசி பாவகம் (பாரம்பரிய பராசர முறை)";
+  const kpEffectiveHouse = kpChart.system?.houseSystem || (kpChart.system?.isHouseSystemFallback ? "Equal (Placidus Polar Fallback)" : "Placidus Cusps (Semi-Arc)");
+  const kpEffectiveHouseTa = kpChart.system?.isHouseSystemFallback ? "சம பாவக முறை (பிளாசிடஸ் துருவ மாற்று)" : "பிளாசிடஸ் (Placidus Semi-Arc) முறை";
+
+  // 2. Body Ledger Comparison & Cusp Boundary Analysis
   const bodiesList = ["Ascendant", "Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
   const bodyComparisons = [];
   const materialDifferences = [];
+  const kpHouses = kpChart.houses || kpChart.cusps || [];
 
   for (const name of bodiesList) {
     let lObj = null;
@@ -207,6 +214,7 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
         pada: kpChart.ascendant?.pada ?? null,
         starLord: kpChart.ascendant?.starLord ?? "N/A",
         subLord: kpChart.ascendant?.subLord ?? "N/A",
+        subSubLord: kpChart.ascendant?.subSubLord ?? "N/A",
         formatted: formatDms(kLong)
       };
     } else {
@@ -233,6 +241,7 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
           pada: kP.pada ?? null,
           starLord: kP.starLord ?? "N/A",
           subLord: kP.subLord ?? "N/A",
+          subSubLord: kP.subSubLord ?? "N/A",
           formatted: formatDms(kP.longitude ?? kP.long)
         };
       }
@@ -241,13 +250,37 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     if (lObj && kObj) {
       const mat = classifyMaterialDifference(lObj, kObj);
       const deltaDeg = Math.abs((lObj.longitude || 0) - (kObj.longitude || 0));
+
+      // Build chart-specific exact boundary details
+      let chartSpecificBoundaryEn = mat.explanationEn;
+      let chartSpecificBoundaryTa = mat.explanationTa;
+
+      if (mat.classification === "HOUSE_SYSTEM_DIFFERENCE") {
+        const kCusp = kpHouses.find(h => h.house === kObj.house);
+        const cuspStartStr = kCusp ? `${kCusp.signName || kCusp.sign} ${kCusp.degreeInSign != null ? kCusp.degreeInSign.toFixed(2) + "°" : formatDms(kCusp.longitude)}` : `House ${kObj.house}`;
+        const cuspStartTa = kCusp ? `${toTamilRasi(kCusp.signName || kCusp.sign)} ${kCusp.degreeInSign != null ? kCusp.degreeInSign.toFixed(2) + "°" : formatDms(kCusp.longitude)}` : `${kObj.house}-ம் பாவகம்`;
+        chartSpecificBoundaryEn = `${name} at ${kObj.formatted} resides in House ${lObj.house} (${lObj.sign}) under Lahiri Whole Sign, but shifts to House ${kObj.house} under KP Placidus (cusp begins at ${cuspStartStr}). Methodological impact: activates House ${kObj.house} significations instead of House ${lObj.house}.`;
+        chartSpecificBoundaryTa = `${toTamilPlanet(name) || name} (${kObj.formatted}) லஹிரி முழு ராசி முறையில் ${lObj.house}-ம் இடத்திலும் (${toTamilRasi(lObj.sign)}), கே.பி. பிளாசிடஸ் முறையில் ${kObj.house}-ம் பாவகத்திலும் (பாவக ஆரம்பம்: ${cuspStartTa}) அமைகிறது. பலன் தாக்கம்: ${lObj.house}-ம் பாவக காரகத்துவத்திற்குப் பதிலாக ${kObj.house}-ம் பாவக காரகத்துவங்களை இயக்குகிறது.`;
+      } else if (mat.classification === "PADA_CHANGE") {
+        chartSpecificBoundaryEn = `${name} at ${lObj.formatted} (Lahiri) vs ${kObj.formatted} (KP) crosses the 3° 20' pada boundary, moving from Pada ${lObj.pada} to Pada ${kObj.pada} in ${kObj.nakshatra}. Methodological impact: alters its D9 Navamsha sign position.`;
+        chartSpecificBoundaryTa = `${toTamilPlanet(name) || name}: லஹிரியில் ${lObj.formatted}, கே.பி.யில் ${kObj.formatted}. 3° 20' பாத எல்லையைக் கடந்து ${toTamilNakshatra(kObj.nakshatra)} பாதம் ${lObj.pada}-லிருந்து பாதம் ${kObj.pada}-க்கு மாறுகிறது. பலன் தாக்கம்: D9 நவாம்ச ராசி நிலை மாறுகிறது.`;
+      } else if (mat.classification === "NAKSHATRA_CHANGE") {
+        chartSpecificBoundaryEn = `${name} crosses the 13° 20' constellation boundary from ${lObj.nakshatra} (Lahiri) to ${kObj.nakshatra} (KP). Methodological impact: alters natal Nakshatra Lord and Vimshottari balance.`;
+        chartSpecificBoundaryTa = `${toTamilPlanet(name) || name} 13° 20' நட்சத்திர எல்லையைக் கடந்து ${toTamilNakshatra(lObj.nakshatra)}-லிருந்து ${toTamilNakshatra(kObj.nakshatra)}-க்கு மாறுகிறது. பலன் தாக்கம்: நட்சத்திர அதிபதி மற்றும் தசா இருப்பு மாறுகிறது.`;
+      } else if (mat.classification === "SIGN_CHANGE") {
+        chartSpecificBoundaryEn = `${name} crosses the 30° zodiac sign boundary from ${lObj.sign} (Lahiri) to ${kObj.sign} (KP). Methodological impact: alters domicile dispositor and elemental triplicity.`;
+        chartSpecificBoundaryTa = `${toTamilPlanet(name) || name} 30° ராசி எல்லையைக் கடந்து ${toTamilRasi(lObj.sign)}-லிருந்து ${toTamilRasi(kObj.sign)}-க்கு மாறுகிறது. பலன் தாக்கம்: ராசி அதிபதி மற்றும் அடிப்படை குணம் மாறுகிறது.`;
+      }
+
       const compItem = {
         name,
         lahiri: lObj,
         kp: kObj,
         deltaDeg: parseFloat(deltaDeg.toFixed(4)),
         deltaFormatted: formatDms(deltaDeg),
-        ...mat
+        ...mat,
+        chartSpecificBoundaryEn,
+        chartSpecificBoundaryTa
       };
       bodyComparisons.push(compItem);
       if (mat.isMaterial) {
@@ -256,8 +289,7 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     }
   }
 
-  // 3. KP Cusps and Sub-Lords
-  const kpHouses = kpChart.houses || kpChart.cusps || [];
+  // 3. KP Cusps, 249 Division & Complete Significator Chain
   const cuspalSubLords = {};
   for (const h of kpHouses) {
     if (h.house != null) {
@@ -272,7 +304,84 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     }
   }
 
-  // 4. Formatted Direct Answers (Bilingual)
+  // Build complete significator chains for key cusps (1st, 7th, 10th)
+  const kpSignificators = kpChart.significators || {};
+  const getCuspChain = (cuspNum) => {
+    const cObj = kpHouses.find(h => h.house === cuspNum) || {};
+    const starL = cObj.starLord || "N/A";
+    const subL = cObj.subLord || "N/A";
+    const subSubL = cObj.subSubLord || "N/A";
+    const subPlanet = (kpChart.planets || []).find(p => p.name === subL);
+    const starOfSub = subPlanet?.starLord || "N/A";
+
+    const subSigHouses = [];
+    const starSigHouses = [];
+    for (let h = 1; h <= 12; h++) {
+      const s = kpSignificators[h];
+      if (!s) continue;
+      if (s.level1?.includes(subL) || s.level2?.includes(subL) || s.level3?.includes(subL) || s.level4?.includes(subL)) {
+        subSigHouses.push(h);
+      }
+      if (starOfSub !== "N/A" && (s.level1?.includes(starOfSub) || s.level2?.includes(starOfSub) || s.level3?.includes(starOfSub) || s.level4?.includes(starOfSub))) {
+        starSigHouses.push(h);
+      }
+    }
+    return {
+      cuspNum,
+      sign: cObj.signName || cObj.sign || "N/A",
+      degree: cObj.degreeInSign != null ? cObj.degreeInSign.toFixed(2) + "°" : formatDms(cObj.longitude),
+      starLord: starL,
+      subLord: subL,
+      subSubLord: subSubL,
+      subPlanetStarLord: starOfSub,
+      subSignifiedHouses: subSigHouses.length > 0 ? subSigHouses.join(", ") : "None directly",
+      starSignifiedHouses: starSigHouses.length > 0 ? starSigHouses.join(", ") : "None directly"
+    };
+  };
+
+  const chain1 = getCuspChain(1);
+  const chain7 = getCuspChain(7);
+  const chain10 = getCuspChain(10);
+
+  // 4. Chart-Specific Timing Comparison
+  const lahiriCurrentDasha = lahiriChart.currentDasha || null;
+  const lahiriMd = (typeof lahiriCurrentDasha === "object" ? (lahiriCurrentDasha?.lord || lahiriCurrentDasha?.mahadasha) : lahiriCurrentDasha) || "Operating";
+  const lahiriAd = (typeof lahiriCurrentDasha === "object" ? (lahiriCurrentDasha?.subLord || lahiriCurrentDasha?.currentAntar || lahiriCurrentDasha?.antarDasha) : lahiriChart.currentAntar) || "Operating";
+  const lahiriMdTa = toTamilPlanet(lahiriMd) || lahiriMd;
+  const lahiriAdTa = toTamilPlanet(lahiriAd) || lahiriAd;
+
+  const kpCurMd = kpChart.curMd || (Array.isArray(kpChart.dashaTable) ? kpChart.dashaTable.find(d => d.isCurrent) : null);
+  const kpCurBk = kpChart.curBk || kpCurMd?.bukthis?.find(b => b.isCurrent) || null;
+  const kpMd = kpCurMd?.lord || kpChart.currentDasha?.lord || lahiriMd;
+  const kpAd = kpCurBk?.subLord || kpChart.currentDasha?.subLord || lahiriAd;
+  const kpMdTa = toTamilPlanet(kpMd) || kpMd;
+  const kpAdTa = toTamilPlanet(kpAd) || kpAd;
+
+  const rp = kpChart.rulingPlanets || {};
+  const rpListEn = [
+    rp.lagnaSignLord ? `Lagna Lord: ${rp.lagnaSignLord}` : null,
+    rp.lagnaStarLord ? `Lagna Star Lord: ${rp.lagnaStarLord}` : null,
+    rp.lagnaSubLord ? `Lagna Sub-Lord: ${rp.lagnaSubLord}` : null,
+    rp.moonStarLord ? `Moon Star Lord: ${rp.moonStarLord}` : null,
+    rp.dayLord ? `Day Lord: ${rp.dayLord}` : null
+  ].filter(Boolean).join(", ") || "Active at moment of query";
+
+  const rpListTa = [
+    rp.lagnaSignLord ? `லக்ன அதிபதி: ${toTamilPlanet(rp.lagnaSignLord) || rp.lagnaSignLord}` : null,
+    rp.lagnaStarLord ? `லக்ன நட்சத்திர அதிபதி: ${toTamilPlanet(rp.lagnaStarLord) || rp.lagnaStarLord}` : null,
+    rp.lagnaSubLord ? `லக்ன உப-அதிபதி: ${toTamilPlanet(rp.lagnaSubLord) || rp.lagnaSubLord}` : null,
+    rp.moonStarLord ? `சந்திர நட்சத்திர அதிபதி: ${toTamilPlanet(rp.moonStarLord) || rp.moonStarLord}` : null,
+    rp.dayLord ? `கிழமை அதிபதி: ${toTamilPlanet(rp.dayLord) || rp.dayLord}` : null
+  ].filter(Boolean).join(", ") || "கேள்வி நேர ஆளும் கிரகங்கள்";
+
+  const timingConvergence = (lahiriMd === kpMd && lahiriAd === kpAd)
+    ? `Dasha periods converge: Both systems currently operate under ${lahiriMd} Mahadasha — ${lahiriAd} Antardasha.`
+    : `Dasha periods show minor boundary shift: Lahiri operates under ${lahiriMd}-${lahiriAd}, whereas KP operates under ${kpMd}-${kpAd}.`;
+  const timingConvergenceTa = (lahiriMd === kpMd && lahiriAd === kpAd)
+    ? `தசா காலக்கோடு ஒத்திருக்கிறது: இரு முறைகளிலும் தற்போது ${lahiriMdTa} மகா தசை — ${lahiriAdTa} புக்தி நடைபெறுகிறது.`
+    : `தசா காலக்கோட்டில் சிறிய எல்லை மாற்றம்: லஹிரியில் ${lahiriMdTa}-${lahiriAdTa}, கே.பி.யில் ${kpMdTa}-${kpAdTa}.`;
+
+  // 5. Formatted Direct Answers (Bilingual)
   const hasMaterial = materialDifferences.length > 0;
 
   // Build Table of Longitudes
@@ -295,40 +404,60 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     boundarySummaryEn = "No planetary or ascendant positions cross a zodiac sign, nakshatra, or pada boundary between Lahiri and KP. Therefore, there is NO material difference in signs or stars; the angular variation is strictly a minor numerical longitude offset.";
     boundarySummaryTa = "உங்கள் ஜாதகத்தில் எந்த கிரகமும் அல்லது லக்னமும் லஹிரி மற்றும் கே.பி. முறைகளுக்கு இடையே ராசி, நட்சத்திரம் அல்லது பாத எல்லையைக் கடக்கவில்லை. எனவே இதில் பொருள் சார்ந்த மாற்றம் (Material Difference) எதுவும் இல்லை; உள்ள வேறுபாடு ஒரு சிறிய கணித பாகை இடைவெளி மட்டுமே.";
   } else {
-    const shiftDetailsEn = materialDifferences.map(m => `  - ${m.name}: ${m.explanationEn}`);
-    const shiftDetailsTa = materialDifferences.map(m => `  - ${toTamilPlanet(m.name) || m.name}: ${m.explanationTa}`);
-    boundarySummaryEn = `Material boundary shifts detected between Lahiri and KP:\n${shiftDetailsEn.join("\n")}`;
-    boundarySummaryTa = `லஹிரி மற்றும் கே.பி. முறைகளுக்கு இடையே கண்டறியப்பட்ட பொருள் சார்ந்த மாற்றங்கள்:\n${shiftDetailsTa.join("\n")}`;
+    const shiftDetailsEn = materialDifferences.map(m => `  - ${m.name}: ${m.chartSpecificBoundaryEn}`);
+    const shiftDetailsTa = materialDifferences.map(m => `  - ${toTamilPlanet(m.name) || m.name}: ${m.chartSpecificBoundaryTa}`);
+    boundarySummaryEn = `Material differences detected in your chart:\n${shiftDetailsEn.join("\n")}`;
+    boundarySummaryTa = `உங்கள் ஜாதகத்தில் கண்டறியப்பட்ட பொருள் சார்ந்த மாற்றங்கள்:\n${shiftDetailsTa.join("\n")}`;
   }
 
-  // Sub-Lord summary
+  // Sub-Lord summary with complete chain
   const sub10 = cuspalSubLords[10]?.subLord || "Not calculated";
   const sub7 = cuspalSubLords[7]?.subLord || "Not calculated";
   const sub1 = cuspalSubLords[1]?.subLord || "Not calculated";
-  const l10Lord = (lahiriChart.planets || []).find(p => p.house === 10)?.name || "10th Lord";
+  const l10Obj = (lahiriChart.bhavasDetailed || []).find(b => b.num === 10) || {};
+  const l10Lord = l10Obj.lordName || (lahiriChart.planets || []).find(p => p.house === 10)?.name || "10th Lord";
+  const l10LordTa = toTamilPlanet(l10Lord) || l10Lord;
 
-  const subLordSummaryEn = `KP's foundational innovation is the 249 Cuspal Sub-Lord division:\n• 1st Cusp (Ascendant) Sub-Lord: ${sub1}\n• 7th Cusp (Partnership) Sub-Lord: ${sub7}\n• 10th Cusp (Career) Sub-Lord: ${sub10}\nIn classical Lahiri, events are judged primarily through the house lord (${l10Lord}) and divisional vargas (D9/D10); in KP, the Cuspal Sub-Lord dictates whether a house's promise materializes through its 4-tier star significators.`;
-  const subLordSummaryTa = `KP முறையின் மிக முக்கியமான தனிச்சிறப்பு 249 பாவக உப-அதிபதி (Cuspal Sub-Lord) கணிதமாகும்:\n• 1-ம் பாவகம் (லக்னம்) உப அதிபதி: ${toTamilPlanet(sub1) || sub1}\n• 7-ம் பாவகம் (களத்திரம்) உப அதிபதி: ${toTamilPlanet(sub7) || sub7}\n• 10-ம் பாவகம் (தொழில்) உப அதிபதி: ${toTamilPlanet(sub10) || sub10}\nலஹிரியில் 10-ம் பாவாதிபதி மற்றும் D10 தசாம்ச வர்க்க பலம் முதன்மையாகப் பார்க்கப்படும் நிலையில், கே.பி.யில் 10-ம் பாவ உப அதிபதியே தொழில் காரகத்துவங்களை (2, 6, 10, 11 பாவக தொடர்புகள்) திட்டவட்டமாக நிர்ணயிக்கிறது.`;
+  const subLordSummaryEn = `KP's foundational architecture replaces equal house sign rulership with the 249 Sub-Division System (formed by subdividing the 27 Nakshatras proportionally by the 9 Vimshottari Dasha spans: 27 × 9 = 243, expanding to 249 as 6 nodes span across zodiac sign boundaries):\n` +
+    `• 1st Cusp (${chain1.sign} ${chain1.degree}): Cusp Lord: ${chain1.starLord} → Sub-Lord: ${chain1.subLord} (in star of ${chain1.subPlanetStarLord}, Sub-Sub: ${chain1.subSubLord}). Sub-Lord signifies houses [${chain1.subSignifiedHouses}]; its Star Lord signifies houses [${chain1.starSignifiedHouses}].\n` +
+    `• 7th Cusp (${chain7.sign} ${chain7.degree}): Cusp Lord: ${chain7.starLord} → Sub-Lord: ${chain7.subLord} (in star of ${chain7.subPlanetStarLord}, Sub-Sub: ${chain7.subSubLord}). Sub-Lord signifies houses [${chain7.subSignifiedHouses}]; its Star Lord signifies houses [${chain7.starSignifiedHouses}].\n` +
+    `• 10th Cusp (${chain10.sign} ${chain10.degree}): Cusp Lord: ${chain10.starLord} → Sub-Lord: ${chain10.subLord} (in star of ${chain10.subPlanetStarLord}, Sub-Sub: ${chain10.subSubLord}). Sub-Lord signifies houses [${chain10.subSignifiedHouses}]; its Star Lord signifies houses [${chain10.starSignifiedHouses}].\n` +
+    `Methodological divergence: In the Lahiri calculation profile, classical Vedic interpretation analyzes the 10th house lord (${l10Lord}) and divisional vargas (D9/D10); in KP, the 10th Cusp Sub-Lord (${chain10.subLord}) and its star lord dictate whether professional events materialize through 4-tier house significators.`;
 
-  // Timing methodology summary
-  const timingMethodologyEn = "Timing systems diverge fundamentally: Lahiri relies on classical Vimshottari Mahadasha-Antardasha cycles confirmed by Gochar transits crossing natal sign points. KP relies on the Cuspal Sub-Lord's significator activation combined with the Ruling Planets (Lagna Lord, Moon Star Lord, Day Lord) operative at the moment of query. Timing rules from one system cannot be interchanged or generalized to the other.";
-  const timingMethodologyTa = "காலக்கணிப்பு முறைமையில் இரு அமைப்புகளும் வேறுபடுகின்றன: லஹிரி முறையில் விம்சோத்தரி தசா-புக்தி மற்றும் கோச்சாரப் பெயர்ச்சிகள் பாரம்பரியமாக ஆராயப்படுகின்றன; கே.பி. முறையில் உப-அதிபதி குறிக்கும் பாவக காரகத்துவங்கள் (Significators) மற்றும் ஆளும் கிரகங்கள் (Ruling Planets) கொண்டு நிகழ்வுகளின் காலக்கோடு துல்லியப்படுத்தப்படுகிறது. ஒரு அமைப்பின் காலக்கணிப்பை மற்றொன்றுக்கு பொதுமைப்படுத்தக்கூடாது.";
+  const subLordSummaryTa = `KP முறையின் அடிப்படை கட்டமைப்பு 249 உப-அதிபதி (Sub-Lord) கணிதமாகும் (27 நட்சத்திரங்கள் ஒவ்வொன்றையும் 9 விம்சோத்தரி தசா விகிதப்படி பிரிப்பதன் மூலம் 27 × 9 = 243 உப பிரிவுகள் உருவாகின்றன; இதில் 6 உப பிரிவுகள் ராசி எல்லையில் இரண்டாகப் பிரிவதால் மொத்தம் 249 உப பிரிவுகள் ஏற்படுகின்றன):\n` +
+    `• 1-ம் பாவகம் (${toTamilRasi(chain1.sign)} ${chain1.degree}): நட்சத்திர அதிபதி: ${toTamilPlanet(chain1.starLord) || chain1.starLord} → உப-அதிபதி: ${toTamilPlanet(chain1.subLord) || chain1.subLord} (${toTamilPlanet(chain1.subPlanetStarLord) || chain1.subPlanetStarLord} நட்சத்திரத்தில்; உப-உப: ${toTamilPlanet(chain1.subSubLord) || chain1.subSubLord}). உப-அதிபதி குறிக்கும் பாவகங்கள்: [${chain1.subSignifiedHouses}]; நட்சத்திர அதிபதி குறிக்கும் பாவகங்கள்: [${chain1.starSignifiedHouses}].\n` +
+    `• 7-ம் பாவகம் (${toTamilRasi(chain7.sign)} ${chain7.degree}): நட்சத்திர அதிபதி: ${toTamilPlanet(chain7.starLord) || chain7.starLord} → உப-அதிபதி: ${toTamilPlanet(chain7.subLord) || chain7.subLord} (${toTamilPlanet(chain7.subPlanetStarLord) || chain7.subPlanetStarLord} நட்சத்திரத்தில்; உப-உப: ${toTamilPlanet(chain7.subSubLord) || chain7.subSubLord}). உப-அதிபதி குறிக்கும் பாவகங்கள்: [${chain7.subSignifiedHouses}]; நட்சத்திர அதிபதி குறிக்கும் பாவகங்கள்: [${chain7.starSignifiedHouses}].\n` +
+    `• 10-ம் பாவகம் (${toTamilRasi(chain10.sign)} ${chain10.degree}): நட்சத்திர அதிபதி: ${toTamilPlanet(chain10.starLord) || chain10.starLord} → உப-அதிபதி: ${toTamilPlanet(chain10.subLord) || chain10.subLord} (${toTamilPlanet(chain10.subPlanetStarLord) || chain10.subPlanetStarLord} நட்சத்திரத்தில்; உப-உப: ${toTamilPlanet(chain10.subSubLord) || chain10.subSubLord}). உப-அதிபதி குறிக்கும் பாவகங்கள்: [${chain10.subSignifiedHouses}]; நட்சத்திர அதிபதி குறிக்கும் பாவகங்கள்: [${chain10.starSignifiedHouses}].\n` +
+    `முறைமை வேறுபாடு: லஹிரி கணக்கீட்டு அமைப்பில் பராசர மரபு 10-ம் பாவாதிபதி (${l10LordTa}) மற்றும் D9/D10 வர்க்க சக்கர பலத்தை முதன்மையாகக் கொள்கிறது; கே.பி.யில் 10-ம் பாவ உப-அதிபதி (${toTamilPlanet(chain10.subLord) || chain10.subLord}) மற்றும் அதன் நட்சத்திர அதிபதியின் 4-நிலை பாவக தொடர்புகளே தொழில் நிகழ்வுகளை திட்டவட்டமாக நிர்ணயிக்கின்றன.`;
+
+  // Timing methodology summary with chart-specific active periods
+  const timingMethodologyEn = `Chart-specific timing analysis:\n` +
+    `• Current Period: ${timingConvergence}\n` +
+    `• Lahiri Timing Method: Classical Vimshottari Mahadasha (${lahiriMd}) - Antardasha (${lahiriAd}) validated by Gochar transits crossing natal Moon and Lagna sign points.\n` +
+    `• KP Timing Method: Event fruitfulness determined by Cuspal Sub-Lord activation; timing pin-pointed by Ruling Planets (${rpListEn}) and DBAS (Dasha-Bukthi-Antara-Sookshma) transiting active significator stars.\n` +
+    `Note: Interpretive timing rules from one framework cannot be cross-applied or substituted into the other.`;
+
+  const timingMethodologyTa = `ஜாதக அடிப்படையிலான காலக்கணிப்பு ஒப்பீடு:\n` +
+    `• நடப்பு தசா-புக்தி: ${timingConvergenceTa}\n` +
+    `• லஹிரி காலக்கணிப்பு: பாரம்பரிய விம்சோத்தரி மகா தசை (${lahiriMdTa}) - புக்தி (${lahiriAdTa}) மற்றும் சந்திரன்/லக்ன ராசி புள்ளிகளைக் கடக்கும் கோச்சாரப் பெயர்ச்சிகள்.\n` +
+    `• கே.பி. காலக்கணிப்பு: பாவக உப-அதிபதி உறுதிசெய்த காரகத்துவங்கள் இயங்கும் காலம்; ஆளும் கிரகங்கள் (${rpListTa}) மற்றும் தசா-புக்தி அதிபதிகள் சுப காரக நட்சத்திரங்களில் பிரவேசிக்கும் காலம் கொண்டு துல்லியப்படுத்தப்படுகிறது.\n` +
+    `குறிப்பு: ஒரு அமைப்பின் காலக்கணிப்பு விதிகளை மற்றொரு அமைப்பிற்கு மாற்றிப் பொருத்துவது முறையற்றது.`;
 
   // Verdict summary
   let verdictEn = "";
   let verdictTa = "";
   if (!hasMaterial) {
-    verdictEn = `Verdict: No material sign or nakshatra difference exists in your natal ledger. The ${ayanamshaDiffStr} ayanamsha difference shifts longitudes slightly without crossing star boundaries. The genuine divergence lies in interpretive methodology: classical Parashari aspects and Vargas (Lahiri) vs. Placidus semi-arc cusps and Cuspal Sub-Lords (KP).`;
-    verdictTa = `முடிவு: உங்கள் ஜாதகத்தில் லக்னம் மற்றும் கிரகங்களின் ராசி அல்லது நட்சத்திர அமைப்பில் பொருள் சார்ந்த மாற்றம் இல்லை. ${ayanamshaDiffStr} அயனாம்ச இடைவெளி சிறிய பாகை மாற்றத்தை மட்டுமே ஏற்படுத்துகிறது. உண்மையான வேறுபாடு பலன் காணும் முறைமையில்தான் உள்ளது: பராசர வர்க்க சக்கரங்கள் மற்றும் பார்வைகள் (லஹிரி) vs பிளாசிடஸ் பாவக ஆரம்பங்கள் மற்றும் உப அதிபதிகள் (கே.பி.).`;
+    verdictEn = `Verdict: No material sign or nakshatra difference exists in your natal ledger. The ${ayanamshaDiffStr} precession difference (${lahiriAyanStr} Chitrapaksha vs ${kpAyanStr} KP New) shifts longitudes slightly without crossing star boundaries. The genuine divergence is structural: classical Vedic Whole Sign interpretation (Lahiri) vs Placidus cusps and 249 Cuspal Sub-Lords (KP).`;
+    verdictTa = `முடிவு: உங்கள் ஜாதகத்தில் லக்னம் மற்றும் கிரகங்களின் ராசி அல்லது நட்சத்திர அமைப்பில் பொருள் சார்ந்த மாற்றம் இல்லை. ${ayanamshaDiffStr} அயனாம்ச இடைவெளி (${lahiriAyanStr} சித்திரபக்ஷ vs ${kpAyanStr} கே.பி. புதிய அயனாம்சம்) சிறிய பாகை மாற்றத்தை மட்டுமே ஏற்படுத்துகிறது. உண்மையான வேறுபாடு கட்டமைப்பு சார்ந்தது: பாரம்பரிய பராசர முழு ராசி முறை (லஹிரி) vs பிளாசிடஸ் பாவக ஆரம்பங்கள் மற்றும் 249 உப-அதிபதிகள் (கே.பி.).`;
   } else {
-    verdictEn = `Verdict: Material differences exist in your chart due to the ${ayanamshaDiffStr} ayanamsha offset and Placidus cuspal division, altering specific planetary house placements or pada boundaries. These directly influence which houses each planet activates.`;
-    verdictTa = `முடிவு: ${ayanamshaDiffStr} அயனாம்ச வேறுபாடு மற்றும் பிளாசிடஸ் பாவக ஆரம்ப கணிதத்தால் உங்கள் ஜாதகத்தில் பொருள் சார்ந்த மாற்றங்கள் (குறிப்பாக பாவ சலித இடப்பெயர்ச்சி) உள்ளன. இது கிரகங்கள் பலன் தரும் பாவக ஆதிக்கத்தை நேரடியாக மாற்றுகிறது.`;
+    verdictEn = `Verdict: Material differences exist in your chart due to two distinct causes: (A) Coordinate offset: ${ayanamshaDiffStr} difference between Chitrapaksha (${lahiriAyanStr}) and KP New (${kpAyanStr}) ayanamsha, and (B) House system divergence: Lahiri Whole Sign vs KP Placidus cusp boundaries. These alter specific planetary house placements or pada boundaries, directly modifying which houses each planet activates.`;
+    verdictTa = `முடிவு: உங்கள் ஜாதகத்தில் இரண்டு காரணங்களால் பொருள் சார்ந்த மாற்றங்கள் உள்ளன: (A) ஆயத்தொலைவு வேறுபாடு: சித்திரபக்ஷ (${lahiriAyanStr}) மற்றும் கே.பி. புதிய (${kpAyanStr}) அயனாம்சத்திற்கு இடையிலான ${ayanamshaDiffStr} இடைவெளி; (B) பாவக முறை வேறுபாடு: லஹிரி முழு ராசி vs கே.பி. பிளாசிடஸ் பாவக ஆரம்பங்கள். இவை கிரகங்களின் பாவக ஆதிக்கத்தை நேரடியாக மாற்றுகின்றன.`;
   }
 
   // Full direct answers
   const directAnswerEn = [
-    "When comparing the Lahiri and KP systems for your horoscope, astronomical coordinate variations and their subsequent interpretive impacts must be distinguished clearly:\n",
-    `1. Ayanamsha (Precession Offset)\n• Lahiri: Chitrapaksha Ayanamsha (${lahiriAyanStr})\n• KP: Krishnamurti New Ayanamsha (${kpAyanStr})\n• Calculated difference in your chart: ${ayanamshaDiffStr}\n`,
+    "When comparing the Lahiri and KP systems for your horoscope, astronomical coordinate variations and house system methodologies must be distinguished clearly:\n",
+    `1. Ayanamsha (Precession Offset)\n• Lahiri: Chitrapaksha Ayanamsha (${lahiriAyanStr})\n• KP: Krishnamurti New Ayanamsha (${kpAyanStr})\n• Calculated coordinate difference in your chart: ${ayanamshaDiffStr}\n• Lahiri effective house system: ${lahiriEffectiveHouse}\n• KP effective house system: ${kpEffectiveHouse}\n`,
     `2. Planetary Longitudes & Ascendant\nBoth systems are calculated from the identical birth coordinates and timestamp:\n${ledgerLinesEn.join("\n")}\n`,
     `3. Nakshatra & Pada Boundary Analysis\n${boundarySummaryEn}\n`,
     `4. KP Sub-Lord Significators\n${subLordSummaryEn}\n`,
@@ -337,8 +466,8 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
   ].join("\n");
 
   const directAnswerTa = [
-    "உங்கள் ஜாதகத்தில் லஹிரி மற்றும் கே.பி. முறைகளை ஒப்பிடும்போது, கணித ரீதியாக மாறும் அம்சங்களையும், அந்த மாற்றங்கள் பலன் விளக்கத்தில் ஏற்படுத்தும் தாக்கத்தையும் தனித்தனியாக பார்க்க வேண்டும்:\n",
-    `1. அயனாம்சம்\n• லஹிரி: சித்திரபக்ஷ லஹிரி அயனாம்சம் (${lahiriAyanStr})\n• கே.பி.: KP New Ayanamsha அமைப்பு (${kpAyanStr})\n• உங்கள் ஜாதகத்தில் கணக்கிடப்பட்ட actual difference: ${ayanamshaDiffStr}\n`,
+    "உங்கள் ஜாதகத்தில் லஹிரி மற்றும் கே.பி. முறைகளை ஒப்பிடும்போது, வானியல் கணித வேறுபாடுகளையும் பாவக முறைமைகளின் தாக்கத்தையும் தனித்தனியாக பிரித்துப் பார்க்க வேண்டும்:\n",
+    `1. அயனாம்சம்\n• லஹிரி: சித்திரபக்ஷ லஹிரி அயனாம்சம் (${lahiriAyanStr})\n• கே.பி.: KP New Ayanamsha அமைப்பு (${kpAyanStr})\n• உங்கள் ஜாதகத்தில் கணக்கிடப்பட்ட actual difference: ${ayanamshaDiffStr}\n• லஹிரி நடைமுறை பாவக அமைப்பு (Lahiri effective house system): ${lahiriEffectiveHouseTa}\n• கே.பி. நடைமுறை பாவக அமைப்பு (KP effective house system): ${kpEffectiveHouseTa}\n`,
     `2. கிரக நிலைகள் & லக்னம்\nஉங்கள் பிறந்த நேரம் மற்றும் இடத்தை ஒரே input ஆக வைத்து இரு முறைகளிலும் கிரகங்களின் பாகைகள் கணக்கிடப்படுகின்றன:\n${ledgerLinesTa.join("\n")}\n`,
     `3. நட்சத்திரம் / பாதம்\n${boundarySummaryTa}\n`,
     `4. கே.பி. உப அதிபதி (KP Sub-Lord)\n${subLordSummaryTa}\n`,
@@ -356,10 +485,24 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
       kpFormatted: kpAyanStr,
       diffFormatted: ayanamshaDiffStr
     },
+    effectiveHouseSystems: {
+      lahiri: lahiriEffectiveHouse,
+      kp: kpEffectiveHouse
+    },
     bodies: bodyComparisons,
     materialDifferences,
     hasMaterialDifference: hasMaterial,
     cuspalSubLords,
+    significatorChains: {
+      cusp1: chain1,
+      cusp7: chain7,
+      cusp10: chain10
+    },
+    timingComparison: {
+      lahiri: { mahadasha: lahiriMd, antardasha: lahiriAd },
+      kp: { mahadasha: kpMd, antardasha: kpAd },
+      convergence: timingConvergence
+    },
     tenthSubLord: sub10,
     seventhSubLord: sub7,
     ascendantSubLord: sub1,

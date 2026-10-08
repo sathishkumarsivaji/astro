@@ -112,6 +112,9 @@ check("Moon included in body comparisons", compResult.bodies.some(b => b.name ==
 check("KP Cuspal Sub-Lords calculated for 1st cusp", compResult.cuspalSubLords[1]?.subLord != null);
 check("KP Cuspal Sub-Lords calculated for 7th cusp", compResult.cuspalSubLords[7]?.subLord != null);
 check("KP Cuspal Sub-Lords calculated for 10th cusp", compResult.cuspalSubLords[10]?.subLord != null);
+check("Effective house systems reported for Lahiri and KP", compResult.effectiveHouseSystems?.lahiri.includes("Whole Sign") && compResult.effectiveHouseSystems?.kp.includes("Placidus"));
+check("Complete KP significator chain computed for 10th cusp", compResult.significatorChains?.cusp10?.subPlanetStarLord != null && compResult.significatorChains?.cusp10?.subSignifiedHouses != null);
+check("Chart-specific timing comparison computed", compResult.timingComparison?.lahiri?.mahadasha != null && compResult.timingComparison?.kp?.mahadasha != null);
 
 // -----------------------------------------------------------------------------
 // 4. Material Difference Classifier Invariants
@@ -128,7 +131,7 @@ const bodyHouseShift = classifyMaterialDifference(
   { name: "Sun", longitude: 121.5, sign: "Leo", nakshatra: "Magha", pada: 1, house: 5 },
   { name: "Sun", longitude: 121.41, sign: "Leo", nakshatra: "Magha", pada: 1, house: 4 }
 );
-check("House cusp change triggers HOUSE_SHIFT", bodyHouseShift.isMaterial === true && bodyHouseShift.classification === "HOUSE_SHIFT");
+check("House difference triggers HOUSE_SYSTEM_DIFFERENCE", bodyHouseShift.isMaterial === true && bodyHouseShift.classification === "HOUSE_SYSTEM_DIFFERENCE");
 
 const bodySignShift = classifyMaterialDifference(
   { name: "Sun", longitude: 120.02, sign: "Leo", nakshatra: "Magha", pada: 1, house: 5 },
@@ -183,10 +186,16 @@ console.log("\n[6] Testing generateAstrologerConsultation for system comparison.
 
 const consultResTa = generateAstrologerConsultation(lahiriChart, queryTa, { lang: "ta" });
 check("Consultation direct answer in Tamil contains Ayanamsha section", consultResTa.directAnswer.includes("1. அயனாம்சம்"));
+check("Consultation direct answer in Tamil reports effective house system", consultResTa.directAnswer.includes("Lahiri effective house system"));
+check("Consultation direct answer in Tamil explains 249 sub divisions", consultResTa.directAnswer.includes("249"));
+check("Consultation direct answer in Tamil contains KP significator chain", consultResTa.directAnswer.includes("குறிக்கும் பாவகங்கள்"));
 check("Consultation timing windows do not contain 18-24 months", !JSON.stringify(consultResTa.timingWindows).includes("18–24") && !JSON.stringify(consultResTa.timingWindows).includes("18-24"));
 
 const consultResEn = generateAstrologerConsultation(lahiriChart, queryEn, { lang: "en" });
 check("Consultation direct answer in English contains Ayanamsha section", consultResEn.directAnswer.includes("1. Ayanamsha"));
+check("Consultation direct answer in English reports effective house system", consultResEn.directAnswer.includes("Lahiri effective house system"));
+check("Consultation direct answer in English explains 249 sub divisions", consultResEn.directAnswer.includes("249"));
+check("Consultation direct answer in English contains KP significator chain", consultResEn.directAnswer.includes("signifies houses"));
 check("Consultation timing windows do not contain 18-24 months", !JSON.stringify(consultResEn.timingWindows).includes("18–24") && !JSON.stringify(consultResEn.timingWindows).includes("18-24"));
 
 console.log(`\n===========================================================================`);

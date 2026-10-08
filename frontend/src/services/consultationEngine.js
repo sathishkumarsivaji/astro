@@ -1991,8 +1991,12 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let reasoningTa = "";
 
   if (sysComparison && sysComparison.status === "SUCCESS") {
-    reasoningEn = "Lahiri (Chitrapaksha) uses the fixed star Spica at 180° tropical longitude as the anchor, with Whole Sign / Equal house division. Krishnamurti Paddhati (KP) uses the New KP Ayanamsha coupled with Placidus semi-arc cusp geometry and divides each constellation into 249 unequal sub-divisions governed by proportional Vimshottari Dasha spans.";
-    reasoningTa = "லஹிரி முறை சித்திரா நட்சத்திரத்தை (180° அயனாம்ச ஆரம்ப புள்ளி) மையமாகக் கொண்டு சம பாவக முறையில் இயங்குகிறது. கே.பி. முறை புதிய கே.பி. அயனாம்சத்தை மற்றும் பிளாசிடஸ் பாவக ஆரம்பங்களை அடிப்படையாகக் கொண்டு, ஒவ்வொரு நட்சத்திரத்தையும் விம்சோத்தரி தசா விகிதப்படி 249 உப-பிரிவுகளாகப் பிரிக்கிறது.";
+    reasoningEn = "The comparison reveals two independent dimensions of divergence:\n" +
+      "1. Coordinate difference: The Lahiri calculation profile anchors to the fixed star Spica (Chitra at 180° tropical longitude) using Chitrapaksha ayanamsha, whereas KP uses KP New Ayanamsha (precession rate 50.2388475\"/yr). Lahiri is primarily an ayanamsha convention rather than an interpretive school, and is coupled with classical Vedic/Parashari interpretation.\n" +
+      "2. House system & division difference: Lahiri applies Whole Sign / Rāśi Bhava division. Krishnamurti Paddhati (KP) introduces Placidus semi-arc cusp division and the 249 Sub-Lord system—derived not as an arbitrary house division, but by proportionally dividing the 27 Nakshatras according to the 9 Vimshottari Dasha spans (27 × 9 = 243, with 6 subdivisions split across sign boundaries = 249). In KP, event promise is dictated by the Cuspal Sub-Lord and its 4-tier star significators.";
+    reasoningTa = "இந்த ஒப்பீட்டில் இரண்டு சுயாதீன வேறுபாட்டுப் பரிமாணங்கள் உள்ளன:\n" +
+      "1. வானியல் ஆயத்தொலைவு வேறுபாடு: லஹிரி கணக்கீடு சித்திரா நட்சத்திரத்தை (180° அயனாம்ச ஆரம்ப புள்ளி) மையமாகக் கொண்ட சித்திரபக்ஷ அயனாம்சத்தையும், பாரம்பரிய பராசர பலன் விளக்க நெறிமுறைகளையும் பயன்படுத்துகிறது. கே.பி. முறை புதிய கே.பி. அயனாம்சத்தை (KP New Ayanamsha) பயன்படுத்துகிறது.\n" +
+      "2. பாவக முறை & உப பிரிவு வேறுபாடு: லஹிரி முறை முழு ராசி பாவக முறையில் இயங்குகிறது; கே.பி. முறை பிளாசிடஸ் அரை-விகித பாவக ஆரம்பங்களையும் 249 உப-அதிபதி அமைப்பையும் பயன்படுத்துகிறது. இந்த 249 பிரிவு என்பது தன்னிச்சையான பாவகப் பிரிவு அல்ல; 27 நட்சத்திரங்களை 9 விம்சோத்தரி தசா விகிதப்படி பிரிப்பதன் மூலமே (27 × 9 = 243, ராசி எல்லைகளில் பிரியும் 6 பிரிவுகளுடன் மொத்தம் 249) உருவாக்கப்படுகிறது. கே.பி.யில் பாவக உப-அதிபதியே காரகத்துவங்களை நிர்ணயிக்கிறது.";
   } else if (intent.domain === "HEALTH") {
     reasoningEn = "1st Bhava lord dignity and benefic aspects align with traditional physical vitality symbolism. 6th Bhava configurations provide traditional health symbolism and vitality preservation (Roga Nashana), while 8th Bhava indicators correspond to endurance and longevity.";
     reasoningTa = "சுப கிரகங்களின் லக்ன பார்வை மற்றும் 6-ம் பாவகத்தின் மீதுள்ள தாக்கம் பாரம்பரிய உடலியல் சமநிலையை சுட்டிக்காட்டுகிறது. 8-ம் பாவக ஆயுள் பலமும் சனியின் நன்னிலையும் பாரம்பரிய முறைப்படி நீண்ட ஆயுளையும் மீளும் ஆற்றலையும் குறிக்கின்றன (இது மருத்துவ முடிவல்ல; பாரம்பரிய ஜோதிட வழிகாட்டல் மட்டுமே).";
@@ -2043,8 +2047,17 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   let timingContentEn = "";
   let timingContentTa = "";
   if (sysComparison && sysComparison.status === "SUCCESS") {
-    timingContentEn = "Timing systems diverge fundamentally: Lahiri relies on classical Vimshottari Mahadasha-Antardasha cycles confirmed by Gochar transits crossing natal sign points. KP relies on the Cuspal Sub-Lord's significator activation combined with the Ruling Planets (Lagna Lord, Moon Star Lord, Day Lord) operative at the moment of query.";
-    timingContentTa = "காலக்கணிப்பு முறைமையில் இரு அமைப்புகளும் வேறுபடுகின்றன: லஹிரி முறையில் விம்சோத்தரி தசா-புக்தி மற்றும் கோச்சாரப் பெயர்ச்சிகள் பாரம்பரியமாக ஆராயப்படுகின்றன; கே.பி. முறையில் உப-அதிபதி குறிக்கும் பாவக காரகத்துவங்கள் (Significators) மற்றும் ஆளும் கிரகங்கள் (Ruling Planets) கொண்டு நிகழ்வுகளின் காலக்கோடு துல்லியப்படுத்தப்படுகிறது.";
+    const lMd = sysComparison.timingComparison?.lahiri?.mahadasha || currentDasha || "Operating";
+    const lAd = sysComparison.timingComparison?.lahiri?.antardasha || currentAntar || "Operating";
+    const kMd = sysComparison.timingComparison?.kp?.mahadasha || lMd;
+    const kAd = sysComparison.timingComparison?.kp?.antardasha || lAd;
+    const lMdTa = toTamilPlanet(lMd) || lMd;
+    const lAdTa = toTamilPlanet(lAd) || lAd;
+    const kMdTa = toTamilPlanet(kMd) || kMd;
+    const kAdTa = toTamilPlanet(kAd) || kAd;
+
+    timingContentEn = `Chart-specific timing convergence:\n• Lahiri active cycle: ${lMd} Mahadasha — ${lAd} Antardasha; event timing validated via Gochar transits crossing natal sign points.\n• KP active cycle: ${kMd} Mahadasha — ${kAd} Antardasha; event timing governed by Cuspal Sub-Lord significators and verified by Ruling Planets at query time.\nInterpretive timing frameworks operate under independent principles and cannot be generalized across systems.`;
+    timingContentTa = `ஜாதக அடிப்படையிலான தசா-புக்தி ஒப்பீடு:\n• லஹிரி நடப்பு சுழற்சி: ${lMdTa} மகா தசை — ${lAdTa} புக்தி; நிகழ்வுகள் கோச்சாரப் பெயர்ச்சிகள் மூலம் உறுதிப்படுத்தப்படுகின்றன.\n• கே.பி. நடப்பு சுழற்சி: ${kMdTa} மகா தசை — ${kAdTa} புக்தி; நிகழ்வுகள் பாவக உப-அதிபதி காரகத்துவங்கள் மற்றும் ஆளும் கிரகங்கள் மூலம் நிர்ணயிக்கப்படுகின்றன.\nஒரு அமைப்பின் காலக்கணிப்பு நெறிமுறைகளை மற்றொன்றுடன் இணைத்துப் பார்க்கக்கூடாது.`;
   } else {
     timingContentEn = `Primary Activation Window: Active under ${currentDasha || "Operating"} Mahadasha — ${currentAntar || "Operating"} Antardasha. Secondary supportive window aligns with the subsequent Antardasha transition and transit triggers.`;
     timingContentTa = `முதன்மையான சுப காலம்: ${currentDashaTa || "நடப்பு"} தசை - ${currentAntarTa || "நடப்பு"} புக்தி காலகட்டம். மாற்றுச் சுப காலம் அடுத்த புக்தி மாற்றம் மற்றும் கோச்சார சுப சேர்க்கை மூலம் அமைகிறது.`;
