@@ -374,12 +374,23 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     rp.dayLord ? `கிழமை அதிபதி: ${toTamilPlanet(rp.dayLord) || rp.dayLord}` : null
   ].filter(Boolean).join(", ") || "கேள்வி நேர ஆளும் கிரகங்கள்";
 
+  let timingClassification = "NOT_DISCRIMINATING";
+  if (!lahiriMd || !kpMd) {
+    timingClassification = "INSUFFICIENT_DATA";
+  } else if (lahiriMd === kpMd && lahiriAd === kpAd) {
+    timingClassification = "TIMING_CONVERGES";
+  } else if (lahiriMd === kpMd && lahiriAd !== kpAd) {
+    timingClassification = "TIMING_PARTIALLY_DIVERGES";
+  } else {
+    timingClassification = "TIMING_STRONGLY_DIVERGES";
+  }
+
   const timingConvergence = (lahiriMd === kpMd && lahiriAd === kpAd)
-    ? `Dasha periods converge: Both systems currently operate under ${lahiriMd} Mahadasha — ${lahiriAd} Antardasha.`
-    : `Dasha periods show minor boundary shift: Lahiri operates under ${lahiriMd}-${lahiriAd}, whereas KP operates under ${kpMd}-${kpAd}.`;
+    ? `Dasha periods converge (${timingClassification}): Both systems currently operate under ${lahiriMd} Mahadasha — ${lahiriAd} Antardasha.`
+    : `Dasha periods show boundary divergence (${timingClassification}): Lahiri operates under ${lahiriMd}-${lahiriAd}, whereas KP operates under ${kpMd}-${kpAd}.`;
   const timingConvergenceTa = (lahiriMd === kpMd && lahiriAd === kpAd)
-    ? `தசா காலக்கோடு ஒத்திருக்கிறது: இரு முறைகளிலும் தற்போது ${lahiriMdTa} மகா தசை — ${lahiriAdTa} புக்தி நடைபெறுகிறது.`
-    : `தசா காலக்கோட்டில் சிறிய எல்லை மாற்றம்: லஹிரியில் ${lahiriMdTa}-${lahiriAdTa}, கே.பி.யில் ${kpMdTa}-${kpAdTa}.`;
+    ? `தசா காலக்கோடு ஒத்திருக்கிறது (${timingClassification}): இரு முறைகளிலும் தற்போது ${lahiriMdTa} மகா தசை — ${lahiriAdTa} புக்தி நடைபெறுகிறது.`
+    : `தசா காலக்கோட்டில் எல்லை வேறுபாடு (${timingClassification}): லஹிரியில் ${lahiriMdTa}-${lahiriAdTa}, கே.பி.யில் ${kpMdTa}-${kpAdTa}.`;
 
   // 5. Formatted Direct Answers (Bilingual)
   const hasMaterial = materialDifferences.length > 0;
@@ -501,11 +512,18 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
     timingComparison: {
       lahiri: { mahadasha: lahiriMd, antardasha: lahiriAd },
       kp: { mahadasha: kpMd, antardasha: kpAd },
-      convergence: timingConvergence
+      convergence: timingConvergence,
+      classification: timingClassification
     },
     tenthSubLord: sub10,
     seventhSubLord: sub7,
     ascendantSubLord: sub1,
+    evidenceLayeredClaims: [
+      { layer: "CALCULATED_FACT", claimEn: `Chitrapaksha Ayanamsha: ${lahiriAyanStr}; KP New Ayanamsha: ${kpAyanStr}; Offset: ${ayanamshaDiffStr}`, claimTa: `சித்திரபக்ஷ அயனாம்சம்: ${lahiriAyanStr}; KP New அயனாம்சம்: ${kpAyanStr}; இடைவெளி: ${ayanamshaDiffStr}` },
+      { layer: "CONVENTION_FACT", claimEn: `Lahiri convention uses Whole Sign houses; KP convention uses Placidus cusps and 249 sub-divisions.`, claimTa: `லஹிரி முறைமை முழு ராசி பாவகத்தையும், கே.பி. முறைமை பிளாசிடஸ் ஆரம்பங்களையும் 249 உப-பிரிவுகளையும் பயன்படுத்துகின்றன.` },
+      { layer: "TRADITIONAL_INTERPRETATION", claimEn: `Vedic Parashari relies on 10th lord and D10 vargas; KP relies on 10th cusp sub-lord significators.`, claimTa: `பராசர ஜோதிடம் 10-ம் அதிபதியையும் தசாம்சத்தையும் முதன்மையாகக் கொள்கிறது; KP 10-ம் பாவ உப-அதிபதி காரகங்களை முதன்மையாகக் கொள்கிறது.` },
+      { layer: "CALCULATED_FACT", claimEn: `Current Dasha timing comparison status: ${timingClassification}`, claimTa: `நடப்பு தசா காலக்கோடு ஒப்பீட்டு நிலை: ${timingClassification}` }
+    ],
     directAnswerEn,
     directAnswerTa,
     summaryEn: verdictEn,

@@ -158,14 +158,26 @@ export function getAstronomicalObservations(birthData, options = {}) {
   bodies["Rahu"] = nodes.rahu;
   bodies["Ketu"] = nodes.ketu;
 
-  // Ayanamshas
-  const lahiriAyanamsha = getLahiriAyanamsha(jd);
-  const kpAyanamsha = getKPAyanamsha(jd);
-  const ramanAyanamsha = getRamanAyanamsha(jd);
+  // Rigorous Time Scales: evaluate ayanamshas on Terrestrial Time (TT)
+  const jdUtc = birthData.jdUtc ?? jd;
+  const jdTt = birthData.jdTt ?? jd;
+  const deltaTSeconds = birthData.deltaTSeconds ?? ((jdTt - jdUtc) * 86400.0);
+
+  // Ayanamshas evaluated on Terrestrial Time (TT) epoch according to IAU-76 standard
+  const lahiriAyanamsha = getLahiriAyanamsha(jdTt);
+  const kpAyanamsha = getKPAyanamsha(jdTt);
+  const ramanAyanamsha = getRamanAyanamsha(jdTt);
 
   const observation = {
     jd,
+    jdUtc,
+    jdTt,
+    deltaTSeconds,
+    JD_UTC: jdUtc,
+    JD_TT: jdTt,
+    DeltaT: deltaTSeconds,
     T,
+    T_TT: birthData.T_TT ?? ((jdTt - 2451545.0) / 36525.0),
     lat,
     lng,
     utcDate,

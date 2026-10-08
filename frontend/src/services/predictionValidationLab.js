@@ -1048,11 +1048,16 @@ export function runAblationStudy(cohortOrPartitions, options = {}) {
 
     // 2. Tune / verify calibration on Validation partition
     const valRaw = valSet.map(n => m.evaluate(n));
-    const valCalibrated = valRaw.map(r => ({
-      ...r,
-      calibratedProbability: calibrator.calibrate(r.ruleConvergenceScore),
-      probability: calibrator.calibrate(r.ruleConvergenceScore)
-    }));
+    const valCalibrated = valRaw.map(r => {
+      const calProb = calibrator.calibrate(r.ruleConvergenceScore);
+      return {
+        ...r,
+        ruleConvergenceScore: r.ruleConvergenceScore,
+        calibratedProbability: calProb,
+        probabilityStatus: "EMPIRICALLY_CALIBRATED",
+        probability: calProb
+      };
+    });
     const valMetrics = evaluatePredictions(valCalibrated, valSet.map(n => n.actualEvents?.marriage));
 
     // 3. Freeze calibrator and evaluate Out-Of-Sample Blind Test partition
@@ -1061,7 +1066,9 @@ export function runAblationStudy(cohortOrPartitions, options = {}) {
       const calProb = calibrator.calibrate(r.ruleConvergenceScore);
       return {
         ...r,
+        ruleConvergenceScore: r.ruleConvergenceScore,
         calibratedProbability: calProb,
+        probabilityStatus: "EMPIRICALLY_CALIBRATED",
         probability: calProb
       };
     });

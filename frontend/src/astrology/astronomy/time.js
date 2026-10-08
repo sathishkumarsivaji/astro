@@ -5,6 +5,7 @@
  * and Greenwich/Local Sidereal Time (GMST / LMST) according to IAU-76 / IAU-2000 standards.
  */
 
+import * as Astronomy from "astronomy-engine";
 import { getUtcInstantFromLocal } from "../../services/astroEngine.js";
 
 export const DEG2RAD = Math.PI / 180;
@@ -156,7 +157,9 @@ export function normalizeBirthData(data) {
     utcDate.setUTCMilliseconds(Math.round(decimalUTCHours * 3600 * 1000));
   }
 
-  const jd = calculateJulianDate(utcDate, calendarMode);
+  const jdUtc = calculateJulianDate(utcDate, calendarMode);
+  const timeScales = calculateTimeScales(utcDate, jdUtc);
+  const jd = jdUtc;
   const T = (jd - 2451545.0) / 36525.0;
 
   return {
@@ -177,7 +180,65 @@ export function normalizeBirthData(data) {
     calendar: calendarMode,
     utcDate,
     jd,
-    T
+    T,
+    // Explicit Time Scales (IAU-76/2000 & Espenak-Meeus Standards)
+    jdUtc: timeScales.jdUtc,
+    jdTt: timeScales.jdTt,
+    deltaTSeconds: timeScales.deltaTSeconds,
+    JD_UTC: timeScales.jdUtc,
+    JD_TT: timeScales.jdTt,
+    DeltaT: timeScales.deltaTSeconds,
+    T_UTC: timeScales.T_UTC,
+    T_TT: timeScales.T_TT
+  };
+}
+
+/**
+ * Calculates high-precision Delta-T (\u0394T = TT - UT) in seconds using IAU / Espenak-Meeus polynomial.
+ * @param {Date|number} dateOrYear - JavaScript Date or decimal calendar year
+ * @returns {number} \u0394T in seconds
+ */
+export function getDeltaT(dateOrYear) {
+  let dt;
+  if (dateOrYear instanceof Date) {
+    dt = dateOrYear;
+  } else if (typeof dateOrYear === "number") {
+    const yr = Math.floor(dateOrYear);
+    const frac = dateOrYear - yr;
+    const ms = frac * 365.25 * 86400 * 1000;
+    dt = new Date(Date.UTC(yr, 0, 1) + ms);
+  } else {
+    dt = new Date();
+  }
+  // Espenak-Meeus (2006) as implemented in astronomy-engine AstroTime
+  const t = new Astronomy.AstroTime(dt);
+  return (t.tt - t.ut) * 86400.0;
+}
+
+/**
+ * Computes exact time scales: JD_UTC, JD_TT, \u0394T (seconds), T_UTC, T_TT.
+ * @param {Date} utcDate - UTC Date instance
+ * @param {number} [precomputedJdUtc] - Optional precalculated JD_UTC
+ * @returns {Object} Rigorous time scale object
+ */
+export function calculateTimeScales(utcDate, precomputedJdUtc = null) {
+  const jdUtc = precomputedJdUtc !== null ? precomputedJdUtc : calculateJulianDate(utcDate);
+  const deltaTSeconds = getDeltaT(utcDate);
+  const deltaTDays = deltaTSeconds / 86400.0;
+  const jdTt = jdUtc + deltaTDays;
+  const T_UTC = (jdUtc - 2451545.0) / 36525.0;
+  const T_TT = (jdTt - 2451545.0) / 36525.0;
+
+  return {
+    jdUtc,
+    jdTt,
+    deltaTSeconds,
+    deltaTDays,
+    JD_UTC: jdUtc,
+    JD_TT: jdTt,
+    DeltaT: deltaTSeconds,
+    T_UTC,
+    T_TT
   };
 }
 
