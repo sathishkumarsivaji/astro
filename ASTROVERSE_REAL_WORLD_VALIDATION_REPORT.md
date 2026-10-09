@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA). No overlap was detected under the preregistered exact-name/birth-date and normalized-name linkage rules. Residual linkage risk from aliases or unresolved identity variants cannot be completely excluded.
 - **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8`) and calibration model SHA-256 hash (`699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4`) and calibration model SHA-256 hash (`9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -114,8 +114,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
-  "calibrationModelHash": "699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97",
+  "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
+  "calibrationModelHash": "9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -293,9 +293,9 @@ Coefficients frozen on TRAIN and evaluated across untouched out-of-sample cohort
 
 | Cohort Split | Sample $N$ | Events / Censored | Harrell's C-Index | Model Timing MAE | Demographic Null MAE | Baseline Comparison | LRT vs Null ($p$-value) | Empirical Quality Gate |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **BLIND_TEST** | 1605 | 1440 / 165 | **0.5048** | 4.05y | 4.05y | MEANINGFUL_IMPROVEMENT | $\Delta G^2 = 0.6886$ ($p = 0.40662$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **INTERNAL_HOLDOUT** | 1528 | 1374 / 154 | **0.507** | 4.09y | 4.09y | STATISTICALLY_TIED | $\Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
-| **Astro-Databank Certified A/AA** | 869 | 301 / 568 | **0.5345** | 4.91y | 4.92y | MEANINGFUL_IMPROVEMENT | $\Delta G^2 = 0.4375$ ($p = 0.50833$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **BLIND_TEST** | 1605 | 1440 / 165 | **0.5048** | 4.05y | 4.05y | STATISTICALLY_TIED | $Delta G^2 = 0.6886$ ($p = 0.40662$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **INTERNAL_HOLDOUT** | 1528 | 1374 / 154 | **0.507** | 4.09y | 4.09y | STATISTICALLY_TIED | $Delta G^2 = 0$ ($p = 1$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
+| **Astro-Databank Certified A/AA** | 869 | 301 / 568 | **0.5345** | 4.91y | 4.92y | STATISTICALLY_TIED | $Delta G^2 = 0.4375$ ($p = 0.50833$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 | *— AA_ONLY Sensitivity* | 455 | 188 / 267 | **0.518** | 4.78y | 4.78y | STATISTICALLY_TIED | $\Delta G^2 = 0.1294$ ($p = 0.71903$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 | *— A_ONLY Sensitivity* | 414 | 113 / 301 | **0.5531** | 5.13y | 5.14y | STATISTICALLY_TIED | $\Delta G^2 = 0.3081$ ($p = 0.57886$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
 | *— ALL_INDEPENDENT Sensitivity* | 1111 | 408 / 703 | **0.5383** | 5.02y | 5.03y | STATISTICALLY_TIED | $\Delta G^2 = 0.6651$ ($p = 0.41476$) | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** |
@@ -323,13 +323,13 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8` |
-| **Calibration Model Hash** | `699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97` |
+| **Prediction Engine Hash** | `fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4` |
+| **Calibration Model Hash** | `9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
 | **External Dataset Hash** | `116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392` |
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
-| **Benchmark Code Hash** | `d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3` |
-| **Artifact Generation Timestamp** | `2026-10-08T04:21:19.875Z` |
+| **Benchmark Code Hash** | `aaa0bb0677fe1d0edf2dfc865518eb1b07510a729780898e8a6c366ffbd6251a` |
+| **Artifact Generation Timestamp** | `2026-10-09T07:23:06.312Z` |

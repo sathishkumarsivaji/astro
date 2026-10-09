@@ -72,7 +72,7 @@ function setTimingResolution(timingObj) {
     timingObj.empiricalPredictiveResolution = "MULTI_YEAR_RANGE";
     timingObj.empiricalTimingStatus = "EMPIRICALLY_UNVALIDATED_FOR_EXACT_DAY";
     if (!timingObj.baselineComparisonStatus) {
-      timingObj.baselineComparisonStatus = timingObj.doesCombinedBeatBaseline ? "MEANINGFUL_IMPROVEMENT" : "STATISTICALLY_TIED";
+      timingObj.baselineComparisonStatus = timingObj.doesCombinedBeatBaseline ? "SUPERIOR" : "STATISTICALLY_TIED";
     }
   }
 }

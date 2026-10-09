@@ -13,16 +13,16 @@
     "independentAstroDatabank": 4798,
     "certifiedAstroDatabankAAA": 3751,
     "antiLeakageProtocol": "SHA-256 Pre-Cutoff Commitment Hashing",
-    "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
-    "calibrationModelHash": "699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97",
+    "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
+    "calibrationModelHash": "9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
     "externalDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "modelFitHash": "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03",
     "coefficientHash": "ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f",
-    "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
-    "generationTimestamp": "2026-10-08T04:21:19.875Z",
+    "benchmarkCodeHash": "aaa0bb0677fe1d0edf2dfc865518eb1b07510a729780898e8a6c366ffbd6251a",
+    "generationTimestamp": "2026-10-09T07:23:06.312Z",
     "predictionVersion": "v3.0.0-audited",
     "rulesVersion": "Parashari-v3.0-discrete-hazard"
   },
@@ -79,15 +79,22 @@
         "balancedAccuracy": 0.5086,
         "mcc": 0.0156,
         "rocAuc": 0.5569,
+        "rocAucCi95": {
+          "lower": 0.5086,
+          "upper": 0.6052,
+          "standardError": 0.0246
+        },
         "prAuc": 0.9275,
-        "calibrationSlope": 1,
-        "calibrationIntercept": 0,
+        "calibrationSlope": 4.3324,
+        "calibrationIntercept": -6.3944,
         "brierScore": 0.0808,
         "ece": 0.0295,
         "ci95": {
           "lower": 0.1624,
           "upper": 0.2003
         },
+        "sparseNegativeWarning": null,
+        "sparseNegativeDisclosure": null,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -282,7 +289,8 @@
           "within1yPct": 14.03,
           "within2yPct": 31.6,
           "within3yPct": 47.36,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 1605,
@@ -392,15 +400,22 @@
         "balancedAccuracy": 0.511,
         "mcc": 0.0192,
         "rocAuc": 0.5419,
+        "rocAucCi95": {
+          "lower": 0.4909,
+          "upper": 0.5929,
+          "standardError": 0.026
+        },
         "prAuc": 0.9298,
-        "calibrationSlope": 1,
-        "calibrationIntercept": 0,
+        "calibrationSlope": 3.0553,
+        "calibrationIntercept": -3.7852,
         "brierScore": 0.0781,
         "ece": 0.0328,
         "ci95": {
           "lower": 0.1642,
           "upper": 0.2032
         },
+        "sparseNegativeWarning": null,
+        "sparseNegativeDisclosure": null,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -595,6 +610,7 @@
           "within1yPct": 14.7,
           "within2yPct": 31,
           "within3yPct": 47.23,
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
           "doesCombinedBeatBaseline": false
         },
         "occurrence": {
@@ -705,15 +721,22 @@
         "balancedAccuracy": 0.5092,
         "mcc": 0.0109,
         "rocAuc": 0.5072,
+        "rocAucCi95": {
+          "lower": 0.334,
+          "upper": 0.6804,
+          "standardError": 0.0883
+        },
         "prAuc": 0.9688,
-        "calibrationSlope": 1,
-        "calibrationIntercept": 0,
+        "calibrationSlope": 0.2825,
+        "calibrationIntercept": 2.742,
         "brierScore": 0.0407,
         "ece": 0.0821,
         "ci95": {
           "lower": 0.1036,
           "upper": 0.1799
         },
+        "sparseNegativeWarning": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).",
+        "sparseNegativeDisclosure": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).",
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -908,7 +931,8 @@
           "within1yPct": 12.96,
           "within2yPct": 26.91,
           "within3yPct": 38.21,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 869,
@@ -1143,7 +1167,7 @@
           "nAvailable": 9366,
           "selectionHash": "FULL_COHORT"
         },
-        "fittedAt": "2026-10-07T02:46:28.777Z"
+        "fittedAt": "2026-10-08T10:37:26.968Z"
       }
     },
     "validationMetrics": {
@@ -1172,6 +1196,7 @@
         "within1yPct": 15.36,
         "within2yPct": 29.5,
         "within3yPct": 44.86,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
         "doesCombinedBeatBaseline": false
       },
       "occurrence": {
@@ -1216,7 +1241,8 @@
         "within1yPct": 14.03,
         "within2yPct": 31.6,
         "within3yPct": 47.36,
-        "doesCombinedBeatBaseline": true
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
       },
       "occurrence": {
         "evaluatedCount": 1605,
@@ -1260,6 +1286,7 @@
         "within1yPct": 14.7,
         "within2yPct": 31,
         "within3yPct": 47.23,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
         "doesCombinedBeatBaseline": false
       },
       "occurrence": {
@@ -1304,7 +1331,8 @@
         "within1yPct": 12.96,
         "within2yPct": 26.91,
         "within3yPct": 38.21,
-        "doesCombinedBeatBaseline": true
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
       },
       "occurrence": {
         "evaluatedCount": 869,
@@ -1349,7 +1377,8 @@
           "within1yPct": 15.96,
           "within2yPct": 26.6,
           "within3yPct": 39.36,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 455,
@@ -1393,7 +1422,8 @@
           "within1yPct": 7.96,
           "within2yPct": 27.43,
           "within3yPct": 36.28,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 414,
@@ -1437,7 +1467,8 @@
           "within1yPct": 11.76,
           "within2yPct": 25.25,
           "within3yPct": 37.01,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 1111,

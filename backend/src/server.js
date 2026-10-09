@@ -457,8 +457,8 @@ app.post('/api/auth/register', authRateLimiter, requireDatabaseReady, (req, res)
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return res.status(400).json({ error: 'Valid email address is required.' });
     }
-    if (!password || typeof password !== 'string' || password.length < 4) {
-      return res.status(400).json({ error: 'Password must be at least 4 characters.' });
+    if (!password || typeof password !== 'string' || password.length < 12) {
+      return res.status(400).json({ error: 'Password must be at least 12 characters long for security compliance.' });
     }
 
     const normEmail = email.trim().toLowerCase();

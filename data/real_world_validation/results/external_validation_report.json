@@ -1,16 +1,16 @@
 {
   "reportTitle": "Astro-Databank External Validation Summary Report",
   "metadata": {
-    "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
-    "calibrationModelHash": "699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97",
+    "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
+    "calibrationModelHash": "9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
-    "generatedAt": "2026-10-07T04:31:25.658Z",
+    "benchmarkCodeHash": "aaa0bb0677fe1d0edf2dfc865518eb1b07510a729780898e8a6c366ffbd6251a",
+    "generatedAt": "2026-10-09T07:19:57.699Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0"
   },
-  "evaluationDate": "2026-10-07T04:31:25.658Z",
+  "evaluationDate": "2026-10-09T07:19:57.699Z",
   "independenceVerification": {
     "status": "VERIFIED_INDEPENDENT",
     "totalExportRecords": 6036,

@@ -1,6 +1,6 @@
 {
   "manifestVersion": "2.3.0",
-  "generatedAt": "2026-10-07T16:24:21.720Z",
+  "generatedAt": "2026-10-09T07:22:06.151Z",
   "application": {
     "name": "AstroVerse",
     "version": "4.2.0-Scientific",
@@ -200,298 +200,874 @@
     "releaseGateStatus": "PASS"
   },
   "testSuiteSummary": {
-    "totalChecks": 2052,
-    "passed": 2052,
-    "failed": 0,
-    "status": "ALL_PASSED",
+    "totalChecks": 4848,
+    "passed": 4844,
+    "failed": 4,
+    "status": "FAILED",
     "suites": [
       {
-        "name": "Swiss Ephemeris Benchmark",
-        "command": "node test_swiss_ephemeris_benchmark.mjs",
-        "checks": 180,
-        "passed": 180,
+        "name": "500 random benchmark",
+        "command": "node test_500_random_benchmark.mjs",
+        "checks": 500,
+        "passed": 500,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 397
+        "durationMs": 22651
       },
       {
-        "name": "True Node Independent Benchmark",
-        "command": "node test_true_node_independent_benchmark.mjs",
-        "checks": 24,
-        "passed": 24,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 351
-      },
-      {
-        "name": "Cross-System Consistency",
-        "command": "node test_cross_system_astronomical_consistency.mjs",
-        "checks": 90,
-        "passed": 90,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 503
-      },
-      {
-        "name": "Prediction Lab & Backtesting",
-        "command": "node test_backtesting_validation.mjs",
-        "checks": 87,
-        "passed": 87,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 809
-      },
-      {
-        "name": "Consultation Engine",
-        "command": "node test_consultation_engine.mjs",
-        "checks": 51,
-        "passed": 51,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 179
-      },
-      {
-        "name": "Multi-Turn QA Router",
-        "command": "node test_multiturn_qa.mjs",
-        "checks": 14,
-        "passed": 14,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 19709
-      },
-      {
-        "name": "PDF & Fingerprint Integrity",
-        "command": "node test_pdf_and_fingerprint.mjs",
-        "checks": 4,
-        "passed": 4,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 1530
-      },
-      {
-        "name": "Tamil Purity & Localization",
-        "command": "node test_tamil_purity.mjs",
-        "checks": 11,
-        "passed": 11,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 8132
-      },
-      {
-        "name": "Detailed Report Anti-Fabrication",
-        "command": "node test_detailed_report_integrity.mjs",
-        "checks": 104,
-        "passed": 104,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 2344
-      },
-      {
-        "name": "Convention Fixtures",
-        "command": "node test_convention_fixtures.mjs",
-        "checks": 67,
-        "passed": 67,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 79
-      },
-      {
-        "name": "Golden Astronomy",
-        "command": "node test_golden_astronomy.mjs",
-        "checks": 780,
-        "passed": 780,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 2824
-      },
-      {
-        "name": "Claim Graph",
-        "command": "node test_claim_graph.mjs",
-        "checks": 15,
-        "passed": 15,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 174
-      },
-      {
-        "name": "Calendar Engine",
-        "command": "node test_calendar_engine.mjs",
-        "checks": 13,
-        "passed": 13,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 84
-      },
-      {
-        "name": "Differential Prediction Integrity",
-        "command": "node test_differential_prediction_integrity.mjs",
-        "checks": 10,
-        "passed": 10,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 334
-      },
-      {
-        "name": "No Fabricated Calculated Values",
-        "command": "node test_no_fabricated_calculated_values.mjs",
-        "checks": 7,
-        "passed": 7,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 1361
-      },
-      {
-        "name": "Behavioral Anti-Fabrication Invariants",
-        "command": "node test_behavioral_anti_fabrication.mjs",
-        "checks": 14,
-        "passed": 14,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 171
-      },
-      {
-        "name": "V3 Statistical Integrity",
-        "command": "node test_v3_statistical_integrity.mjs",
-        "checks": 46,
-        "passed": 46,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 4997
-      },
-      {
-        "name": "V3 Full Cohort Execution",
-        "command": "node test_v3_full_cohort_execution.mjs",
-        "checks": 17,
-        "passed": 17,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 63
-      },
-      {
-        "name": "Harrell's C Censoring",
-        "command": "node test_harrells_c_censoring.mjs",
-        "checks": 10,
-        "passed": 10,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 91
-      },
-      {
-        "name": "P0 Negative Data Matrix",
-        "command": "node test_negative_data_matrix.mjs",
-        "checks": 24,
-        "passed": 24,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 120
-      },
-      {
-        "name": "Backend Security & Push",
-        "command": "node test_backend.mjs",
-        "checks": 88,
-        "passed": 88,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 1026
-      },
-      {
-        "name": "Epistemic Architecture Mandates",
-        "command": "node test_epistemic_architecture_mandates.mjs",
-        "checks": 17,
-        "passed": 17,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 4887
-      },
-      {
-        "name": "Cache Coefficient Hash Integrity",
-        "command": "node test_cache_coefficient_hash_integrity.mjs",
-        "checks": 11,
-        "passed": 11,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 153
-      },
-      {
-        "name": "Current Release Manifest Integrity",
-        "command": "node test_current_release_manifest.mjs",
-        "checks": 11,
-        "passed": 11,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 123
-      },
-      {
-        "name": "Forensic Integrity Mandates",
-        "command": "node test_forensic_integrity_mandates.mjs",
-        "checks": 12,
-        "passed": 12,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 204
-      },
-      {
-        "name": "Customer Report Pipeline",
-        "command": "node test_customer_report_pipeline.mjs",
-        "checks": 14,
-        "passed": 14,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 15219
-      },
-      {
-        "name": "Precision Q&A Engine Complete Verification",
-        "command": "node test_precision_qa_engine.mjs",
-        "checks": 82,
-        "passed": 82,
-        "failed": 0,
-        "status": "PASS",
-        "durationMs": 5108
-      },
-      {
-        "name": "Advanced Q&A Engine",
+        "name": "advanced qa engine",
         "command": "node test_advanced_qa_engine.mjs",
         "checks": 40,
         "passed": 40,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 5063
+        "durationMs": 17421
       },
       {
-        "name": "Follow-Up Q&A Engine",
+        "name": "astrotheme parity",
+        "command": "node test_astrotheme_parity.mjs",
+        "checks": 72,
+        "passed": 72,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 282
+      },
+      {
+        "name": "backtesting validation",
+        "command": "node test_backtesting_validation.mjs",
+        "checks": 87,
+        "passed": 87,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1588
+      },
+      {
+        "name": "baseline no leakage",
+        "command": "node test_baseline_no_leakage.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 242
+      },
+      {
+        "name": "behavioral anti fabrication",
+        "command": "node test_behavioral_anti_fabrication.mjs",
+        "checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 400
+      },
+      {
+        "name": "birth time rectification",
+        "command": "node test_birth_time_rectification.mjs",
+        "checks": 9,
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 3666
+      },
+      {
+        "name": "cache coefficient hash integrity",
+        "command": "node test_cache_coefficient_hash_integrity.mjs",
+        "checks": 11,
+        "passed": 11,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 389
+      },
+      {
+        "name": "cache invalidation matrix",
+        "command": "node test_cache_invalidation_matrix.mjs",
+        "checks": 9,
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 355
+      },
+      {
+        "name": "calculated value integrity",
+        "command": "node test_calculated_value_integrity.mjs",
+        "checks": 9,
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 233
+      },
+      {
+        "name": "calendar engine",
+        "command": "node test_calendar_engine.mjs",
+        "checks": 13,
+        "passed": 13,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 255
+      },
+      {
+        "name": "calendar journal",
+        "command": "node test_calendar_journal.mjs",
+        "checks": 13,
+        "passed": 13,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 206
+      },
+      {
+        "name": "calibration artifact matches runtime",
+        "command": "node test_calibration_artifact_matches_runtime.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 1,
+        "status": "FAIL",
+        "error": "Command failed: node test_calibration_artifact_matches_runtime.mjs\n  ✗ FAIL: Model predictionEngineHash matches CURRENT production engine hash\n❌ Calibration artifact integrity test FAILED.\n"
+      },
+      {
+        "name": "calibration no stale cache",
+        "command": "node test_calibration_no_stale_cache.mjs",
+        "checks": 5,
+        "passed": 5,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 730
+      },
+      {
+        "name": "censoring integrity",
+        "command": "node test_censoring_integrity.mjs",
+        "checks": 11,
+        "passed": 11,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 268
+      },
+      {
+        "name": "chapter empirical status",
+        "command": "node test_chapter_empirical_status.mjs",
+        "checks": 22,
+        "passed": 22,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 105
+      },
+      {
+        "name": "claim graph",
+        "command": "node test_claim_graph.mjs",
+        "checks": 15,
+        "passed": 15,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 302
+      },
+      {
+        "name": "clean install build",
+        "command": "node test_clean_install_build.mjs",
+        "checks": 16,
+        "passed": 16,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 28418
+      },
+      {
+        "name": "consultation engine",
+        "command": "node test_consultation_engine.mjs",
+        "checks": 51,
+        "passed": 51,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 392
+      },
+      {
+        "name": "convention fixtures",
+        "command": "node test_convention_fixtures.mjs",
+        "checks": 67,
+        "passed": 67,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 203
+      },
+      {
+        "name": "cross surface consistency",
+        "command": "node test_cross_surface_consistency.mjs",
+        "checks": 246,
+        "passed": 246,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 60160
+      },
+      {
+        "name": "cross system astronomical consistency",
+        "command": "node test_cross_system_astronomical_consistency.mjs",
+        "checks": 90,
+        "passed": 90,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 963
+      },
+      {
+        "name": "current release manifest",
+        "command": "node test_current_release_manifest.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 1,
+        "status": "FAIL",
+        "error": "Command failed: node test_current_release_manifest.mjs\n  ✗ FAIL: discreteHazardSurvivalEngineHash matches runtime\n     Actual:   9821e7a728f08d2bbd308530662809f1961ad32e92c8c512192fd4949fc60e30\n     Manifest: 7d1e2881926f776c274571a6eb2cbe99379d7b176ba17c615e8801617d7b620b\n  ✗ FAIL: predictionEngineHash aggregate matches composite runtime\n     Actual:   fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4\n     Manifest: aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8\n"
+      },
+      {
+        "name": "customer report pipeline",
+        "command": "node test_customer_report_pipeline.mjs",
+        "checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 53379
+      },
+      {
+        "name": "d3 d9",
+        "command": "node test_d3_d9.mjs",
+        "checks": 2,
+        "passed": 2,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 154
+      },
+      {
+        "name": "detailed report integrity",
+        "command": "node test_detailed_report_integrity.mjs",
+        "checks": 104,
+        "passed": 104,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 5883
+      },
+      {
+        "name": "differential prediction integrity",
+        "command": "node test_differential_prediction_integrity.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 648
+      },
+      {
+        "name": "discrete hazard survival",
+        "command": "node test_discrete_hazard_survival.mjs",
+        "checks": 52,
+        "passed": 52,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 12209
+      },
+      {
+        "name": "empirical discrimination models",
+        "command": "node test_empirical_discrimination_models.mjs",
+        "checks": 12,
+        "passed": 12,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 182
+      },
+      {
+        "name": "epistemic architecture mandates",
+        "command": "node test_epistemic_architecture_mandates.mjs",
+        "checks": 17,
+        "passed": 17,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 14583
+      },
+      {
+        "name": "event precision metrics",
+        "command": "node test_event_precision_metrics.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 155
+      },
+      {
+        "name": "external astro databank validation",
+        "command": "node test_external_astro_databank_validation.mjs",
+        "checks": 47,
+        "passed": 47,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 159
+      },
+      {
+        "name": "external dataset not synthetic",
+        "command": "node test_external_dataset_not_synthetic.mjs",
+        "checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 264
+      },
+      {
+        "name": "external dataset provenance",
+        "command": "node test_external_dataset_provenance.mjs",
+        "checks": 18,
+        "passed": 18,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 256
+      },
+      {
+        "name": "fdr is not hardcoded",
+        "command": "node test_fdr_is_not_hardcoded.mjs",
+        "checks": 12,
+        "passed": 12,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 166
+      },
+      {
+        "name": "feature registry",
+        "command": "node test_feature_registry.mjs",
+        "checks": 170,
+        "passed": 170,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 132
+      },
+      {
+        "name": "find claims",
+        "command": "node test_find_claims.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 494
+      },
+      {
+        "name": "find defaults",
+        "command": "node test_find_defaults.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 1,
+        "status": "FAIL",
+        "error": "Command failed: node test_find_defaults.mjs\n❌ VIOLATION: Zero forbidden '?? \"Asia/Kolkata\"' or '|| \"Asia/Kolkata\"' defaults in src/ (Found 1)\nFAILED: 1 architectural violations found.\n"
+      },
+      {
+        "name": "follow up qa",
         "command": "node test_follow_up_qa.mjs",
         "checks": 189,
         "passed": 189,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 9103
+        "durationMs": 31301
       },
       {
-        "name": "Q&A Scientific Grounding",
-        "command": "node test_qa_scientific_grounding.mjs",
-        "checks": 5,
-        "passed": 5,
+        "name": "forensic integrity mandates",
+        "command": "node test_forensic_integrity_mandates.mjs",
+        "checks": 12,
+        "passed": 12,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 141
+        "durationMs": 403
       },
       {
-        "name": "P0 P1 Remediation Audit",
+        "name": "full audit",
+        "command": "node test_full_audit.mjs",
+        "checks": 150,
+        "passed": 150,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 105753
+      },
+      {
+        "name": "full cohort execution",
+        "command": "node test_full_cohort_execution.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 178
+      },
+      {
+        "name": "full public dataset validation",
+        "command": "node test_full_public_dataset_validation.mjs",
+        "checks": 22,
+        "passed": 22,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 454
+      },
+      {
+        "name": "golden astronomy",
+        "command": "node test_golden_astronomy.mjs",
+        "checks": 780,
+        "passed": 780,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 5524
+      },
+      {
+        "name": "harrells c censoring",
+        "command": "node test_harrells_c_censoring.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 171
+      },
+      {
+        "name": "historical time engine",
+        "command": "node test_historical_time_engine.mjs",
+        "checks": 20,
+        "passed": 20,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 310
+      },
+      {
+        "name": "independent ephemeris 500 cases",
+        "command": "node test_independent_ephemeris_500_cases.mjs",
+        "checks": 500,
+        "passed": 500,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 3066
+      },
+      {
+        "name": "independent ephemeris reference",
+        "command": "node test_independent_ephemeris_reference.mjs",
+        "checks": 426,
+        "passed": 426,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 689
+      },
+      {
+        "name": "karakamsa no default",
+        "command": "node test_karakamsa_no_default.mjs",
+        "checks": 9,
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 145
+      },
+      {
+        "name": "marriage event ordering",
+        "command": "node test_marriage_event_ordering.mjs",
+        "checks": 7,
+        "passed": 7,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 518
+      },
+      {
+        "name": "multi system precision",
+        "command": "node test_multi_system_precision.mjs",
+        "checks": 222,
+        "passed": 222,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 383
+      },
+      {
+        "name": "multiturn qa",
+        "command": "node test_multiturn_qa.mjs",
+        "checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 20270
+      },
+      {
+        "name": "negative controls reproducible",
+        "command": "node test_negative_controls_reproducible.mjs",
+        "checks": 7,
+        "passed": 7,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 383
+      },
+      {
+        "name": "negative data matrix",
+        "command": "node test_negative_data_matrix.mjs",
+        "checks": 24,
+        "passed": 24,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 266
+      },
+      {
+        "name": "no fabricated calculated values",
+        "command": "node test_no_fabricated_calculated_values.mjs",
+        "checks": 7,
+        "passed": 7,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2927
+      },
+      {
+        "name": "p0 p1 remediation audit",
         "command": "node test_p0_p1_remediation_audit.mjs",
         "checks": 10,
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 319
+        "durationMs": 674
       },
       {
-        "name": "Validation Manifest Integrity",
+        "name": "pdf and fingerprint",
+        "command": "node test_pdf_and_fingerprint.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2970
+      },
+      {
+        "name": "precision qa engine",
+        "command": "node test_precision_qa_engine.mjs",
+        "checks": 82,
+        "passed": 82,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 10230
+      },
+      {
+        "name": "prediction cache version integrity",
+        "command": "node test_prediction_cache_version_integrity.mjs",
+        "checks": 15,
+        "passed": 15,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 561
+      },
+      {
+        "name": "qa scientific grounding",
+        "command": "node test_qa_scientific_grounding.mjs",
+        "checks": 5,
+        "passed": 5,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 234
+      },
+      {
+        "name": "real world empirical benchmark",
+        "command": "node test_real_world_empirical_benchmark.mjs",
+        "checks": 22,
+        "passed": 22,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 82204010
+      },
+      {
+        "name": "rectification d10 identity",
+        "command": "node test_rectification_d10_identity.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2735
+      },
+      {
+        "name": "rectification d7 identity",
+        "command": "node test_rectification_d7_identity.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 449
+      },
+      {
+        "name": "rectification d9 identity",
+        "command": "node test_rectification_d9_identity.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 520
+      },
+      {
+        "name": "rectification edge boundary",
+        "command": "node test_rectification_edge_boundary.mjs",
+        "checks": 2,
+        "passed": 2,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 8517
+      },
+      {
+        "name": "rectification flat score",
+        "command": "node test_rectification_flat_score.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 307
+      },
+      {
+        "name": "rectification holdout",
+        "command": "node test_rectification_holdout.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 383
+      },
+      {
+        "name": "rectification known ground truth",
+        "command": "node test_rectification_known_ground_truth.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 16467
+      },
+      {
+        "name": "rectification loeo",
+        "command": "node test_rectification_loeo.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 186
+      },
+      {
+        "name": "rectification margin",
+        "command": "node test_rectification_margin.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2434
+      },
+      {
+        "name": "rectification md ad pd",
+        "command": "node test_rectification_md_ad_pd.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 470
+      },
+      {
+        "name": "rectification midnight boundary",
+        "command": "node test_rectification_midnight_boundary.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 128
+      },
+      {
+        "name": "rectification multipeak",
+        "command": "node test_rectification_multipeak.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 118
+      },
+      {
+        "name": "rectification no fake precision",
+        "command": "node test_rectification_no_fake_precision.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1867
+      },
+      {
+        "name": "rectification null distribution",
+        "command": "node test_rectification_null_distribution.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1961
+      },
+      {
+        "name": "rectification search completeness",
+        "command": "node test_rectification_search_completeness.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 228
+      },
+      {
+        "name": "rectification stability",
+        "command": "node test_rectification_stability.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 132
+      },
+      {
+        "name": "rectification suite",
+        "command": "node test_rectification_suite.mjs",
+        "checks": 9,
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 4109
+      },
+      {
+        "name": "rectification timezone dst",
+        "command": "node test_rectification_timezone_dst.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 261
+      },
+      {
+        "name": "rectification transit accuracy",
+        "command": "node test_rectification_transit_accuracy.mjs",
+        "checks": 1,
+        "passed": 1,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 534
+      },
+      {
+        "name": "regression",
+        "command": "node test_regression.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 573
+      },
+      {
+        "name": "release certification gate",
+        "command": "node test_release_certification_gate.mjs",
+        "checks": 0,
+        "passed": 0,
+        "failed": 1,
+        "status": "FAIL",
+        "error": "Command failed: node test_release_certification_gate.mjs\n  \u001b[31m✗ [GATE 03 FAILED]\u001b[0m runtime hazard hash === manifest hazard hash\n      Failure: 9821e7a728f08d2bbd308530662809f1961ad32e92c8c512192fd4949fc60e30\n  \u001b[31m✗ [GATE 04 FAILED]\u001b[0m aggregate prediction hash === manifest prediction hash\n      Failure: fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4\n  \u001b[31m✗ [GATE 08 FAILED]\u001b[0m benchmark engine hash === manifest prediction hash across all artifacts\n      Failure: bench=fe3e19bfd00156cb, latest=fe3e19bfd00156cb\n  \u001b[31m✗ [GATE 17 FAILED]\u001b[0m full release certification audit completes\n      Failure: 3 prerequisite gate(s) failed\n\n\u001b[31m================================================================================\n RELEASE_CERTIFIED = false\n Release Certification Gate FAILED. One or more requirements were violated.\n================================================================================\u001b[0m\n\n"
+      },
+      {
+        "name": "release package integrity",
+        "command": "node test_release_package_integrity.mjs",
+        "checks": 5,
+        "passed": 5,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 503
+      },
+      {
+        "name": "report accuracy claim integrity",
+        "command": "node test_report_accuracy_claim_integrity.mjs",
+        "checks": 24,
+        "passed": 24,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 403
+      },
+      {
+        "name": "resolution layers",
+        "command": "node test_resolution_layers.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 327
+      },
+      {
+        "name": "swiss ephemeris benchmark",
+        "command": "node test_swiss_ephemeris_benchmark.mjs",
+        "checks": 180,
+        "passed": 180,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 1400
+      },
+      {
+        "name": "system comparison qa",
+        "command": "node test_system_comparison_qa.mjs",
+        "checks": 49,
+        "passed": 49,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 19375
+      },
+      {
+        "name": "tamil purity",
+        "command": "node test_tamil_purity.mjs",
+        "checks": 11,
+        "passed": 11,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 18468
+      },
+      {
+        "name": "true node independent benchmark",
+        "command": "node test_true_node_independent_benchmark.mjs",
+        "checks": 24,
+        "passed": 24,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 738
+      },
+      {
+        "name": "universal claim firewall",
+        "command": "node test_universal_claim_firewall.mjs",
+        "checks": 12,
+        "passed": 12,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 194
+      },
+      {
+        "name": "user facing no fabricated values",
+        "command": "node test_user_facing_no_fabricated_values.mjs",
+        "checks": 8,
+        "passed": 8,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 203
+      },
+      {
+        "name": "v3 full cohort execution",
+        "command": "node test_v3_full_cohort_execution.mjs",
+        "checks": 17,
+        "passed": 17,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 128
+      },
+      {
+        "name": "v3 statistical integrity",
+        "command": "node test_v3_statistical_integrity.mjs",
+        "checks": 46,
+        "passed": 46,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 15237
+      },
+      {
+        "name": "validation manifest",
+        "command": "node test_validation_manifest.mjs",
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 604
+      },
+      {
+        "name": "validation manifest integrity",
         "command": "node test_validation_manifest_integrity.mjs",
         "checks": 5,
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 60
+        "durationMs": 150
+      },
+      {
+        "name": "Backend: backend",
+        "command": "node test_backend.mjs",
+        "checks": 88,
+        "passed": 88,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 17492
       }
     ]
   }

@@ -1803,20 +1803,26 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   const meanBrier = brierScores.length > 0 ? brierScores.reduce((a, b) => a + b, 0) / brierScores.length : 0;
 
   // Scientific Quality Gate & Categorical Baseline Comparison
+  // Categorical States: SUPERIOR | INFERIOR | PRACTICALLY_TIED | STATISTICALLY_TIED | INCONCLUSIVE
   let baselineComparisonStatus = "INCONCLUSIVE";
-  let beatsDemographicBaseline = false;
+  let isSuperior = false;
   if (timingMAECombined !== null && timingMAEBaseline !== null) {
     const maeDelta = timingMAEBaseline - timingMAECombined; // positive = combined model has lower error
-    const practicalThresholdYears = 0.25; // 3 months practical demographic significance
-    if (Math.abs(maeDelta) < practicalThresholdYears || lrtPValue >= 0.05) {
+    const practicalThresholdYears = 0.25; // 3 months predefined practical effect threshold
+    const isStatisticallySignificant = lrtPValue < 0.05;
+
+    if (Math.abs(maeDelta) < practicalThresholdYears && isStatisticallySignificant) {
+      baselineComparisonStatus = "PRACTICALLY_TIED";
+      isSuperior = false;
+    } else if (!isStatisticallySignificant) {
       baselineComparisonStatus = "STATISTICALLY_TIED";
-      beatsDemographicBaseline = false; // Never claim "beats baseline" on ties, sub-threshold differences (< 0.25y), or insignificant LRT
-    } else if (maeDelta >= practicalThresholdYears && lrtPValue < 0.05) {
-      baselineComparisonStatus = "MEANINGFUL_IMPROVEMENT";
-      beatsDemographicBaseline = true;
+      isSuperior = false;
+    } else if (maeDelta >= practicalThresholdYears && isStatisticallySignificant) {
+      baselineComparisonStatus = "SUPERIOR";
+      isSuperior = true;
     } else if (maeDelta <= -practicalThresholdYears) {
-      baselineComparisonStatus = "WORSE_THAN_BASELINE";
-      beatsDemographicBaseline = false;
+      baselineComparisonStatus = "INFERIOR";
+      isSuperior = false;
     }
   }
 
@@ -1824,7 +1830,7 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
   const hasSpecificity = specificity > 0.05;
   const hasPositiveMcc = mcc > 0.05;
 
-  const isEmpiricallyValidated = beatsDemographicBaseline && cIndexAboveChance && hasSpecificity && hasPositiveMcc;
+  const isEmpiricallyValidated = isSuperior && cIndexAboveChance && hasSpecificity && hasPositiveMcc;
   const validationStatus = isEmpiricallyValidated ? "EMPIRICALLY_VALIDATED" : "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED";
 
   return {
@@ -1850,8 +1856,8 @@ export function evaluateCohortDiscreteHazardSurvival(records, chartProvider, opt
       within1yPct: Number(within1yPct.toFixed(2)),
       within2yPct: Number(within2yPct.toFixed(2)),
       within3yPct: Number(within3yPct.toFixed(2)),
-      doesCombinedBeatBaseline: beatsDemographicBaseline,
-      baselineComparisonStatus
+      baselineComparisonStatus,
+      doesCombinedBeatBaseline: isSuperior
     },
     occurrence: {
       evaluatedCount: evaluatedOccCount,

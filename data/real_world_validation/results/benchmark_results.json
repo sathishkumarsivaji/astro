@@ -1,14 +1,14 @@
 {
   "metadata": {
     "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results (V3)",
-    "generatedAt": "2026-10-07T04:31:25.658Z",
+    "generatedAt": "2026-10-09T07:19:57.713Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
-    "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
-    "calibrationModelHash": "699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97",
+    "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
+    "calibrationModelHash": "9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff:116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "benchmarkCodeHash": "d48e875d8158b28b04014cf56a5de69646f46cc3ca0b8b36f2de2e08512056b3",
+    "benchmarkCodeHash": "aaa0bb0677fe1d0edf2dfc865518eb1b07510a729780898e8a6c366ffbd6251a",
     "cohortExecution": "FULL_COHORT_100_PERCENT",
     "blindCohortSize": 1634,
     "internalHoldoutSize": 1555,
@@ -21,15 +21,15 @@
       "cacheMisses": 0,
       "recomputedCount": 7987,
       "invalidatedEntries": 7987,
-      "predictionEngineHash": "aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8",
-      "calibrationHash": "699e66e19057bf3a9c3304a98860dcdd6b130002cf048370b4d778e77e115b97"
+      "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
+      "calibrationHash": "9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790"
     }
   },
   "splits": {
     "BLIND_TEST": {
       "cohortName": "BLIND_TEST",
       "n": 1634,
-      "actualExecutionDurationSec": 313.91,
+      "actualExecutionDurationSec": 371.8,
       "actualPredictionCount": 1634,
       "cacheHits": 0,
       "cacheMisses": 0,
@@ -37,7 +37,7 @@
       "errors": 0,
       "excludedCount": 24,
       "unknownCount": 0,
-      "elapsedSeconds": 313.91,
+      "elapsedSeconds": 371.8,
       "occurrence": {
         "n": 1584,
         "censoringBreakdown": {
@@ -70,15 +70,22 @@
         "balancedAccuracy": 0.5086,
         "mcc": 0.0156,
         "rocAuc": 0.5569,
+        "rocAucCi95": {
+          "lower": 0.5086,
+          "upper": 0.6052,
+          "standardError": 0.0246
+        },
         "prAuc": 0.9275,
-        "calibrationSlope": 1,
-        "calibrationIntercept": 0,
+        "calibrationSlope": 4.3324,
+        "calibrationIntercept": -6.3944,
         "brierScore": 0.0808,
         "ece": 0.0295,
         "ci95": {
           "lower": 0.1624,
           "upper": 0.2003
         },
+        "sparseNegativeWarning": null,
+        "sparseNegativeDisclosure": null,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -331,7 +338,8 @@
           "within1yPct": 14.03,
           "within2yPct": 31.6,
           "within3yPct": 47.36,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 1605,
@@ -353,7 +361,7 @@
     "INTERNAL_HOLDOUT": {
       "cohortName": "INTERNAL_HOLDOUT",
       "n": 1555,
-      "actualExecutionDurationSec": 181.34,
+      "actualExecutionDurationSec": 333.53,
       "actualPredictionCount": 1555,
       "cacheHits": 0,
       "cacheMisses": 0,
@@ -361,7 +369,7 @@
       "errors": 0,
       "excludedCount": 26,
       "unknownCount": 0,
-      "elapsedSeconds": 181.34,
+      "elapsedSeconds": 333.53,
       "occurrence": {
         "n": 1509,
         "censoringBreakdown": {
@@ -394,15 +402,22 @@
         "balancedAccuracy": 0.511,
         "mcc": 0.0192,
         "rocAuc": 0.5419,
+        "rocAucCi95": {
+          "lower": 0.4909,
+          "upper": 0.5929,
+          "standardError": 0.026
+        },
         "prAuc": 0.9298,
-        "calibrationSlope": 1,
-        "calibrationIntercept": 0,
+        "calibrationSlope": 3.0553,
+        "calibrationIntercept": -3.7852,
         "brierScore": 0.0781,
         "ece": 0.0328,
         "ci95": {
           "lower": 0.1642,
           "upper": 0.2032
         },
+        "sparseNegativeWarning": null,
+        "sparseNegativeDisclosure": null,
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -655,6 +670,7 @@
           "within1yPct": 14.7,
           "within2yPct": 31,
           "within3yPct": 47.23,
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
           "doesCombinedBeatBaseline": false
         },
         "occurrence": {
@@ -718,15 +734,22 @@
         "balancedAccuracy": 0.5092,
         "mcc": 0.0109,
         "rocAuc": 0.5072,
+        "rocAucCi95": {
+          "lower": 0.334,
+          "upper": 0.6804,
+          "standardError": 0.0883
+        },
         "prAuc": 0.9688,
-        "calibrationSlope": 1,
-        "calibrationIntercept": 0,
+        "calibrationSlope": 0.2825,
+        "calibrationIntercept": 2.742,
         "brierScore": 0.0407,
         "ece": 0.0821,
         "ci95": {
           "lower": 0.1036,
           "upper": 0.1799
         },
+        "sparseNegativeWarning": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).",
+        "sparseNegativeDisclosure": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).",
         "fourModelComparison": [
           {
             "modelId": "MODEL_0_NULL",
@@ -981,7 +1004,8 @@
           "within1yPct": 12.96,
           "within2yPct": 26.91,
           "within3yPct": 38.21,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 869,
@@ -1004,7 +1028,7 @@
       "AA_ONLY": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
         "n": 2591,
-        "actualExecutionDurationSec": 0.44,
+        "actualExecutionDurationSec": 0.46,
         "actualPredictionCount": 2591,
         "cacheHits": 0,
         "cacheMisses": 2591,
@@ -1012,7 +1036,7 @@
         "errors": 0,
         "excludedCount": 262,
         "unknownCount": 3,
-        "elapsedSeconds": 0.44,
+        "elapsedSeconds": 0.46,
         "occurrence": {
           "n": 193,
           "censoringBreakdown": {
@@ -1027,10 +1051,10 @@
           },
           "prevalence": 0.9793,
           "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
-          "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-          "isDegenerate": true,
-          "degeneracyReason": "Degenerate base-rate classification detected: Specificity=75.0%, TN=3, MCC=-0.059, PredPosRate=11.9%. Model fails to discriminate actual negative outcomes.",
-          "status": "BASE_RATE_DOMINATED",
+          "classifierStatus": "NON_DISCRIMINATIVE",
+          "isDegenerate": false,
+          "degeneracyReason": "Non-discriminative classifier: Specificity=75.0%, MCC=-0.059, ROC-AUC=0.2884 (95% CI [0, 0.5769]). Meets basic non-degeneracy criteria (TN=3) but performance does not statistically or substantively exceed chance level.",
+          "status": "NOT_DISCRIMINATIVE",
           "confusionMatrix": {
             "tp": 22,
             "fp": 1,
@@ -1045,15 +1069,22 @@
           "balancedAccuracy": 0.4332,
           "mcc": -0.0587,
           "rocAuc": 0.2884,
+          "rocAucCi95": {
+            "lower": 0,
+            "upper": 0.5769,
+            "standardError": 0.1472
+          },
           "prAuc": 0.9708,
-          "calibrationSlope": 1,
-          "calibrationIntercept": 0,
+          "calibrationSlope": -20.0657,
+          "calibrationIntercept": 44.7252,
           "brierScore": 0.0297,
           "ece": 0.0963,
           "ci95": {
             "lower": 0.0893,
             "upper": 0.1842
-          }
+          },
+          "sparseNegativeWarning": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 4 negative observations out of 193 evaluable records).",
+          "sparseNegativeDisclosure": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 4 negative observations out of 193 evaluable records)."
         },
         "timing": {
           "n": 197,
@@ -1178,7 +1209,7 @@
       "A_ONLY": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
         "n": 1160,
-        "actualExecutionDurationSec": 0.44,
+        "actualExecutionDurationSec": 0.49,
         "actualPredictionCount": 1160,
         "cacheHits": 0,
         "cacheMisses": 1160,
@@ -1186,7 +1217,7 @@
         "errors": 0,
         "excludedCount": 294,
         "unknownCount": 22,
-        "elapsedSeconds": 0.44,
+        "elapsedSeconds": 0.49,
         "occurrence": {
           "n": 120,
           "censoringBreakdown": {
@@ -1200,11 +1231,11 @@
             "eventPreHorizonCount": 3
           },
           "prevalence": 0.9417,
-          "validationStatus": "EMPIRICALLY_VALIDATED",
-          "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+          "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+          "classifierStatus": "NON_DISCRIMINATIVE",
           "isDegenerate": false,
-          "degeneracyReason": "Non-degenerate discrimination confirmed.",
-          "status": "VALIDATED",
+          "degeneracyReason": "Non-discriminative classifier: Specificity=100.0%, MCC=0.079, ROC-AUC=0.6188 (95% CI [0.4208, 0.8168]). Meets basic non-degeneracy criteria (TN=7) but performance does not statistically or substantively exceed chance level.",
+          "status": "NOT_DISCRIMINATIVE",
           "confusionMatrix": {
             "tp": 11,
             "fp": 0,
@@ -1219,15 +1250,22 @@
           "balancedAccuracy": 0.5487,
           "mcc": 0.0791,
           "rocAuc": 0.6188,
+          "rocAucCi95": {
+            "lower": 0.4208,
+            "upper": 0.8168,
+            "standardError": 0.101
+          },
           "prAuc": 0.9661,
-          "calibrationSlope": 1,
-          "calibrationIntercept": 0,
+          "calibrationSlope": 9.1961,
+          "calibrationIntercept": -15.6963,
           "brierScore": 0.0583,
           "ece": 0.0592,
           "ci95": {
             "lower": 0.097,
             "upper": 0.2247
-          }
+          },
+          "sparseNegativeWarning": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 7 negative observations out of 120 evaluable records).",
+          "sparseNegativeDisclosure": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 7 negative observations out of 120 evaluable records)."
         },
         "timing": {
           "n": 123,
@@ -1352,7 +1390,7 @@
       "ALL_INDEPENDENT": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
         "n": 4798,
-        "actualExecutionDurationSec": 571.82,
+        "actualExecutionDurationSec": 1023.78,
         "actualPredictionCount": 4798,
         "cacheHits": 0,
         "cacheMisses": 0,
@@ -1360,7 +1398,7 @@
         "errors": 0,
         "excludedCount": 686,
         "unknownCount": 28,
-        "elapsedSeconds": 571.82,
+        "elapsedSeconds": 1023.78,
         "occurrence": {
           "n": 428,
           "censoringBreakdown": {
@@ -1375,10 +1413,10 @@
           },
           "prevalence": 0.9626,
           "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
-          "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+          "classifierStatus": "NON_DISCRIMINATIVE",
           "isDegenerate": false,
-          "degeneracyReason": "Non-degenerate discrimination confirmed.",
-          "status": "VALIDATED",
+          "degeneracyReason": "Non-discriminative classifier: Specificity=93.8%, MCC=0.024, ROC-AUC=0.4892 (95% CI [0.3439, 0.6345]). Meets basic non-degeneracy criteria (TN=15) but performance does not statistically or substantively exceed chance level.",
+          "status": "NOT_DISCRIMINATIVE",
           "confusionMatrix": {
             "tp": 41,
             "fp": 1,
@@ -1393,15 +1431,22 @@
           "balancedAccuracy": 0.5185,
           "mcc": 0.0236,
           "rocAuc": 0.4892,
+          "rocAucCi95": {
+            "lower": 0.3439,
+            "upper": 0.6345,
+            "standardError": 0.0741
+          },
           "prAuc": 0.9664,
-          "calibrationSlope": -0.102,
-          "calibrationIntercept": 1.051,
+          "calibrationSlope": -1.6656,
+          "calibrationIntercept": 6.5711,
           "brierScore": 0.0523,
           "ece": 0.096,
           "ci95": {
             "lower": 0.1021,
             "upper": 0.1661
-          }
+          },
+          "sparseNegativeWarning": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 16 negative observations out of 428 evaluable records).",
+          "sparseNegativeDisclosure": "External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 16 negative observations out of 428 evaluable records)."
         },
         "timing": {
           "n": 419,
@@ -1526,7 +1571,7 @@
       "REGRESSION_SAMPLE": {
         "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
         "n": 500,
-        "actualExecutionDurationSec": 0.46,
+        "actualExecutionDurationSec": 0.5,
         "actualPredictionCount": 500,
         "cacheHits": 0,
         "cacheMisses": 500,
@@ -1534,7 +1579,7 @@
         "errors": 0,
         "excludedCount": 68,
         "unknownCount": 3,
-        "elapsedSeconds": 0.46,
+        "elapsedSeconds": 0.5,
         "occurrence": {
           "n": 427,
           "censoringBreakdown": {
@@ -1548,11 +1593,11 @@
             "eventPreHorizonCount": 2
           },
           "prevalence": 0.096,
-          "validationStatus": "EMPIRICALLY_VALIDATED",
-          "classifierStatus": "DISCRIMINATIVE_CLASSIFIER",
+          "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
+          "classifierStatus": "NON_DISCRIMINATIVE",
           "isDegenerate": false,
-          "degeneracyReason": "Non-degenerate discrimination confirmed.",
-          "status": "VALIDATED",
+          "degeneracyReason": "Non-discriminative classifier: Specificity=90.7%, MCC=0.029, ROC-AUC=0.5308 (95% CI [0.4364, 0.6252]). Meets basic non-degeneracy criteria (TN=350) but performance does not statistically or substantively exceed chance level.",
+          "status": "NOT_DISCRIMINATIVE",
           "confusionMatrix": {
             "tp": 5,
             "fp": 36,
@@ -1567,15 +1612,22 @@
           "balancedAccuracy": 0.5143,
           "mcc": 0.0287,
           "rocAuc": 0.5308,
+          "rocAucCi95": {
+            "lower": 0.4364,
+            "upper": 0.6252,
+            "standardError": 0.0481
+          },
           "prAuc": 0.16,
-          "calibrationSlope": 0.1057,
-          "calibrationIntercept": 0.006,
+          "calibrationSlope": -107572.8976,
+          "calibrationIntercept": -2.7973,
           "brierScore": 0.6664,
           "ece": 0.7558,
           "ci95": {
             "lower": 0.7929,
             "upper": 0.8639
-          }
+          },
+          "sparseNegativeWarning": null,
+          "sparseNegativeDisclosure": null
         },
         "timing": {
           "n": 43,
@@ -1870,8 +1922,8 @@
       {
         "controlId": "10K_PERMUTATION_DISTRIBUTION",
         "name": "10,000 Run Non-Parametric Outcome Permutation Distribution",
-        "expectedChanceRatePct": 2.71,
-        "observedSimulatedPct": 2.71,
+        "expectedChanceRatePct": 2.73,
+        "observedSimulatedPct": 2.73,
         "passesNullCheck": true
       }
     ]
@@ -2480,7 +2532,7 @@
           "nAvailable": 9366,
           "selectionHash": "FULL_COHORT"
         },
-        "fittedAt": "2026-10-07T02:46:28.777Z"
+        "fittedAt": "2026-10-08T10:37:26.968Z"
       }
     },
     "validationMetrics": {
@@ -2509,6 +2561,7 @@
         "within1yPct": 15.36,
         "within2yPct": 29.5,
         "within3yPct": 44.86,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
         "doesCombinedBeatBaseline": false
       },
       "occurrence": {
@@ -2553,7 +2606,8 @@
         "within1yPct": 14.03,
         "within2yPct": 31.6,
         "within3yPct": 47.36,
-        "doesCombinedBeatBaseline": true
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
       },
       "occurrence": {
         "evaluatedCount": 1605,
@@ -2597,6 +2651,7 @@
         "within1yPct": 14.7,
         "within2yPct": 31,
         "within3yPct": 47.23,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
         "doesCombinedBeatBaseline": false
       },
       "occurrence": {
@@ -2641,7 +2696,8 @@
         "within1yPct": 12.96,
         "within2yPct": 26.91,
         "within3yPct": 38.21,
-        "doesCombinedBeatBaseline": true
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
       },
       "occurrence": {
         "evaluatedCount": 869,
@@ -2686,7 +2742,8 @@
           "within1yPct": 15.96,
           "within2yPct": 26.6,
           "within3yPct": 39.36,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 455,
@@ -2730,7 +2787,8 @@
           "within1yPct": 7.96,
           "within2yPct": 27.43,
           "within3yPct": 36.28,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 414,
@@ -2774,7 +2832,8 @@
           "within1yPct": 11.76,
           "within2yPct": 25.25,
           "within3yPct": 37.01,
-          "doesCombinedBeatBaseline": true
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
         },
         "occurrence": {
           "evaluatedCount": 1111,

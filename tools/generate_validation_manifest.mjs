@@ -32,40 +32,30 @@ const fixtureBytes = fs.readFileSync(SWISS_FIXTURE_PATH);
 const fixtureSha256 = crypto.createHash("sha256").update(fixtureBytes).digest("hex");
 console.log(`✓ Computed Swiss Ephemeris 2.10.03 fixture SHA-256: ${fixtureSha256}`);
 
-// 2. Define standard test suites to execute
+// 2. Discover all test suites dynamically from frontend and backend
+const discoveredFrontendSuites = fs.readdirSync(FRONTEND_DIR)
+  .filter(f => f.startsWith("test_") && f.endsWith(".mjs"))
+  .sort()
+  .map(f => ({
+    name: f.replace(/^test_/, "").replace(/\.mjs$/, "").replace(/_/g, " "),
+    cwd: FRONTEND_DIR,
+    cmd: `node ${f}`
+  }));
+
+const discoveredBackendSuites = fs.existsSync(BACKEND_DIR)
+  ? fs.readdirSync(BACKEND_DIR)
+      .filter(f => f.startsWith("test_") && f.endsWith(".mjs"))
+      .sort()
+      .map(f => ({
+        name: `Backend: ${f.replace(/^test_/, "").replace(/\.mjs$/, "").replace(/_/g, " ")}`,
+        cwd: BACKEND_DIR,
+        cmd: `node ${f}`
+      }))
+  : [];
+
 const TEST_SUITES = [
-  { name: "Swiss Ephemeris Benchmark", cwd: FRONTEND_DIR, cmd: "node test_swiss_ephemeris_benchmark.mjs" },
-  { name: "True Node Independent Benchmark", cwd: FRONTEND_DIR, cmd: "node test_true_node_independent_benchmark.mjs" },
-  { name: "Cross-System Consistency", cwd: FRONTEND_DIR, cmd: "node test_cross_system_astronomical_consistency.mjs" },
-  { name: "Prediction Lab & Backtesting", cwd: FRONTEND_DIR, cmd: "node test_backtesting_validation.mjs" },
-  { name: "Consultation Engine", cwd: FRONTEND_DIR, cmd: "node test_consultation_engine.mjs" },
-  { name: "Multi-Turn QA Router", cwd: FRONTEND_DIR, cmd: "node test_multiturn_qa.mjs" },
-  { name: "PDF & Fingerprint Integrity", cwd: FRONTEND_DIR, cmd: "node test_pdf_and_fingerprint.mjs" },
-  { name: "Tamil Purity & Localization", cwd: FRONTEND_DIR, cmd: "node test_tamil_purity.mjs" },
-  { name: "Detailed Report Anti-Fabrication", cwd: FRONTEND_DIR, cmd: "node test_detailed_report_integrity.mjs" },
-  { name: "Convention Fixtures", cwd: FRONTEND_DIR, cmd: "node test_convention_fixtures.mjs" },
-  { name: "Golden Astronomy", cwd: FRONTEND_DIR, cmd: "node test_golden_astronomy.mjs" },
-  { name: "Claim Graph", cwd: FRONTEND_DIR, cmd: "node test_claim_graph.mjs" },
-  { name: "Calendar Engine", cwd: FRONTEND_DIR, cmd: "node test_calendar_engine.mjs" },
-  { name: "Differential Prediction Integrity", cwd: FRONTEND_DIR, cmd: "node test_differential_prediction_integrity.mjs" },
-  { name: "No Fabricated Calculated Values", cwd: FRONTEND_DIR, cmd: "node test_no_fabricated_calculated_values.mjs" },
-  { name: "Behavioral Anti-Fabrication Invariants", cwd: FRONTEND_DIR, cmd: "node test_behavioral_anti_fabrication.mjs" },
-  { name: "V3 Statistical Integrity", cwd: FRONTEND_DIR, cmd: "node test_v3_statistical_integrity.mjs" },
-  { name: "V3 Full Cohort Execution", cwd: FRONTEND_DIR, cmd: "node test_v3_full_cohort_execution.mjs" },
-  { name: "Harrell's C Censoring", cwd: FRONTEND_DIR, cmd: "node test_harrells_c_censoring.mjs" },
-  { name: "P0 Negative Data Matrix", cwd: FRONTEND_DIR, cmd: "node test_negative_data_matrix.mjs" },
-  { name: "Backend Security & Push", cwd: BACKEND_DIR, cmd: "node test_backend.mjs" },
-  { name: "Epistemic Architecture Mandates", cwd: FRONTEND_DIR, cmd: "node test_epistemic_architecture_mandates.mjs" },
-  { name: "Cache Coefficient Hash Integrity", cwd: FRONTEND_DIR, cmd: "node test_cache_coefficient_hash_integrity.mjs" },
-  { name: "Current Release Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_current_release_manifest.mjs" },
-  { name: "Forensic Integrity Mandates", cwd: FRONTEND_DIR, cmd: "node test_forensic_integrity_mandates.mjs" },
-  { name: "Customer Report Pipeline", cwd: FRONTEND_DIR, cmd: "node test_customer_report_pipeline.mjs" },
-  { name: "Precision Q&A Engine Complete Verification", cwd: FRONTEND_DIR, cmd: "node test_precision_qa_engine.mjs" },
-  { name: "Advanced Q&A Engine", cwd: FRONTEND_DIR, cmd: "node test_advanced_qa_engine.mjs" },
-  { name: "Follow-Up Q&A Engine", cwd: FRONTEND_DIR, cmd: "node test_follow_up_qa.mjs" },
-  { name: "Q&A Scientific Grounding", cwd: FRONTEND_DIR, cmd: "node test_qa_scientific_grounding.mjs" },
-  { name: "P0 P1 Remediation Audit", cwd: FRONTEND_DIR, cmd: "node test_p0_p1_remediation_audit.mjs" },
-  { name: "Validation Manifest Integrity", cwd: FRONTEND_DIR, cmd: "node test_validation_manifest_integrity.mjs" }
+  ...discoveredFrontendSuites,
+  ...discoveredBackendSuites
 ];
 
 let totalChecksExecuted = 0;

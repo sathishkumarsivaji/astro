@@ -140,7 +140,7 @@ export function compareAstrologySystems({ chart, multiSystemBundle = null, isTam
         birthTime: bTime,
         latitude: chart?.birthLatitude ?? chart?.latitude ?? chart?.lat,
         longitude: chart?.birthLongitude ?? chart?.longitude ?? chart?.lng,
-        timezoneId: chart?.timezoneId || chart?.tz || chart?.timezone || "Asia/Kolkata",
+        timezoneId: chart?.timezoneId || chart?.tz || chart?.timezone || null,
         utcOffset: chart?.utcOffset
       };
       if (birthData.birthDate && (birthData.latitude != null || birthData.lat != null)) {

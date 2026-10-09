@@ -162,8 +162,9 @@ export function loadCalibrationModel(forceReload = false, options = {}) {
     if (!parsed.parameters || typeof parsed.parameters.slope !== "number" || typeof parsed.parameters.intercept !== "number") {
       throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing required numeric parameters (slope, intercept).");
     }
-    if (!parsed.conformalIntervalQuantiles || typeof parsed.conformalIntervalQuantiles.q80 !== "number") {
-      throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing conformal interval quantiles (q80).");
+    const quantiles = parsed.empiricalResidualQuantiles || parsed.conformalIntervalQuantiles;
+    if (!quantiles || typeof quantiles.q80 !== "number") {
+      throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing empirical residual prediction interval quantiles (q80).");
     }
 
     // Fail-closed staleness verification if expected hashes are resolved or supplied
