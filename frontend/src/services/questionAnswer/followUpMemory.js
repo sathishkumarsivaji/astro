@@ -23,11 +23,24 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   const raw = (question || "").trim();
   const lower = raw.toLowerCase();
 
+  // Explicit Domain & Subject Keyword Detection
+  const explicitProperty = /\b(?:property|house|land|real\s*estate|வீடு|சொத்து)\b/i.test(raw);
+  const explicitCareer = /\b(?:job|career|promotion|profession|வேலை|தொழில்)\b/i.test(raw);
+  const explicitFinance = /\b(?:wealth|money|finance|பணம்|செல்வம்)\b/i.test(raw);
+  const explicitSpouse = /\b(?:spouse|wife|husband|partner|துணை|மனைவி|கணவர்)\b/i.test(raw);
+  const explicitMarriage = /\b(?:marry|marriage|wedding|திருமண)\b/i.test(raw) || explicitSpouse;
+
+  let initialDomain = DOMAINS.GENERAL;
+  if (explicitProperty) initialDomain = DOMAINS.PROPERTY;
+  else if (explicitCareer) initialDomain = DOMAINS.CAREER;
+  else if (explicitFinance) initialDomain = DOMAINS.FINANCE;
+  else if (explicitMarriage) initialDomain = DOMAINS.MARRIAGE;
+
   if (!conversationHistory || conversationHistory.length === 0) {
     return {
       resolvedQuestion: raw,
       activeSubject: "native",
-      activeDomain: DOMAINS.GENERAL,
+      activeDomain: initialDomain,
       inheritedEvidenceIds: [],
       isFollowUp: false
     };
@@ -65,6 +78,21 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   let activeDomain = lastDomain || DOMAINS.GENERAL;
   let activeSubject = lastSubject || "native";
 
+  // Check 0: Explicit Topic Shift / New Domain Declaration
+  if (explicitProperty) {
+    activeDomain = DOMAINS.PROPERTY;
+    activeSubject = "native";
+  } else if (explicitCareer) {
+    activeDomain = DOMAINS.CAREER;
+    activeSubject = "native";
+  } else if (explicitFinance) {
+    activeDomain = DOMAINS.FINANCE;
+    activeSubject = "native";
+  } else if (explicitMarriage) {
+    activeDomain = DOMAINS.MARRIAGE;
+    activeSubject = explicitSpouse ? "spouse" : (lastSubject || "native");
+  }
+
   // Check 1: Elliptical "When?" / "எப்போது?"
   if (/^(when|when\s*\?|எப்போது\??)$/i.test(raw)) {
     isFollowUp = true;
@@ -92,7 +120,7 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
     } else if (lastDomain === DOMAINS.MARRIAGE) {
       resolvedQuestion = `Is the year ${year} favorable for marriage?`;
       activeDomain = DOMAINS.MARRIAGE;
-      activeSubject = "spouse";
+      activeSubject = lastSubject || "native";
     } else {
       resolvedQuestion = `What are the astrological transits for ${year}?`;
     }
@@ -120,6 +148,13 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
     isFollowUp = true;
     const planetName = raw.match(/why\s+(\w+)/i)?.[1] || "";
     resolvedQuestion = `Why is ${planetName} considered an influential factor in ${lastDomain || "this reading"}?`;
+    if (lastDomain === DOMAINS.PROPERTY || !lastSubject || lastSubject !== "spouse") {
+      activeSubject = "native";
+    }
+  }
+
+  if (!isFollowUp && !explicitMarriage) {
+    activeSubject = "native";
   }
 
   return {

@@ -186,6 +186,10 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
           }
           if (visionData) {
             results.visionPipeline = visionData;
+          } else {
+            results.isDemoData = true;
+            results.status = "DEMO_DATA_NOT_A_REAL_PALM_ANALYSIS";
+            results.scientificDisclosure = "DEMO_DATA_NOT_A_REAL_PALM_ANALYSIS";
           }
           onScanComplete(results);
           return 100;

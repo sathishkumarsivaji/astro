@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download, Heart, Brain, Activity, Compass, Loader2 } from "lucide-react";
+import { Download, Heart, Brain, Activity, Compass, Loader2, AlertTriangle } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { TRANSLATIONS } from "../../services/localization";
 
@@ -322,6 +322,23 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+      {/* Demo Data Disclosure Banner */}
+      {(telemetry?.status === "DEMO_DATA_NOT_A_REAL_PALM_ANALYSIS" || telemetry?.isDemoData) && (
+        <div className="p-4 rounded-2xl bg-amber-100 border-2 border-amber-500 text-amber-950 font-medium text-xs flex items-center gap-3 shadow-sm">
+          <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0" />
+          <div>
+            <span className="font-bold block uppercase tracking-wider text-amber-900">
+              {isTamil ? "மாதிரி செயல்முறை தரவு (DEMO_DATA_NOT_A_REAL_PALM_ANALYSIS)" : "DEMO SAMPLE DATA (DEMO_DATA_NOT_A_REAL_PALM_ANALYSIS)"}
+            </span>
+            <span className="text-stone-700">
+              {isTamil
+                ? "இது நேரடி கைரேகை ஆய்வல்ல. விளக்கக் காட்சி நோக்கங்களுக்காக மட்டுமே ஏற்றப்பட்ட மாதிரித் தரவு. இது நிஜ மனித கைரேகை முடிவு அல்ல."
+                : "This report was generated using synthetic demo telemetry for illustrative visualization. It is NOT an analysis of a real hand."}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Report Header Card */}
       <div className="p-6 rounded-3xl bg-[#FFFDF9] border border-amber-300 shadow-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
