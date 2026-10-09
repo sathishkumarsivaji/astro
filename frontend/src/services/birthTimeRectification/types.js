@@ -61,7 +61,18 @@ export function validateLifeEvent(rawEvent, index = 0) {
   }
 
   const id = rawEvent.id ? String(rawEvent.id).trim() : `EVT_${Date.now()}_${index}`;
-  const type = (rawEvent.type || "OTHER").toUpperCase();
+  const rawType = (rawEvent.type || "OTHER").toUpperCase();
+  const EVENT_SYNONYMS = {
+    "CAREER": "CAREER_START",
+    "PROGENY": "CHILD_BIRTH",
+    "HEALTH": "HEALTH_THEME",
+    "TRAVEL": "RELOCATION",
+    "HONOUR": "PROMOTION",
+    "HONOR": "PROMOTION",
+    "BEREAVEMENT": "MAJOR_FAMILY_EVENT",
+    "LEGAL": "OTHER"
+  };
+  const type = EVENT_SYNONYMS[rawType] || rawType;
   if (!EVENT_TYPES.includes(type)) {
     throw new Error(`Invalid event type "${rawEvent.type}" for event ${id}. Allowed types: ${EVENT_TYPES.join(", ")}`);
   }

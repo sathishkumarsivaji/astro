@@ -1,0 +1,92 @@
+[
+  {
+    "personId": "RECT-VAL-001",
+    "name": "Franklin D. Roosevelt",
+    "sourceReliability": "RODDEN_AA_BIRTH_CERTIFICATE",
+    "trueBirthDate": "1882-01-30",
+    "trueBirthTime": "20:00",
+    "perturbedInputTime": "20:25",
+    "marginMinutes": 45,
+    "lat": 41.7856,
+    "lng": -73.9332,
+    "timezoneId": "America/New_York",
+    "utcOffset": -5,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1905-03-17", "importance": "CRITICAL", "description": "Marriage to Eleanor Roosevelt" },
+      { "id": "EVT-02", "type": "CAREER", "date": "1933-03-04", "importance": "CRITICAL", "description": "First inauguration as US President" },
+      { "id": "EVT-03", "type": "HEALTH", "date": "1921-08-10", "importance": "HIGH", "description": "Onset of paralytic illness" }
+    ]
+  },
+  {
+    "personId": "RECT-VAL-002",
+    "name": "Jawaharlal Nehru",
+    "sourceReliability": "RODDEN_AA_CIVIL_RECORD",
+    "trueBirthDate": "1889-11-14",
+    "trueBirthTime": "23:36",
+    "perturbedInputTime": "23:10",
+    "marginMinutes": 45,
+    "lat": 25.4358,
+    "lng": 81.8463,
+    "timezoneId": "Asia/Kolkata",
+    "utcOffset": 5.5,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1916-02-08", "importance": "CRITICAL", "description": "Marriage to Kamala Kaul" },
+      { "id": "EVT-02", "type": "PROGENY", "date": "1917-11-19", "importance": "CRITICAL", "description": "Birth of daughter Indira" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1947-08-15", "importance": "CRITICAL", "description": "Assumed office as first Prime Minister of India" }
+    ]
+  },
+  {
+    "personId": "RECT-VAL-003",
+    "name": "Charles Darwin",
+    "sourceReliability": "RODDEN_AA_PARISH_REGISTER",
+    "trueBirthDate": "1809-02-12",
+    "trueBirthTime": "03:00",
+    "perturbedInputTime": "03:30",
+    "marginMinutes": 50,
+    "lat": 52.7068,
+    "lng": -2.7562,
+    "timezoneId": "Europe/London",
+    "utcOffset": 0,
+    "events": [
+      { "id": "EVT-01", "type": "TRAVEL", "date": "1831-12-27", "importance": "CRITICAL", "description": "Departs on HMS Beagle expedition" },
+      { "id": "EVT-02", "type": "MARRIAGE", "date": "1839-01-29", "importance": "CRITICAL", "description": "Marriage to Emma Wedgwood" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1859-11-24", "importance": "CRITICAL", "description": "Publication of On the Origin of Species" }
+    ]
+  },
+  {
+    "personId": "RECT-VAL-004",
+    "name": "Sigmund Freud",
+    "sourceReliability": "RODDEN_AA_FAMILY_BIBLE",
+    "trueBirthDate": "1856-05-06",
+    "trueBirthTime": "18:30",
+    "perturbedInputTime": "18:05",
+    "marginMinutes": 45,
+    "lat": 49.5938,
+    "lng": 18.1436,
+    "timezoneId": "Europe/Prague",
+    "utcOffset": 1.2,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1886-09-14", "importance": "CRITICAL", "description": "Marriage to Martha Bernays" },
+      { "id": "EVT-02", "type": "CAREER", "date": "1899-11-04", "importance": "CRITICAL", "description": "Publication of The Interpretation of Dreams" },
+      { "id": "EVT-03", "type": "RELOCATION", "date": "1938-06-04", "importance": "HIGH", "description": "Exile to London" }
+    ]
+  },
+  {
+    "personId": "RECT-VAL-005",
+    "name": "Bill Gates",
+    "sourceReliability": "RODDEN_AA_BIRTH_CERTIFICATE",
+    "trueBirthDate": "1955-10-28",
+    "trueBirthTime": "22:00",
+    "perturbedInputTime": "21:35",
+    "marginMinutes": 45,
+    "lat": 47.6062,
+    "lng": -122.3321,
+    "timezoneId": "America/Los_Angeles",
+    "utcOffset": -8,
+    "events": [
+      { "id": "EVT-01", "type": "CAREER", "date": "1975-04-04", "importance": "CRITICAL", "description": "Co-founds Microsoft" },
+      { "id": "EVT-02", "type": "MARRIAGE", "date": "1994-01-01", "importance": "CRITICAL", "description": "Marriage to Melinda French" },
+      { "id": "EVT-03", "type": "PROGENY", "date": "1996-04-26", "importance": "HIGH", "description": "Birth of daughter Jennifer" }
+    ]
+  }
+]

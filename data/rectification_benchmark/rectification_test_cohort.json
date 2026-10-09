@@ -1,0 +1,92 @@
+[
+  {
+    "personId": "RECT-TEST-001",
+    "name": "Barack Obama",
+    "sourceReliability": "RODDEN_AA_BIRTH_CERTIFICATE",
+    "trueBirthDate": "1961-08-04",
+    "trueBirthTime": "19:24",
+    "perturbedInputTime": "19:48",
+    "marginMinutes": 45,
+    "lat": 21.3069,
+    "lng": -157.8583,
+    "timezoneId": "Pacific/Honolulu",
+    "utcOffset": -10,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1992-10-03", "importance": "CRITICAL", "description": "Marriage to Michelle Robinson" },
+      { "id": "EVT-02", "type": "CAREER", "date": "2008-11-04", "importance": "CRITICAL", "description": "Elected 44th President of the United States" },
+      { "id": "EVT-03", "type": "PROGENY", "date": "1998-07-04", "importance": "HIGH", "description": "Birth of daughter Malia" }
+    ]
+  },
+  {
+    "personId": "RECT-TEST-002",
+    "name": "Mahatma Gandhi",
+    "sourceReliability": "RODDEN_AA_CIVIL_RECORD",
+    "trueBirthDate": "1869-10-02",
+    "trueBirthTime": "07:12",
+    "perturbedInputTime": "06:45",
+    "marginMinutes": 45,
+    "lat": 21.6417,
+    "lng": 69.6293,
+    "timezoneId": "Asia/Kolkata",
+    "utcOffset": 4.64,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1883-05-15", "importance": "CRITICAL", "description": "Marriage to Kasturba Kapadia" },
+      { "id": "EVT-02", "type": "TRAVEL", "date": "1888-09-04", "importance": "HIGH", "description": "Sails for England to study law" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1930-03-12", "importance": "CRITICAL", "description": "Launches Salt March" }
+    ]
+  },
+  {
+    "personId": "RECT-TEST-003",
+    "name": "Steve Jobs",
+    "sourceReliability": "RODDEN_AA_BIRTH_CERTIFICATE",
+    "trueBirthDate": "1955-02-24",
+    "trueBirthTime": "19:15",
+    "perturbedInputTime": "19:40",
+    "marginMinutes": 45,
+    "lat": 37.7749,
+    "lng": -122.4194,
+    "timezoneId": "America/Los_Angeles",
+    "utcOffset": -8,
+    "events": [
+      { "id": "EVT-01", "type": "CAREER", "date": "1976-04-01", "importance": "CRITICAL", "description": "Founding of Apple Computer" },
+      { "id": "EVT-02", "type": "MARRIAGE", "date": "1991-03-18", "importance": "CRITICAL", "description": "Marriage to Laurene Powell" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1997-09-16", "importance": "CRITICAL", "description": "Named interim CEO of Apple" }
+    ]
+  },
+  {
+    "personId": "RECT-TEST-004",
+    "name": "Margaret Thatcher",
+    "sourceReliability": "RODDEN_AA_BIRTH_CERTIFICATE",
+    "trueBirthDate": "1925-10-13",
+    "trueBirthTime": "09:00",
+    "perturbedInputTime": "08:35",
+    "marginMinutes": 45,
+    "lat": 52.9113,
+    "lng": -0.6416,
+    "timezoneId": "Europe/London",
+    "utcOffset": 0,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1951-12-13", "importance": "CRITICAL", "description": "Marriage to Denis Thatcher" },
+      { "id": "EVT-02", "type": "PROGENY", "date": "1953-08-15", "importance": "HIGH", "description": "Birth of twin children" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1979-05-04", "importance": "CRITICAL", "description": "Becomes Prime Minister of the UK" }
+    ]
+  },
+  {
+    "personId": "RECT-TEST-005",
+    "name": "Nelson Mandela",
+    "sourceReliability": "RODDEN_A_AUTOBIOGRAPHY",
+    "trueBirthDate": "1918-07-18",
+    "trueBirthTime": "14:54",
+    "perturbedInputTime": "14:25",
+    "marginMinutes": 50,
+    "lat": -31.9842,
+    "lng": 28.5085,
+    "timezoneId": "Africa/Johannesburg",
+    "utcOffset": 2,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1958-06-14", "importance": "CRITICAL", "description": "Marriage to Winnie Madikizela" },
+      { "id": "EVT-02", "type": "LEGAL", "date": "1964-06-12", "importance": "CRITICAL", "description": "Sentenced to life imprisonment (Rivonia)" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1994-05-10", "importance": "CRITICAL", "description": "Inaugurated President of South Africa" }
+    ]
+  }
+]

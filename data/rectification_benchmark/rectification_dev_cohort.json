@@ -1,0 +1,93 @@
+[
+  {
+    "personId": "RECT-DEV-001",
+    "name": "Queen Victoria",
+    "sourceReliability": "RODDEN_AA_CIVIL_RECORD",
+    "trueBirthDate": "1819-05-24",
+    "trueBirthTime": "04:15",
+    "perturbedInputTime": "04:40",
+    "marginMinutes": 45,
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "timezoneId": "Europe/London",
+    "utcOffset": 0,
+    "events": [
+      { "id": "EVT-01", "type": "CAREER", "date": "1837-06-20", "importance": "CRITICAL", "description": "Accession to the throne" },
+      { "id": "EVT-02", "type": "MARRIAGE", "date": "1840-02-10", "importance": "CRITICAL", "description": "Marriage to Prince Albert" },
+      { "id": "EVT-03", "type": "PROGENY", "date": "1840-11-21", "importance": "HIGH", "description": "Birth of first child" },
+      { "id": "EVT-04", "type": "BEREAVEMENT", "date": "1861-12-14", "importance": "HIGH", "description": "Death of Prince Albert" }
+    ]
+  },
+  {
+    "personId": "RECT-DEV-002",
+    "name": "Winston Churchill",
+    "sourceReliability": "RODDEN_AA_OFFICIAL_DOCUMENT",
+    "trueBirthDate": "1874-11-30",
+    "trueBirthTime": "01:30",
+    "perturbedInputTime": "01:50",
+    "marginMinutes": 40,
+    "lat": 51.8447,
+    "lng": -1.3582,
+    "timezoneId": "Europe/London",
+    "utcOffset": 0,
+    "events": [
+      { "id": "EVT-01", "type": "EDUCATION", "date": "1893-09-01", "importance": "HIGH", "description": "Entered Royal Military College" },
+      { "id": "EVT-02", "type": "MARRIAGE", "date": "1908-09-12", "importance": "CRITICAL", "description": "Marriage to Clementine Hozier" },
+      { "id": "EVT-03", "type": "CAREER", "date": "1940-05-10", "importance": "CRITICAL", "description": "Appointed Prime Minister" }
+    ]
+  },
+  {
+    "personId": "RECT-DEV-003",
+    "name": "Indira Gandhi",
+    "sourceReliability": "RODDEN_AA_CIVIL_RECORD",
+    "trueBirthDate": "1917-11-19",
+    "trueBirthTime": "23:11",
+    "perturbedInputTime": "22:45",
+    "marginMinutes": 45,
+    "lat": 25.4358,
+    "lng": 81.8463,
+    "timezoneId": "Asia/Kolkata",
+    "utcOffset": 5.5,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1942-03-26", "importance": "CRITICAL", "description": "Marriage to Feroze Gandhi" },
+      { "id": "EVT-02", "type": "CAREER", "date": "1966-01-24", "importance": "CRITICAL", "description": "Sworn in as Prime Minister of India" },
+      { "id": "EVT-03", "type": "BEREAVEMENT", "date": "1960-09-08", "importance": "HIGH", "description": "Death of husband" }
+    ]
+  },
+  {
+    "personId": "RECT-DEV-004",
+    "name": "Albert Einstein",
+    "sourceReliability": "RODDEN_AA_BIRTH_CERTIFICATE",
+    "trueBirthDate": "1879-03-14",
+    "trueBirthTime": "11:30",
+    "perturbedInputTime": "11:05",
+    "marginMinutes": 45,
+    "lat": 48.4011,
+    "lng": 9.9876,
+    "timezoneId": "Europe/Berlin",
+    "utcOffset": 0.665,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1903-01-06", "importance": "CRITICAL", "description": "Marriage to Mileva Maric" },
+      { "id": "EVT-02", "type": "CAREER", "date": "1905-09-26", "importance": "CRITICAL", "description": "Special Theory of Relativity published" },
+      { "id": "EVT-03", "type": "HONOUR", "date": "1922-11-09", "importance": "HIGH", "description": "Awarded Nobel Prize in Physics" }
+    ]
+  },
+  {
+    "personId": "RECT-DEV-005",
+    "name": "Marie Curie",
+    "sourceReliability": "RODDEN_AA_OFFICIAL_REGISTRY",
+    "trueBirthDate": "1867-11-07",
+    "trueBirthTime": "12:00",
+    "perturbedInputTime": "12:25",
+    "marginMinutes": 40,
+    "lat": 52.2297,
+    "lng": 21.0122,
+    "timezoneId": "Europe/Warsaw",
+    "utcOffset": 1.4,
+    "events": [
+      { "id": "EVT-01", "type": "MARRIAGE", "date": "1895-07-26", "importance": "CRITICAL", "description": "Marriage to Pierre Curie" },
+      { "id": "EVT-02", "type": "HONOUR", "date": "1903-12-10", "importance": "CRITICAL", "description": "Nobel Prize in Physics awarded" },
+      { "id": "EVT-03", "type": "BEREAVEMENT", "date": "1906-04-19", "importance": "HIGH", "description": "Death of Pierre Curie" }
+    ]
+  }
+]

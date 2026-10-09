@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Camera, RefreshCw, Eye, Sparkles, CheckCircle2, Sliders, AlertTriangle, Upload, X } from "lucide-react";
-import { analyzePalmTelemetry, MAJOR_LINES } from "../../services/palmistryEngine";
+import { analyzePalmTelemetry, analyzePalmImage, MAJOR_LINES, PALM_MOUNTS } from "../../services/palmistryEngine";
 import { TRANSLATIONS } from "../../services/localization";
 
 export default function CameraCapture({ onScanComplete, lang = "en" }) {
@@ -12,6 +12,9 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
   const [scanProgress, setScanProgress] = useState(0);
   const [handSide, setHandSide] = useState("right");
   const [cameraError, setCameraError] = useState("");
+  const [insufficientEvidence, setInsufficientEvidence] = useState(null);
+  const [userCorrections, setUserCorrections] = useState({});
+  const [visionTelemetry, setVisionTelemetry] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [activeLineTab, setActiveLineTab] = useState("heart");
   const [showConsentModal, setShowConsentModal] = useState(false);
@@ -79,94 +82,46 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
 
   const [opticalTelemetry, setOpticalTelemetry] = useState(null);
 
-  const analyzeCanvasOpticalProperties = (canvas) => {
+  const analyzeCanvasVision = (canvas) => {
     try {
-      const ctx = canvas.getContext("2d");
-      const width = canvas.width;
-      const height = canvas.height;
-      if (!ctx || width === 0 || height === 0) return null;
-
-      // Sample central 50% quadrant of the palm (where major creases lie)
-      const startX = Math.floor(width * 0.25);
-      const startY = Math.floor(height * 0.25);
-      const w = Math.floor(width * 0.5);
-      const h = Math.floor(height * 0.5);
-
-      const imgData = ctx.getImageData(startX, startY, w, h);
-      const data = imgData.data;
-      let totalLuminance = 0;
-      const grayPixels = new Float32Array(w * h);
-
-      for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-        // Standard Rec. 601 Luma
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        grayPixels[p] = lum;
-        totalLuminance += lum;
+      const vision = analyzePalmImage(canvas, handSide, userCorrections);
+      if (vision.status === "INSUFFICIENT_VISUAL_EVIDENCE") {
+        setInsufficientEvidence(vision);
+        setVisionTelemetry(null);
+        setOpticalTelemetry(null);
+        return null;
       }
-      const avgLuminance = totalLuminance / (w * h);
-
-      // Variance & contrast
-      let varianceSum = 0;
-      for (let p = 0; p < grayPixels.length; p++) {
-        varianceSum += (grayPixels[p] - avgLuminance) ** 2;
-      }
-      const variance = varianceSum / (w * h);
-      const stdDev = Math.sqrt(variance);
-
-      // Simple horizontal/vertical gradient energy for palm crease edge density
-      let edgeEnergy = 0;
-      let edgeSamples = 0;
-      for (let y = 1; y < h - 1; y += 2) {
-        for (let x = 1; x < w - 1; x += 2) {
-          const idx = y * w + x;
-          const gx = grayPixels[idx + 1] - grayPixels[idx - 1];
-          const gy = grayPixels[idx + w] - grayPixels[idx - w];
-          const grad = Math.abs(gx) + Math.abs(gy);
-          if (grad > 25) {
-            edgeEnergy += grad;
-            edgeSamples++;
-          }
-        }
-      }
-      const edgeDensity = edgeSamples / ((w * h) / 4);
-
-      // Calibrate realistic confidence scores between 65% and 94% based on optical clarity
-      const baseConfidence = Math.min(94, Math.max(65, Math.round(50 + (stdDev * 0.4) + (edgeDensity * 120))));
-      const heartConfidence = Math.min(96, Math.max(62, Math.round(baseConfidence + ((edgeEnergy % 7) - 3))));
-      const headConfidence = Math.min(95, Math.max(60, Math.round(baseConfidence + (((edgeEnergy * 3) % 9) - 4))));
-      const lifeConfidence = Math.min(97, Math.max(65, Math.round(baseConfidence + (((edgeEnergy * 7) % 8) - 3))));
-      const fateConfidence = Math.min(92, Math.max(58, Math.round(baseConfidence + (((edgeEnergy * 11) % 10) - 5))));
-
-      return {
-        luminance: Math.round(avgLuminance),
-        contrast: Math.round(stdDev),
-        edgeDensity: Number(edgeDensity.toFixed(3)),
-        lineConfidence: {
-          heart: heartConfidence,
-          head: headConfidence,
-          life: lifeConfidence,
-          fate: fateConfidence
-        }
+      setInsufficientEvidence(null);
+      setVisionTelemetry(vision);
+      const tele = {
+        luminance: vision.qualityMetrics?.meanLuminance || 128,
+        contrast: vision.qualityMetrics?.contrast || 40,
+        edgeDensity: vision.candidateCreasesCount || 0,
+        lineConfidence: vision.lineDetectionConfidence || {},
+        imageQualityScore: vision.imageQualityScore,
+        landmarkDetectionConfidence: vision.landmarkDetectionConfidence
       };
+      setOpticalTelemetry(tele);
+      return { vision, tele };
     } catch (e) {
-      console.warn("Optical canvas analysis error:", e);
+      console.warn("Vision canvas analysis error:", e);
       return null;
     }
   };
 
   const loadSamplePalmImage = () => {
     setCapturedImage("sample");
+    setInsufficientEvidence(null);
     const baselineTelemetry = {
       luminance: 128,
       contrast: 42,
-      edgeDensity: 0.185,
-      lineConfidence: { heart: 82, head: 85, life: 88, fate: 79 }
+      edgeDensity: 18,
+      lineConfidence: { heart: 80, head: 82, life: 85, fate: null },
+      imageQualityScore: 82,
+      landmarkDetectionConfidence: 86
     };
     setOpticalTelemetry(baselineTelemetry);
-    simulateScanning(baselineTelemetry);
+    simulateScanning(baselineTelemetry, null);
   };
 
   const handleFileUpload = (e) => {
@@ -178,7 +133,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
       setCapturedImage(dataUrl);
       stopCamera();
 
-      // Analyze optical properties from uploaded image using offscreen canvas
+      // Analyze vision properties from uploaded image using offscreen canvas
       const img = new Image();
       img.onload = () => {
         const offCanvas = document.createElement("canvas");
@@ -186,9 +141,10 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         offCanvas.height = img.height || 480;
         const ctx = offCanvas.getContext("2d");
         ctx.drawImage(img, 0, 0, offCanvas.width, offCanvas.height);
-        const opticalData = analyzeCanvasOpticalProperties(offCanvas);
-        setOpticalTelemetry(opticalData);
-        simulateScanning(opticalData);
+        const data = analyzeCanvasVision(offCanvas);
+        if (data) {
+          simulateScanning(data.tele, data.vision);
+        }
       };
       img.src = dataUrl;
     };
@@ -207,12 +163,13 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
     setCapturedImage(dataUrl);
     stopCamera();
 
-    const opticalData = analyzeCanvasOpticalProperties(canvas);
-    setOpticalTelemetry(opticalData);
-    simulateScanning(opticalData);
+    const data = analyzeCanvasVision(canvas);
+    if (data) {
+      simulateScanning(data.tele, data.vision);
+    }
   };
 
-  const simulateScanning = (opticalData = null) => {
+  const simulateScanning = (teleData = null, visionData = null) => {
     setScanning(true);
     setScanProgress(10);
     const interval = setInterval(() => {
@@ -220,9 +177,15 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         if (prev >= 100) {
           clearInterval(interval);
           setScanning(false);
-          const results = analyzePalmTelemetry(handSide, opticalData?.lineConfidence || {});
-          if (opticalData) {
-            results.opticalMeasurements = opticalData;
+          const results = analyzePalmTelemetry(handSide, teleData?.lineConfidence || {}, {
+            imageQualityScore: teleData?.imageQualityScore,
+            landmarkDetectionConfidence: teleData?.landmarkDetectionConfidence
+          });
+          if (teleData) {
+            results.opticalMeasurements = teleData;
+          }
+          if (visionData) {
+            results.visionPipeline = visionData;
           }
           onScanComplete(results);
           return 100;
@@ -270,6 +233,27 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
           <span>Contrast: <strong>{opticalTelemetry.contrast}</strong></span>
           <span>Crease Edge Density: <strong>{opticalTelemetry.edgeDensity}</strong></span>
           <span className="text-emerald-700 font-bold">Telemetry: Active</span>
+        </div>
+      )}
+
+      {/* Insufficient Evidence Warning Banner */}
+      {insufficientEvidence && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-stone-800 text-xs space-y-2 shadow-xs">
+          <div className="flex items-center gap-2 font-bold text-amber-950">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              {isTamil
+                ? "போதுமான காட்சி ஆதாரம் கிடைக்கவில்லை (INSUFFICIENT_VISUAL_EVIDENCE)"
+                : "Insufficient Visual Evidence (INSUFFICIENT_VISUAL_EVIDENCE)"}
+            </span>
+          </div>
+          <p className="text-stone-700 leading-relaxed">{insufficientEvidence.message}</p>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-stone-600 bg-amber-100/60 px-3 py-1.5 rounded-lg border border-amber-200">
+            <span>Status: <strong>{insufficientEvidence.failureReason}</strong></span>
+            {insufficientEvidence.qualityMetrics && (
+              <span>Quality Score: <strong>{insufficientEvidence.imageQualityScore}/100</strong></span>
+            )}
+          </div>
         </div>
       )}
 
@@ -515,6 +499,29 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
                     />
                   </div>
                   <p className="text-[11px] text-stone-600 truncate">{line.description}</p>
+                  <div className="mt-2 pt-2 border-t border-amber-200 flex items-center justify-between">
+                    <span className="text-[10px] text-stone-500 font-mono">
+                      {userCorrections[line.id]
+                        ? "User Corrected"
+                        : (visionTelemetry?.lines?.[line.id]?.detected ? "Detected" : "Unresolved")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const isCurrent = userCorrections[line.id]?.detected ?? visionTelemetry?.lines?.[line.id]?.detected ?? true;
+                        setUserCorrections(prev => ({
+                          ...prev,
+                          [line.id]: { detected: !isCurrent, confidence: !isCurrent ? 90 : null }
+                        }));
+                      }}
+                      className="text-[10px] px-2 py-0.5 rounded bg-amber-200 hover:bg-amber-300 font-semibold text-amber-900 cursor-pointer"
+                    >
+                      {(userCorrections[line.id]?.detected ?? visionTelemetry?.lines?.[line.id]?.detected ?? true)
+                        ? (isTamil ? "ரேகை இல்லை" : "Mark Absent")
+                        : (isTamil ? "ரேகை உள்ளது" : "Mark Present")}
+                    </button>
+                  </div>
                 </button>
               );
             })}

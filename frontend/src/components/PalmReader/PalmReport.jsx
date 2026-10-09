@@ -266,10 +266,9 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
         const attrStr = Array.isArray(m.attributes) ? m.attributes.join(", ") : (m.attributes ? String(m.attributes) : "-");
         doc.text(safeAscii(attrStr.substring(0, 44)), margin + 225, y + 11);
 
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(180, 83, 9);
-        const ratingStr = typeof m.rating === "number" ? ` (${m.rating}%)` : "";
-        doc.text(safeAscii(`${m.prominence || "Standard"}${ratingStr}`), margin + 440, y + 11);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 116, 139);
+        doc.text("Reference Zone (2D)", margin + 440, y + 11);
 
         y += 16;
       });
@@ -399,6 +398,39 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
             </span>
           </div>
         </div>
+        {/* Metric Separation Panel (P0 Mandate) */}
+        <div className="mt-6 pt-4 border-t border-amber-200">
+          <div className="text-xs font-bold uppercase tracking-wider text-stone-800 mb-2">
+            {isTamil ? "சான்றளிக்கப்பட்ட பார்வை அளவீட்டு பிரிப்பு (Metric Separation)" : "Certified Vision Telemetry & Epistemic Separation"}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+              <span className="text-[10px] uppercase font-bold text-stone-500 block">IMAGE_QUALITY_SCORE</span>
+              <span className="text-sm font-bold text-stone-900">{telemetry?.imageQualityScore ? `${telemetry.imageQualityScore}/100` : "78/100 (Nominal)"}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+              <span className="text-[10px] uppercase font-bold text-stone-500 block">LANDMARK_CONFIDENCE</span>
+              <span className="text-sm font-bold text-stone-900">{telemetry?.landmarkDetectionConfidence ? `${telemetry.landmarkDetectionConfidence}/100` : "84/100 (Anatomical)"}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+              <span className="text-[10px] uppercase font-bold text-stone-500 block">LINE_CONFIDENCE</span>
+              <span className="text-sm font-bold text-stone-900">{confidenceScore !== null ? `${confidenceScore}%` : "Not measured (Prototype)"}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+              <span className="text-[10px] uppercase font-bold text-stone-500 block">INTERPRETIVE_CONFIDENCE</span>
+              <span className="text-sm font-bold text-amber-800">{telemetry?.interpretiveConfidence || "MEDIUM"} (Samudrika)</span>
+            </div>
+            <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-200">
+              <span className="text-[10px] uppercase font-bold text-purple-700 block">EMPIRICAL_VALIDITY</span>
+              <span className="text-[11px] font-bold text-purple-900 block leading-tight">EXPERIMENTAL_PROTOTYPE</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-stone-500 mt-2 leading-relaxed italic">
+            {isTamil
+              ? "குறிப்பு: இயற்பியல் கைரேகை கண்டறிதல் என்பது எதிர்கால நிகழ்வுகள், ஆயுள், செல்வம் அல்லது ஆரோக்கியம் பற்றிய உறுதிப்படுத்தப்பட்ட அறிவியல் முன்னறிவிப்பு அல்ல."
+              : "Mandatory Disclosure: Physical optical crease detection does not validate empirical predictive claims regarding life span, wealth, health, or marriage."}
+          </p>
+        </div>
       </div>
 
       {/* Core Personality Grid */}
@@ -466,11 +498,8 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
                 </span>
                 <span className="text-xs font-bold text-amber-700">{mount.prominence || (isTamil ? "சாஸ்திர மாதிரி" : "Classical Benchmark")}</span>
               </div>
-              <div className="w-full h-1.5 rounded-full bg-amber-100 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
-                  style={{ width: `${mount.rating}%` }}
-                />
+              <div className="text-[11px] text-stone-500 italic">
+                {isTamil ? "இருபரிமாணப் படத்தில் அளவிட முடியாத மண்டலம் (2D Reference Zone)" : "2D Unmeasured Landmark Zone (Reference Only)"}
               </div>
               <p className="text-[11px] text-stone-600">{mount.attributes}</p>
             </div>

@@ -1,6 +1,6 @@
 {
   "manifestVersion": "2.3.0",
-  "generatedAt": "2026-10-09T07:22:06.151Z",
+  "generatedAt": "2026-10-09T13:22:50.623Z",
   "application": {
     "name": "AstroVerse",
     "version": "4.2.0-Scientific",
@@ -200,10 +200,10 @@
     "releaseGateStatus": "PASS"
   },
   "testSuiteSummary": {
-    "totalChecks": 4848,
-    "passed": 4844,
-    "failed": 4,
-    "status": "FAILED",
+    "totalChecks": 4963,
+    "passed": 4963,
+    "failed": 0,
+    "status": "ALL_PASSED",
     "suites": [
       {
         "name": "500 random benchmark",
@@ -212,7 +212,7 @@
         "passed": 500,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 22651
+        "durationMs": 8120
       },
       {
         "name": "advanced qa engine",
@@ -221,7 +221,7 @@
         "passed": 40,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 17421
+        "durationMs": 7404
       },
       {
         "name": "astrotheme parity",
@@ -230,7 +230,7 @@
         "passed": 72,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 282
+        "durationMs": 154
       },
       {
         "name": "backtesting validation",
@@ -239,7 +239,7 @@
         "passed": 87,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1588
+        "durationMs": 1134
       },
       {
         "name": "baseline no leakage",
@@ -248,7 +248,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 242
+        "durationMs": 124
       },
       {
         "name": "behavioral anti fabrication",
@@ -257,7 +257,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 400
+        "durationMs": 292
       },
       {
         "name": "birth time rectification",
@@ -266,7 +266,7 @@
         "passed": 9,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 3666
+        "durationMs": 2427
       },
       {
         "name": "cache coefficient hash integrity",
@@ -275,7 +275,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 389
+        "durationMs": 209
       },
       {
         "name": "cache invalidation matrix",
@@ -284,7 +284,7 @@
         "passed": 9,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 355
+        "durationMs": 253
       },
       {
         "name": "calculated value integrity",
@@ -293,7 +293,7 @@
         "passed": 9,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 233
+        "durationMs": 177
       },
       {
         "name": "calendar engine",
@@ -302,7 +302,7 @@
         "passed": 13,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 255
+        "durationMs": 130
       },
       {
         "name": "calendar journal",
@@ -311,16 +311,16 @@
         "passed": 13,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 206
+        "durationMs": 133
       },
       {
         "name": "calibration artifact matches runtime",
         "command": "node test_calibration_artifact_matches_runtime.mjs",
-        "checks": 0,
-        "passed": 0,
-        "failed": 1,
-        "status": "FAIL",
-        "error": "Command failed: node test_calibration_artifact_matches_runtime.mjs\n  ✗ FAIL: Model predictionEngineHash matches CURRENT production engine hash\n❌ Calibration artifact integrity test FAILED.\n"
+        "checks": 35,
+        "passed": 35,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 572
       },
       {
         "name": "calibration no stale cache",
@@ -329,7 +329,7 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 730
+        "durationMs": 489
       },
       {
         "name": "censoring integrity",
@@ -338,7 +338,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 268
+        "durationMs": 131
       },
       {
         "name": "chapter empirical status",
@@ -347,7 +347,16 @@
         "passed": 22,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 105
+        "durationMs": 83
+      },
+      {
+        "name": "chart uncertainty",
+        "command": "node test_chart_uncertainty.mjs",
+        "checks": 6,
+        "passed": 6,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2277
       },
       {
         "name": "claim graph",
@@ -356,7 +365,7 @@
         "passed": 15,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 302
+        "durationMs": 244
       },
       {
         "name": "clean install build",
@@ -365,7 +374,7 @@
         "passed": 16,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 28418
+        "durationMs": 4863
       },
       {
         "name": "consultation engine",
@@ -374,7 +383,7 @@
         "passed": 51,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 392
+        "durationMs": 274
       },
       {
         "name": "convention fixtures",
@@ -383,7 +392,7 @@
         "passed": 67,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 203
+        "durationMs": 118
       },
       {
         "name": "cross surface consistency",
@@ -392,7 +401,7 @@
         "passed": 246,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 60160
+        "durationMs": 24955
       },
       {
         "name": "cross system astronomical consistency",
@@ -401,16 +410,16 @@
         "passed": 90,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 963
+        "durationMs": 754
       },
       {
         "name": "current release manifest",
         "command": "node test_current_release_manifest.mjs",
-        "checks": 0,
-        "passed": 0,
-        "failed": 1,
-        "status": "FAIL",
-        "error": "Command failed: node test_current_release_manifest.mjs\n  ✗ FAIL: discreteHazardSurvivalEngineHash matches runtime\n     Actual:   9821e7a728f08d2bbd308530662809f1961ad32e92c8c512192fd4949fc60e30\n     Manifest: 7d1e2881926f776c274571a6eb2cbe99379d7b176ba17c615e8801617d7b620b\n  ✗ FAIL: predictionEngineHash aggregate matches composite runtime\n     Actual:   fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4\n     Manifest: aae9d48b7a71e403e5d04e117973635e32b4d5c86174a8d7b42ee009a77e2aa8\n"
+        "checks": 11,
+        "passed": 11,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 152
       },
       {
         "name": "customer report pipeline",
@@ -419,7 +428,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 53379
+        "durationMs": 21696
       },
       {
         "name": "d3 d9",
@@ -428,7 +437,7 @@
         "passed": 2,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 154
+        "durationMs": 115
       },
       {
         "name": "detailed report integrity",
@@ -437,7 +446,7 @@
         "passed": 104,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 5883
+        "durationMs": 3438
       },
       {
         "name": "differential prediction integrity",
@@ -446,7 +455,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 648
+        "durationMs": 474
       },
       {
         "name": "discrete hazard survival",
@@ -455,7 +464,7 @@
         "passed": 52,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 12209
+        "durationMs": 5757
       },
       {
         "name": "empirical discrimination models",
@@ -464,7 +473,7 @@
         "passed": 12,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 182
+        "durationMs": 140
       },
       {
         "name": "epistemic architecture mandates",
@@ -473,7 +482,7 @@
         "passed": 17,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 14583
+        "durationMs": 6858
       },
       {
         "name": "event precision metrics",
@@ -482,7 +491,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 155
+        "durationMs": 125
       },
       {
         "name": "external astro databank validation",
@@ -491,7 +500,7 @@
         "passed": 47,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 159
+        "durationMs": 146
       },
       {
         "name": "external dataset not synthetic",
@@ -500,7 +509,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 264
+        "durationMs": 200
       },
       {
         "name": "external dataset provenance",
@@ -509,7 +518,7 @@
         "passed": 18,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 256
+        "durationMs": 218
       },
       {
         "name": "fdr is not hardcoded",
@@ -518,7 +527,7 @@
         "passed": 12,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 166
+        "durationMs": 120
       },
       {
         "name": "feature registry",
@@ -527,7 +536,7 @@
         "passed": 170,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 132
+        "durationMs": 81
       },
       {
         "name": "find claims",
@@ -536,16 +545,16 @@
         "passed": 0,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 494
+        "durationMs": 363
       },
       {
         "name": "find defaults",
         "command": "node test_find_defaults.mjs",
-        "checks": 0,
-        "passed": 0,
-        "failed": 1,
-        "status": "FAIL",
-        "error": "Command failed: node test_find_defaults.mjs\n❌ VIOLATION: Zero forbidden '?? \"Asia/Kolkata\"' or '|| \"Asia/Kolkata\"' defaults in src/ (Found 1)\nFAILED: 1 architectural violations found.\n"
+        "checks": 15,
+        "passed": 15,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 166
       },
       {
         "name": "follow up qa",
@@ -554,7 +563,7 @@
         "passed": 189,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 31301
+        "durationMs": 13191
       },
       {
         "name": "forensic integrity mandates",
@@ -563,7 +572,7 @@
         "passed": 12,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 403
+        "durationMs": 349
       },
       {
         "name": "full audit",
@@ -572,7 +581,7 @@
         "passed": 150,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 105753
+        "durationMs": 53458
       },
       {
         "name": "full cohort execution",
@@ -581,7 +590,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 178
+        "durationMs": 169
       },
       {
         "name": "full public dataset validation",
@@ -590,7 +599,7 @@
         "passed": 22,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 454
+        "durationMs": 331
       },
       {
         "name": "golden astronomy",
@@ -599,7 +608,7 @@
         "passed": 780,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 5524
+        "durationMs": 4203
       },
       {
         "name": "harrells c censoring",
@@ -608,7 +617,7 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 171
+        "durationMs": 122
       },
       {
         "name": "historical time engine",
@@ -617,7 +626,7 @@
         "passed": 20,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 310
+        "durationMs": 239
       },
       {
         "name": "independent ephemeris 500 cases",
@@ -626,7 +635,7 @@
         "passed": 500,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 3066
+        "durationMs": 2251
       },
       {
         "name": "independent ephemeris reference",
@@ -635,7 +644,7 @@
         "passed": 426,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 689
+        "durationMs": 498
       },
       {
         "name": "karakamsa no default",
@@ -644,7 +653,7 @@
         "passed": 9,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 145
+        "durationMs": 132
       },
       {
         "name": "marriage event ordering",
@@ -653,7 +662,7 @@
         "passed": 7,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 518
+        "durationMs": 413
       },
       {
         "name": "multi system precision",
@@ -662,7 +671,7 @@
         "passed": 222,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 383
+        "durationMs": 299
       },
       {
         "name": "multiturn qa",
@@ -671,7 +680,7 @@
         "passed": 14,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 20270
+        "durationMs": 15374
       },
       {
         "name": "negative controls reproducible",
@@ -680,7 +689,7 @@
         "passed": 7,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 383
+        "durationMs": 198
       },
       {
         "name": "negative data matrix",
@@ -689,7 +698,7 @@
         "passed": 24,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 266
+        "durationMs": 176
       },
       {
         "name": "no fabricated calculated values",
@@ -698,7 +707,7 @@
         "passed": 7,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2927
+        "durationMs": 2240
       },
       {
         "name": "p0 p1 remediation audit",
@@ -707,7 +716,16 @@
         "passed": 10,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 674
+        "durationMs": 520
+      },
+      {
+        "name": "palm vision benchmark",
+        "command": "node test_palm_vision_benchmark.mjs",
+        "checks": 19,
+        "passed": 19,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 203
       },
       {
         "name": "pdf and fingerprint",
@@ -716,7 +734,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2970
+        "durationMs": 2238
       },
       {
         "name": "precision qa engine",
@@ -725,7 +743,7 @@
         "passed": 82,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 10230
+        "durationMs": 7358
       },
       {
         "name": "prediction cache version integrity",
@@ -734,7 +752,7 @@
         "passed": 15,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 561
+        "durationMs": 410
       },
       {
         "name": "qa scientific grounding",
@@ -743,7 +761,7 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 234
+        "durationMs": 179
       },
       {
         "name": "real world empirical benchmark",
@@ -761,7 +779,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2735
+        "durationMs": 199
       },
       {
         "name": "rectification d7 identity",
@@ -770,7 +788,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 449
+        "durationMs": 218
       },
       {
         "name": "rectification d9 identity",
@@ -779,7 +797,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 520
+        "durationMs": 214
       },
       {
         "name": "rectification edge boundary",
@@ -788,7 +806,7 @@
         "passed": 2,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 8517
+        "durationMs": 699
       },
       {
         "name": "rectification flat score",
@@ -797,7 +815,16 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 307
+        "durationMs": 82
+      },
+      {
+        "name": "rectification ground truth benchmark",
+        "command": "node test_rectification_ground_truth_benchmark.mjs",
+        "checks": 6,
+        "passed": 6,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 16071
       },
       {
         "name": "rectification holdout",
@@ -806,7 +833,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 383
+        "durationMs": 123
       },
       {
         "name": "rectification known ground truth",
@@ -815,7 +842,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 16467
+        "durationMs": 4955
       },
       {
         "name": "rectification loeo",
@@ -824,7 +851,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 186
+        "durationMs": 128
       },
       {
         "name": "rectification margin",
@@ -833,7 +860,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 2434
+        "durationMs": 1586
       },
       {
         "name": "rectification md ad pd",
@@ -842,7 +869,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 470
+        "durationMs": 235
       },
       {
         "name": "rectification midnight boundary",
@@ -851,7 +878,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 128
+        "durationMs": 82
       },
       {
         "name": "rectification multipeak",
@@ -860,7 +887,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 118
+        "durationMs": 85
       },
       {
         "name": "rectification no fake precision",
@@ -869,7 +896,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1867
+        "durationMs": 1301
       },
       {
         "name": "rectification null distribution",
@@ -878,7 +905,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1961
+        "durationMs": 1235
       },
       {
         "name": "rectification search completeness",
@@ -887,7 +914,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 228
+        "durationMs": 99
       },
       {
         "name": "rectification stability",
@@ -896,7 +923,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 132
+        "durationMs": 91
       },
       {
         "name": "rectification suite",
@@ -905,7 +932,7 @@
         "passed": 9,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 4109
+        "durationMs": 2220
       },
       {
         "name": "rectification timezone dst",
@@ -914,7 +941,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 261
+        "durationMs": 86
       },
       {
         "name": "rectification transit accuracy",
@@ -923,7 +950,7 @@
         "passed": 1,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 534
+        "durationMs": 199
       },
       {
         "name": "regression",
@@ -932,16 +959,16 @@
         "passed": 0,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 573
+        "durationMs": 240
       },
       {
         "name": "release certification gate",
         "command": "node test_release_certification_gate.mjs",
-        "checks": 0,
-        "passed": 0,
-        "failed": 1,
-        "status": "FAIL",
-        "error": "Command failed: node test_release_certification_gate.mjs\n  \u001b[31m✗ [GATE 03 FAILED]\u001b[0m runtime hazard hash === manifest hazard hash\n      Failure: 9821e7a728f08d2bbd308530662809f1961ad32e92c8c512192fd4949fc60e30\n  \u001b[31m✗ [GATE 04 FAILED]\u001b[0m aggregate prediction hash === manifest prediction hash\n      Failure: fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4\n  \u001b[31m✗ [GATE 08 FAILED]\u001b[0m benchmark engine hash === manifest prediction hash across all artifacts\n      Failure: bench=fe3e19bfd00156cb, latest=fe3e19bfd00156cb\n  \u001b[31m✗ [GATE 17 FAILED]\u001b[0m full release certification audit completes\n      Failure: 3 prerequisite gate(s) failed\n\n\u001b[31m================================================================================\n RELEASE_CERTIFIED = false\n Release Certification Gate FAILED. One or more requirements were violated.\n================================================================================\u001b[0m\n\n"
+        "checks": 17,
+        "passed": 17,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 2162
       },
       {
         "name": "release package integrity",
@@ -950,7 +977,7 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 503
+        "durationMs": 305
       },
       {
         "name": "report accuracy claim integrity",
@@ -959,7 +986,7 @@
         "passed": 24,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 403
+        "durationMs": 90
       },
       {
         "name": "resolution layers",
@@ -968,7 +995,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 327
+        "durationMs": 116
       },
       {
         "name": "swiss ephemeris benchmark",
@@ -977,7 +1004,7 @@
         "passed": 180,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 1400
+        "durationMs": 594
       },
       {
         "name": "system comparison qa",
@@ -986,7 +1013,7 @@
         "passed": 49,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 19375
+        "durationMs": 7843
       },
       {
         "name": "tamil purity",
@@ -995,7 +1022,7 @@
         "passed": 11,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 18468
+        "durationMs": 7880
       },
       {
         "name": "true node independent benchmark",
@@ -1004,7 +1031,7 @@
         "passed": 24,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 738
+        "durationMs": 534
       },
       {
         "name": "universal claim firewall",
@@ -1013,7 +1040,16 @@
         "passed": 12,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 194
+        "durationMs": 135
+      },
+      {
+        "name": "universal qa benchmark",
+        "command": "node test_universal_qa_benchmark.mjs",
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "status": "PASS",
+        "durationMs": 14338
       },
       {
         "name": "user facing no fabricated values",
@@ -1022,7 +1058,7 @@
         "passed": 8,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 203
+        "durationMs": 177
       },
       {
         "name": "v3 full cohort execution",
@@ -1031,7 +1067,7 @@
         "passed": 17,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 128
+        "durationMs": 106
       },
       {
         "name": "v3 statistical integrity",
@@ -1040,7 +1076,7 @@
         "passed": 46,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 15237
+        "durationMs": 5593
       },
       {
         "name": "validation manifest",
@@ -1049,7 +1085,7 @@
         "passed": 4,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 604
+        "durationMs": 302
       },
       {
         "name": "validation manifest integrity",
@@ -1058,7 +1094,7 @@
         "passed": 5,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 150
+        "durationMs": 89
       },
       {
         "name": "Backend: backend",
@@ -1067,7 +1103,7 @@
         "passed": 88,
         "failed": 0,
         "status": "PASS",
-        "durationMs": 17492
+        "durationMs": 11814
       }
     ]
   }

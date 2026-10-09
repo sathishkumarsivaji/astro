@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA). No overlap was detected under the preregistered exact-name/birth-date and normalized-name linkage rules. Residual linkage risk from aliases or unresolved identity variants cannot be completely excluded.
 - **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4`) and calibration model SHA-256 hash (`9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4`) and calibration model SHA-256 hash (`f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -115,7 +115,7 @@ Every cached prediction entry contains:
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
   "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
-  "calibrationModelHash": "9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790",
+  "calibrationModelHash": "f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -324,7 +324,7 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
 | **Prediction Engine Hash** | `fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4` |
-| **Calibration Model Hash** | `9cb754db3d2482d59745f8905538e86dd2213bc97005a9106a14e590bc311790` |
+| **Calibration Model Hash** | `f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
@@ -332,4 +332,4 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
 | **Benchmark Code Hash** | `aaa0bb0677fe1d0edf2dfc865518eb1b07510a729780898e8a6c366ffbd6251a` |
-| **Artifact Generation Timestamp** | `2026-10-09T07:23:06.312Z` |
+| **Artifact Generation Timestamp** | `2026-10-09T12:29:45.573Z` |

@@ -406,8 +406,13 @@ export function runBirthTimeRectification({
     metrics.peakMemoryMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
   }
 
+  const canonicalResolution = resolution === "INTERVAL_RESOLUTION" ? "CANDIDATE_INTERVAL" : resolution;
+
   return {
     status: "SUCCESS",
+    scientificStatus: "EXPERIMENTAL_BIRTH_TIME_RECTIFICATION",
+    experimentalStatus: "EXPERIMENTAL_BIRTH_TIME_RECTIFICATION",
+    experimentalNotice: "Independent empirical ground-truth validation is experimental. Birth-time rectification identifies candidate consistency intervals based on traditional Jyotish event-timing rules and should not be presented as guaranteed ground truth.",
     centralEstimate,
     rectifiedTime: centralEstimate, // Backward compatibility alias
     candidateInterval: candidateIntervalObj,
@@ -416,7 +421,7 @@ export function runBirthTimeRectification({
     evidenceLineage, // Backward compatibility alias
     summaryEn: finalVerdictEn, // Backward compatibility alias
     summaryTa: finalVerdictTa, // Backward compatibility alias
-    resolution,
+    resolution: canonicalResolution,
     minuteLevelResolutionEstablished,
     isMultiPeak: Boolean(stability.isMultiPeak),
     evidenceStrength,

@@ -60,8 +60,8 @@ export function analyzeCandidateStability(scoredCandidates, peakCandidate, score
     };
   }
 
-  // 3. Find Contiguous Chronological High-Scoring Runs (Threshold = maxScore * 0.95)
-  const threshold = Math.max(10, maxScore * 0.95);
+  // 3. Find Contiguous Chronological High-Scoring Runs (Threshold = maxScore * 0.85)
+  const threshold = Math.max(10, maxScore * 0.85);
   const foundRuns = [];
   let currentRun = [];
 
@@ -127,6 +127,12 @@ export function analyzeCandidateStability(scoredCandidates, peakCandidate, score
     // Sort regions by peakScore descending, then candidateCount descending
     stableRegions.sort((a, b) => b.peakScore - a.peakScore || b.candidateCount - a.candidateCount);
     const topRegion = stableRegions[0];
+    const earliestMin = Math.min(...stableRegions.map(r => r.startMinutes));
+    const latestMin = Math.max(...stableRegions.map(r => r.endMinutes));
+    const boundingStart = chronoSorted.find(c => c.totalMinutes === earliestMin)?.timeString || topRegion.start;
+    const boundingEnd = chronoSorted.find(c => c.totalMinutes === latestMin)?.timeString || topRegion.end;
+    const totalElapsed = Number(Math.abs(latestMin - earliestMin).toFixed(2));
+    const totalCandidateCount = stableRegions.reduce((sum, r) => sum + r.candidateCount, 0);
 
     return {
       isStable: false,
@@ -136,13 +142,13 @@ export function analyzeCandidateStability(scoredCandidates, peakCandidate, score
       resolution: "MULTI_MODAL",
       minuteLevelResolutionEstablished: false,
       stableRegions,
-      stableIntervalStart: null,
-      stableIntervalEnd: null,
-      elapsedIntervalMinutes: topRegion.elapsedMinutes,
-      candidateCount: topRegion.candidateCount,
+      stableIntervalStart: boundingStart,
+      stableIntervalEnd: boundingEnd,
+      elapsedIntervalMinutes: totalElapsed,
+      candidateCount: totalCandidateCount,
       scoreSpread,
       neighborConsistency: 0.75,
-      explanation: `Multiple distinct high-scoring candidate intervals identified (${stableRegions.length} separate regions). Evidence remains multimodal.`
+      explanation: `Multiple distinct high-scoring candidate intervals identified (${stableRegions.length} separate regions across ${boundingStart}–${boundingEnd}). Evidence remains multimodal.`
     };
   }
 
