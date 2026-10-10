@@ -4,7 +4,7 @@
   "schemaVersion": "3.0",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
-  "generatedAt": "2026-10-10T16:54:17.372Z",
+  "generatedAt": "2026-10-10T17:42:44.775Z",
   "status": {
     "astronomicalEngine": "CALCULATION_VALIDATED",
     "softwareInfrastructure": "SOFTWARE_VALIDATED",
@@ -12,19 +12,19 @@
     "empiricalPrediction": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
   },
   "authoritativeHashes": {
-    "astroEngineHash": "56c046114226835af956d66f0a673a293a9aa2903e82df883a828a53e3b6c405",
+    "astroEngineHash": "f20db0ff723abf0303ddde815f7d0e786bf6412d7df4751ebfb97e7ed0f06c15",
     "empiricalEvaluationEngineHash": "88307ad60eedf6bcfd5a9172ab59ef32c327c6008fb3d3b3e3c0259a7d9c7d31",
     "discreteHazardSurvivalEngineHash": "e6e6549c3405d663cfcd88dc95c1c17db971960f17301759225ea9e986633481",
-    "predictionEngineHash": "d50ba931164b39e9ae36546ed0f92022a34a07a5d08292fdb2e819a9ca3c2ede",
-    "calibrationModelHash": "223ab0921d337928944cc0049ae8676988cb1c95418095fd5482d7ec5aed7bb1"
+    "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+    "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
   },
   "datasetHashes": {
     "trainSplitHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "valSplitHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindTestSplitHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
     "internalHoldoutSplitHash": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
-    "astroDatabankTrueIndependentHash": "57900b993385b8cc2fb8959355de55b6c2a06a0f41db8de0d04e34875a6cea40",
+    "astroDatabankTrueIndependentHash": "b9f7d8b75fabb50018239ee419ac2064646206e2bc9809cb647678fed58368be",
     "overlapManifestHash": "6c6cac3c32bf7d63cc2bbe74060214757e2e1a3f8f68317fe844da51b140bb99"
   },
-  "updatedAt": "2026-10-10T16:54:17.372Z"
+  "updatedAt": "2026-10-10T17:42:44.775Z"
 }

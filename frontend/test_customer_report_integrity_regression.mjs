@@ -189,13 +189,17 @@ check("5A. Themes are derived from detected yogas with full provenance", () => {
         name: "Gajakesari Yoga",
         formation: "Jupiter in 4th kendra from Moon",
         manifestation: "Fully Active",
-        strength: "Strong"
+        strength: "Strong",
+        ruleId: "RULE_YOGA_GAJAKESARI",
+        evidenceId: "EV_YOGA_GAJAKESARI"
       },
       {
         name: "Dhana Yoga",
         formation: "2nd lord aspecting 11th house",
         manifestation: "Active",
-        strength: "Supported"
+        strength: "Supported",
+        ruleId: "RULE_YOGA_DHANA",
+        evidenceId: "EV_YOGA_DHANA"
       }
     ],
     planets: [{ name: "Sun", longitude: 10 }]
@@ -215,13 +219,66 @@ check("5B. Tamil localization of personalized themes", () => {
     detectedYogas: [
       {
         name: "Gajakesari Yoga",
-        formation: "Jupiter in kendra from Moon"
+        formation: "Jupiter in kendra from Moon",
+        ruleId: "RULE_YOGA_GAJAKESARI",
+        evidenceId: "EV_YOGA_GAJAKESARI"
       }
     ],
     planets: []
   };
   const themesTa = derivePersonalizedExecutiveThemes(yogaChart, [], {}, "ta");
   assert(themesTa[0].title.includes("கஜகேசரி"), "Tamil theme must contain Tamil title");
+});
+
+check("5C. Zero synthetic ID fallback for unevidenced yogas and domain reports", () => {
+  // Yogas without ruleId or evidenceId must NOT synthesize IDs
+  const unevidencedYogaChart = {
+    detectedYogas: [
+      {
+        name: "Gajakesari Yoga",
+        formation: "Jupiter in kendra from Moon"
+        // missing ruleId and evidenceId
+      }
+    ],
+    planets: []
+  };
+  const unevidencedThemes = derivePersonalizedExecutiveThemes(unevidencedYogaChart, [], {}, "en");
+  assert.strictEqual(unevidencedThemes.length, 0, "Yogas lacking authentic ruleId/evidenceId must be omitted (zero fabricated IDs)");
+
+  // Domain reports with VERY_STRONG but missing ruleId/evidenceNodeId must be omitted
+  const unevidencedDomainReports = [
+    {
+      domainId: "career",
+      evidenceStrength: "VERY_STRONG",
+      overallTraditionalAssessment: "FAVORABLE",
+      technicalEvidence: { primaryLord: "Saturn", primaryHouse: 10 }
+      // missing ruleId and technicalEvidence.evidenceNodeId
+    }
+  ];
+  const domThemes = derivePersonalizedExecutiveThemes({}, unevidencedDomainReports, {}, "en");
+  assert.strictEqual(domThemes.length, 0, "Domain reports lacking authentic ruleId/evidenceNodeId must be omitted even if VERY_STRONG");
+});
+
+check("5D. Domain theme preserves contradictions and sets GUARDED status", () => {
+  const contradictoryDomainReports = [
+    {
+      domainId: "career",
+      evidenceStrength: "STRONG",
+      overallTraditionalAssessment: "FAVORABLE",
+      ruleId: "RULE_CAREER_GOVERNANCE",
+      technicalEvidence: {
+        primaryLord: "Saturn",
+        primaryHouse: 10,
+        evidenceNodeId: "DOM_CAREER_EV_01"
+      },
+      contradictions: ["Saturn combust in natal chart reduces executive vitality"],
+      executiveConclusion: "Significant professional trajectory with operational cautions."
+    }
+  ];
+  const themes = derivePersonalizedExecutiveThemes({}, contradictoryDomainReports, {}, "en");
+  assert.strictEqual(themes.length, 1, "Must derive 1 theme");
+  assert.strictEqual(themes[0].traditionalStatus, "GUARDED", "Traditional status must be GUARDED when contradictions exist (never forced FAVORABLE)");
+  assert.strictEqual(themes[0].contradictoryEvidence.length, 1, "Must preserve contradictions in contradictoryEvidence");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

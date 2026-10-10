@@ -197,7 +197,7 @@ export function createLifeReportModel(params = {}) {
       nextImportantWindows: [],
       keyCautions: [],
       birthTimeReliability: {
-        rating: "HIGH",
+        rating: "UNASSESSED",
         notes: []
       }
     },
@@ -278,6 +278,7 @@ export function createDomainReport(domainData = {}) {
   return {
     domainId,
     domainName: domainData.domainName || names,
+    ruleId: domainData.ruleId || null,
     executiveConclusion: domainData.executiveConclusion || "",
     overallTraditionalAssessment: domainData.overallTraditionalAssessment || TRADITIONAL_ASSESSMENT.SUPPORTED,
     evidenceStrength: domainData.evidenceStrength || EVIDENCE_STRENGTH.MODERATE,

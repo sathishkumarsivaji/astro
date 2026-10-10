@@ -501,6 +501,9 @@ function buildSingleDomainReport({
     practicalGuidance,
     whatCannotBeConcluded,
     customerQuestions,
+    ruleId: rawExpertResult?.subPhases?.find(sp => sp.ruleId || sp.subPhaseId)?.ruleId
+      || rawExpertResult?.subPhases?.find(sp => sp.status === "SUPPORTED")?.subPhaseId
+      || null,
     technicalEvidence: {
       primaryHouse,
       primaryLord,
@@ -508,7 +511,8 @@ function buildSingleDomainReport({
       varga: vargaCode,
       lordDignity: lordPlanet?.dignity || "Neutral",
       totalCandidateWindows: primaryWindows.length,
-      empiricalBenchmarkAvailable: validationInfo.empiricalOutcomeValidationAvailable || false
+      empiricalBenchmarkAvailable: validationInfo.empiricalOutcomeValidationAvailable || false,
+      ...(primaryWindows?.[0]?.evidenceIds?.[0] ? { evidenceNodeId: primaryWindows[0].evidenceIds[0] } : {})
     }
   });
 }

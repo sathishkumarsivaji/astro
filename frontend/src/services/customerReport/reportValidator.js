@@ -41,7 +41,11 @@ export function validateLifeReport(lifeReport, options = {}) {
 
   // 2. Planetary Position Consistency
   const planets = lifeReport.planetaryTable || [];
-  const validPlanets = planets.length >= 7 && planets.every(p => p.name && (p.longitude != null || p.deg != null));
+  const validPlanets = planets.length >= 7 && planets.every(p => {
+    if (!p || typeof p !== "object" || !p.name) return false;
+    const l = p.longitude != null ? p.longitude : p.deg;
+    return typeof l === "number" && Number.isFinite(l) && l >= 0 && l <= 360;
+  });
   recordCheck(
     2,
     "planetaryPositionConsistency",
@@ -51,12 +55,19 @@ export function validateLifeReport(lifeReport, options = {}) {
 
   // 3. Dasha Consistency
   const dasha = lifeReport.currentDasha || lifeReport.executiveSummary?.currentLifePhase;
-  const validDasha = Boolean(dasha && (dasha.lord || dasha.mahadasha));
+  let validDasha = Boolean(dasha && (dasha.lord || dasha.mahadasha));
+  if (validDasha && dasha.startDate && dasha.endDate) {
+    const s = new Date(dasha.startDate).getTime();
+    const e = new Date(dasha.endDate).getTime();
+    if (Number.isFinite(s) && Number.isFinite(e) && s > e) {
+      validDasha = false;
+    }
+  }
   recordCheck(
     3,
     "dashaConsistency",
     validDasha,
-    validDasha ? `Operating Dasha identified (${dasha.lord || dasha.mahadasha}).` : "Operating Dasha undefined."
+    validDasha ? `Operating Dasha identified (${dasha.lord || dasha.mahadasha}).` : "Operating Dasha undefined or chronological order inverted."
   );
 
   // 4. Transit Consistency
@@ -76,15 +87,21 @@ export function validateLifeReport(lifeReport, options = {}) {
     validTransits ? "Real-time transit dashboard and planetary transit data verified." : "Transit data missing."
   );
 
-  // 5. Domain Evidence Consistency (All 17 domains present)
+  // 5. Domain Evidence Consistency (All 17 domains present and distinct)
   const domainReports = lifeReport.domainReports || [];
-  const domainIds = new Set(domainReports.map(d => d.domainId));
-  const all17Present = ALL_17_DOMAINS.every(d => domainIds.has(d));
+  const uniqueValidDomainIds = new Set(
+    domainReports
+      .filter(d => d && typeof d === "object" && d.domainId && ALL_17_DOMAINS.includes(d.domainId))
+      .map(d => d.domainId)
+  );
+  const all17Present = ALL_17_DOMAINS.every(d => uniqueValidDomainIds.has(d)) &&
+    uniqueValidDomainIds.size === 17 &&
+    domainReports.length === 17;
   recordCheck(
     5,
     "domainEvidenceConsistency",
     all17Present,
-    all17Present ? `All ${ALL_17_DOMAINS.length} mandated domains present.` : `Missing domains: ${ALL_17_DOMAINS.filter(d => !domainIds.has(d)).join(", ")}`
+    all17Present ? `All ${ALL_17_DOMAINS.length} distinct mandated domains present.` : `Missing or duplicate domains: unique count ${uniqueValidDomainIds.size}/${ALL_17_DOMAINS.length}`
   );
 
   // 6. Timing Consistency
@@ -254,7 +271,7 @@ export function validateLifeReport(lifeReport, options = {}) {
   // 16. PDF Layout Validation
   const hasTimeline = Boolean(lifeReport.lifeTimeline?.CURRENT);
   const hasMilestones = Boolean(lifeReport.majorMilestones?.prospective?.length > 0);
-  const pdfLayoutValid = hasTimeline && hasMilestones && domainReports.length === 17;
+  const pdfLayoutValid = hasTimeline && hasMilestones && all17Present;
   recordCheck(
     16,
     "pdfLayoutValidation",
@@ -267,15 +284,29 @@ export function validateLifeReport(lifeReport, options = {}) {
   const totalCount = checks.length;
   const passRate = (passedCount / totalCount) * 100;
 
+  // Real evidence verification across domains
+  const domainsWithRealEvidence = domainReports.filter(dr => {
+    if (!dr || typeof dr !== "object") return false;
+    const hasChain = Array.isArray(dr.evidenceChain) && dr.evidenceChain.length > 0;
+    const techKeys = dr.technicalEvidence && typeof dr.technicalEvidence === "object"
+      ? Object.keys(dr.technicalEvidence).filter(k => k !== "evidenceNodeId")
+      : [];
+    const hasTech = techKeys.length > 0;
+    return hasChain || hasTech;
+  });
+  const uniqueDomainsWithEvidence = new Set(
+    domainsWithRealEvidence.map(d => d.domainId).filter(id => ALL_17_DOMAINS.includes(id))
+  );
+
   const qualityScore = {
-    evidenceCompleteness: all17Present ? 100 : 70,
-    domainCompleteness: (domainReports.length / 17) * 100,
-    timingCompleteness: timingValid ? 100 : 60,
-    safetyCompliance: (healthSafe && legalSafe && finSafe && antiFabSafe) ? 100 : 50,
-    personalizationScore: validPlanets ? 95 : 60,
-    repetitionScore: repAudit.repetitionScore * 100,
-    dataConsistency: (hasClient && hasCoords && validDasha) ? 100 : 65,
-    resolutionCompliance: empiricalResValid ? 100 : 50,
+    evidenceCompleteness: parseFloat(((uniqueDomainsWithEvidence.size / 17) * 100).toFixed(1)),
+    domainCompleteness: parseFloat(((uniqueValidDomainIds.size / 17) * 100).toFixed(1)),
+    timingCompleteness: timingValid ? 100 : 0,
+    safetyCompliance: (healthSafe && legalSafe && finSafe && antiFabSafe) ? 100 : 0,
+    personalizationScore: validPlanets ? 100 : 0,
+    repetitionScore: parseFloat((repAudit.repetitionScore * 100).toFixed(1)),
+    dataConsistency: (hasClient && hasCoords && validDasha && validPlanets) ? 100 : 0,
+    resolutionCompliance: empiricalResValid ? 100 : 0,
     overallQualityScore: parseFloat(passRate.toFixed(1))
   };
 

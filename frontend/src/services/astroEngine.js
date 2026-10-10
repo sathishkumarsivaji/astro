@@ -1469,11 +1469,41 @@ export function calculateDivisionalCharts(planets = [], ascendantLong, ascendant
   const hasAsc = rawAsc !== null && rawAsc !== undefined && typeof rawAsc !== "boolean" && Number.isFinite(Number(rawAsc));
   const ascLong = hasAsc ? norm360(Number(rawAsc)) : null;
 
+  const CLASSICAL_9 = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  const validClassical9Count = CLASSICAL_9.filter(cName => {
+    const p = (planets || []).find(pl => pl?.name?.toLowerCase() === cName.toLowerCase());
+    if (!p) return false;
+    const l = p.longitude ?? p.long;
+    if (typeof l === "number" && Number.isFinite(l)) return true;
+    if (p.sign && typeof p.degreeInSign === "number" && Number.isFinite(p.degreeInSign)) return true;
+    return false;
+  }).length;
+
+  const totalValidPlanets = (planets || []).filter(p => {
+    const l = p?.longitude ?? p?.long;
+    if (typeof l === "number" && Number.isFinite(l)) return true;
+    if (p?.sign && typeof p?.degreeInSign === "number" && Number.isFinite(p.degreeInSign)) return true;
+    return false;
+  }).length;
+
+  let aggregateStatus = "INSUFFICIENT_DATA";
+  if (!hasAsc || totalValidPlanets === 0) {
+    aggregateStatus = "INSUFFICIENT_DATA";
+  } else if (validClassical9Count === 9 || totalValidPlanets >= 9) {
+    aggregateStatus = "COMPLETE";
+  } else {
+    aggregateStatus = "PARTIAL";
+  }
+
   const res = {
-    status: hasAsc ? "CALCULATED" : "INSUFFICIENT_DATA"
+    status: aggregateStatus
   };
   if (!hasAsc) {
     res.error = "Missing or invalid Ascendant longitude; cannot calculate divisional Lagna or house placements.";
+  } else if (totalValidPlanets === 0) {
+    res.error = "No valid planetary positions available for divisional chart calculation.";
+  } else if (aggregateStatus === "PARTIAL") {
+    res.warning = "Partial divisional chart calculated: missing some classical planetary positions.";
   }
 
   for (const [key, fn] of Object.entries(vargaFns)) {
@@ -1529,7 +1559,7 @@ export function calculateDivisionalCharts(planets = [], ascendantLong, ascendant
 
     res[key] = {
       varga: key,
-      status: hasAsc ? "CALCULATED" : "INSUFFICIENT_DATA",
+      status: aggregateStatus,
       ascendant: hasAsc ? {
         signIdx: ascSignIdx,
         signName: ascVarga.name,

@@ -80,7 +80,33 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
 
   for (const y of yogas) {
     if (themes.length >= 3) break;
+    if (!y || typeof y !== "object") continue;
+
+    // Phase 2 Non-Negotiable: Require authentic y.ruleId and y.evidenceId (or y.id).
+    // If absent, do not synthesize RULE_YOGA_* or EV_YOGA_*. Omit the yoga.
+    const ruleId = y.ruleId || null;
+    const evidenceId = y.evidenceId || y.id || null;
+    if (!ruleId || !evidenceId) {
+      continue;
+    }
+
     const yName = y.name || "";
+    const contradictions = Array.isArray(y.contradictions)
+      ? y.contradictions
+      : (Array.isArray(y.cancellationFactors) ? y.cancellationFactors : []);
+
+    let traditionalStatus = y.traditionalStatus || y.status || null;
+    if (contradictions.length > 0) {
+      traditionalStatus = "GUARDED";
+    } else if (!traditionalStatus) {
+      traditionalStatus = "FAVORABLE";
+    }
+
+    const supportingFacts = [
+      y.formation || y.description || (yName ? `Classical planetary formation: ${yName}` : null),
+      y.manifestation ? `Manifestation status: ${y.manifestation}` : null,
+      y.strength ? `Strength assessment: ${y.strength}` : null
+    ].filter(Boolean);
 
     // Raja / Leadership / Authority Yogas
     if (/Raja Yoga|Gajakesari|Pancha Mahapurusha|Hamsa|Malavya|Ruchaka|Bhadra|Sasa/i.test(yName) && !usedDomains.has("leadership") && !usedDomains.has("career")) {
@@ -90,14 +116,11 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           ? (isGk ? "கஜகேசரி யோகம்: நெறிமுறை தலைமை மற்றும் நிறுவன செல்வாக்கு" : `${yName}: தலைமைத்துவம் மற்றும் அதிகார வளர்ச்சி`)
           : (isGk ? "Gajakesari Yoga: Institutional Authority & Ethical Leadership" : `${yName}: Leadership Architecture & Sector Authority`),
         domain: "leadership",
-        supportingFacts: [
-          y.formation || y.description || `Classical planetary formation: ${yName}`,
-          `Manifestation status: ${y.manifestation || "Active"}`
-        ],
-        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        contradictoryEvidence: [],
-        traditionalStatus: "FAVORABLE",
+        supportingFacts,
+        ruleId,
+        evidenceId,
+        contradictoryEvidence: contradictions,
+        traditionalStatus,
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
       });
       usedDomains.add("leadership");
@@ -110,14 +133,11 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           ? `${yName}: திட்டமிட்ட மூலதன உருவாக்கம் மற்றும் நிதி வளம்`
           : `${yName}: Strategic Capital Accumulation & Fiscal Resilience`,
         domain: "finance",
-        supportingFacts: [
-          y.formation || y.description || `Classical wealth yoga: ${yName}`,
-          `Strength assessment: ${y.strength || "Supported"}`
-        ],
-        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        contradictoryEvidence: [],
-        traditionalStatus: "FAVORABLE",
+        supportingFacts,
+        ruleId,
+        evidenceId,
+        contradictoryEvidence: contradictions,
+        traditionalStatus,
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
       });
       usedDomains.add("finance");
@@ -129,14 +149,11 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           ? `${yName}: தடைகளைத் தாண்டிய மீள்தன்மை மற்றும் வெற்றி`
           : `${yName}: Strategic Resilience & Adversity Inversion`,
         domain: "career",
-        supportingFacts: [
-          y.formation || y.description || `Inversion yoga: ${yName}`,
-          `Status: ${y.manifestation || "Active"}`
-        ],
-        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        contradictoryEvidence: [],
-        traditionalStatus: "FAVORABLE",
+        supportingFacts,
+        ruleId,
+        evidenceId,
+        contradictoryEvidence: contradictions,
+        traditionalStatus,
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
       });
       usedDomains.add("resilience");
@@ -149,13 +166,11 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           ? `${yName}: கூர்மையான பகுப்பாய்வு திறன் மற்றும் அறிவுசார் தேர்ச்சி`
           : `${yName}: Analytical Intellect & Professional Specialization`,
         domain: "education",
-        supportingFacts: [
-          y.formation || y.description || `Intellectual yoga: ${yName}`
-        ],
-        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
-        contradictoryEvidence: [],
-        traditionalStatus: "FAVORABLE",
+        supportingFacts,
+        ruleId,
+        evidenceId,
+        contradictoryEvidence: contradictions,
+        traditionalStatus,
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
       });
       usedDomains.add("education");
@@ -166,12 +181,43 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
   if (themes.length < 3 && Array.isArray(rawDomainReports) && rawDomainReports.length > 0) {
     const strengthScore = { VERY_STRONG: 4, STRONG: 3, MODERATE: 2, LIMITED: 1, MIXED: 1 };
     const sortedDomains = [...rawDomainReports]
-      .filter(d => !usedDomains.has(d.domainId))
+      .filter(d => d && typeof d === "object" && d.domainId && !usedDomains.has(d.domainId))
       .sort((a, b) => (strengthScore[b.evidenceStrength] || 0) - (strengthScore[a.evidenceStrength] || 0));
 
     for (const dr of sortedDomains) {
       if (themes.length >= 3) break;
+      if (!dr || typeof dr !== "object" || !dr.domainId) continue;
       if (usedDomains.has(dr.domainId)) continue;
+
+      // Phase 2 Non-Negotiable: Require authentic dr.ruleId and dr.technicalEvidence?.evidenceNodeId
+      // Do not synthesize DOMAIN_*_ASSESSMENT or DOM_*_EVIDENCE
+      const ruleId = dr.ruleId || null;
+      const evidenceNodeId = dr.technicalEvidence?.evidenceNodeId || null;
+      if (!ruleId || !evidenceNodeId) {
+        continue;
+      }
+
+      // Check dr.evidenceChain or dr.technicalEvidence: if empty or absent, omit the theme (even if evidenceStrength === "VERY_STRONG")
+      const hasEvidenceChain = Array.isArray(dr.evidenceChain) && dr.evidenceChain.length > 0;
+      const techKeys = dr.technicalEvidence && typeof dr.technicalEvidence === "object"
+        ? Object.keys(dr.technicalEvidence).filter(k => k !== "evidenceNodeId")
+        : [];
+      const hasTechnicalEvidence = techKeys.length > 0;
+      if (!hasEvidenceChain && !hasTechnicalEvidence) {
+        continue;
+      }
+
+      const contradictions = Array.isArray(dr.contradictions) ? dr.contradictions : [];
+      let traditionalStatus = dr.overallTraditionalAssessment;
+      if (contradictions.length > 0) {
+        if (!traditionalStatus || traditionalStatus === "SUPPORTED" || traditionalStatus === "FAVORABLE") {
+          traditionalStatus = "GUARDED";
+        }
+      } else if (!traditionalStatus) {
+        traditionalStatus = (dr.evidenceStrength === "MIXED" || dr.evidenceStrength === "LIMITED") ? "GUARDED" : "SUPPORTED";
+      } else if ((dr.evidenceStrength === "MIXED" || dr.evidenceStrength === "LIMITED") && (traditionalStatus === "SUPPORTED" || traditionalStatus === "FAVORABLE")) {
+        traditionalStatus = "GUARDED";
+      }
 
       const dNameEn = dr.domainName?.en || dr.domainId;
       const dNameTa = dr.domainName?.ta || dr.domainId;
@@ -230,15 +276,15 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
         title: themeTitle,
         domain: dr.domainId,
         supportingFacts: [
-          `Evidence strength: ${dr.evidenceStrength}`,
+          dr.evidenceStrength ? `Evidence strength: ${dr.evidenceStrength}` : null,
           primaryLord ? `Governing Lord: ${primaryLord}` : null,
           primaryHouse ? `Primary House: House ${primaryHouse}` : null,
           dr.executiveConclusion ? dr.executiveConclusion.slice(0, 100) : null
         ].filter(Boolean),
-        ruleId: dr.ruleId || (dr.domainId ? `DOMAIN_${dr.domainId.toUpperCase()}_ASSESSMENT` : null),
-        evidenceId: dr.technicalEvidence?.evidenceNodeId || (dr.domainId ? `DOM_${dr.domainId.toUpperCase()}_EVIDENCE` : null),
-        contradictoryEvidence: dr.contradictions || [],
-        traditionalStatus: dr.overallTraditionalAssessment || "SUPPORTED",
+        ruleId,
+        evidenceId: evidenceNodeId,
+        contradictoryEvidence: contradictions,
+        traditionalStatus,
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
       });
       usedDomains.add(dr.domainId);

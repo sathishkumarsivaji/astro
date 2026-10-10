@@ -116,6 +116,23 @@ assert(
   "getStructuredVargaData sets status INSUFFICIENT_DATA for planets with missing longitude"
 );
 
+// 1.4 calculateDivisionalCharts aggregate statuses (COMPLETE, PARTIAL, INSUFFICIENT_DATA)
+const fullPlanets = [
+  { name: "Sun", longitude: 10 }, { name: "Moon", longitude: 40 },
+  { name: "Mars", longitude: 70 }, { name: "Mercury", longitude: 100 },
+  { name: "Jupiter", longitude: 130 }, { name: "Venus", longitude: 160 },
+  { name: "Saturn", longitude: 190 }, { name: "Rahu", longitude: 220 },
+  { name: "Ketu", longitude: 40 }
+];
+const completeDiv = calculateDivisionalCharts(fullPlanets, 15.0);
+assert(completeDiv.status === "COMPLETE", "calculateDivisionalCharts returns COMPLETE when Ascendant + all 9 planets are valid");
+
+const partialDiv = calculateDivisionalCharts([{ name: "Sun", longitude: 10 }], 15.0);
+assert(partialDiv.status === "PARTIAL", "calculateDivisionalCharts returns PARTIAL when Ascendant + <9 planets are valid");
+
+const noPlanetDiv = calculateDivisionalCharts([], 15.0);
+assert(noPlanetDiv.status === "INSUFFICIENT_DATA", "calculateDivisionalCharts returns INSUFFICIENT_DATA when zero valid planets are provided");
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Test Group 2: Pathway Functions Input Integrity
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +205,8 @@ const sampleDomainReports = [
     domainId: "career",
     evidenceStrength: "VERY_STRONG",
     overallTraditionalAssessment: "FAVORABLE",
+    ruleId: "RULE_CAREER_GOVERNANCE",
+    evidenceChain: [{ step: 1, factor: "Lagna", finding: "Scorpio" }],
     technicalEvidence: {
       primaryLord: "Saturn",
       primaryHouse: 10,
@@ -199,10 +218,26 @@ const sampleDomainReports = [
 const domainThemes = derivePersonalizedExecutiveThemes({}, sampleDomainReports, {}, "en");
 assert(
   domainThemes.length === 1 &&
-  domainThemes[0].ruleId === "DOMAIN_CAREER_ASSESSMENT" &&
+  domainThemes[0].ruleId === "RULE_CAREER_GOVERNANCE" &&
   domainThemes[0].evidenceId === "DOM_CAREER_EVIDENCE" &&
   domainThemes[0].empiricalStatus === "NOT_EMPIRICALLY_VALIDATED",
   "Domain themes use authentic ruleId and evidenceId with NOT_EMPIRICALLY_VALIDATED status"
+);
+
+// 3.3 Zero synthetic ID fallback when ruleId or evidenceNodeId is absent
+const unevidencedReports = [
+  {
+    domainId: "career",
+    evidenceStrength: "VERY_STRONG",
+    overallTraditionalAssessment: "FAVORABLE",
+    technicalEvidence: { primaryLord: "Saturn", primaryHouse: 10 },
+    executiveConclusion: "Significant professional trajectory."
+  }
+];
+const emptyDomainThemes = derivePersonalizedExecutiveThemes({}, unevidencedReports, {}, "en");
+assert(
+  emptyDomainThemes.length === 0,
+  "derivePersonalizedExecutiveThemes omits themes when authentic ruleId/evidenceNodeId are absent (zero synthetic ID generation)"
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -215,6 +250,10 @@ assert(
   defaultModel.dataQuality.completenessScore === null &&
   defaultModel.dataQuality.completenessLabel === "UNASSESSED",
   "createLifeReportModel defaults dataQuality completenessScore to null and label to UNASSESSED"
+);
+assert(
+  defaultModel.executiveSummary.birthTimeReliability.rating === "UNASSESSED",
+  "createLifeReportModel defaults executiveSummary.birthTimeReliability rating to UNASSESSED"
 );
 assert(
   defaultModel.calculationMetadata.ayanamsha === null &&
