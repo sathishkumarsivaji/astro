@@ -42,8 +42,10 @@ import {
   clearLifeReportCache,
   getLifeReportCacheStats,
   configureReportCacheBindings,
-  computeReportInputHash
+  computeReportInputHash,
+  invalidateReportCacheEntry
 } from "./reportCacheManager.js";
+import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 
 // Re-export key components for clean public API
 export * from "./lifeReportModel.js";
@@ -92,8 +94,8 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           y.formation || y.description || `Classical planetary formation: ${yName}`,
           `Manifestation status: ${y.manifestation || "Active"}`
         ],
-        ruleId: `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`,
-        evidenceId: `EV_YOGA_${themes.length + 1}`,
+        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
+        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
         contradictoryEvidence: [],
         traditionalStatus: "FAVORABLE",
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
@@ -112,8 +114,8 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           y.formation || y.description || `Classical wealth yoga: ${yName}`,
           `Strength assessment: ${y.strength || "Supported"}`
         ],
-        ruleId: `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`,
-        evidenceId: `EV_YOGA_${themes.length + 1}`,
+        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
+        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
         contradictoryEvidence: [],
         traditionalStatus: "FAVORABLE",
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
@@ -131,8 +133,8 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           y.formation || y.description || `Inversion yoga: ${yName}`,
           `Status: ${y.manifestation || "Active"}`
         ],
-        ruleId: `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`,
-        evidenceId: `EV_YOGA_${themes.length + 1}`,
+        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
+        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
         contradictoryEvidence: [],
         traditionalStatus: "FAVORABLE",
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
@@ -150,8 +152,8 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
         supportingFacts: [
           y.formation || y.description || `Intellectual yoga: ${yName}`
         ],
-        ruleId: `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`,
-        evidenceId: `EV_YOGA_${themes.length + 1}`,
+        ruleId: y.ruleId || (yName ? `RULE_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
+        evidenceId: y.evidenceId || y.id || (yName ? `EV_YOGA_${yName.toUpperCase().replace(/[^A-Z0-9]/g, "_")}` : null),
         contradictoryEvidence: [],
         traditionalStatus: "FAVORABLE",
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
@@ -233,8 +235,8 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
           primaryHouse ? `Primary House: House ${primaryHouse}` : null,
           dr.executiveConclusion ? dr.executiveConclusion.slice(0, 100) : null
         ].filter(Boolean),
-        ruleId: `RULE_DOMAIN_${dr.domainId.toUpperCase()}_STRENGTH`,
-        evidenceId: `EV_DOM_${dr.domainId.toUpperCase()}_01`,
+        ruleId: dr.ruleId || (dr.domainId ? `DOMAIN_${dr.domainId.toUpperCase()}_ASSESSMENT` : null),
+        evidenceId: dr.technicalEvidence?.evidenceNodeId || (dr.domainId ? `DOM_${dr.domainId.toUpperCase()}_EVIDENCE` : null),
         contradictoryEvidence: dr.contradictions || [],
         traditionalStatus: dr.overallTraditionalAssessment || "SUPPORTED",
         empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
@@ -243,27 +245,7 @@ export function derivePersonalizedExecutiveThemes(chartData = {}, rawDomainRepor
     }
   }
 
-  // 3. Fallback: If under 1 theme, anchor strictly on Lagna / Atmakaraka
-  if (themes.length === 0) {
-    const lagnaSign = canonicalFacts.ascendantSign || chartData.ascendantSign || "Lagna";
-    const akPlanet = canonicalFacts.atmakaraka?.planet || chartData.atmakaraka || "Atmakaraka";
-    themes.push({
-      title: isTamil
-        ? `லக்னம் (${lagnaSign}): தனிநபர் ஆற்றல் மற்றும் சமநிலை வாழ்க்கை நெறி`
-        : `Lagna (${lagnaSign}): Personal Agency & Deliberate Life Equilibrium`,
-      domain: "leadership",
-      supportingFacts: [
-        `Ascendant Sign: ${lagnaSign}`,
-        `Atmakaraka: ${akPlanet}`
-      ],
-      ruleId: "RULE_LAGNA_EQUILIBRIUM",
-      evidenceId: "EV_NATAL_CORE_01",
-      contradictoryEvidence: [],
-      traditionalStatus: "SUPPORTED",
-      empiricalStatus: "NOT_EMPIRICALLY_VALIDATED"
-    });
-  }
-
+  // 3. If no themes meet criteria, return [] without fabricated fallback
   return themes.slice(0, 3);
 }
 
@@ -495,12 +477,13 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
     houseSystem: chartData.houseSystem || (chartData.system === "western" ? "Placidus" : "Equal / Whole Sign"),
     lunarNodeConvention: chartData.nodeType || chartData.lunarNodeConvention || "Mean Node",
     ephemeris: chartData.ephemeris || "AstronomyEngine/VSOP87",
-    calculationEngine: "ASTROVERSE Core v4.2.0",
+    calculationEngine: chartData.calculationEngine || (releaseManifest?.astronomyEngineVersion ? `ASTROVERSE Core v${releaseManifest.astronomyEngineVersion}` : "ASTROVERSE Core v4.2.0"),
     generatedAt: new Date().toISOString(),
     reportFingerprint,
-    releaseVersion: "3.0.0",
-    modelVersion: "2.2.0",
-    schemaVersion: "3.0",
+    releaseVersion: chartData.releaseVersion || releaseManifest?.releaseVersion || "unknown",
+    modelVersion: chartData.modelVersion || releaseManifest?.modelVersion || "unknown",
+    schemaVersion: chartData.schemaVersion || releaseManifest?.schemaVersion || "unknown",
+    astronomyEngineVersion: chartData.astronomyEngineVersion || releaseManifest?.astronomyEngineVersion || "unknown",
     lang
   };
 

@@ -1445,7 +1445,7 @@ export function calculateD45(longDeg) {
  * COMPLETE PARASHARI SHODASHAVARGA CHARTS MAPPER
  * Computes all 16 divisional charts (D1 to D60) with Ascendant and 9 planetary positions.
  */
-export function calculateDivisionalCharts(planets = [], ascendantLong = 0, ascendantSpeedDegPerMin = null) {
+export function calculateDivisionalCharts(planets = [], ascendantLong, ascendantSpeedDegPerMin = null) {
   const vargaFns = {
     D1: calculateD1,
     D2: calculateD2,
@@ -1465,22 +1465,52 @@ export function calculateDivisionalCharts(planets = [], ascendantLong = 0, ascen
     D60: (deg) => calculateD60(deg, ascendantSpeedDegPerMin)
   };
 
-  const ascLong = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long ?? 0);
-  const res = {};
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const hasAsc = rawAsc !== null && rawAsc !== undefined && typeof rawAsc !== "boolean" && Number.isFinite(Number(rawAsc));
+  const ascLong = hasAsc ? norm360(Number(rawAsc)) : null;
+
+  const res = {
+    status: hasAsc ? "CALCULATED" : "INSUFFICIENT_DATA"
+  };
+  if (!hasAsc) {
+    res.error = "Missing or invalid Ascendant longitude; cannot calculate divisional Lagna or house placements.";
+  }
 
   for (const [key, fn] of Object.entries(vargaFns)) {
-    const ascVarga = fn(ascLong);
-    const ascSignIdx = ascVarga.index;
+    const ascVarga = hasAsc ? fn(ascLong) : null;
+    const ascSignIdx = ascVarga ? ascVarga.index : null;
     const pList = (planets || []).map(p => {
-      let pLong = 0;
-      if (typeof p.longitude === "number") pLong = p.longitude;
-      else if (typeof p.long === "number") pLong = p.long;
-      else if (p.sign) {
+      let pLong = null;
+      if (typeof p?.longitude === "number" && Number.isFinite(p.longitude)) {
+        pLong = norm360(p.longitude);
+      } else if (typeof p?.long === "number" && Number.isFinite(p.long)) {
+        pLong = norm360(p.long);
+      } else if (p?.sign) {
         const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === p.sign.toLowerCase());
-        pLong = (sIdx >= 0 ? sIdx * 30 : 0) + (p.degreeInSign || 0);
+        if (sIdx >= 0 && typeof p.degreeInSign === "number" && Number.isFinite(p.degreeInSign)) {
+          pLong = norm360(sIdx * 30 + p.degreeInSign);
+        }
       }
+
+      if (pLong === null) {
+        return {
+          name: p?.name ?? "Unknown",
+          tamil: p?.tamil || p?.name || "தெரியவில்லை",
+          longitude: null,
+          signIdx: null,
+          signName: null,
+          signTamil: null,
+          house: null,
+          status: "INSUFFICIENT_DATA",
+          error: "Missing or invalid planetary longitude",
+          dignity: p?.dignity || "Unknown",
+          isRetrograde: Boolean(p?.isRetrograde),
+          isCombust: Boolean(p?.isCombust)
+        };
+      }
+
       const v = fn(pLong);
-      const house = ((v.index - ascSignIdx + 12) % 12) + 1;
+      const house = (hasAsc && ascSignIdx !== null) ? (((v.index - ascSignIdx + 12) % 12) + 1) : null;
       return {
         name: p.name,
         tamil: p.tamil || p.name,
@@ -1489,6 +1519,7 @@ export function calculateDivisionalCharts(planets = [], ascendantLong = 0, ascen
         signName: v.name,
         signTamil: v.tamil,
         house,
+        status: "CALCULATED",
         dignity: p.dignity || "Neutral",
         isRetrograde: Boolean(p.isRetrograde),
         isCombust: Boolean(p.isCombust),
@@ -1498,12 +1529,21 @@ export function calculateDivisionalCharts(planets = [], ascendantLong = 0, ascen
 
     res[key] = {
       varga: key,
-      ascendant: {
+      status: hasAsc ? "CALCULATED" : "INSUFFICIENT_DATA",
+      ascendant: hasAsc ? {
         signIdx: ascSignIdx,
         signName: ascVarga.name,
         signTamil: ascVarga.tamil,
         house: 1,
+        status: "CALCULATED",
         ...ascVarga
+      } : {
+        signIdx: null,
+        signName: null,
+        signTamil: null,
+        house: null,
+        status: "INSUFFICIENT_DATA",
+        error: "Missing or invalid Ascendant longitude"
       },
       planets: pList
     };
@@ -1514,7 +1554,11 @@ export function calculateDivisionalCharts(planets = [], ascendantLong = 0, ascen
     const d60Asc = res.D60.ascendant;
     res.D60.birthTimeSensitivity = "Very High";
     res.D60.segmentSize = "0°30′";
-    res.D60.sensitivityNote = `Ascendant D60 boundary changes every 0°30′ (approx ${(d60Asc?.d60SensitivityMinutes ?? 2.0).toFixed(1)} min of clock time due to Earth's rotation; planetary D60 positions shift by their individual daily speeds). Requires verified birth instant.`;
+    if (hasAsc) {
+      res.D60.sensitivityNote = `Ascendant D60 boundary changes every 0°30′ (approx ${(d60Asc?.d60SensitivityMinutes ?? 2.0).toFixed(1)} min of clock time due to Earth's rotation; planetary D60 positions shift by their individual daily speeds). Requires verified birth instant.`;
+    } else {
+      res.D60.sensitivityNote = "Ascendant longitude not available for D60 boundary computation.";
+    }
   }
 
   // Aliases for backward compatibility
@@ -1549,7 +1593,7 @@ export function calculateDivisionalCharts(planets = [], ascendantLong = 0, ascen
  * Extracts full planet arrays, signs, houses, dignities, and 12-house rulerships
  * across all major divisional charts (D1, D3, D4, D7, D9, D10, D24, D30, D60).
  */
-export function getStructuredVargaData(planets = [], ascendantLong = 0) {
+export function getStructuredVargaData(planets = [], ascendantLong) {
   const targetVargas = [
     { key: "D1", name: "Rasi (D1 - General / Natal Foundation)", fn: calculateD1 },
     { key: "D2", name: "Hora (D2 - Wealth, Sustenance & Resources)", fn: calculateD2 },
@@ -1569,7 +1613,8 @@ export function getStructuredVargaData(planets = [], ascendantLong = 0) {
     { key: "D60", name: "Shashtiamsha (D60 - Past Karma & Deep Spiritual Lineage)", fn: (d) => calculateD60(d) }
   ];
 
-  const ascLong = requireLongitude(typeof ascendantLong === "number" ? ascendantLong : ascendantLong?.longitude, "calculateDivisionalCharts Ascendant");
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "getStructuredVargaData Ascendant");
   const result = {};
 
   for (const v of targetVargas) {
@@ -1584,12 +1629,33 @@ export function getStructuredVargaData(planets = [], ascendantLong = 0) {
     }
 
     const vargaPlanets = (planets || []).map(p => {
-      let pLong = 0;
-      if (typeof p.longitude === "number") pLong = p.longitude;
-      else if (typeof p.long === "number") pLong = p.long;
-      else if (p.sign) {
+      let pLong = null;
+      if (typeof p?.longitude === "number" && Number.isFinite(p.longitude)) {
+        pLong = norm360(p.longitude);
+      } else if (typeof p?.long === "number" && Number.isFinite(p.long)) {
+        pLong = norm360(p.long);
+      } else if (p?.sign) {
         const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === p.sign.toLowerCase());
-        pLong = (sIdx >= 0 ? sIdx * 30 : 0) + (p.degreeInSign || 0);
+        if (sIdx >= 0 && typeof p.degreeInSign === "number" && Number.isFinite(p.degreeInSign)) {
+          pLong = norm360(sIdx * 30 + p.degreeInSign);
+        }
+      }
+
+      if (pLong === null) {
+        return {
+          name: p?.name ?? "Unknown",
+          tamil: p?.tamil || p?.name || "தெரியவில்லை",
+          longitude: null,
+          signIdx: null,
+          signName: null,
+          signTamil: null,
+          house: null,
+          status: "INSUFFICIENT_DATA",
+          error: "Missing or invalid planetary longitude",
+          dignity: "Unknown",
+          isRetrograde: Boolean(p?.isRetrograde),
+          isCombust: Boolean(p?.isCombust)
+        };
       }
 
       const vSign = v.fn(pLong);
@@ -3968,9 +4034,11 @@ export function calculatePersonalizedRemedies(ascendantSign, planets = [], lang 
  * Evaluates 6th lord combustion, 10th house Shrapit Dosha (Saturn+Rahu),
  * Saturn aspecting Mars (Defense block), and 11th/7th house Business Yogas.
  */
-export function calculateCareerAndExamPathway(planets = [], ascendantLong = 0, lang = "en") {
+export function calculateCareerAndExamPathway(planets = [], ascendantLong, lang = "en") {
   const isTamil = lang === "ta";
-  const lagnaSignIdx = Math.floor(norm360(ascendantLong) / 30);
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "calculateCareerAndExamPathway Ascendant");
+  const lagnaSignIdx = Math.floor(norm360(ascLong) / 30);
   const lagnaSign = ZODIAC_SIGNS[lagnaSignIdx];
   const lagnaLordName = lagnaSign.ruler;
   const lagnaLord = planets.find(p => p.name.toLowerCase() === lagnaLordName.toLowerCase());
@@ -4197,9 +4265,11 @@ export function calculateCareerAndExamPathway(planets = [], ascendantLong = 0, l
  * Evaluates 7th house, Lagna-7th Lord conjunction, Ketu/malefics in 4th house (family friction),
  * and Saturn's aspects on 7th house, dynamically computing marriage nature and exact dasha timing.
  */
-export function calculateMarriagePathway(planets = [], ascendantLong = 0, dashaTable = [], birthYear = 1990, lang = "en") {
+export function calculateMarriagePathway(planets = [], ascendantLong, dashaTable = [], birthYear = null, lang = "en") {
   const isTamil = lang === "ta";
-  const lagnaSignIdx = Math.floor(norm360(ascendantLong) / 30);
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "calculateMarriagePathway Ascendant");
+  const lagnaSignIdx = Math.floor(norm360(ascLong) / 30);
   const lagnaSign = ZODIAC_SIGNS[lagnaSignIdx];
   const lagnaLord = planets.find(p => p.name.toLowerCase() === lagnaSign.ruler.toLowerCase());
 
@@ -4352,7 +4422,7 @@ export function calculateMarriagePathway(planets = [], ascendantLong = 0, dashaT
         ...bk,
         score,
         activationFactors: qualifyingFactors,
-        calendarYears: `${Math.round(birthYear + bk.startAge)} - ${Math.round(birthYear + bk.endAge)}`
+        calendarYears: (typeof birthYear === "number" && Number.isFinite(birthYear)) ? `${Math.round(birthYear + bk.startAge)} - ${Math.round(birthYear + bk.endAge)}` : null
       });
     }
   }
@@ -4367,8 +4437,9 @@ export function calculateMarriagePathway(planets = [], ascendantLong = 0, dashaT
   const auspiciousAgeRange = primeWindows.length > 0 
     ? primeWindows.map(b => `${b.startAge.toFixed(1)} - ${b.endAge.toFixed(1)}`).join(" & ")
     : (isTamil ? "கணிக்கப்பட்ட தசா சாளரம் இல்லை" : "No qualifying calculated Dasha window");
-  const calendarYears = primeWindows.length > 0 
-    ? primeWindows.map(b => b.calendarYears).join(" & ")
+  const hasValidBirthYear = typeof birthYear === "number" && Number.isFinite(birthYear);
+  const calendarYears = (primeWindows.length > 0 && hasValidBirthYear)
+    ? primeWindows.map(b => b.calendarYears).filter(Boolean).join(" & ")
     : null;
 
   const lagnaLordTa = lagnaLord?.tamil || lagnaSign.tamil;
@@ -4466,9 +4537,11 @@ export function calculateMarriagePathway(planets = [], ascendantLong = 0, dashaT
 // generating normalized evidence index values without arbitrary baselines or clamps.
 // Note: These represent rule-based astrological consistency across chart factors, NOT empirical event probabilities.
 // ---------------------------------------------------------------------------
-export function buildDomainEvidenceLedger(planets = [], ascendantLong = 0, moonLong = 0, dashaTable = [], lang = "en") {
+export function buildDomainEvidenceLedger(planets = [], ascendantLong, moonLong, dashaTable = [], lang = "en") {
   const isTamil = lang === "ta";
-  const lagnaSignIdx = Math.floor(norm360(ascendantLong) / 30);
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "buildDomainEvidenceLedger Ascendant");
+  const lagnaSignIdx = Math.floor(norm360(ascLong) / 30);
   const lagnaSign = ZODIAC_SIGNS[lagnaSignIdx];
   const lagnaLord = planets.find(p => p.name.toLowerCase() === lagnaSign.ruler.toLowerCase());
 
@@ -9291,11 +9364,11 @@ export function calculatePratyantardasha(currentDashaOrLord = null, maybeDuratio
  * Computes personalized auspicious windows for Marriage, Property/Home, Vehicles,
  * Business, Career, Travel, Family Functions, and Day-to-Day Activity Optimization.
  */
-export function calculateAuspiciousMilestoneTimelines(planets = [], ascendantLong = 0, moonLong = 0, dashaTable = [], birthYear = 1995, lang = "en", sunTimes = null, lat = null, lng = null, tz = null, timezoneId = null) {
+export function calculateAuspiciousMilestoneTimelines(planets = [], ascendantLong, moonLong, dashaTable = [], birthYear = null, lang = "en", sunTimes = null, lat = null, lng = null, tz = null, timezoneId = null) {
   const isTamil = lang === "ta";
 
   let sTimes = sunTimes;
-  if (!sTimes && typeof lat === "number" && typeof lng === "number" && (tz !== null || timezoneId !== null)) {
+  if (!sTimes && typeof lat === "number" && typeof lng === "number" && (tz !== null || timezoneId !== null) && typeof birthYear === "number" && Number.isFinite(birthYear)) {
     try {
       const effTz = typeof tz === "number" ? tz : 0;
       const effTzId = timezoneId || (typeof tz === "string" ? tz : null);
@@ -9346,11 +9419,14 @@ export function calculateAuspiciousMilestoneTimelines(planets = [], ascendantLon
   ];
 
   // Planetary Lords & Karakas
-  const ascendantSign = ZODIAC_SIGNS[Math.floor(norm360(ascendantLong) / 30)] || ZODIAC_SIGNS[0];
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "calculateAuspiciousMilestoneTimelines Ascendant");
+  const ascendantSign = ZODIAC_SIGNS[Math.floor(norm360(ascLong) / 30)];
+  if (!ascendantSign) throw new Error("Invalid Ascendant longitude in calculateAuspiciousMilestoneTimelines");
   const lagnaSignIdx = ZODIAC_SIGNS.findIndex(s => s.name === ascendantSign.name);
 
   const getBhava = (bhavaNum) => {
-    const signIdx = ((lagnaSignIdx >= 0 ? lagnaSignIdx : 0) + (bhavaNum - 1)) % 12;
+    const signIdx = (lagnaSignIdx + (bhavaNum - 1)) % 12;
     const sign = ZODIAC_SIGNS[signIdx];
     const lordName = sign.ruler;
     const lordPlanet = planets.find(p => p.name === lordName);
@@ -9858,7 +9934,10 @@ function formatLocalDateTime(rootDate, tzOffsetHours = 5.5) {
  * COMPREHENSIVE WINDOW-LEVEL TRANSIT CONVERGENCE SOLVER
  * Computes domain-specific planetary crossings to chart points across any JD window with dual convergence.
  */
-export function findMajorTransitEventsForWindow(planets = [], ascendantLong = 0, jdStart, jdEnd, domain = "all", timezoneOffsetHours = 5.5, timezoneId = null) {
+export function findMajorTransitEventsForWindow(planets, ascendantLong, jdStart, jdEnd, domain = "all", timezoneOffsetHours = 5.5, timezoneId = null) {
+  if (!Array.isArray(planets)) {
+    throw new Error("Valid planets array required for findMajorTransitEventsForWindow");
+  }
   const effectiveTzId = (typeof timezoneId === "string" && timezoneId) ? timezoneId : (timezoneOffsetHours === 5.5 ? "Asia/Kolkata" : "UTC");
   const parseToJd = (dt) => {
     if (dt instanceof Date) return (dt.getTime() / 86400000) + 2440587.5;
@@ -9884,7 +9963,8 @@ export function findMajorTransitEventsForWindow(planets = [], ascendantLong = 0,
     throw new Error("jdEnd must be strictly greater than jdStart for major transit events window calculation");
   }
 
-  const ascLong = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? 0);
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "findMajorTransitEventsForWindow Ascendant");
   const lagnaSignIdx = Math.floor(norm360(ascLong) / 30);
 
   const cacheKey = `${domain}_${Math.round(ascLong * 100)}_${Math.round(startJd * 100)}_${Math.round(endJd * 100)}`;
@@ -9900,7 +9980,17 @@ export function findMajorTransitEventsForWindow(planets = [], ascendantLong = 0,
   const getPlanetSignIdx = (pName) => {
     const pl = (planets || []).find(p => p.name?.toLowerCase() === pName?.toLowerCase());
     if (!pl) return null;
-    const pLong = pl.longitude ?? pl.long ?? (pl.sign ? (ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === pl.sign.toLowerCase()) * 30 + (pl.degreeInSign || 0)) : null);
+    let pLong = null;
+    if (typeof pl.longitude === "number" && Number.isFinite(pl.longitude)) {
+      pLong = pl.longitude;
+    } else if (typeof pl.long === "number" && Number.isFinite(pl.long)) {
+      pLong = pl.long;
+    } else if (pl.sign) {
+      const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === pl.sign.toLowerCase());
+      if (sIdx >= 0 && typeof pl.degreeInSign === "number" && Number.isFinite(pl.degreeInSign)) {
+        pLong = sIdx * 30 + pl.degreeInSign;
+      }
+    }
     return pLong !== null ? Math.floor(norm360(pLong) / 30) : null;
   };
 
@@ -11839,7 +11929,7 @@ export function calculateMasterPredictions(chartOrPlanets, maybeAscLong, maybeMo
  * Calculates real-time or future planetary positions of major transiting planets
  * (Saturn, Jupiter, Mars, Rahu, Ketu) against natal Lagna and Moon.
  */
-export function calculateTransitEphemeris(targetDate = new Date(), natalAscendantLong = 0, natalMoonLong = 0, systemOrOptions = "lahiri") {
+export function calculateTransitEphemeris(targetDate = new Date(), natalAscendantLong, natalMoonLong, systemOrOptions = "lahiri") {
   let tDate;
   if (targetDate instanceof Date) {
     if (isNaN(targetDate.getTime())) throw new Error("Invalid targetDate Date object provided to calculateTransitEphemeris.");
@@ -11854,6 +11944,11 @@ export function calculateTransitEphemeris(targetDate = new Date(), natalAscendan
   } else {
     throw new Error("calculateTransitEphemeris requires a valid Date object or ISO YYYY-MM-DD date string.");
   }
+
+  const rawAsc = typeof natalAscendantLong === "number" ? natalAscendantLong : (natalAscendantLong?.longitude ?? natalAscendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "calculateTransitEphemeris natalAscendantLong");
+  const rawMoon = typeof natalMoonLong === "number" ? natalMoonLong : (natalMoonLong?.longitude ?? natalMoonLong?.long);
+  const moonLong = requireLongitude(rawMoon, "calculateTransitEphemeris natalMoonLong");
 
   const jd = (tDate.getTime() / 86400000) + 2440587.5;
   const sys = typeof systemOrOptions === "string" ? systemOrOptions : (systemOrOptions?.system || "lahiri");
@@ -11881,16 +11976,16 @@ export function calculateTransitEphemeris(targetDate = new Date(), natalAscendan
   const rahuLong = norm360(rahuMeanTrop - ayanamsha);
   const ketuLong = norm360(rahuLong + 180);
 
-  const saturnHouseFromMoon = getHouseFrom(saturnLong, natalMoonLong);
-  const saturnHouseFromLagna = getHouseFrom(saturnLong, natalAscendantLong);
-  const jupiterHouseFromMoon = getHouseFrom(jupiterLong, natalMoonLong);
-  const jupiterHouseFromLagna = getHouseFrom(jupiterLong, natalAscendantLong);
-  const marsHouseFromMoon = getHouseFrom(marsLong, natalMoonLong);
-  const marsHouseFromLagna = getHouseFrom(marsLong, natalAscendantLong);
-  const rahuHouseFromMoon = getHouseFrom(rahuLong, natalMoonLong);
-  const rahuHouseFromLagna = getHouseFrom(rahuLong, natalAscendantLong);
-  const ketuHouseFromMoon = getHouseFrom(ketuLong, natalMoonLong);
-  const ketuHouseFromLagna = getHouseFrom(ketuLong, natalAscendantLong);
+  const saturnHouseFromMoon = getHouseFrom(saturnLong, moonLong);
+  const saturnHouseFromLagna = getHouseFrom(saturnLong, ascLong);
+  const jupiterHouseFromMoon = getHouseFrom(jupiterLong, moonLong);
+  const jupiterHouseFromLagna = getHouseFrom(jupiterLong, ascLong);
+  const marsHouseFromMoon = getHouseFrom(marsLong, moonLong);
+  const marsHouseFromLagna = getHouseFrom(marsLong, ascLong);
+  const rahuHouseFromMoon = getHouseFrom(rahuLong, moonLong);
+  const rahuHouseFromLagna = getHouseFrom(rahuLong, ascLong);
+  const ketuHouseFromMoon = getHouseFrom(ketuLong, moonLong);
+  const ketuHouseFromLagna = getHouseFrom(ketuLong, ascLong);
 
   // Classical Gochara Triggers:
   // 1. Sade Sati (12, 1, 2 from Moon)
@@ -11962,19 +12057,26 @@ export function calculateTransitEphemeris(targetDate = new Date(), natalAscendan
 // ---------------------------------------------------------------------------
 export function generateRetrospectiveLifeMilestoneAudit(
   planets = [],
-  ascendantLong = 0,
-  moonLong = 0,
+  ascendantLong,
+  moonLong,
   dashaTable = [],
-  birthDate = new Date("1995-05-15T06:30:00Z"),
+  birthDate,
   lang = "en"
 ) {
   const isTamil = lang === "ta";
+  if (!birthDate) throw new Error("Valid birthDate required for generateRetrospectiveLifeMilestoneAudit.");
   const bDate = birthDate instanceof Date ? birthDate : new Date(birthDate);
+  if (isNaN(bDate.getTime())) throw new Error("Valid birthDate required for generateRetrospectiveLifeMilestoneAudit.");
   const now = new Date();
   const currentAge = Math.max(0, (now.getTime() - bDate.getTime()) / (365.24219878 * 86400000));
   const birthYear = bDate.getUTCFullYear();
 
-  const lagnaSignIdx = Math.floor(norm360(ascendantLong) / 30);
+  const rawAsc = typeof ascendantLong === "number" ? ascendantLong : (ascendantLong?.longitude ?? ascendantLong?.long);
+  const ascLong = requireLongitude(rawAsc, "generateRetrospectiveLifeMilestoneAudit Ascendant");
+  const rawMoon = typeof moonLong === "number" ? moonLong : (moonLong?.longitude ?? moonLong?.long);
+  const mLong = requireLongitude(rawMoon, "generateRetrospectiveLifeMilestoneAudit Moon");
+
+  const lagnaSignIdx = Math.floor(norm360(ascLong) / 30);
   const lagnaSign = ZODIAC_SIGNS[lagnaSignIdx];
   if (!lagnaSign) throw new Error(`Invalid lagna sign index: ${lagnaSignIdx}`);
   const getHouseOfPlanet = (pName) => {

@@ -297,8 +297,7 @@ let cacheDetail = "";
 if (fs.existsSync(cachePath)) {
   const cacheData = JSON.parse(fs.readFileSync(cachePath, "utf8"));
   const recordKeys = Object.keys(cacheData);
-  const sampleSize = Math.min(recordKeys.length, 250);
-  for (let i = 0; i < sampleSize; i++) {
+  for (let i = 0; i < recordKeys.length; i++) {
     const entry = cacheData[recordKeys[i]];
     if (!entry || typeof entry !== "object") continue;
     if (entry.predictionEngineHash && entry.predictionEngineHash !== authHashes.predictionEngineHash) {
@@ -313,7 +312,7 @@ if (fs.existsSync(cachePath)) {
     }
   }
   if (cacheMatches) {
-    cacheDetail = `Verified ${sampleSize}/${recordKeys.length} sampled prediction cache entries bound to manifest hashes`;
+    cacheDetail = `Verified 100% of ${recordKeys.length} prediction cache entries cryptographically bound to manifest hashes`;
   }
 } else {
   cacheMatches = false;
@@ -368,7 +367,7 @@ try {
     for (const zf of zipFiles) {
       try {
         const zipPath = path.join(ROOT, zf);
-        const entries = execSync(`tar -tf "${zipPath}"`, { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 }).split("\n");
+        const entries = execSync(`tar -tf "${zipPath}"`, { encoding: "utf8", maxBuffer: 50 * 1024 * 1024 }).split("\n");
         const hasNodeModules = entries.some(e => e.includes("node_modules/"));
         const hasDist = entries.some(e => e.includes("/dist/") || e.startsWith("dist/"));
         const hasStore = entries.some(e => e.includes("astroverse_store.json"));
@@ -379,7 +378,9 @@ try {
         if (hasNodeModules || hasDist || hasStore || hasEnv) {
           zipAuditFailures.push(`${zf} (contains: ${[hasNodeModules && 'node_modules', hasDist && 'dist', hasStore && 'runtime_store', hasEnv && 'secret .env'].filter(Boolean).join(', ')})`);
         }
-      } catch (_ze) {}
+      } catch (ze) {
+        zipAuditFailures.push(`${zf} (failed inspection: ${ze.message})`);
+      }
     }
 
     if (zipAuditFailures.length > 0) {

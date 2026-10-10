@@ -161,14 +161,15 @@ export function createLifeReportModel(params = {}) {
       timezone: null
     },
     calculationMetadata: params.calculationMetadata || {
-      ayanamsha: "Lahiri (Chitra Paksha)",
-      ephemeris: "AstronomyEngine/VSOP87",
-      calculationEngine: "ASTROVERSE Core v4.2.0",
+      ayanamsha: null,
+      ephemeris: null,
+      calculationEngine: null,
       generatedAt: new Date().toISOString(),
       reportFingerprint: null,
-      releaseVersion: "3.0.0",
-      modelVersion: "2.2.0",
-      schemaVersion: "3.0"
+      releaseVersion: null,
+      modelVersion: null,
+      schemaVersion: null,
+      astronomyEngineVersion: null
     },
     dataQuality: params.dataQuality || {
       birthDate: null,
@@ -177,16 +178,16 @@ export function createLifeReportModel(params = {}) {
       latitude: null,
       longitude: null,
       timezone: null,
-      ayanamsha: "Lahiri (Chitra Paksha)",
-      ephemeris: "AstronomyEngine/VSOP87",
-      calculationEngine: "ASTROVERSE Core v4.2.0",
+      ayanamsha: null,
+      ephemeris: null,
+      calculationEngine: null,
       birthTimeSensitivity: {
         d60Sensitivity: "~2 minutes",
         d9Sensitivity: "~13.3 minutes",
         boundaryProximityAlert: false
       },
-      completenessScore: 1.0,
-      completenessLabel: "EXCELLENT"
+      completenessScore: null,
+      completenessLabel: "UNASSESSED"
     },
     executiveSummary: params.executiveSummary || {
       coreProfileSummary: "",

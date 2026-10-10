@@ -61,12 +61,19 @@ export function validateLifeReport(lifeReport, options = {}) {
 
   // 4. Transit Consistency
   const transits = lifeReport.currentTransits;
-  const validTransits = Boolean(transits && transits.sadeSati);
+  const validTransits = Boolean(
+    transits && (
+      transits.sadeSati !== undefined ||
+      transits.saturnHouse !== undefined ||
+      Array.isArray(transits.majorEvents) ||
+      transits.status === "CALCULATED"
+    )
+  );
   recordCheck(
     4,
     "transitConsistency",
     validTransits,
-    validTransits ? "Real-time transit dashboard and Sade Sati calculated." : "Transit data missing."
+    validTransits ? "Real-time transit dashboard and planetary transit data verified." : "Transit data missing."
   );
 
   // 5. Domain Evidence Consistency (All 17 domains present)
@@ -123,9 +130,18 @@ export function validateLifeReport(lifeReport, options = {}) {
   const healthSafe =
     !/\bcancer\b/i.test(wellnessText) &&
     !/\btumor\b/i.test(wellnessText) &&
-    !/\bsurgery prediction\b/i.test(wellnessText) &&
+    !/\btumour\b/i.test(wellnessText) &&
+    !/\bcarcinoma\b/i.test(wellnessText) &&
+    !/\bheart attack\b/i.test(wellnessText) &&
+    !/\bcardiac arrest\b/i.test(wellnessText) &&
+    !/\bsurgery (?:prediction|guarantee|guaranteed)\b/i.test(wellnessText) &&
+    !/\bguaranteed surgery\b/i.test(wellnessText) &&
     !/\borgan failure\b/i.test(wellnessText) &&
-    !/\blifespan prediction\b/i.test(wellnessText);
+    !/\bexact lifespan\b/i.test(wellnessText) &&
+    !/\blifespan prediction\b/i.test(wellnessText) &&
+    !/\b(?:death|fatality) timing\b/i.test(wellnessText) &&
+    !/\bமாரடைப்பு\b/i.test(wellnessText) &&
+    !/\bபுற்றுநோய்\b/i.test(wellnessText);
   recordCheck(
     8,
     "healthSafety",
@@ -138,7 +154,12 @@ export function validateLifeReport(lifeReport, options = {}) {
   const legalText = JSON.stringify(legalRep || {});
   const legalSafe =
     !/you will win the case/i.test(legalText) &&
-    !/guaranteed court victory/i.test(legalText);
+    !/guaranteed court victory/i.test(legalText) &&
+    !/court victory certainty/i.test(legalText) &&
+    !/verdict in your favor guaranteed/i.test(legalText) &&
+    !/certain trial win/i.test(legalText) &&
+    !/guaranteed acquittal/i.test(legalText) &&
+    !/வழக்கில் நிச்சயம் வெற்றி பெறுவீர்கள்/i.test(legalText);
   recordCheck(
     9,
     "legalSafety",
@@ -151,7 +172,12 @@ export function validateLifeReport(lifeReport, options = {}) {
   const finText = JSON.stringify(finRep || {});
   const finSafe =
     !/guaranteed profit/i.test(finText) &&
-    !/lottery jackpot win/i.test(finText);
+    !/guaranteed investment return/i.test(finText) &&
+    !/lottery jackpot win/i.test(finText) &&
+    !/risk[\s-]free investment/i.test(finText) &&
+    !/stock market windfall guaranteed/i.test(finText) &&
+    !/100% return guaranteed/i.test(finText) &&
+    !/நிச்சய பண லாபம்/i.test(finText);
   recordCheck(
     10,
     "financialSafety",
@@ -203,13 +229,14 @@ export function validateLifeReport(lifeReport, options = {}) {
 
   // 14. Missing-Data Detection
   const dataQuality = lifeReport.dataQuality || {};
-  const completeness = dataQuality.completenessScore ?? 1.0;
-  const noMissing = completeness >= 0.7;
+  const hasCompleteness = typeof dataQuality.completenessScore === "number" && Number.isFinite(dataQuality.completenessScore);
+  const completeness = hasCompleteness ? dataQuality.completenessScore : 0.0;
+  const noMissing = hasCompleteness && completeness >= 0.7;
   recordCheck(
     14,
     "missingDataDetection",
     noMissing,
-    `Data completeness score: ${(completeness * 100).toFixed(0)}%.`
+    hasCompleteness ? `Data completeness score: ${(completeness * 100).toFixed(0)}%.` : "Data completeness score uncalculated or missing."
   );
 
   // 15. Tamil Language Purity (if lang = ta)

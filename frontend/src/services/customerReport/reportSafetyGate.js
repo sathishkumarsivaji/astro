@@ -11,29 +11,41 @@ import { DOMAIN_VALIDATION_REGISTRY } from "../expertPrediction/domainValidation
 
 // Forbidden medical clinical diagnostic terms
 const FORBIDDEN_MEDICAL_TERMS = [
-  /\bcancer\b/i,
+  /\b(?:clinical\s+)?cancer\b/i,
   /\btumor\b/i,
   /\btumour\b/i,
-  /\bsurgery prediction\b/i,
-  /\borgan failure\b/i,
-  /\bnerve damage\b/i,
+  /\bcarcinoma\b/i,
+  /\b(?:heart\s+attack|cardiac\s+arrest)\b/i,
+  /\bsurgery\s+(?:prediction|guarantee|guaranteed)\b/i,
+  /\bguaranteed\s+surgery\b/i,
+  /\borgan\s+failure\b/i,
+  /\bnerve\s+damage\b/i,
+  /\bstroke\b/i,
   new RegExp("\\b" + ["death", "timing"].join(" ") + "\\b", "i"),
-  /\blifespan prediction\b/i,
-  /\bfatal disease\b/i,
-  /\bclinical diagnosis\b/i,
-  /\bmedical prognosis\b/i,
+  /\bexact\s+lifespan\b/i,
+  /\blifespan\s+prediction\b/i,
+  /\bfatal\s+disease\b/i,
+  /\bclinical\s+diagnosis\b/i,
+  /\bmedical\s+prognosis\b/i,
   /\bமாரடைப்பு\b/i,
   /\bபுற்றுநோய்\b/i,
-  /\bமரணம்\b/i
+  /\bமரணம்\b/i,
+  /\bஆயுள்\s+கணிப்பு\b/i,
+  /\bஅறுவை\s+சிகிச்சை\s+உறுதி\b/i
 ];
 
 // Forbidden deterministic legal guarantees
 const FORBIDDEN_LEGAL_CLAIMS = [
   /you will win the case/i,
   /guaranteed court victory/i,
+  /court victory certainty/i,
   /verdict in your favor guaranteed/i,
+  /certain trial win/i,
+  /guaranteed acquittal/i,
+  /sure win lawsuit/i,
   /வழக்கில் நிச்சயம் வெற்றி பெறுவீர்கள்/i,
-  /நீதிமன்ற தீர்ப்பு சாதகமாக மட்டுமே அமையும்/i
+  /நீதிமன்ற தீர்ப்பு சாதகமாக மட்டுமே அமையும்/i,
+  /நிச்சய வெற்றி வழக்கு/i
 ];
 
 // Forbidden financial return guarantees
@@ -42,8 +54,12 @@ const FORBIDDEN_FINANCIAL_CLAIMS = [
   /guaranteed investment return/i,
   /lottery jackpot win/i,
   /stock market windfall guaranteed/i,
+  /risk[\s-]free investment/i,
+  /100% return guaranteed/i,
+  /surefire stock return/i,
   /நிச்சய பண லாபம்/i,
-  /லாட்டரி பரிசு கிடைக்கும்/i
+  /லாட்டரி பரிசு கிடைக்கும்/i,
+  /ஆபத்தற்ற முதலீடு/i
 ];
 
 // Forbidden fatalistic overclaims
@@ -80,22 +96,22 @@ export function sanitizeReportText(text, domain = "general", lang = "en") {
 
   // 1. Sanitize medical clinical terms
   for (const pattern of FORBIDDEN_MEDICAL_TERMS) {
-    cleaned = cleaned.replace(pattern, lang === "ta" ? "ஆரோக்கிய தற்காப்பு" : "preventive constitutional balance");
+    cleaned = cleaned.replace(pattern, lang === "ta" ? "பாரம்பரிய உடல்நல தற்காப்பு வழிகாட்டல்" : "traditional constitutional wellness guidance");
   }
 
   // 2. Sanitize legal verdict guarantees
   for (const pattern of FORBIDDEN_LEGAL_CLAIMS) {
-    cleaned = cleaned.replace(pattern, lang === "ta" ? "பாரம்பரிய சமரச பேச்சுவார்த்தை சாதகமாக உள்ளது" : "traditionally supportive mediation window");
+    cleaned = cleaned.replace(pattern, lang === "ta" ? "பாரம்பரிய சமரச பேச்சுவார்த்தை சாதகமான காலம்" : "traditionally supportive mediation window");
   }
 
   // 3. Sanitize financial profit guarantees
   for (const pattern of FORBIDDEN_FINANCIAL_CLAIMS) {
-    cleaned = cleaned.replace(pattern, lang === "ta" ? "பொருளாதார வளர்ச்சிக்கு சாதகமான காலம்" : "supportive wealth-building conditions");
+    cleaned = cleaned.replace(pattern, lang === "ta" ? "பொருளாதார திட்டமிடலுக்குரிய பாரம்பரிய சாதகமான காலம்" : "supportive conditions for prudent financial planning");
   }
 
   // 4. Sanitize fatalistic overclaims
   for (const pattern of FORBIDDEN_FATALISTIC_TERMS) {
-    cleaned = cleaned.replace(pattern, lang === "ta" ? "பாரம்பரிய சாதகமான காலம்" : "favorable traditional window");
+    cleaned = cleaned.replace(pattern, lang === "ta" ? "பாரம்பரிய சாத்தியக்கூறு காலம்" : "favorable traditional tendencies");
   }
 
   return cleaned;

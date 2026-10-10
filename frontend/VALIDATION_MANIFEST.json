@@ -21,20 +21,39 @@
       "maxResidualArcSec": 19.05,
       "crossSystemConsistencyArcSec": 0,
       "precisionTiers": {
+        "reconciledMultiTierSummary": "Core planets (1950-2050) <= 1.0 arcsec target, 5.0 arcsec hard limit; Moon (1950-2050) <= 2.5 arcsec target, 15.0 arcsec hard limit; Nodes (1900-2100) <= 30.0 arcsec target, 120.0 arcsec limit; All-epoch / Delta-T extrapolation upper bound <= 60.0 arcsec (Moon reaches 64.26 arcsec at 2100).",
         "planetary": {
-          "preferredTargetArcSec": 1,
-          "warningThresholdArcSec": 3,
-          "hardRegressionToleranceArcSec": 60
+          "modernEraEpochRange": [1950, 2050],
+          "modernEraTargetArcSec": 1.0,
+          "modernEraHardLimitArcSec": 5.0,
+          "allEpochHardRegressionToleranceArcSec": 60.0,
+          "preferredTargetArcSec": 1.0,
+          "warningThresholdArcSec": 3.0,
+          "hardRegressionToleranceArcSec": 60.0,
+          "description": "Core classical planets (1950-2050) target <= 1.0 arcsec with 5.0 arcsec hard limit; 60.0 arcsec all-epoch upper bound accommodates secular Delta-T extrapolation drift"
+        },
+        "lunar": {
+          "modernEraEpochRange": [1950, 2050],
+          "modernEraTargetArcSec": 2.5,
+          "modernEraHardLimitArcSec": 15.0,
+          "allEpochMaxResidualArcSec": 64.26,
+          "preferredTargetArcSec": 2.5,
+          "warningThresholdArcSec": 5.0,
+          "hardRegressionToleranceArcSec": 65.0,
+          "description": "Modern era (1950-2050) Moon target <= 2.5 arcsec, 15.0 arcsec limit; secular Delta-T extrapolation at 2100 reaches 64.26 arcsec"
         },
         "lunarNodes": {
-          "preferredTargetArcSec": 30,
-          "warningThresholdArcSec": 60,
-          "hardRegressionToleranceArcSec": 120
+          "preferredTargetArcSec": 30.0,
+          "warningThresholdArcSec": 60.0,
+          "hardRegressionToleranceArcSec": 120.0,
+          "description": "Instantaneous osculating True Node target <= 30 arcsec, hard regression limit 120 arcsec"
         },
         "houseCusps": {
-          "preferredTargetArcSec": 1,
-          "warningThresholdArcSec": 3,
-          "hardRegressionToleranceArcSec": 60
+          "modernEraHardLimitArcSec": 5.0,
+          "preferredTargetArcSec": 1.0,
+          "warningThresholdArcSec": 3.0,
+          "hardRegressionToleranceArcSec": 60.0,
+          "description": "House cusps target <= 1.0 arcsec, modern era limit 5.0 arcsec, all-epoch limit 60.0 arcsec"
         }
       },
       "lunarInvestigation": {

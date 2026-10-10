@@ -130,16 +130,22 @@ function getExpectedHashes(options = {}) {
  */
 export function loadCalibrationModel(forceReload = false, options = {}) {
   if (testFixtureOverride) {
+    if (!testFixtureOverride.predictionEngineHash || !testFixtureOverride.trainingDatasetHash) {
+      throw new Error("UNVERIFIED_PROVENANCE: Missing required predictionEngineHash or trainingDatasetHash in calibration artifact.");
+    }
     return testFixtureOverride;
   }
 
   const { expectedPredictionEngineHash, expectedTrainingDatasetHash } = getExpectedHashes(options);
 
   if (cachedModel && !forceReload) {
-    if (expectedPredictionEngineHash && cachedModel.predictionEngineHash && cachedModel.predictionEngineHash !== expectedPredictionEngineHash) {
+    if (!cachedModel.predictionEngineHash || !cachedModel.trainingDatasetHash) {
+      throw new Error("UNVERIFIED_PROVENANCE: Missing required predictionEngineHash or trainingDatasetHash in calibration artifact.");
+    }
+    if (expectedPredictionEngineHash && cachedModel.predictionEngineHash !== expectedPredictionEngineHash) {
       throw new Error(`CALIBRATION_ARTIFACT_STALE: Model predictionEngineHash (${cachedModel.predictionEngineHash}) does not match runtime engine hash (${expectedPredictionEngineHash}). Re-fit calibration model.`);
     }
-    if (expectedTrainingDatasetHash && cachedModel.trainingDatasetHash && cachedModel.trainingDatasetHash !== expectedTrainingDatasetHash) {
+    if (expectedTrainingDatasetHash && cachedModel.trainingDatasetHash !== expectedTrainingDatasetHash) {
       throw new Error(`CALIBRATION_ARTIFACT_STALE: Model trainingDatasetHash (${cachedModel.trainingDatasetHash}) does not match current dataset hash (${expectedTrainingDatasetHash}). Re-fit calibration model.`);
     }
     return cachedModel;
@@ -167,18 +173,23 @@ export function loadCalibrationModel(forceReload = false, options = {}) {
       throw new Error("CALIBRATION_ARTIFACT_INVALID: Missing empirical residual prediction interval quantiles (q80).");
     }
 
+    // Fail-closed provenance verification
+    if (!parsed.predictionEngineHash || !parsed.trainingDatasetHash) {
+      throw new Error("UNVERIFIED_PROVENANCE: Missing required predictionEngineHash or trainingDatasetHash in calibration artifact.");
+    }
+
     // Fail-closed staleness verification if expected hashes are resolved or supplied
-    if (expectedPredictionEngineHash && parsed.predictionEngineHash && parsed.predictionEngineHash !== expectedPredictionEngineHash) {
+    if (expectedPredictionEngineHash && parsed.predictionEngineHash !== expectedPredictionEngineHash) {
       throw new Error(`CALIBRATION_ARTIFACT_STALE: Model predictionEngineHash (${parsed.predictionEngineHash}) does not match runtime engine hash (${expectedPredictionEngineHash}). Re-fit calibration model.`);
     }
-    if (expectedTrainingDatasetHash && parsed.trainingDatasetHash && parsed.trainingDatasetHash !== expectedTrainingDatasetHash) {
+    if (expectedTrainingDatasetHash && parsed.trainingDatasetHash !== expectedTrainingDatasetHash) {
       throw new Error(`CALIBRATION_ARTIFACT_STALE: Model trainingDatasetHash (${parsed.trainingDatasetHash}) does not match current dataset hash (${expectedTrainingDatasetHash}). Re-fit calibration model.`);
     }
 
     cachedModel = parsed;
     return cachedModel;
   } catch (err) {
-    if (err.message.startsWith("CALIBRATION_ARTIFACT_")) {
+    if (err.message.startsWith("CALIBRATION_ARTIFACT_") || err.message.startsWith("UNVERIFIED_PROVENANCE")) {
       throw err;
     }
     throw new Error(`CALIBRATION_ARTIFACT_INVALID: Failed to parse calibration artifact: ${err.message}`);
@@ -199,7 +210,9 @@ export function verifyCalibrationModelFreshness(expectedPredictionEngineHash, ex
   } catch (err) {
     return {
       isFresh: false,
-      status: err.message.startsWith("CALIBRATION_ARTIFACT_STALE") ? "CALIBRATION_ARTIFACT_STALE" : "CALIBRATION_ARTIFACT_INVALID",
+      status: err.message.startsWith("CALIBRATION_ARTIFACT_STALE")
+        ? "CALIBRATION_ARTIFACT_STALE"
+        : (err.message.startsWith("UNVERIFIED_PROVENANCE") ? "UNVERIFIED_PROVENANCE" : "CALIBRATION_ARTIFACT_INVALID"),
       error: err.message
     };
   }

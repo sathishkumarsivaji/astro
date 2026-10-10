@@ -20,6 +20,7 @@
 
 import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 import { generateChartFingerprint } from "../astroEngine.js";
+import { computeSha256Hex } from "../predictionValidationLab.js";
 
 // Authoritative frozen baseline versions and hashes
 export const DEFAULT_ENGINE_VERSION = "ASTROVERSE Core v4.2.0";
@@ -41,32 +42,6 @@ const cacheStats = {
 };
 
 /**
- * Computes deterministic 64-bit/128-bit hex hash safe for browser and Node.
- */
-function sha256(str) {
-  const s = String(str);
-  let h1 = 0xdeadbeef ^ s.length;
-  let h2 = 0x41c6ce57 ^ s.length;
-  let h3 = 0x9e3779b9 ^ s.length;
-  let h4 = 0x85ebca6b ^ s.length;
-  for (let i = 0; i < s.length; i++) {
-    const ch = s.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-    h3 = Math.imul(h3 ^ ch, 2246822507);
-    h4 = Math.imul(h4 ^ ch, 3266489909);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  h3 = Math.imul(h3 ^ (h3 >>> 16), 1597334677) ^ Math.imul(h4 ^ (h4 >>> 13), 2654435761);
-  h4 = Math.imul(h4 ^ (h4 >>> 16), 1597334677) ^ Math.imul(h3 ^ (h3 >>> 13), 2654435761);
-  return (h1 >>> 0).toString(16).padStart(8, '0') +
-         (h2 >>> 0).toString(16).padStart(8, '0') +
-         (h3 >>> 0).toString(16).padStart(8, '0') +
-         (h4 >>> 0).toString(16).padStart(8, '0');
-}
-
-/**
  * Extracts or generates a canonical chart fingerprint for caching.
  */
 export function getReportChartFingerprint(chartData) {
@@ -85,7 +60,7 @@ export function getReportChartFingerprint(chartData) {
       chartData.longitude ?? chartData.lng ?? "",
       chartData.timezoneId || chartData.tz || chartData.utcOffset || ""
     ].join("|");
-    return sha256(rawKey);
+    return computeSha256Hex(rawKey);
   }
 }
 
@@ -96,8 +71,9 @@ export function computeReportInputHash(chartData, options = {}) {
   const chartFp = getReportChartFingerprint(chartData);
   const lang = options.lang || "en";
   const name = options.clientName || chartData.clientName || "";
-  const payload = `${chartFp}:${lang}:${name}`;
-  return sha256(payload);
+  const currentDate = options.currentDate || chartData.currentDate || "";
+  const payload = `${chartFp}:${lang}:${name}:${currentDate}`;
+  return computeSha256Hex(payload);
 }
 
 /**
@@ -111,7 +87,8 @@ export function getCachedLifeReport(chartData, options = {}) {
   }
 
   const lang = options.lang || "en";
-  const cacheKey = `${chartFp}:${lang}`;
+  const currentDate = options.currentDate || chartData.currentDate || "";
+  const cacheKey = `${chartFp}:${lang}:${currentDate}`;
   const entry = reportCache.get(cacheKey);
 
   if (!entry) {
@@ -149,12 +126,14 @@ export function setCachedLifeReport(chartData, options = {}, report) {
   if (!chartFp || !report) return;
 
   const lang = options.lang || "en";
-  const cacheKey = `${chartFp}:${lang}`;
+  const currentDate = options.currentDate || chartData.currentDate || "";
+  const cacheKey = `${chartFp}:${lang}:${currentDate}`;
   const inputHash = computeReportInputHash(chartData, options);
 
   const entry = {
     chartFingerprint: chartFp,
     lang,
+    currentDate,
     engineVersion: activeEngineVersion,
     predictionEngineHash: activePredictionEngineHash,
     calibrationModelHash: activeCalibrationModelHash,
@@ -166,6 +145,24 @@ export function setCachedLifeReport(chartData, options = {}, report) {
 
   reportCache.set(cacheKey, entry);
   cacheStats.total = reportCache.size;
+}
+
+/**
+ * Invalidates a specific cache entry for the given chart and options.
+ */
+export function invalidateReportCacheEntry(chartData, options = {}) {
+  const chartFp = getReportChartFingerprint(chartData);
+  if (!chartFp) return false;
+
+  const lang = options.lang || "en";
+  const currentDate = options.currentDate || chartData.currentDate || "";
+  const cacheKey = `${chartFp}:${lang}:${currentDate}`;
+  const deleted = reportCache.delete(cacheKey);
+  if (deleted) {
+    cacheStats.invalidated++;
+    cacheStats.total = reportCache.size;
+  }
+  return deleted;
 }
 
 /**

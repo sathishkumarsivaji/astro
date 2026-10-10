@@ -2,7 +2,7 @@
   "calibratorType": "PLATT_LOGISTIC_SCALING_V2",
   "modelVersion": "2.2.0-actual-model-fitted",
   "predictionEngineVersion": "4.2.0",
-  "predictionEngineHash": "3f080bd4f6aeaefe5420a6493c73e479d1accdcb6aa655f5c3ab7d7914b444b0",
+  "predictionEngineHash": "d50ba931164b39e9ae36546ed0f92022a34a07a5d08292fdb2e819a9ca3c2ede",
   "calibrationInputHash": "58c1c3b7bb8defa059bc58e11cf1382dad418f216a423a6e8e94dce2b5516db4",
   "trainingSampleHash": "83a97b8b775723f88b5f43b3501b61efc5f24a040b4b066b70e500f6f4ab2357",
   "fitTimestamp": "2026-10-10T11:45:57.495Z",
