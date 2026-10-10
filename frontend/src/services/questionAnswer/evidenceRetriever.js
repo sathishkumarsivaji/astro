@@ -385,20 +385,25 @@ export function retrieveEvidence(plan, context) {
   if (p1Name && p2Name && planetMap[p1Name] && planetMap[p2Name]) {
     const p1 = planetMap[p1Name];
     const p2 = planetMap[p2Name];
-    const h1 = p1.house || 1;
-    const h2 = p2.house || 1;
-    let distance = Math.abs(h1 - h2) + 1;
-    if (distance > 6) distance = 14 - distance;
+    const hasH1 = Number.isInteger(p1.house);
+    const hasH2 = Number.isInteger(p2.house);
+    const h1 = hasH1 ? p1.house : null;
+    const h2 = hasH2 ? p2.house : null;
+    let distance = null;
+    let axisRelationship = "NOT_AVAILABLE";
+    if (h1 != null && h2 != null) {
+      distance = Math.abs(h1 - h2) + 1;
+      if (distance > 6) distance = 14 - distance;
 
-    let axisRelationship = "MUTUAL_ASPECT";
-    if (h1 === h2) axisRelationship = "1/1_CONJUNCTION";
-    else if ((Math.abs(h1 - h2) === 6)) axisRelationship = "1/7_OPPOSITION";
-    else if ((Math.abs(h1 - h2) === 2 || Math.abs(h1 - h2) === 10)) axisRelationship = "3/11_UPACHAYA";
-    else if ((Math.abs(h1 - h2) === 4 || Math.abs(h1 - h2) === 8)) axisRelationship = "5/9_TRIKONA";
-    else if ((Math.abs(h1 - h2) === 5 || Math.abs(h1 - h2) === 7)) axisRelationship = "6/8_SHADASHTAKA";
-    else if ((Math.abs(h1 - h2) === 1 || Math.abs(h1 - h2) === 11)) axisRelationship = "2/12_DWIRDWADASA";
+      if (h1 === h2) axisRelationship = "1/1_CONJUNCTION";
+      else if ((Math.abs(h1 - h2) === 6)) axisRelationship = "1/7_OPPOSITION";
+      else if ((Math.abs(h1 - h2) === 2 || Math.abs(h1 - h2) === 10)) axisRelationship = "3/11_UPACHAYA";
+      else if ((Math.abs(h1 - h2) === 4 || Math.abs(h1 - h2) === 8)) axisRelationship = "5/9_TRIKONA";
+      else if ((Math.abs(h1 - h2) === 5 || Math.abs(h1 - h2) === 7)) axisRelationship = "6/8_SHADASHTAKA";
+      else if ((Math.abs(h1 - h2) === 1 || Math.abs(h1 - h2) === 11)) axisRelationship = "2/12_DWIRDWADASA";
+    }
 
-    const activatedHouses = [h1, h2];
+    const activatedHouses = [h1, h2].filter(h => h != null);
     const activatedDomains = [];
     if (activatedHouses.includes(1)) activatedDomains.push("vitality_identity");
     if (activatedHouses.includes(2) || activatedHouses.includes(11)) activatedDomains.push("finance_wealth");

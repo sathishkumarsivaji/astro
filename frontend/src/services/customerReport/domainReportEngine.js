@@ -206,9 +206,9 @@ function buildSingleDomainReport({
 }) {
   const displayNames = DOMAIN_DISPLAY_NAMES[domainId] || { en: domainId, ta: domainId };
   const houses = config.relevantHouses || [];
-  const primaryHouse = houses[0] || 1;
+  const primaryHouse = houses.length > 0 ? houses[0] : null;
   const houseLords = canonicalFacts.houseLords || {};
-  const primaryLord = houseLords[primaryHouse] || "Unknown";
+  const primaryLord = primaryHouse != null ? (houseLords[primaryHouse] || "Unknown") : null;
   const karakas = config.karakas || [];
   const primaryKaraka = karakas[0] || "";
   const vargaCode = config.varga || "D1";
@@ -335,16 +335,16 @@ function buildSingleDomainReport({
       step: 2,
       factor: "House Analysis",
       finding: isTamil
-        ? `${primaryHouse}-ம் பாவகம் (${houses.join(", ")} பாவகங்கள் தொடர்புடையவை)`
-        : `House ${primaryHouse} (relevant axis: houses ${houses.join(", ")})`,
+        ? (primaryHouse != null ? `${primaryHouse}-ம் பாவகம் (${houses.join(", ")} பாவகங்கள் தொடர்புடையவை)` : "தொடர்புடைய பாவகங்கள் வரையறுக்கப்படவில்லை")
+        : (primaryHouse != null ? `House ${primaryHouse} (relevant axis: houses ${houses.join(", ")})` : "No specific relevant house configured"),
       significance: isTamil ? "டொமைனின் செயல்பாட்டு களம்" : "Operational arena for this domain"
     },
     {
       step: 3,
       factor: "House Lord",
       finding: isTamil
-        ? `${primaryHouse}-ம் அதிபதி: ${primaryLord}`
-        : `Ruler of house ${primaryHouse}: ${primaryLord}`,
+        ? (primaryLord != null ? `${primaryHouse}-ம் அதிபதி: ${primaryLord}` : "பாவகாதிபதி வரையறுக்கப்படவில்லை")
+        : (primaryLord != null ? `Ruler of house ${primaryHouse}: ${primaryLord}` : "No specific house ruler configured"),
       significance: isTamil ? "பாவக பலத்தின் நிர்வாகி" : "Executive steward of domain outcomes"
     },
     {

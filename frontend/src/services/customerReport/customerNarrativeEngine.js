@@ -159,7 +159,7 @@ export function generateAlgorithmicNarrative(lifeReport, lang = "en") {
     const moonNakTa = toTamilNakshatra(moonNak) || moonNak;
     const sunSignVal = typeof coreProfile.sunSign === "object" ? (coreProfile.sunSign.sign || "") : (coreProfile.sunSign || "");
     const sunSignTa = toTamilRasi(sunSignVal) || sunSignVal;
-    const akPlanet = typeof coreProfile.atmakaraka === "object" ? (coreProfile.atmakaraka.planet || "") : (coreProfile.atmakaraka || "");
+    const akPlanet = (coreProfile.atmakaraka && typeof coreProfile.atmakaraka === "object") ? (coreProfile.atmakaraka.planet || "") : (coreProfile.atmakaraka || "");
     const akPlanetTa = toTamilPlanet(akPlanet) || akPlanet;
 
     lifeReport.executiveSummary.coreProfileSummary = isTamil

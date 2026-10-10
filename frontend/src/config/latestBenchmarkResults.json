@@ -13,8 +13,8 @@
     "independentAstroDatabank": 4798,
     "certifiedAstroDatabankAAA": 3751,
     "antiLeakageProtocol": "SHA-256 Pre-Cutoff Commitment Hashing",
-    "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
-    "calibrationModelHash": "f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61",
+    "predictionEngineHash": "3f080bd4f6aeaefe5420a6493c73e479d1accdcb6aa655f5c3ab7d7914b444b0",
+    "calibrationModelHash": "d44b0d4ca0cdbab351fbf74d4b9cf296473061d72462aa730fbf6c311b3497c9",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
@@ -22,7 +22,7 @@
     "modelFitHash": "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03",
     "coefficientHash": "ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f",
     "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-    "generationTimestamp": "2026-10-10T08:38:15.745Z",
+    "generationTimestamp": "2026-10-10T11:48:18.747Z",
     "predictionVersion": "v3.0.0-audited",
     "rulesVersion": "Parashari-v3.0-discrete-hazard"
   },
@@ -181,28 +181,28 @@
             "modelId": "MODEL_3_COMBINED",
             "modelName": "Combined Demographic + Astrology Model",
             "appliedThreshold": 0.93,
-            "accuracy": 0.1345,
-            "recall": 0.054,
-            "sensitivity": 0.054,
-            "specificity": 0.9712,
-            "mcc": 0.0322,
-            "balancedAccuracy": 0.5126,
-            "rocAuc": 0.4944,
-            "prAuc": 0.9139,
-            "brierScore": 0.0797,
+            "accuracy": 0.0878,
+            "recall": 0,
+            "sensitivity": 0,
+            "specificity": 1,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.528,
+            "prAuc": 0.9156,
+            "brierScore": 0.0809,
             "confusionMatrix": {
-              "tp": 78,
-              "fp": 4,
-              "tn": 135,
-              "fn": 1367
+              "tp": 0,
+              "fp": 0,
+              "tn": 139,
+              "fn": 1445
             },
-            "classifierStatus": "NON_DISCRIMINATIVE",
-            "isDegenerate": false,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "isDegenerate": true,
             "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
             "fittedParameters": {
-              "intercept": 2.3253,
-              "betaDemographic": 0.277,
-              "betaAstrology": 0.3775
+              "intercept": 1.888,
+              "betaDemographic": -0.0269,
+              "betaAstrology": 0.3627
             }
           }
         ]
@@ -501,28 +501,28 @@
             "modelId": "MODEL_3_COMBINED",
             "modelName": "Combined Demographic + Astrology Model",
             "appliedThreshold": 0.93,
-            "accuracy": 0.1279,
-            "recall": 0.0543,
-            "sensitivity": 0.0543,
-            "specificity": 0.9291,
-            "mcc": -0.0201,
-            "balancedAccuracy": 0.4917,
-            "rocAuc": 0.5089,
-            "prAuc": 0.9101,
-            "brierScore": 0.0765,
+            "accuracy": 0.0842,
+            "recall": 0,
+            "sensitivity": 0,
+            "specificity": 1,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.4988,
+            "prAuc": 0.9119,
+            "brierScore": 0.0782,
             "confusionMatrix": {
-              "tp": 75,
-              "fp": 9,
-              "tn": 118,
-              "fn": 1307
+              "tp": 0,
+              "fp": 0,
+              "tn": 127,
+              "fn": 1382
             },
-            "classifierStatus": "NON_DISCRIMINATIVE",
-            "isDegenerate": false,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "isDegenerate": true,
             "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
             "fittedParameters": {
-              "intercept": 2.3253,
-              "betaDemographic": 0.277,
-              "betaAstrology": 0.3775
+              "intercept": 1.888,
+              "betaDemographic": -0.0269,
+              "betaAstrology": 0.3627
             }
           }
         ]
@@ -821,28 +821,28 @@
             "modelId": "MODEL_3_COMBINED",
             "modelName": "Combined Demographic + Astrology Model",
             "appliedThreshold": 0.93,
-            "accuracy": 0.1502,
-            "recall": 0.1192,
-            "sensitivity": 0.1192,
+            "accuracy": 0.0351,
+            "recall": 0,
+            "sensitivity": 0,
             "specificity": 1,
-            "mcc": 0.0688,
-            "balancedAccuracy": 0.5596,
-            "rocAuc": 0.5554,
-            "prAuc": 0.9766,
-            "brierScore": 0.0395,
+            "mcc": 0,
+            "balancedAccuracy": 0.5,
+            "rocAuc": 0.4973,
+            "prAuc": 0.9684,
+            "brierScore": 0.0406,
             "confusionMatrix": {
-              "tp": 36,
+              "tp": 0,
               "fp": 0,
               "tn": 11,
-              "fn": 266
+              "fn": 302
             },
-            "classifierStatus": "NON_DISCRIMINATIVE",
-            "isDegenerate": false,
+            "classifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+            "isDegenerate": true,
             "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
             "fittedParameters": {
-              "intercept": 2.3253,
-              "betaDemographic": 0.277,
-              "betaAstrology": 0.3775
+              "intercept": 1.888,
+              "betaDemographic": -0.0269,
+              "betaAstrology": 0.3627
             }
           }
         ]

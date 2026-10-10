@@ -921,6 +921,18 @@ export function classifyConsultationIntent(questionText = "", conversationHistor
  */
 export function evaluateSpouseFamilyWealth(chartData) {
   const planets = chartData?.planets || [];
+  if (!chartData || !Array.isArray(planets) || planets.length === 0) {
+    return {
+      classification: "INSUFFICIENT_DATA",
+      verdictEn: "Insufficient astrological data to evaluate spouse family wealth relative comparison.",
+      verdictTa: "துணையின் குடும்ப செல்வ நிலையை ஒப்பிட தேவையான ஜோதிட தரவுகள் போதுமானதாக இல்லை.",
+      nativeScore: null,
+      spouseScore: null,
+      evidenceFactors: [],
+      confidence: "INSUFFICIENT_DATA"
+    };
+  }
+
   const getPlanet = (name) => planets.find(p => p.name === name) || {};
   const jup = getPlanet("Jupiter");
   const ven = getPlanet("Venus");
@@ -970,6 +982,18 @@ export function evaluateSpouseFamilyWealth(chartData) {
       layer: CERTAINTY_LAYERS.LAYER_C.id,
       text: `Venus (Shukra) occupies dignified dignity (${ven.dignity}), indicating aesthetic affluence in the partner's background.`
     });
+  }
+
+  if (factors.length === 0) {
+    return {
+      classification: "INSUFFICIENT_DATA",
+      verdictEn: "Insufficient astrological indicators available to evaluate spouse family wealth relative comparison.",
+      verdictTa: "துணையின் குடும்ப செல்வ நிலையை மதிப்பிட போதுமான ஜோதிட காரணிகள் அமையவில்லை.",
+      nativeScore: 0,
+      spouseScore: 0,
+      evidenceFactors: [],
+      confidence: "INSUFFICIENT_DATA"
+    };
   }
 
   let classification = "SIMILAR";

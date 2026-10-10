@@ -893,6 +893,7 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {isTamil ? "மீண்டும் கணக்கிடு" : "Recalculate"}
                 </button>
                 <button
+                  disabled={!result.timeWindow?.mostProbable || result.timeWindow?.status === "INSUFFICIENT_DATA" || result.timeWindow?.status === "NOT_DISCRIMINATING"}
                   onClick={() => {
                     const lat = answers.latitude ?? result.latitude;
                     const lng = answers.longitude ?? result.longitude;
@@ -901,9 +902,14 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                       setCurrentStep(2);
                       return;
                     }
+                    const validCandidateTime = result.timeWindow?.mostProbable ? result.timeWindow.mostProbable.replace(/\s*(AM|PM)/i, "").trim() : null;
+                    if (!validCandidateTime || result.timeWindow?.status === "INSUFFICIENT_DATA" || result.timeWindow?.status === "NOT_DISCRIMINATING") {
+                      alert(isTamil ? "போதுமான தகவல்கள் இல்லாததால் பிறந்த நேரத்தை நிர்ணயிக்க இயலவில்லை (INSUFFICIENT_DATA)." : "Insufficient discriminating data. A valid candidate birth time could not be resolved (INSUFFICIENT_DATA / NOT_DISCRIMINATING).");
+                      return;
+                    }
                     onApplyEstimatedChart({
                       birthDate: result.candidateMonthWindow.exactEstimatedDOB,
-                      birthTime: result.timeWindow?.mostProbable ? result.timeWindow.mostProbable.replace(/\s*(AM|PM)/i, "") : "06:45",
+                      birthTime: validCandidateTime,
                       name: isTamil ? "ஜாதகர்" : "Native",
                       birthPlace: answers.birthCity || result.birthPlace || "",
                       latitude: lat,
@@ -912,7 +918,11 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                       timezoneId: answers.timezoneId ?? result.timezoneId ?? null
                     });
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 flex items-center justify-center gap-2"
+                  className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 ${
+                    !result.timeWindow?.mostProbable || result.timeWindow?.status === "INSUFFICIENT_DATA" || result.timeWindow?.status === "NOT_DISCRIMINATING"
+                      ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
+                      : "bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 shadow-amber-500/20 hover:brightness-110"
+                  }`}
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{isTamil ? "இந்த நேரத்தை கொண்டு ஜாதகம் கணக்கிடுக" : "Generate Natal Chart With This Time"}</span>

@@ -47,10 +47,10 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
 
   const lagnaSign = canonicalFacts?.ascendant?.sign || null;
   const lagnaLong = canonicalFacts?.ascendant?.longitude != null ? canonicalFacts.ascendant.longitude.toFixed(2) : null;
-  const houses = options.relevantHouses || DOMAIN_HOUSES[domain] || [1, 7, 10];
-  const houseStr = houses.join(', ');
-  const karakas = options.relevantKarakas?.primary || DOMAIN_KARAKAS[domain]?.primary || ['Jupiter'];
-  const karakaStr = karakas.join(', ');
+  const houses = options.relevantHouses || DOMAIN_HOUSES[domain] || [];
+  const houseStr = houses.length > 0 ? houses.join(', ') : 'None configured';
+  const karakas = options.relevantKarakas?.primary || DOMAIN_KARAKAS[domain]?.primary || [];
+  const karakaStr = karakas.length > 0 ? karakas.join(', ') : 'None configured';
 
   const isIncomplete = !lagnaSign || !mdLord;
 
@@ -420,13 +420,21 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     nodeId: node3Id,
     level: 3,
     type: 'HOUSE',
-    description: `Domain ${domain} maps to principal houses [${houseStr}].`,
-    descriptionTamil: `${domain} களம் [${houseStr}] முக்கிய பாவகங்களுடன் தொடர்புடையது.`,
-    value: 1.0,
-    source: 'BHAVA_MAPPING',
+    description: houses.length > 0
+      ? `Domain ${domain} maps to principal houses [${houseStr}].`
+      : `Domain ${domain} has no configured principal houses.`,
+    descriptionTamil: houses.length > 0
+      ? `${domain} களம் [${houseStr}] முக்கிய பாவகங்களுடன் தொடர்புடையது.`
+      : `${domain} களத்திற்கு பாவகங்கள் வரையறுக்கப்படவில்லை.`,
+    value: houses.length > 0 ? 1.0 : null,
+    source: houses.length > 0 ? 'BHAVA_MAPPING' : 'NOT_APPLICABLE',
     childNodeIds: [node4Id],
-    independenceGroupId: lagnaSign ? igNatalId : null
+    independenceGroupId: (lagnaSign && houses.length > 0) ? igNatalId : null
   });
+  if (houses.length === 0) {
+    node3.status = 'NOT_APPLICABLE';
+    node3.contribution = 0;
+  }
   validateEvidenceNode(node3);
   evidenceNodes.splice(2, 0, node3);
 
@@ -434,13 +442,21 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     nodeId: node4Id,
     level: 4,
     type: 'LORD',
-    description: `Domain houses ruled by lords [${lordStr}].`,
-    descriptionTamil: `பாவக அதிபதிகள் [${lordStr}] பொறுப்பு வகிக்கின்றனர்.`,
-    value: 1.0,
-    source: 'HOUSE_LORDS',
+    description: lords.length > 0
+      ? `Domain houses ruled by lords [${lordStr}].`
+      : `No house rulers available for domain ${domain}.`,
+    descriptionTamil: lords.length > 0
+      ? `பாவக அதிபதிகள் [${lordStr}] பொறுப்பு வகிக்கின்றனர்.`
+      : `${domain} களத்திற்கு அதிபதிகள் கிடைக்கவில்லை.`,
+    value: lords.length > 0 ? 1.0 : null,
+    source: lords.length > 0 ? 'HOUSE_LORDS' : 'NOT_APPLICABLE',
     childNodeIds: [node5Id],
-    independenceGroupId: lagnaSign ? igNatalId : null
+    independenceGroupId: (lagnaSign && lords.length > 0) ? igNatalId : null
   });
+  if (lords.length === 0) {
+    node4.status = 'NOT_APPLICABLE';
+    node4.contribution = 0;
+  }
   validateEvidenceNode(node4);
   evidenceNodes.splice(3, 0, node4);
 
@@ -448,13 +464,21 @@ export function buildEvidenceChain(domain, canonicalFacts = {}, dashaMatch = {},
     nodeId: node5Id,
     level: 5,
     type: 'KARAKA',
-    description: `Natural significators for ${domain}: [${karakaStr}].`,
-    descriptionTamil: `${domain} களத்தின் இயற்கை காரகர்கள்: [${karakaStr}].`,
-    value: 1.0,
-    source: 'NAISARGIKA_KARAKA',
+    description: karakas.length > 0
+      ? `Natural significators for ${domain}: [${karakaStr}].`
+      : `No natural significators configured for domain ${domain}.`,
+    descriptionTamil: karakas.length > 0
+      ? `${domain} களத்தின் இயற்கை காரகர்கள்: [${karakaStr}].`
+      : `${domain} களத்திற்கு காரகங்கள் வரையறுக்கப்படவில்லை.`,
+    value: karakas.length > 0 ? 1.0 : null,
+    source: karakas.length > 0 ? 'NAISARGIKA_KARAKA' : 'NOT_APPLICABLE',
     childNodeIds: vargaNodeIds,
-    independenceGroupId: lagnaSign ? igNatalId : null
+    independenceGroupId: (lagnaSign && karakas.length > 0) ? igNatalId : null
   });
+  if (karakas.length === 0) {
+    node5.status = 'NOT_APPLICABLE';
+    node5.contribution = 0;
+  }
   validateEvidenceNode(node5);
   evidenceNodes.splice(4, 0, node5);
 

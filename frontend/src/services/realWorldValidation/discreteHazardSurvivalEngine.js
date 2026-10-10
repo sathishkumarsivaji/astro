@@ -154,8 +154,18 @@ export function extractSubjectEventTime(rec) {
   }
 
   if (rec.censoringStatus === "RIGHT_CENSORED") {
-    const cAge = rec.currentAge || 45.0;
-    return { eventAge: null, censorAge: cAge, isEvent: false, groundTruthPrecision: rec.currentAge ? "YEAR" : "ESTIMATED" };
+    let cAge = Number.isFinite(rec.currentAge) ? rec.currentAge : null;
+    if (cAge == null && rec.birthDate && rec.observationCutoffDate) {
+      const bYear = new Date(rec.birthDate).getUTCFullYear();
+      const cYear = new Date(rec.observationCutoffDate).getUTCFullYear();
+      if (Number.isFinite(bYear) && Number.isFinite(cYear) && cYear > bYear) {
+        cAge = cYear - bYear;
+      }
+    }
+    if (cAge == null) {
+      return { eventAge: null, censorAge: null, isEvent: false, groundTruthPrecision: null };
+    }
+    return { eventAge: null, censorAge: cAge, isEvent: false, groundTruthPrecision: "YEAR" };
   }
   if (rec.censoringStatus === "NO_EVENT_WITH_COMPLETE_FOLLOWUP" || rec.censoringStatus === "NO_EVENT") {
     return { eventAge: null, censorAge: 50.0, isEvent: false, groundTruthPrecision: "STUDY_HORIZON" };

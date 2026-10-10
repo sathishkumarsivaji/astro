@@ -108,13 +108,13 @@ test("Spouse geographic distance evaluator handles null/empty chart safely with 
 test("Spouse family wealth evaluator handles null/empty chart safely", () => {
   const resNull = evaluateSpouseFamilyWealth(null);
   assert.ok(resNull);
-  assert.equal(resNull.classification, "SIMILAR");
-  assert.equal(resNull.nativeScore, 0);
-  assert.equal(resNull.spouseScore, 0);
+  assert.equal(resNull.classification, "INSUFFICIENT_DATA");
+  assert.equal(resNull.confidence, "INSUFFICIENT_DATA");
 
   const resEmpty = evaluateSpouseFamilyWealth({});
   assert.ok(resEmpty);
-  assert.equal(resEmpty.classification, "SIMILAR");
+  assert.equal(resEmpty.classification, "INSUFFICIENT_DATA");
+  assert.equal(resEmpty.confidence, "INSUFFICIENT_DATA");
 });
 
 test("Gemstone remedies evaluator handles null/empty chart safely with null primary gemstone", () => {

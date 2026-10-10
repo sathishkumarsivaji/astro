@@ -1520,7 +1520,19 @@ export function fitNullOccurrenceModel(trainCohort) {
     if (status === "EVENT") { events++; total++; }
     else if (status === "NO_EVENT" || status === "NO_EVENT_WITH_COMPLETE_FOLLOWUP") { total++; }
   }
-  const baseRate = total > 0 ? events / total : 0.842;
+  if (total === 0) {
+    return {
+      modelId: "MODEL_0_NULL",
+      modelName: "Null Intercept-Only Baseline",
+      status: "INSUFFICIENT_DATA",
+      intercept: null,
+      slope: 0.0,
+      baseRate: null,
+      trainingN: 0,
+      predict: () => null
+    };
+  }
+  const baseRate = events / total;
   const pClamped = Math.min(Math.max(baseRate, 0.01), 0.99);
   const intercept = Math.log(pClamped / (1 - pClamped));
   return {
@@ -1539,8 +1551,9 @@ export function fitDemographicOccurrenceModel(trainCohort, options = {}) {
   for (const r of trainCohort) {
     const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
     if (status === "RIGHT_CENSORED" || status === "UNKNOWN" || status === "MISSING_OUTCOME" || status === "EVENT_PRE_HORIZON") continue;
+    const bYear = Number.isInteger(r.birthYear) ? r.birthYear : (r.birthDate ? new Date(r.birthDate).getUTCFullYear() : null);
+    if (bYear == null || !Number.isFinite(bYear)) continue;
     const y = status === "EVENT" ? 1 : 0;
-    const bYear = r.birthYear || 1950;
     const xDemo = (bYear - 1950) / 50;
     dataPoints.push({ y, x: [1, xDemo] });
   }
@@ -1558,7 +1571,8 @@ export function fitDemographicOccurrenceModel(trainCohort, options = {}) {
     converged: fit.converged,
     iterations: fit.iterations,
     predict: (record) => {
-      const bYear = record.birthYear || 1950;
+      const bYear = Number.isInteger(record.birthYear) ? record.birthYear : (record.birthDate ? new Date(record.birthDate).getUTCFullYear() : null);
+      if (bYear == null || !Number.isFinite(bYear)) return null;
       const xDemo = (bYear - 1950) / 50;
       const logit = intercept + betaCohort * xDemo;
       return 1 / (1 + Math.exp(-Math.max(-35, Math.min(35, logit))));
@@ -1622,11 +1636,11 @@ export function fitCombinedOccurrenceModel(trainCohort, options = {}) {
   const dataPoints = [];
   for (const r of trainCohort) {
     const status = r.censoringStatus || (r.hasDocumentedMarriage ? "EVENT" : "UNKNOWN");
-    if (status === "RIGHT_CENSORED" || status === "UNKNOWN" || status === "MISSING_OUTCOME" || status === "EVENT_PRE_HORIZON") continue;
+    const bYear = Number.isInteger(r.birthYear) ? r.birthYear : (r.birthDate ? new Date(r.birthDate).getUTCFullYear() : null);
+    if (bYear == null || !Number.isFinite(bYear)) continue;
     const rawScore = getRecordAstrologicalScore(r, options);
     if (rawScore === null || typeof rawScore !== "number" || !Number.isFinite(rawScore)) continue;
     const y = status === "EVENT" ? 1 : 0;
-    const bYear = r.birthYear || 1950;
     const xDemo = (bYear - 1950) / 50;
     const xAstro = rawScore - 0.5;
     dataPoints.push({ y, x: [1, xDemo, xAstro] });
@@ -1662,7 +1676,8 @@ export function fitCombinedOccurrenceModel(trainCohort, options = {}) {
     converged: fit.converged,
     iterations: fit.iterations,
     predict: (record, rawRuleScore = null) => {
-      const bYear = record.birthYear || 1950;
+      const bYear = Number.isInteger(record.birthYear) ? record.birthYear : (record.birthDate ? new Date(record.birthDate).getUTCFullYear() : null);
+      if (bYear == null || !Number.isFinite(bYear)) return null;
       const xDemo = (bYear - 1950) / 50;
       const s = typeof rawRuleScore === "number" && Number.isFinite(rawRuleScore)
         ? rawRuleScore

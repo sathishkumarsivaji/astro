@@ -161,12 +161,12 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
     },
     moonNakshatra: {
       name: chartData.moonNakshatra || "",
-      pada: chartData.moonPada || 1,
+      pada: Number.isInteger(chartData.moonPada) ? chartData.moonPada : null,
       lord: chartData.moonNakshatraLord || ""
     },
     sunSign: {
       sign: chartData.sunSign || "",
-      degree: parseFloat((chartData.sunLong ? chartData.sunLong % 30 : 15).toFixed(2)),
+      degree: Number.isFinite(chartData.sunLong) ? parseFloat((chartData.sunLong % 30).toFixed(2)) : null,
       lord: chartData.sunSignLord || ""
     },
     sunNakshatra: {
@@ -176,26 +176,35 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
     yogakaraka: chartData.yogakaraka || null,
     functionalLordships: chartData.functionalLordships || null,
     shadbalaSummary: chartData.shadbala || [],
-    elementalDistribution: chartData.elementalDistribution || { fire: 3, air: 2, water: 2, earth: 3 }
+    elementalDistribution: chartData.elementalDistribution || null
   };
 
   // 4. Planetary Table
-  const planetaryTable = (chartData.planets || []).map(p => ({
-    name: p.name,
-    nameTa: p.tamil || p.name,
-    longitude: p.longitude ?? p.long ?? 0,
-    deg: p.degreeInSign ?? parseFloat(((p.longitude ?? 0) % 30).toFixed(2)),
-    sign: p.sign || p.signName || "",
-    house: p.house || 1,
-    nakshatra: p.nakshatra || "",
-    pada: p.pada || 1,
-    dignity: p.dignity || "Neutral",
-    isRetrograde: Boolean(p.isRetrograde ?? p.retrograde),
-    isCombust: Boolean(p.isCombust ?? p.combust),
-    speedDegDay: p.speed ?? 1.0,
-    shadbalaVirupas: p.shadbalaVirupas ?? null,
-    shadbalaRatio: p.shadbalaRatio ?? null
-  }));
+  const planetaryTable = (chartData.planets || []).map(p => {
+    const rawLong = p.longitude ?? p.long;
+    const hasLong = Number.isFinite(rawLong);
+    const rawSpeed = p.speed ?? p.speedDegDay;
+    const hasSpeed = Number.isFinite(rawSpeed);
+    const hasHouse = Number.isInteger(p.house);
+    const hasPada = Number.isInteger(p.pada);
+
+    return {
+      name: p.name,
+      nameTa: p.tamil || p.name,
+      longitude: hasLong ? rawLong : null,
+      deg: p.degreeInSign ?? (hasLong ? parseFloat((rawLong % 30).toFixed(2)) : null),
+      sign: p.sign || p.signName || "",
+      house: hasHouse ? p.house : null,
+      nakshatra: p.nakshatra || "",
+      pada: hasPada ? p.pada : null,
+      dignity: p.dignity || "Neutral",
+      isRetrograde: Boolean(p.isRetrograde ?? p.retrograde),
+      isCombust: Boolean(p.isCombust ?? p.combust),
+      speedDegDay: hasSpeed ? rawSpeed : null,
+      shadbalaVirupas: p.shadbalaVirupas ?? null,
+      shadbalaRatio: p.shadbalaRatio ?? null
+    };
+  });
 
   // 5. House Analysis
   const rawHouses = (chartData.houses && chartData.houses.length === 12) ? chartData.houses : (canonicalFacts.houses || []);
@@ -210,12 +219,12 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
 
   // 6. Yoga Analysis
   const yogaAnalysis = (chartData.detectedYogas || chartData.vedicYogas || []).map(y => ({
-    name: y.name || "Classical Yoga",
-    nameTa: y.nameTamil || y.name,
-    category: y.category || "Raja Yoga",
-    formation: y.formation || y.description || "Planetary alignment",
-    manifestationStatus: y.manifestation || "Fully Active",
-    strengthScore: y.strength || "Strong"
+    name: y.name || null,
+    nameTa: y.nameTamil || y.name || null,
+    category: y.category || null,
+    formation: y.formation || y.description || null,
+    manifestationStatus: y.manifestation || null,
+    strengthScore: y.strength || null
   }));
 
   // 7. Varga Analysis

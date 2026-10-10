@@ -4,7 +4,7 @@
   "schemaVersion": "3.0",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
-  "generatedAt": "2026-10-10T09:02:46.488Z",
+  "generatedAt": "2026-10-10T11:48:27.465Z",
   "status": {
     "astronomicalEngine": "CALCULATION_VALIDATED",
     "softwareInfrastructure": "SOFTWARE_VALIDATED",
@@ -13,18 +13,18 @@
   },
   "authoritativeHashes": {
     "astroEngineHash": "6ff061885982a5814e5af5c1d9d7a1f8d78073033429e40884eb1a53c9d7f032",
-    "empiricalEvaluationEngineHash": "780103b7e473c80b23b03ec4986681296dc4634654c33d164eaa428ba1a9e24e",
-    "discreteHazardSurvivalEngineHash": "9821e7a728f08d2bbd308530662809f1961ad32e92c8c512192fd4949fc60e30",
-    "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
-    "calibrationModelHash": "f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61"
+    "empiricalEvaluationEngineHash": "88307ad60eedf6bcfd5a9172ab59ef32c327c6008fb3d3b3e3c0259a7d9c7d31",
+    "discreteHazardSurvivalEngineHash": "e6e6549c3405d663cfcd88dc95c1c17db971960f17301759225ea9e986633481",
+    "predictionEngineHash": "3f080bd4f6aeaefe5420a6493c73e479d1accdcb6aa655f5c3ab7d7914b444b0",
+    "calibrationModelHash": "d44b0d4ca0cdbab351fbf74d4b9cf296473061d72462aa730fbf6c311b3497c9"
   },
   "datasetHashes": {
     "trainSplitHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "valSplitHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindTestSplitHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
     "internalHoldoutSplitHash": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
-    "astroDatabankTrueIndependentHash": "b17a1efa2b6da2bf0406e9595cd155c335024f982526445ef315061d3c45ae88",
+    "astroDatabankTrueIndependentHash": "3309e5d2fae7d8812bcfed97f0a999e9cd0cd6e0deed89738d4fa3236c84d87d",
     "overlapManifestHash": "6c6cac3c32bf7d63cc2bbe74060214757e2e1a3f8f68317fe844da51b140bb99"
   },
-  "updatedAt": "2026-10-10T09:02:46.488Z"
+  "updatedAt": "2026-10-10T11:48:27.465Z"
 }
