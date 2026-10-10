@@ -191,6 +191,7 @@ export function createLifeReportModel(params = {}) {
     executiveSummary: params.executiveSummary || {
       coreProfileSummary: "",
       strongestThemes: [],
+      personalizedThemes: [],
       currentLifePhase: null,
       nextImportantWindows: [],
       keyCautions: [],

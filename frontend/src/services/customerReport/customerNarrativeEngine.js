@@ -170,17 +170,24 @@ export function generateAlgorithmicNarrative(lifeReport, lang = "en") {
   // 2. Domain Reports Narrative Enrichment
   if (Array.isArray(lifeReport.domainReports)) {
     lifeReport.domainReports.forEach(dr => {
-      const dName = dr.domainName?.[isTamil ? "ta" : "en"] || dr.domainId;
-      const primaryHouse = dr.technicalEvidence?.primaryHouse || 1;
-      const primaryLord = dr.technicalEvidence?.primaryLord || "Lagna Lord";
+      const dName = isTamil ? (dr.domainName?.ta || dr.domainName?.en || dr.domainId) : (dr.domainName?.en || dr.domainId);
+      const primaryHouse = dr.technicalEvidence?.primaryHouse ?? null;
+      const primaryLord = dr.technicalEvidence?.primaryLord ?? null;
+
+      const houseTextEn = primaryHouse != null ? `House ${primaryHouse}` : "its designated astrological bhava";
+      const houseTextTa = primaryHouse != null ? `${primaryHouse}-ம் பாவகம்` : "அதற்குரிய பாவகம்";
+      const lordTextEn = primaryLord != null ? `its governing lord, ${primaryLord}` : "its governing planetary lord";
+      const lordTextTa = primaryLord != null ? `அதன் அதிபதி ${primaryLord}` : "அதன் பாவகாதிபதி";
+      const lordRefEn = primaryLord != null ? primaryLord : "primary astrological significators";
+      const lordRefTa = primaryLord != null ? primaryLord : "முக்கிய கிரக அமைப்புகள்";
 
       dr.narrative = {
         overview: isTamil
-          ? `${dName} டொமைன் வாழ்க்கையின் மிக முக்கியமான பரிமாணமாகும். இது ஜாதகத்தில் பிரதானமாக ${primaryHouse}-ம் பாவகம் மற்றும் அதன் அதிபதி ${primaryLord} மூலம் நிர்வகிக்கப்படுகிறது. பாரம்பரிய ஜோதிட நூல்களின்படி இந்த அமைப்பு ஒருவரின் இயல்பான போக்கையும், சவால்களையும், முன்னேற்றத்திற்கான நல்வாய்ப்புகளையும் பிரதிபலிக்கிறது.`
-          : `The ${dName} domain represents a cornerstone of lifelong fulfillment. In classical Vedic astrology, this arena is anchored by House ${primaryHouse} and governed by its lord, ${primaryLord}. The interplay of planetary dignities, divisional confirmations, and temporal Dasha cycles shapes the natural baseline tendencies for this domain.`,
+          ? `${dName} டொமைன் வாழ்க்கையின் மிக முக்கியமான பரிமாணமாகும். இது ஜாதகத்தில் பிரதானமாக ${houseTextTa} மற்றும் ${lordTextTa} மூலம் நிர்வகிக்கப்படுகிறது. பாரம்பரிய ஜோதிட நூல்களின்படி இந்த அமைப்பு ஒருவரின் இயல்பான போக்கையும், சவால்களையும், முன்னேற்றத்திற்கான நல்வாய்ப்புகளையும் பிரதிபலிக்கிறது.`
+          : `The ${dName} domain represents a cornerstone of lifelong fulfillment. In classical Vedic astrology, this arena is anchored by ${houseTextEn} and governed by ${lordTextEn}. The interplay of planetary dignities, divisional confirmations, and temporal Dasha cycles shapes the natural baseline tendencies for this domain.`,
         whatChartShows: isTamil
-          ? `உங்கள் ஜாதகத்தில் ${primaryLord} பெற்றுள்ள நிலை மற்றும் சுப கிரகங்களின் பார்வை ${dName} துறையில் ${dr.overallTraditionalAssessment} நிலையை வழங்குகிறது. இந்த அமைப்புகள் உங்களுக்கு உள்ளார்ந்த ஆற்றலையும் நிலைத்தன்மையையும் அளிக்கின்றன.`
-          : `Your natal disposition indicates that ${primaryLord} confers a ${dr.overallTraditionalAssessment} orientation towards ${dName}. The dignity of primary significators fosters innate resilience and structured evolution across this life sector.`,
+          ? `உங்கள் ஜாதகத்தில் ${lordRefTa} பெற்றுள்ள நிலை மற்றும் சுப கிரகங்களின் பார்வை ${dName} துறையில் ${dr.overallTraditionalAssessment} நிலையை வழங்குகிறது. இந்த அமைப்புகள் உங்களுக்கு உள்ளார்ந்த ஆற்றலையும் நிலைத்தன்மையையும் அளிக்கின்றன.`
+          : `Your natal disposition indicates that ${lordRefEn} confers a ${dr.overallTraditionalAssessment} orientation towards ${dName}. The dignity of primary significators fosters innate resilience and structured evolution across this life sector.`,
         timingNotice: isTamil
           ? `கால நிர்ணயம்: பாரம்பரிய தசா-கோச்சார சுழற்சிகள் அடிப்படையில் இந்த சாளரங்கள் 'பாரம்பரிய விதிமுறை சாளரம்' (TRADITIONAL RULE WINDOW) என வகைப்படுத்தப்படுகின்றன. இது எதிர்கால அறிவியல் உத்தரவாதம் அல்ல.`
           : `Timing Resolution: All timing periods are evaluated as TRADITIONAL RULE WINDOWS based on classical Dasha-transit synchronicity. They represent traditional supportive cycles rather than deterministic empirical guarantees.`

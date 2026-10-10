@@ -42,15 +42,25 @@ export function calculateCurrentLifePhase(chartData, currentDate = new Date(), l
 
   // 1. Calculate Native's Current Age
   let birthDate = null;
+  let ageEstimateYears = null;
+  const resolvedBirthYear = Number.isInteger(chartData.birthYear)
+    ? chartData.birthYear
+    : (Number.isInteger(canonicalFacts.birthYear)
+      ? canonicalFacts.birthYear
+      : (Number.isInteger(chartData.canonicalFacts?.birthYear) ? chartData.canonicalFacts.birthYear : null));
+
   if (chartData.birthDateStr) {
-    birthDate = new Date(chartData.birthDateStr);
+    const parsed = new Date(chartData.birthDateStr);
+    if (!isNaN(parsed.getTime())) birthDate = parsed;
   } else if (chartData.birthDate) {
-    birthDate = new Date(chartData.birthDate);
-  } else if (canonicalFacts.birthYear) {
-    birthDate = new Date(canonicalFacts.birthYear, 0, 1);
+    const parsed = new Date(chartData.birthDate);
+    if (!isNaN(parsed.getTime())) birthDate = parsed;
+  } else if (resolvedBirthYear !== null) {
+    // Birth year only: provide honest approximate age without inventing Jan 1 as birth date
+    ageEstimateYears = Math.max(0, currentDate.getFullYear() - resolvedBirthYear);
   }
 
-  let currentAgeYears = 30; // sensible fallback
+  let currentAgeYears = null;
   if (birthDate && !isNaN(birthDate.getTime())) {
     const ageDiffMs = currentDate.getTime() - birthDate.getTime();
     currentAgeYears = Math.max(0, parseFloat((ageDiffMs / (365.25 * 24 * 3600 * 1000)).toFixed(1)));
@@ -74,23 +84,34 @@ export function calculateCurrentLifePhase(chartData, currentDate = new Date(), l
     }
   }
 
-  // Fallback to chartData.currentDasha if table lookup did not match
+  // Fallback to chartData.currentDasha only if explicitly provided in chart facts
   const cd = chartData.currentDasha || {};
-  const mahaLord = activeDashaMatch?.lord || activeDashaMatch?.mahadasha || cd.lord || cd.mahadasha || "";
-  const antarLord = activeDashaMatch?.subLord || activeDashaMatch?.antardasha || cd.currentAntar || cd.antarDasha || "";
-  const pratyantarLord = activeDashaMatch?.pratyantardasha || cd.currentPratyantar || "";
+  const mahaLord = activeDashaMatch?.lord || activeDashaMatch?.mahadasha || cd.lord || cd.mahadasha || null;
+  const antarLord = activeDashaMatch?.subLord || activeDashaMatch?.antardasha || cd.currentAntar || cd.antarDasha || null;
+  const pratyantarLord = activeDashaMatch?.pratyantardasha || cd.currentPratyantar || null;
 
-  let startDateIso = activeDashaMatch?.startDate || cd.startDate || new Date(currentDate.getFullYear() - 1, 0, 1).toISOString().slice(0, 10);
-  let endDateIso = activeDashaMatch?.endDate || cd.endDate || new Date(currentDate.getFullYear() + 2, 0, 1).toISOString().slice(0, 10);
+  let startDateIso = activeDashaMatch?.startDate || cd.startDate || null;
+  let endDateIso = activeDashaMatch?.endDate || cd.endDate || null;
 
-  // Guard against childhood dates being returned as current
-  if (birthDate && !isNaN(birthDate.getTime())) {
+  // Validate date boundaries if dates are present
+  let isCurrentDateEnclosed = false;
+  if (startDateIso && endDateIso) {
     const startObj = new Date(startDateIso);
-    if (!isNaN(startObj.getTime()) && startObj.getTime() < birthDate.getTime()) {
-      // startDate cannot precede birth date
-      startDateIso = birthDate.toISOString().slice(0, 10);
+    const endObj = new Date(endDateIso);
+    if (!isNaN(startObj.getTime()) && !isNaN(endObj.getTime())) {
+      isCurrentDateEnclosed = currentDate.getTime() >= startObj.getTime() && currentDate.getTime() <= endObj.getTime();
+      // Guard against start date preceding birth date
+      if (birthDate && !isNaN(birthDate.getTime()) && startObj.getTime() < birthDate.getTime()) {
+        startDateIso = birthDate.toISOString().slice(0, 10);
+      }
     }
   }
+
+  // Vimshottari lord sequence validation
+  const VIMSHOTTARI_LORDS = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+  const isMahaLordValid = Boolean(mahaLord && VIMSHOTTARI_LORDS.includes(mahaLord));
+  const isAntarLordValid = Boolean(antarLord && VIMSHOTTARI_LORDS.includes(antarLord));
+  const isDashaSequenceValid = isMahaLordValid && isAntarLordValid;
 
   // 3. Activated Houses and Planets
   const houseLords = canonicalFacts.houseLords || {};
@@ -226,15 +247,52 @@ export function calculateCurrentLifePhase(chartData, currentDate = new Date(), l
     );
   }
 
+  const hasValidDasha = Boolean(mahaLord && antarLord);
+  const status = hasValidDasha ? "CALCULATED" : "INSUFFICIENT_DATA";
+
+  let currentAgeDisplay = isTamil ? "பெறப்படவில்லை" : "Not Available";
+  if (currentAgeYears !== null) {
+    currentAgeDisplay = `${currentAgeYears} ${isTamil ? "வயது" : "years"}`;
+  } else if (ageEstimateYears !== null) {
+    currentAgeDisplay = `~${ageEstimateYears} ${isTamil ? "வயது (தோராயமாக)" : "years (approximate)"}`;
+  }
+
+  const dashaDisplay = hasValidDasha
+    ? `${mahaLord} / ${antarLord}${pratyantarLord ? ` / ${pratyantarLord}` : ""}`
+    : (mahaLord ? `${mahaLord} (${isTamil ? "புக்தி பெறப்படவில்லை" : "Antardasha Unresolved"})` : (isTamil ? "தசா தகவல் போதவில்லை" : "Dasha Period Unresolved"));
+
+  let summaryNarrative = "";
+  if (hasValidDasha) {
+    const agePrefixEn = currentAgeYears !== null ? `At the current age of ${currentAgeYears}, ` : "";
+    const agePrefixTa = currentAgeYears !== null ? `ஜாதகரின் தற்போதைய வயது ${currentAgeYears}. ` : "";
+    const dateRangeEn = (startDateIso && endDateIso) ? ` (${startDateIso} to ${endDateIso})` : "";
+    const dateRangeTa = (startDateIso && endDateIso) ? ` (${startDateIso} முதல் ${endDateIso} வரை)` : "";
+    const domainText = activatedDomains.length > 0 ? activatedDomains.slice(0, 3).join(", ") : "general life focus";
+
+    summaryNarrative = isTamil
+      ? `${agePrefixTa}இப்போது ${mahaLord} மகா தசையில் ${antarLord} புக்தி நடைபெறுகிறது${dateRangeTa}. இந்த காலகட்டம் முக்கியமாக ${domainText} துறைகளை இயக்குகிறது.`
+      : `${agePrefixEn}the native is operating under the ${mahaLord} Mahadasha and ${antarLord} Antardasha${dateRangeEn}. This phase prominently activates ${domainText}.`;
+  } else {
+    summaryNarrative = isTamil
+      ? "போதுமான தசா அட்டவணை விவரங்கள் இல்லாததால் நடப்பு தசா-புக்தி காலத்தை துல்லியமாக நிர்ணயிக்க இயலவில்லை."
+      : "Current life phase and active Dasha period could not be resolved due to insufficient dasha calculation outputs.";
+  }
+
   return {
+    status,
     currentAgeYears,
-    currentAgeDisplay: `${currentAgeYears} ${isTamil ? "வயது" : "years"}`,
+    currentAgeDisplay,
+    ageEstimateYears,
+    isApproximateAge: ageEstimateYears !== null && currentAgeYears === null,
+    birthDateKnown: Boolean(birthDate),
     mahadasha: mahaLord,
     antardasha: antarLord,
     pratyantardasha: pratyantarLord,
-    dashaDisplay: `${mahaLord} / ${antarLord}${pratyantarLord ? ` / ${pratyantarLord}` : ""}`,
+    dashaDisplay,
     startDate: startDateIso,
     endDate: endDateIso,
+    isCurrentDateEnclosed,
+    isDashaSequenceValid,
     activatedHouses,
     activatedPlanets,
     activatedDomains,
@@ -247,8 +305,6 @@ export function calculateCurrentLifePhase(chartData, currentDate = new Date(), l
     contradictions,
     currentOpportunities,
     currentCautionAreas,
-    summaryNarrative: isTamil
-      ? `ஜாதகரின் தற்போதைய வயது ${currentAgeYears}. இப்போது ${mahaLord} மகா தசையில் ${antarLord} புக்தி நடைபெறுகிறது (${startDateIso} முதல் ${endDateIso} வரை). இந்த காலகட்டம் முக்கியமாக ${activatedDomains.slice(0, 3).join(", ")} துறைகளை இயக்குகிறது.`
-      : `At the current age of ${currentAgeYears}, the native is operating under the ${mahaLord} Mahadasha and ${antarLord} Antardasha (${startDateIso} to ${endDateIso}). This phase prominently activates ${activatedDomains.slice(0, 3).join(", ")}.`
+    summaryNarrative
   };
 }
