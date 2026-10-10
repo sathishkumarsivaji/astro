@@ -138,7 +138,8 @@ function sha256Hex(str) {
   const bitLen = bytes.length * 8;
   bytes.push(0x80);
   while ((bytes.length % 64) !== 56) bytes.push(0);
-  for (let s = 56; s >= 0; s -= 8) bytes.push((bitLen >>> s) & 0xff);
+  bytes.push(0, 0, 0, 0);
+  bytes.push((bitLen >>> 24) & 0xff, (bitLen >>> 16) & 0xff, (bitLen >>> 8) & 0xff, bitLen & 0xff);
 
   let H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
   const W = new Int32Array(64);
@@ -175,12 +176,21 @@ function sha256Hex(str) {
  * This should be included in every chart calculation output.
  */
 export function generateCalculationCertificate(systemId, birthData, calculationTimestamp = null, chartData = null) {
+  let actualTimestamp = calculationTimestamp;
+  let actualChartData = chartData;
+
+  // Flexible argument handling: (systemId, birthData, chartData, [timestamp])
+  if (calculationTimestamp && typeof calculationTimestamp === "object") {
+    actualChartData = calculationTimestamp;
+    actualTimestamp = (typeof chartData === "string") ? chartData : null;
+  }
+
   const normalizedId = systemId ? String(systemId).toLowerCase() : null;
   if (!normalizedId || !SYSTEM_CONVENTIONS[normalizedId]) {
     throw new Error(`INVALID_ASTROLOGY_SYSTEM: "${systemId}". generateCalculationCertificate requires an explicit valid system: lahiri, kp, raman, tropical.`);
   }
   const convention = SYSTEM_CONVENTIONS[normalizedId];
-  const now = calculationTimestamp || new Date().toISOString();
+  const now = (typeof actualTimestamp === "string" ? actualTimestamp : null) || new Date().toISOString();
 
   const inputPayload = JSON.stringify({
     date: birthData.birthDate || birthData.date || null,
@@ -193,18 +203,26 @@ export function generateCalculationCertificate(systemId, birthData, calculationT
   const inputHash = sha256Hex(inputPayload);
 
   let chartHash = null;
-  if (chartData) {
+  if (actualChartData) {
     const chartPayload = JSON.stringify({
-      asc: chartData.ascendantLong ?? chartData.ascendant?.longitude ?? null,
-      planets: (chartData.planets || []).map(p => ({ n: p.name, l: p.longitude ?? p.long })),
-      ayanamsha: chartData.ayanamsa ?? chartData.ayanamsaValue ?? null
+      asc: actualChartData.ascendantLong ?? actualChartData.ascendant?.longitude ?? null,
+      planets: (actualChartData.planets || []).map(p => ({ n: p.name, l: p.longitude ?? p.long })),
+      ayanamsha: actualChartData.ayanamsa ?? actualChartData.ayanamsaValue ?? null
     });
     chartHash = sha256Hex(chartPayload);
   } else {
     chartHash = sha256Hex(inputHash + ":" + convention.conventionId);
   }
 
-  const effectiveHouseSystem = chartData?.houseSystemEffective || chartData?.system?.houseSystem || birthData.houseSystemEffective || birthData.houseSystem || convention.houseSystem;
+  const effectiveHouseSystem = actualChartData?.houseSystemEffective || actualChartData?.system?.houseSystem || birthData.houseSystemEffective || birthData.houseSystem || convention.houseSystem;
+  const resolvedUtcDate = birthData.utcDate || actualChartData?.birthInstantUtc || actualChartData?.utcDate || null;
+  let resolvedJd = birthData.jd ?? actualChartData?.jd ?? null;
+  if (!resolvedJd && resolvedUtcDate) {
+    const d = (resolvedUtcDate instanceof Date) ? resolvedUtcDate : new Date(resolvedUtcDate);
+    if (!isNaN(d.getTime())) {
+      resolvedJd = (d.getTime() / 86400000.0) + 2440587.5;
+    }
+  }
   
   return {
     certificate: {
@@ -227,8 +245,9 @@ export function generateCalculationCertificate(systemId, birthData, calculationT
       timezoneId: birthData.timezoneId || null,
       utcOffset: birthData.utcOffset ?? null,
       dst: birthData.isDst ? "Active" : "Standard",
-      utcInstant: birthData.utcDate ? (birthData.utcDate instanceof Date ? birthData.utcDate.toISOString() : String(birthData.utcDate)) : null,
-      julianDay: birthData.jd ?? null,
+      utcInstant: resolvedUtcDate ? (resolvedUtcDate instanceof Date ? resolvedUtcDate.toISOString() : String(resolvedUtcDate)) : null,
+      julianDay: resolvedJd,
+      deltaTSeconds: actualChartData?.deltaTSeconds ?? actualChartData?.DeltaT ?? birthData.deltaTSeconds ?? birthData.DeltaT ?? null,
       
       // Convention details
       ayanamsha: convention.ayanamshaModel,

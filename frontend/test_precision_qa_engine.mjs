@@ -396,14 +396,10 @@ check("Both modes share identical timing resolution", noviceRes.timingResolution
 // =========================================================================
 console.log("\n[14] Testing Adversarial Benchmark Cases (Section 28)...");
 
-// Adversarial 1: Missing chart data entirely
-let threwMissing = false;
-try {
-  await processEvidenceLinkedQA({ question: "Will I marry?", context: {} });
-} catch (e) {
-  threwMissing = true;
-}
-check("Missing chart data fails closed with error", threwMissing === true);
+// Adversarial 1: Missing chart data entirely (structured fail-closed abstention contract)
+const resMissingChart = await processEvidenceLinkedQA({ question: "Will I marry?", context: {} });
+check("Missing chart data fails closed with INSUFFICIENT_DATA status", resMissingChart.status === "INSUFFICIENT_DATA");
+check("Missing chart data timingResolution is INSUFFICIENT_DATA", resMissingChart.timingResolution === "INSUFFICIENT_DATA");
 
 // Adversarial 2: Missing D10 chart
 const missingD10Context = {

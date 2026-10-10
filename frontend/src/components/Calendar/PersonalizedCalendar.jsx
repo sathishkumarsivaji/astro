@@ -190,7 +190,7 @@ export default function PersonalizedCalendar({ chartData, lang = "en" }) {
                   {selectedDay.dateStr}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                  {selectedDay.score}% {isTamil ? "சாதக குறியீடு" : "Favorable Index"}
+                  {isTamil ? `${selectedDay.score}/100 விதிமுறை சாதகப் புள்ளி (விதி குறியீடு; நிகழ்தகவு அல்ல)` : `Rule Favorable Score: ${selectedDay.score}/100 (Heuristic Rule Index, Not a Probability)`}
                 </span>
               </div>
               <p className="text-xs text-stone-600">

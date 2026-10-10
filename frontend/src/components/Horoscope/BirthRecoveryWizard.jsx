@@ -745,7 +745,7 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {result.timeWindow.start} - {result.timeWindow.end}
                 </h4>
                 <p className="text-[11px] text-stone-600">
-                  {isTamil ? `மிகவும் சாத்தியமான நேரம்: ${result.timeWindow.mostProbable}` : `Peak probability: ${result.timeWindow.mostProbable} (${result.timeWindow.span})`}
+                  {isTamil ? `உயர் தரவரிசை உத்தேச நேரம்: ${result.timeWindow.mostProbable} (${result.timeWindow.span})` : `Highest-ranked heuristic candidate: ${result.timeWindow.mostProbable} (${result.timeWindow.span})`}
                 </p>
               </div>
 
@@ -762,6 +762,92 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {result.probableLagna.reasoning}
                 </p>
               </div>
+            </div>
+
+            {/* Insufficient Data Alert if candidates are ambiguous */}
+            {result.status === "INSUFFICIENT_DATA" && (
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold block">
+                    {isTamil ? "முழுமையற்ற தரவு எச்சரிக்கை (INSUFFICIENT_DATA)" : "Insufficient Data Notice (Ambiguous Candidates)"}
+                  </span>
+                  <p className="text-stone-700">
+                    {isTamil 
+                      ? "வழங்கப்பட்ட வாழ்க்கை நிகழ்வுகளின் அடிப்படையில் பல சாத்தியமான நேர சாளரங்கள் ஒரே அளவிலான பொருத்தத்தைப் பெற்றுள்ளன. இன்னும் 1-2 கூடுதல் நிகழ்வுகளை (கல்வி, திருமணம், வேலை) பதிவு செய்து துல்லியத்தை அதிகரிக்கவும்."
+                      : "The heuristic model identifies multiple plausible candidate windows with near-identical evidence fits. Additional confirmed life milestones are required to differentiate between them."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Candidate Windows Ranking Table */}
+            {result.candidateWindows && result.candidateWindows.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-purple-700" />
+                    <h4 className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                      {isTamil ? "மதிப்பீடு செய்யப்பட்ட உத்தேச நேர சாளரங்கள் (தரவரிசை)" : "Evaluated Candidate Windows (Ranked Heuristics)"}
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-stone-500 font-mono">
+                    {result.candidateStability}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
+                  {result.candidateWindows.slice(0, 6).map((cw, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`p-3 rounded-xl border text-xs flex flex-col justify-between ${
+                        idx === 0 
+                          ? "bg-purple-50/70 border-purple-300 shadow-xs ring-1 ring-purple-200" 
+                          : "bg-stone-50/60 border-stone-200 text-stone-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-bold">
+                        <span>#{cw.rank} {cw.start} - {cw.end}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
+                          Fit: {cw.score}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-stone-600 mt-1">
+                        {isTamil ? cw.ascendantSign?.tamil : cw.ascendantSign?.name} Lagna
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Model Assumptions & Missing Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
+              {result.assumptions && (
+                <div className="p-3.5 rounded-xl bg-stone-50 border border-stone-200 space-y-1.5">
+                  <span className="font-bold text-stone-800 uppercase tracking-wider text-[10px] block">
+                    {isTamil ? "மாதிரி அனுமானங்கள்" : "Model Assumptions"}
+                  </span>
+                  <ul className="list-disc list-inside space-y-1 text-stone-600 text-[11px]">
+                    {result.assumptions.slice(0, 3).map((asm, i) => (
+                      <li key={i}>{asm}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {result.missingInformation && result.missingInformation.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-orange-50/50 border border-orange-200 space-y-1.5">
+                  <span className="font-bold text-orange-900 uppercase tracking-wider text-[10px] block">
+                    {isTamil ? "தேவைப்படும் கூடுதல் விவரங்கள்" : "Missing / Recommended Data"}
+                  </span>
+                  <ul className="list-disc list-inside space-y-1 text-orange-800 text-[11px]">
+                    {result.missingInformation.map((mi, i) => (
+                      <li key={i}>{mi}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Cross-Verification Proofs Table */}

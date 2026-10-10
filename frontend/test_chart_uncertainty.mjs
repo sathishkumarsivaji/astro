@@ -147,6 +147,25 @@ test("Returns rigorous astronomical disclosures without fabricated claims", () =
   assert.ok(result.disclosure.caveat.includes("BIRTH_TIME_SENSITIVE"));
 });
 
+// 7. Boundary Alternatives Integrity
+test("Exposes explicit boundary alternatives when factor is sensitive, never silently picking one", () => {
+  const result = runBirthTimePerturbationAnalysis({
+    birthDate: "1990-01-01",
+    birthTime: "23:00:00", // 0.22° Virgo Lagna, near Leo border
+    lat: 13.0827,
+    lng: 80.2707,
+    system: "lahiri",
+    tz: 5.5
+  });
+
+  assert.ok(result.boundaryAlternatives);
+  assert.equal(result.boundaryAlternatives.d1Lagna.isSensitive, true);
+  assert.equal(result.boundaryAlternatives.d1Lagna.baseline, "Virgo");
+  assert.ok(result.boundaryAlternatives.d1Lagna.alternatives.includes("Leo"));
+  assert.ok(result.boundaryAlternatives.d9Lagna.isSensitive);
+  assert.ok(result.boundaryAlternatives.d9Lagna.alternatives.length > 0);
+});
+
 console.log("===========================================================================");
-console.log(`ALL ${passed}/6 CHART UNCERTAINTY PERTURBATION TESTS PASSED.`);
+console.log(`ALL ${passed}/7 CHART UNCERTAINTY PERTURBATION TESTS PASSED.`);
 console.log("===========================================================================\n");

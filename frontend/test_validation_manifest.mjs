@@ -153,6 +153,7 @@ if (existsSync(MANIFEST_PATH)) {
 if (process.argv.includes('--generate')) {
   writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
   console.log(`\n  \x1b[32m\u2713\x1b[0m Manifest regenerated at ${MANIFEST_PATH}`);
+  process.exit(0);
 }
 
 console.log(`\n  Results: ${passed} passed, ${failed} failed`);

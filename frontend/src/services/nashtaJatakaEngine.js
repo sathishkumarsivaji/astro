@@ -622,13 +622,12 @@ export function reverseCalculateBirthTimeAndDOB({
     { start: "03:00", mid: "04:00", end: "05:00", labelEn: "03:00 AM - 05:00 AM", labelTa: "அதிகாலை 03:00 - 05:00" }
   ];
 
-  const formattedCandidateDate = `${candidateBirthYear}-${String(candidateBirthMonthNum).padStart(2, "0")}-${String(candidateBirthDayNum).padStart(2, "0")}`;
-
-  let bestCandidate = null;
-  let maxFitScore = -999;
+  const candidateWindows = [];
 
   for (const cTime of candidateTimes) {
     let fitScore = 10;
+    const supportingEvidence = [];
+    const contradictoryEvidence = [];
     try {
       const testChart = calculateChartBySystem("lahiri", {
         birthDate: formattedCandidateDate,
@@ -639,16 +638,32 @@ export function reverseCalculateBirthTimeAndDOB({
         timezoneId: typeof tz === "string" ? tz : null
       }, { lightweight: true });
       const ascName = testChart.ascendantSign.name;
+      const ascTamil = testChart.ascendantSign.tamil;
       const ascLagnaLord = testChart.ascendantSign.ruler;
 
       // 1. Palm mount prominence correlation
       if (palmProfile?.mounts) {
         const jupMount = palmProfile.mounts.find(m => m.name === "Jupiter");
-        if (jupMount && ((jupMount.rating && jupMount.rating >= 90) || ["High", "Very High", "Prominent"].includes(jupMount.prominence)) && ["Sagittarius", "Pisces"].includes(ascName)) fitScore += 8;
+        if (jupMount && ((jupMount.rating && jupMount.rating >= 90) || ["High", "Very High", "Prominent"].includes(jupMount.prominence))) {
+          if (["Sagittarius", "Pisces"].includes(ascName)) {
+            fitScore += 8;
+            supportingEvidence.push("Jupiterian mount prominence aligns with Sagittarius/Pisces Lagna");
+          }
+        }
         const mercMount = palmProfile.mounts.find(m => m.name === "Mercury");
-        if (mercMount && ((mercMount.rating && mercMount.rating >= 90) || ["High", "Very High", "Prominent"].includes(mercMount.prominence)) && ["Gemini", "Virgo"].includes(ascName)) fitScore += 8;
+        if (mercMount && ((mercMount.rating && mercMount.rating >= 90) || ["High", "Very High", "Prominent"].includes(mercMount.prominence))) {
+          if (["Gemini", "Virgo"].includes(ascName)) {
+            fitScore += 8;
+            supportingEvidence.push("Mercurial mount prominence aligns with Gemini/Virgo Lagna");
+          }
+        }
         const sunMount = palmProfile.mounts.find(m => m.name === "Sun (Apollo)");
-        if (sunMount && ((sunMount.rating && sunMount.rating >= 85) || ["High", "Very High", "Prominent"].includes(sunMount.prominence)) && ascName === "Leo") fitScore += 7;
+        if (sunMount && ((sunMount.rating && sunMount.rating >= 85) || ["High", "Very High", "Prominent"].includes(sunMount.prominence))) {
+          if (ascName === "Leo") {
+            fitScore += 7;
+            supportingEvidence.push("Sun mount prominence aligns with Leo Lagna");
+          }
+        }
       }
 
       // 2. Cross-check reported milestone ages against Dasha table of this candidate
@@ -659,34 +674,98 @@ export function reverseCalculateBirthTimeAndDOB({
           const operatingDasha = testChart.dashaTable.find(d => evAge >= d.startAge && evAge < d.endAge);
           if (operatingDasha) {
             const lord = operatingDasha.lord;
+            let matched = false;
             // Education milestones (4th/5th house or Mercury/Jupiter)
             if (["q1_school_start", "q2_10th_board", "q3_12th_board", "q4_ug_degree"].includes(ev.id)) {
-              if (["Mercury", "Jupiter"].includes(lord) || lord === ascLagnaLord) fitScore += 6;
+              if (["Mercury", "Jupiter"].includes(lord) || lord === ascLagnaLord) {
+                fitScore += 6;
+                supportingEvidence.push(`${ev.category || "Education"} aligns with ${lord} dasha period`);
+                matched = true;
+              }
             }
             // Career milestone (10th/11th house or Sun/Saturn)
             if (["q5_first_job"].includes(ev.id)) {
-              if (["Sun", "Saturn", "Mars"].includes(lord) || lord === ascLagnaLord) fitScore += 7;
+              if (["Sun", "Saturn", "Mars"].includes(lord) || lord === ascLagnaLord) {
+                fitScore += 7;
+                supportingEvidence.push(`${ev.category || "Career"} aligns with ${lord} dasha period`);
+                matched = true;
+              }
             }
             // Marriage milestone (Venus or 7th lord)
             if (["q6_marriage"].includes(ev.id)) {
-              if (["Venus", "Jupiter"].includes(lord)) fitScore += 8;
+              if (["Venus", "Jupiter"].includes(lord)) {
+                fitScore += 8;
+                supportingEvidence.push(`${ev.category || "Marriage"} aligns with ${lord} dasha period`);
+                matched = true;
+              }
+            }
+            if (!matched && ["q5_first_job", "q6_marriage"].includes(ev.id)) {
+              contradictoryEvidence.push(`${ev.category} occurs during ${lord} dasha without primary karaka alignment`);
             }
           }
         }
       }
 
-      if (fitScore > maxFitScore) {
-        maxFitScore = fitScore;
-        bestCandidate = {
-          timeSlot: cTime,
-          chart: testChart,
-          score: fitScore
-        };
-      }
+      candidateWindows.push({
+        timeSlot: cTime,
+        start: cTime.start,
+        mid: cTime.mid,
+        end: cTime.end,
+        labelEn: cTime.labelEn,
+        labelTa: cTime.labelTa,
+        chart: testChart,
+        ascendantSign: { name: ascName, tamil: ascTamil, ruler: ascLagnaLord },
+        score: fitScore,
+        supportingEvidence,
+        contradictoryEvidence
+      });
     } catch (e) {
       // Fallback
     }
   }
+
+  // Sort candidate windows descending by score
+  candidateWindows.sort((a, b) => b.score - a.score);
+  candidateWindows.forEach((c, idx) => {
+    c.rank = idx + 1;
+  });
+
+  const bestCandidate = candidateWindows[0] || null;
+  const runnerUpCandidate = candidateWindows[1] || null;
+  const scoreDiff = (bestCandidate && runnerUpCandidate) ? (bestCandidate.score - runnerUpCandidate.score) : 0;
+  const maxFitScore = bestCandidate ? bestCandidate.score : 0;
+
+  const sampleCountNum = answeredEvents.length;
+  let candidateStability = "UNRESOLVED_NO_EVENTS";
+  let status = "INSUFFICIENT_DATA";
+
+  if (sampleCountNum === 0) {
+    status = "INSUFFICIENT_DATA";
+    candidateStability = "UNRESOLVED_NO_EVENTS";
+  } else if (sampleCountNum === 1 || scoreDiff < 2) {
+    status = "INSUFFICIENT_DATA";
+    candidateStability = "AMBIGUOUS_MULTI_CANDIDATE";
+  } else if (scoreDiff < 5) {
+    status = "PLAUSIBLE_CANDIDATE_FOUND";
+    candidateStability = "MODERATE_DIFFERENTIATION";
+  } else {
+    status = "PLAUSIBLE_CANDIDATE_FOUND";
+    candidateStability = "CLEAR_PLURALITY";
+  }
+
+  const assumptions = [
+    "Uniform prior across unstated diurnal and nocturnal birth times within the 24-hour search envelope",
+    "Standard educational progression age baselines (10th Board: ~15.5 yrs, 12th Board: ~17.5 yrs, UG: ~21.5 yrs)",
+    "Vedic sidereal planetary positions computed with Lahiri (Chitra Paksha) ayanamsha",
+    "Geographical birth coordinates are accurately approximated by selected locality"
+  ];
+
+  const missingInformation = [
+    sampleCountNum < 2 ? "At least 2-3 confirmed chronological life milestones (education, career start, marriage)" : null,
+    !palmProfile ? "Biometric palm mount and major line prominence markings" : null,
+    "Diurnal / Nocturnal birth constraint (born during daylight vs night)",
+    "Parental or sibling chronological milestone dates to constrain family bhavas"
+  ].filter(Boolean);
 
   // If candidate search yielded a best candidate, extract realistic values
   const selTime = bestCandidate?.timeSlot || candidateTimes[1];
@@ -699,6 +778,7 @@ export function reverseCalculateBirthTimeAndDOB({
     start: selTime.start,
     end: selTime.end,
     mostProbable: selTime.mid,
+    highestRankedCandidate: selTime.mid,
     span: isTamil ? "2 மணி நேர லக்ன சஞ்சார எல்லை" : "2-hour Lagna transit precision window",
     solarElevation: isTamil ? `${selTime.labelTa} நேர லக்ன உதய பொருத்தம்` : `Ascendant rising window: ${selTime.labelEn}`
   };
@@ -744,7 +824,6 @@ export function reverseCalculateBirthTimeAndDOB({
   }
 
   // Heuristic interview consistency index (non-empirical scoring based on confirmed milestone anchors)
-  const sampleCountNum = answeredEvents.length;
   const heuristicEvidenceScore = sampleCountNum > 0
     ? Math.min(88, Math.round(50.0 + sampleCountNum * 6.0))
     : 0;
@@ -767,6 +846,32 @@ export function reverseCalculateBirthTimeAndDOB({
         : "Please enter at least 1 or 2 key life milestones (schooling, marriage, or first career) to reconstruct your birth chart.");
 
   return {
+    status,
+    candidateStability,
+    highestRankedCandidate: selTime.mid,
+    candidateWindows: candidateWindows.map(c => ({
+      rank: c.rank,
+      start: c.start,
+      mid: c.mid,
+      end: c.end,
+      labelEn: c.labelEn,
+      labelTa: c.labelTa,
+      score: c.score,
+      ascendantSign: c.ascendantSign,
+      supportingEvidence: c.supportingEvidence,
+      contradictoryEvidence: c.contradictoryEvidence
+    })),
+    assumptions,
+    missingInformation,
+    userProvidedEvents: answeredEvents,
+    supportingEvidence: bestCandidate?.supportingEvidence || [],
+    contradictoryEvidence: bestCandidate?.contradictoryEvidence || [],
+    searchWindowLimits: {
+      searchSpanHours: 24,
+      candidateStepMinutes: 120,
+      totalCandidatesEvaluated: candidateWindows.length,
+      coordinates: { lat, lng }
+    },
     source: sampleCountNum > 0 ? "inferred_from_user_milestones" : "uncalibrated_initial_state",
     provenance: sampleCountNum > 0 ? "user_confirmed" : "system_assumption",
     isReconstructed: sampleCountNum > 0,

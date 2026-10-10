@@ -330,6 +330,8 @@ test("5.1 db.claimPaymentId is atomic check-and-set", () => {
   console.log("============================================================\n");
   if (passed !== total) {
     process.exit(1);
+  } else {
+    process.exit(0);
   }
 }
 

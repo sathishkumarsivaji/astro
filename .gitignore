@@ -38,6 +38,7 @@ Thumbs.db
 
 # Database & runtime stores
 backend/data/*.json
+!backend/data/astroverse_store.seed.json
 backend/data/*.tmp*
 data/*.json
 *.json.tmp*

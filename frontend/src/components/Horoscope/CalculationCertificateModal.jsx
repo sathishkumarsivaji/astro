@@ -92,7 +92,7 @@ export default function CalculationCertificateModal({ isOpen, onClose, chartData
             </span>
             <p className="font-mono font-bold text-stone-900">{cert.utcInstant || "N/A"}</p>
             <p className="text-[11px] text-stone-600 font-mono">
-              JD: {typeof cert.julianDay === "number" ? cert.julianDay.toFixed(5) : "N/A"}
+              JD: {typeof cert.julianDay === "number" ? cert.julianDay.toFixed(5) : "N/A"}{typeof cert.deltaTSeconds === "number" ? ` | ΔT: ${cert.deltaTSeconds.toFixed(1)}s` : ""}
             </p>
           </div>
 

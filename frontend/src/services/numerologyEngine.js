@@ -41,9 +41,68 @@ function reduceNumber(num, preserveMaster = true) {
   return num;
 }
 
+/**
+ * Transliterates Tamil Unicode characters to Latin phonetic representations.
+ */
+export function transliterateTamilToLatin(input) {
+  if (!input || typeof input !== "string") return "";
+
+  const independentVowels = {
+    "அ": "A", "ஆ": "AA", "இ": "I", "ஈ": "EE", "உ": "U", "ஊ": "OO",
+    "எ": "E", "ஏ": "E", "ஐ": "AI", "ஒ": "O", "ஓ": "O", "ஔ": "AU",
+    "ஃ": "H"
+  };
+
+  const consonants = {
+    "க": "K", "ங": "NG", "ச": "S", "ஞ": "NY", "ட": "T", "ண": "N",
+    "த": "TH", "ந": "N", "ப": "P", "ம": "M", "ய": "Y", "ர": "R",
+    "ல": "L", "வ": "V", "ழ": "ZH", "ள": "L", "ற": "R", "ன": "N",
+    "ஜ": "J", "ஷ": "SH", "ஸ": "S", "ஹ": "H"
+  };
+
+  const vowelSigns = {
+    "ா": "AA", "ி": "I", "ீ": "EE", "ு": "U", "ூ": "OO",
+    "ெ": "E", "ே": "E", "ை": "AI", "ொ": "O", "ோ": "O", "ௌ": "AU"
+  };
+
+  let out = "";
+  const chars = Array.from(input);
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const next = chars[i + 1];
+
+    if (independentVowels[ch]) {
+      out += independentVowels[ch];
+    } else if (consonants[ch]) {
+      const base = consonants[ch];
+      if (next === "்") {
+        out += base;
+        i++;
+      } else if (next && vowelSigns[next]) {
+        out += base + vowelSigns[next];
+        i++;
+      } else {
+        out += base + "A";
+      }
+    } else if (vowelSigns[ch]) {
+      out += vowelSigns[ch];
+    } else if (/[a-zA-Z]/.test(ch)) {
+      out += ch.toUpperCase();
+    }
+  }
+  return out;
+}
+
 export function calculateNumerology(birthDateStr, fullName = "", system = "pythagorean") {
   const map = system === "chaldean" ? CHALDEAN_MAP : PYTHAGOREAN_MAP;
-  const cleanName = (fullName || "").toUpperCase().replace(/[^A-Z]/g, "");
+  
+  // Unicode normalization and Tamil transliteration support
+  const normalizedRaw = (fullName || "").normalize("NFC");
+  const processedName = /[\u0B80-\u0BFF]/.test(normalizedRaw)
+    ? transliterateTamilToLatin(normalizedRaw)
+    : normalizedRaw.normalize("NFKD");
+
+  const cleanName = processedName.toUpperCase().replace(/[^A-Z]/g, "");
   const hasName = cleanName.length > 0;
 
   // 1. Life Path Number (Date of Birth)

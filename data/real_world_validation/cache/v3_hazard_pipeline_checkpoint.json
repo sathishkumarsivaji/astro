@@ -1,0 +1,921 @@
+{
+  "trainDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+  "valDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
+  "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
+  "holdoutDatasetHash": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
+  "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
+  "calibrationModelHash": "f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61",
+  "discreteHazardModelV3": {
+    "trainFit": {
+      "modelType": "COMBINED_HAZARD",
+      "baselineTable": [
+        {
+          "bin": "18–20",
+          "startAge": 18,
+          "endAge": 20,
+          "midpoint": 19,
+          "events": 257,
+          "atRisk": 9217,
+          "hazard": 0.027883,
+          "logit": -3.5514
+        },
+        {
+          "bin": "20–22",
+          "startAge": 20,
+          "endAge": 22,
+          "midpoint": 21,
+          "events": 747,
+          "atRisk": 8960,
+          "hazard": 0.083371,
+          "logit": -2.3974
+        },
+        {
+          "bin": "22–24",
+          "startAge": 22,
+          "endAge": 24,
+          "midpoint": 23,
+          "events": 1250,
+          "atRisk": 8213,
+          "hazard": 0.152198,
+          "logit": -1.7175
+        },
+        {
+          "bin": "24–26",
+          "startAge": 24,
+          "endAge": 26,
+          "midpoint": 25,
+          "events": 1537,
+          "atRisk": 6963,
+          "hazard": 0.220738,
+          "logit": -1.2614
+        },
+        {
+          "bin": "26–28",
+          "startAge": 26,
+          "endAge": 28,
+          "midpoint": 27,
+          "events": 1330,
+          "atRisk": 5426,
+          "hazard": 0.245116,
+          "logit": -1.1248
+        },
+        {
+          "bin": "28–30",
+          "startAge": 28,
+          "endAge": 30,
+          "midpoint": 29,
+          "events": 972,
+          "atRisk": 4096,
+          "hazard": 0.237305,
+          "logit": -1.1675
+        },
+        {
+          "bin": "30–32",
+          "startAge": 30,
+          "endAge": 32,
+          "midpoint": 31,
+          "events": 712,
+          "atRisk": 3124,
+          "hazard": 0.227913,
+          "logit": -1.2201
+        },
+        {
+          "bin": "32–34",
+          "startAge": 32,
+          "endAge": 34,
+          "midpoint": 33,
+          "events": 452,
+          "atRisk": 2412,
+          "hazard": 0.187396,
+          "logit": -1.467
+        },
+        {
+          "bin": "34–36",
+          "startAge": 34,
+          "endAge": 36,
+          "midpoint": 35,
+          "events": 285,
+          "atRisk": 1960,
+          "hazard": 0.145408,
+          "logit": -1.7711
+        },
+        {
+          "bin": "36–38",
+          "startAge": 36,
+          "endAge": 38,
+          "midpoint": 37,
+          "events": 207,
+          "atRisk": 1675,
+          "hazard": 0.123582,
+          "logit": -1.9589
+        },
+        {
+          "bin": "38–40",
+          "startAge": 38,
+          "endAge": 40,
+          "midpoint": 39,
+          "events": 147,
+          "atRisk": 1468,
+          "hazard": 0.100136,
+          "logit": -2.1957
+        },
+        {
+          "bin": "40–42",
+          "startAge": 40,
+          "endAge": 42,
+          "midpoint": 41,
+          "events": 118,
+          "atRisk": 1321,
+          "hazard": 0.089326,
+          "logit": -2.3219
+        },
+        {
+          "bin": "42–44",
+          "startAge": 42,
+          "endAge": 44,
+          "midpoint": 43,
+          "events": 81,
+          "atRisk": 1203,
+          "hazard": 0.067332,
+          "logit": -2.6284
+        },
+        {
+          "bin": "44–46",
+          "startAge": 44,
+          "endAge": 46,
+          "midpoint": 45,
+          "events": 57,
+          "atRisk": 1122,
+          "hazard": 0.050802,
+          "logit": -2.9277
+        },
+        {
+          "bin": "46–48",
+          "startAge": 46,
+          "endAge": 48,
+          "midpoint": 47,
+          "events": 51,
+          "atRisk": 922,
+          "hazard": 0.055315,
+          "logit": -2.8378
+        },
+        {
+          "bin": "48–50",
+          "startAge": 48,
+          "endAge": 50,
+          "midpoint": 49,
+          "events": 28,
+          "atRisk": 871,
+          "hazard": 0.032147,
+          "logit": -3.4048
+        }
+      ],
+      "coefficients": {
+        "betaAstro": 0.0912
+      },
+      "coefficientTable": [
+        {
+          "parameter": "betaAstro",
+          "coefficient": 0.0912,
+          "standardError": 0.075,
+          "zScore": 1.2148,
+          "pValue": 0.22442,
+          "oddsRatio": 1.0955,
+          "ci95OddsRatio": [
+            0.9456,
+            1.269
+          ],
+          "ciMethod": "Asymptotic Fisher Information Hessian Standard Error"
+        }
+      ],
+      "likelihood": {
+        "logLikNullModel": -22186.58,
+        "logLikFittedModel": -22185.84,
+        "likelihoodRatioStatistic": 1.491,
+        "degreesOfFreedom": 1,
+        "lrtPValue": 0.22207,
+        "isStatisticallySignificant": false,
+        "aic": 44373.67,
+        "bic": 44382.66
+      },
+      "optimization": {
+        "optimizer": "Newton-Raphson with L2 Ridge Penalty (IRLS)",
+        "converged": true,
+        "iterations": 3,
+        "regularizationLambda": 0.05,
+        "initialization": "zero_vector",
+        "convergenceCriterion": "max_parameter_step < 1e-6"
+      },
+      "sampleProvenance": {
+        "evaluatedSubjects": 9217,
+        "totalEvents": 8231,
+        "personIntervals": 58953,
+        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+        "coefficientHash": "ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f",
+        "modelFitHash": "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03",
+        "samplingMetadata": {
+          "method": "FULL_COHORT_NO_SAMPLING",
+          "seed": null,
+          "nSelected": 9366,
+          "nAvailable": 9366,
+          "selectionHash": "FULL_COHORT"
+        },
+        "fittedAt": "2026-10-09T18:05:24.490Z"
+      }
+    },
+    "validationMetrics": {
+      "cohortEvaluatedN": 3101,
+      "eventCount": 2800,
+      "censoredCount": 301,
+      "likelihood": {
+        "logLikNullModel": -7432.99,
+        "logLikAstrologyOnly": -8636.01,
+        "logLikCombinedModel": -7433,
+        "likelihoodRatioStatistic": 0,
+        "lrtPValue": 1,
+        "isAstrologyStatisticallySignificant": false
+      },
+      "concordanceIndex": 0.4999,
+      "concordanceCi95": [
+        0.4878,
+        0.5114
+      ],
+      "timing": {
+        "evalN": 2800,
+        "mae": 4.17,
+        "medianAE": 3.33,
+        "rmse": 5.52,
+        "timingMAEBaseline": 4.17,
+        "within1yPct": 15.36,
+        "within2yPct": 29.5,
+        "within3yPct": 44.86,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
+      },
+      "occurrence": {
+        "evaluatedCount": 3101,
+        "tp": 2800,
+        "fp": 301,
+        "tn": 0,
+        "fn": 0,
+        "accuracy": 0.9029,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "brierScore": 0.0877,
+        "hasTrueNegatives": false
+      },
+      "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+    },
+    "blindTestMetrics": {
+      "cohortEvaluatedN": 1605,
+      "eventCount": 1440,
+      "censoredCount": 165,
+      "likelihood": {
+        "logLikNullModel": -3805.23,
+        "logLikAstrologyOnly": -4463.85,
+        "logLikCombinedModel": -3804.89,
+        "likelihoodRatioStatistic": 0.6886,
+        "lrtPValue": 0.40662,
+        "isAstrologyStatisticallySignificant": false
+      },
+      "concordanceIndex": 0.5048,
+      "concordanceCi95": [
+        0.4883,
+        0.522
+      ],
+      "timing": {
+        "evalN": 1440,
+        "mae": 4.05,
+        "medianAE": 3.18,
+        "rmse": 5.35,
+        "timingMAEBaseline": 4.05,
+        "within1yPct": 14.03,
+        "within2yPct": 31.6,
+        "within3yPct": 47.36,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
+      },
+      "occurrence": {
+        "evaluatedCount": 1605,
+        "tp": 1440,
+        "fp": 165,
+        "tn": 0,
+        "fn": 0,
+        "accuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "brierScore": 0.0922,
+        "hasTrueNegatives": false
+      },
+      "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+    },
+    "internalHoldoutMetrics": {
+      "cohortEvaluatedN": 1528,
+      "eventCount": 1374,
+      "censoredCount": 154,
+      "likelihood": {
+        "logLikNullModel": -3637.52,
+        "logLikAstrologyOnly": -4256.61,
+        "logLikCombinedModel": -3637.98,
+        "likelihoodRatioStatistic": 0,
+        "lrtPValue": 1,
+        "isAstrologyStatisticallySignificant": false
+      },
+      "concordanceIndex": 0.507,
+      "concordanceCi95": [
+        0.4909,
+        0.5236
+      ],
+      "timing": {
+        "evalN": 1374,
+        "mae": 4.09,
+        "medianAE": 3.15,
+        "rmse": 5.47,
+        "timingMAEBaseline": 4.09,
+        "within1yPct": 14.7,
+        "within2yPct": 31,
+        "within3yPct": 47.23,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
+      },
+      "occurrence": {
+        "evaluatedCount": 1528,
+        "tp": 1374,
+        "fp": 154,
+        "tn": 0,
+        "fn": 0,
+        "accuracy": 0.8992,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "brierScore": 0.0906,
+        "hasTrueNegatives": false
+      },
+      "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+    },
+    "astroDatabankCertifiedMetrics": {
+      "cohortEvaluatedN": 869,
+      "eventCount": 301,
+      "censoredCount": 568,
+      "likelihood": {
+        "logLikNullModel": -2017.92,
+        "logLikAstrologyOnly": -2985.7,
+        "logLikCombinedModel": -2017.7,
+        "likelihoodRatioStatistic": 0.4375,
+        "lrtPValue": 0.50833,
+        "isAstrologyStatisticallySignificant": false
+      },
+      "concordanceIndex": 0.5345,
+      "concordanceCi95": [
+        0.5038,
+        0.5653
+      ],
+      "timing": {
+        "evalN": 301,
+        "mae": 4.91,
+        "medianAE": 4.22,
+        "rmse": 6.31,
+        "timingMAEBaseline": 4.92,
+        "within1yPct": 12.96,
+        "within2yPct": 26.91,
+        "within3yPct": 38.21,
+        "baselineComparisonStatus": "STATISTICALLY_TIED",
+        "doesCombinedBeatBaseline": false
+      },
+      "occurrence": {
+        "evaluatedCount": 869,
+        "tp": 301,
+        "fp": 568,
+        "tn": 0,
+        "fn": 0,
+        "accuracy": 0.3464,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "brierScore": 0.5267,
+        "hasTrueNegatives": false
+      },
+      "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+    },
+    "astroDatabankSensitivity": {
+      "AA_ONLY": {
+        "cohortEvaluatedN": 455,
+        "eventCount": 188,
+        "censoredCount": 267,
+        "likelihood": {
+          "logLikNullModel": -1057.2,
+          "logLikAstrologyOnly": -1518.55,
+          "logLikCombinedModel": -1057.13,
+          "likelihoodRatioStatistic": 0.1294,
+          "lrtPValue": 0.71903,
+          "isAstrologyStatisticallySignificant": false
+        },
+        "concordanceIndex": 0.518,
+        "concordanceCi95": [
+          0.4759,
+          0.5628
+        ],
+        "timing": {
+          "evalN": 188,
+          "mae": 4.78,
+          "medianAE": 4.09,
+          "rmse": 6.21,
+          "timingMAEBaseline": 4.78,
+          "within1yPct": 15.96,
+          "within2yPct": 26.6,
+          "within3yPct": 39.36,
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
+        },
+        "occurrence": {
+          "evaluatedCount": 455,
+          "tp": 188,
+          "fp": 267,
+          "tn": 0,
+          "fn": 0,
+          "accuracy": 0.4132,
+          "sensitivity": 1,
+          "specificity": 0,
+          "balancedAccuracy": 0.5,
+          "mcc": 0,
+          "brierScore": 0.474,
+          "hasTrueNegatives": false
+        },
+        "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+      },
+      "A_ONLY": {
+        "cohortEvaluatedN": 414,
+        "eventCount": 113,
+        "censoredCount": 301,
+        "likelihood": {
+          "logLikNullModel": -960.73,
+          "logLikAstrologyOnly": -1467.15,
+          "logLikCombinedModel": -960.57,
+          "likelihoodRatioStatistic": 0.3081,
+          "lrtPValue": 0.57886,
+          "isAstrologyStatisticallySignificant": false
+        },
+        "concordanceIndex": 0.5531,
+        "concordanceCi95": [
+          0.4998,
+          0.6096
+        ],
+        "timing": {
+          "evalN": 113,
+          "mae": 5.13,
+          "medianAE": 4.45,
+          "rmse": 6.46,
+          "timingMAEBaseline": 5.14,
+          "within1yPct": 7.96,
+          "within2yPct": 27.43,
+          "within3yPct": 36.28,
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
+        },
+        "occurrence": {
+          "evaluatedCount": 414,
+          "tp": 113,
+          "fp": 301,
+          "tn": 0,
+          "fn": 0,
+          "accuracy": 0.2729,
+          "sensitivity": 1,
+          "specificity": 0,
+          "balancedAccuracy": 0.5,
+          "mcc": 0,
+          "brierScore": 0.5845,
+          "hasTrueNegatives": false
+        },
+        "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+      },
+      "ALL_INDEPENDENT": {
+        "cohortEvaluatedN": 1111,
+        "eventCount": 408,
+        "censoredCount": 703,
+        "likelihood": {
+          "logLikNullModel": -2597.18,
+          "logLikAstrologyOnly": -3786.42,
+          "logLikCombinedModel": -2596.85,
+          "likelihoodRatioStatistic": 0.6651,
+          "lrtPValue": 0.41476,
+          "isAstrologyStatisticallySignificant": false
+        },
+        "concordanceIndex": 0.5383,
+        "concordanceCi95": [
+          0.5083,
+          0.5661
+        ],
+        "timing": {
+          "evalN": 408,
+          "mae": 5.02,
+          "medianAE": 4.25,
+          "rmse": 6.41,
+          "timingMAEBaseline": 5.03,
+          "within1yPct": 11.76,
+          "within2yPct": 25.25,
+          "within3yPct": 37.01,
+          "baselineComparisonStatus": "STATISTICALLY_TIED",
+          "doesCombinedBeatBaseline": false
+        },
+        "occurrence": {
+          "evaluatedCount": 1111,
+          "tp": 408,
+          "fp": 703,
+          "tn": 0,
+          "fn": 0,
+          "accuracy": 0.3672,
+          "sensitivity": 1,
+          "specificity": 0,
+          "balancedAccuracy": 0.5,
+          "mcc": 0,
+          "brierScore": 0.5102,
+          "hasTrueNegatives": false
+        },
+        "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "featureAblation": [
+      {
+        "modelId": "MODEL_0",
+        "modelName": "Demographic Age-Only Baseline",
+        "parameterCount": 0,
+        "logLikelihood": -3805.22,
+        "aic": 7610.43,
+        "bic": 7610.43,
+        "lrtStatistic": null,
+        "lrtPValue": null,
+        "lrtStatus": "REFERENCE_MODEL",
+        "lrtNote": "Baseline demographic reference model.",
+        "cIndex": 0.5,
+        "cIndexCi95": [
+          0.5,
+          0.5
+        ],
+        "mae": 4.05,
+        "medianAE": 3.17,
+        "rmse": 5.35,
+        "within1yPct": 13.89,
+        "within2yPct": 31.53,
+        "within3yPct": 47.36,
+        "brierScore": 0.0922,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0028,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      },
+      {
+        "modelId": "MODEL_1",
+        "modelName": "Astrology-Only (No Age Baseline)",
+        "parameterCount": 1,
+        "logLikelihood": -4208.42,
+        "aic": 8418.84,
+        "bic": 8424.22,
+        "lrtStatistic": null,
+        "lrtPValue": null,
+        "lrtStatus": "NOT_APPLICABLE_NON_NESTED",
+        "lrtNote": "MODEL_1 (astrology only) and MODEL_0 (demographic only) are non-nested; LRT is statistically invalid. Compare via AIC/BIC.",
+        "cIndex": 0.5055,
+        "cIndexCi95": [
+          0.4876,
+          0.5243
+        ],
+        "mae": 3.92,
+        "medianAE": 2.94,
+        "rmse": 5.42,
+        "within1yPct": 18.75,
+        "within2yPct": 34.86,
+        "within3yPct": 50.63,
+        "brierScore": 0.0962,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0629,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      },
+      {
+        "modelId": "MODEL_2",
+        "modelName": "D1 Natal Promise",
+        "parameterCount": 1,
+        "logLikelihood": -3804.92,
+        "aic": 7611.83,
+        "bic": 7617.21,
+        "lrtStatistic": 0.6029,
+        "lrtPValue": 0.43748,
+        "lrtStatus": "VALID_NESTED",
+        "lrtNote": "Nested likelihood ratio test vs MODEL_0 (df=1).",
+        "cIndex": 0.5045,
+        "cIndexCi95": [
+          0.4897,
+          0.52
+        ],
+        "mae": 4.05,
+        "medianAE": 3.16,
+        "rmse": 5.35,
+        "within1yPct": 14.1,
+        "within2yPct": 31.32,
+        "within3yPct": 47.43,
+        "brierScore": 0.0922,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0022,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      },
+      {
+        "modelId": "MODEL_3",
+        "modelName": "D1 + Dasha",
+        "parameterCount": 2,
+        "logLikelihood": -3804.82,
+        "aic": 7613.63,
+        "bic": 7624.39,
+        "lrtStatistic": 0.8002,
+        "lrtPValue": 0.67024,
+        "lrtStatus": "VALID_NESTED",
+        "lrtNote": "Nested likelihood ratio test vs MODEL_0 (df=2).",
+        "cIndex": 0.5034,
+        "cIndexCi95": [
+          0.4872,
+          0.5213
+        ],
+        "mae": 4.05,
+        "medianAE": 3.15,
+        "rmse": 5.35,
+        "within1yPct": 14.03,
+        "within2yPct": 31.39,
+        "within3yPct": 47.43,
+        "brierScore": 0.0922,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0014,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      },
+      {
+        "modelId": "MODEL_4",
+        "modelName": "D1 + Dasha + Transit",
+        "parameterCount": 4,
+        "logLikelihood": -3805.12,
+        "aic": 7618.24,
+        "bic": 7639.76,
+        "lrtStatistic": 0.1927,
+        "lrtPValue": 0.99564,
+        "lrtStatus": "VALID_NESTED",
+        "lrtNote": "Nested likelihood ratio test vs MODEL_0 (df=4).",
+        "cIndex": 0.5057,
+        "cIndexCi95": [
+          0.4897,
+          0.5244
+        ],
+        "mae": 4.04,
+        "medianAE": 3.16,
+        "rmse": 5.35,
+        "within1yPct": 14.17,
+        "within2yPct": 31.46,
+        "within3yPct": 47.5,
+        "brierScore": 0.0922,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0015,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      },
+      {
+        "modelId": "MODEL_5",
+        "modelName": "D1 + Dasha + Transit + D9",
+        "parameterCount": 5,
+        "logLikelihood": -3805.61,
+        "aic": 7621.22,
+        "bic": 7648.12,
+        "lrtStatistic": 0,
+        "lrtPValue": 1,
+        "lrtStatus": "VALID_NESTED",
+        "lrtNote": "Nested likelihood ratio test vs MODEL_0 (df=5).",
+        "cIndex": 0.4991,
+        "cIndexCi95": [
+          0.4845,
+          0.5161
+        ],
+        "mae": 4.05,
+        "medianAE": 3.15,
+        "rmse": 5.35,
+        "within1yPct": 14.1,
+        "within2yPct": 31.32,
+        "within3yPct": 47.43,
+        "brierScore": 0.0922,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0069,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      },
+      {
+        "modelId": "MODEL_6",
+        "modelName": "Full Selected Feature Model",
+        "parameterCount": 6,
+        "logLikelihood": -3805.56,
+        "aic": 7623.11,
+        "bic": 7655.4,
+        "lrtStatistic": 0,
+        "lrtPValue": 1,
+        "lrtStatus": "VALID_NESTED",
+        "lrtNote": "Nested likelihood ratio test vs MODEL_0 (df=6).",
+        "cIndex": 0.4988,
+        "cIndexCi95": [
+          0.4841,
+          0.5166
+        ],
+        "mae": 4.05,
+        "medianAE": 3.15,
+        "rmse": 5.35,
+        "within1yPct": 14.1,
+        "within2yPct": 31.32,
+        "within3yPct": 47.36,
+        "brierScore": 0.0922,
+        "occurrenceAccuracy": 0.8972,
+        "sensitivity": 1,
+        "specificity": 0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0,
+        "ece": 0.0076,
+        "calibrationStatus": "EMPIRICAL_PROPORTIONAL"
+      }
+    ],
+    "featureLevelStatistics": [
+      {
+        "featureId": "DASHA_7TH_LORD",
+        "featureName": "Operating Dasha/Antardasha Lord is 7th Lord",
+        "status": "NON_SIGNIFICANT",
+        "eventCount": 8231,
+        "exposedCount": 43202,
+        "unexposedCount": 15751,
+        "personTime": 58953,
+        "effectiveSampleSize": 58953,
+        "missingness": 0,
+        "oddsRatio": 1.0069,
+        "coefficient": 0.0069,
+        "standardError": 0.0142,
+        "ci95": [
+          0.9792,
+          1.0353
+        ],
+        "ciMethod": "Asymptotic Fisher Information Hessian Standard Error",
+        "pValue": 0.62853,
+        "concordanceIndex": 0.5122,
+        "isStatisticallySignificant": false,
+        "originalIndex": 0,
+        "fdrAdjustedPValue": 0.86244,
+        "bhCriticalValue": 0.025,
+        "isSignificantFDR": false
+      },
+      {
+        "featureId": "TRANSIT_JUPITER_7TH",
+        "featureName": "Transiting Jupiter Aspects/Conjoins Natal 7th / Venus",
+        "status": "NON_SIGNIFICANT",
+        "eventCount": 8231,
+        "exposedCount": 50458,
+        "unexposedCount": 8495,
+        "personTime": 58953,
+        "effectiveSampleSize": 58953,
+        "missingness": 0,
+        "oddsRatio": 1.0121,
+        "coefficient": 0.0121,
+        "standardError": 0.0131,
+        "ci95": [
+          0.9864,
+          1.0385
+        ],
+        "ciMethod": "Asymptotic Fisher Information Hessian Standard Error",
+        "pValue": 0.35845,
+        "concordanceIndex": 0.5119,
+        "isStatisticallySignificant": false,
+        "originalIndex": 1,
+        "fdrAdjustedPValue": 0.86244,
+        "bhCriticalValue": 0.008333,
+        "isSignificantFDR": false
+      },
+      {
+        "featureId": "TRANSIT_SATURN_7TH",
+        "featureName": "Transiting Saturn Afflicts 7th House",
+        "status": "NON_SIGNIFICANT",
+        "eventCount": 8231,
+        "exposedCount": 28380,
+        "unexposedCount": 30573,
+        "personTime": 58953,
+        "effectiveSampleSize": 58953,
+        "missingness": 0,
+        "oddsRatio": 1.0042,
+        "coefficient": 0.0042,
+        "standardError": 0.0175,
+        "ci95": [
+          0.9703,
+          1.0393
+        ],
+        "ciMethod": "Asymptotic Fisher Information Hessian Standard Error",
+        "pValue": 0.80925,
+        "concordanceIndex": 0.5121,
+        "isStatisticallySignificant": false,
+        "originalIndex": 2,
+        "fdrAdjustedPValue": 0.86244,
+        "bhCriticalValue": 0.041667,
+        "isSignificantFDR": false
+      },
+      {
+        "featureId": "D9_NAVAMSHA_SUPPORT",
+        "featureName": "D9 Navamsha Lord Exalted/Own Sign",
+        "status": "NON_SIGNIFICANT",
+        "eventCount": 8231,
+        "exposedCount": 48325,
+        "unexposedCount": 10628,
+        "personTime": 58953,
+        "effectiveSampleSize": 58953,
+        "missingness": 0,
+        "oddsRatio": 1.0064,
+        "coefficient": 0.0064,
+        "standardError": 0.0134,
+        "ci95": [
+          0.9803,
+          1.0333
+        ],
+        "ciMethod": "Asymptotic Fisher Information Hessian Standard Error",
+        "pValue": 0.63377,
+        "concordanceIndex": 0.5118,
+        "isStatisticallySignificant": false,
+        "originalIndex": 3,
+        "fdrAdjustedPValue": 0.86244,
+        "bhCriticalValue": 0.033333,
+        "isSignificantFDR": false
+      },
+      {
+        "featureId": "VENUS_NATAL_PROMISE",
+        "featureName": "Natal Venus Dignity (Exalted vs Debilitated)",
+        "status": "NON_SIGNIFICANT",
+        "eventCount": 8231,
+        "exposedCount": 42550,
+        "unexposedCount": 16403,
+        "personTime": 58953,
+        "effectiveSampleSize": 58953,
+        "missingness": 0,
+        "oddsRatio": 0.9837,
+        "coefficient": -0.0164,
+        "standardError": 0.0222,
+        "ci95": [
+          0.9419,
+          1.0274
+        ],
+        "ciMethod": "Asymptotic Fisher Information Hessian Standard Error",
+        "pValue": 0.45954,
+        "concordanceIndex": 0.5112,
+        "isStatisticallySignificant": false,
+        "originalIndex": 4,
+        "fdrAdjustedPValue": 0.86244,
+        "bhCriticalValue": 0.016667,
+        "isSignificantFDR": false
+      },
+      {
+        "featureId": "ASHTAKAVARGA_7TH_SAV",
+        "featureName": "7th House Ashtakavarga Bindus >= 28",
+        "status": "NON_SIGNIFICANT",
+        "eventCount": 8231,
+        "exposedCount": 16766,
+        "unexposedCount": 42187,
+        "personTime": 58953,
+        "effectiveSampleSize": 58953,
+        "missingness": 0,
+        "oddsRatio": 1.004,
+        "coefficient": 0.004,
+        "standardError": 0.0229,
+        "ci95": [
+          0.96,
+          1.05
+        ],
+        "ciMethod": "Asymptotic Fisher Information Hessian Standard Error",
+        "pValue": 0.86244,
+        "concordanceIndex": 0.5114,
+        "isStatisticallySignificant": false,
+        "originalIndex": 5,
+        "fdrAdjustedPValue": 0.86244,
+        "bhCriticalValue": 0.05,
+        "isSignificantFDR": false
+      }
+    ]
+  }
+}

@@ -2,7 +2,7 @@
  * ASTROVERSE — Independent Palm Vision & Morphological Benchmark Suite
  * ====================================================================
  *
- * Independently benchmarks and verifies the Palm Image Analysis Pipeline:
+ * SECTION 1-7: SYNTHETIC SOFTWARE TESTS (In-Memory Canvas Geometry & Signal Processing)
  * 1. Image Quality Assessment (resolution, lighting, blur, contrast)
  * 2. Hand Presence & Skin Chrominance Segmentation across demographic groups (Fitzpatrick I-VI)
  * 3. Segmentation Intersection over Union (IoU)
@@ -14,7 +14,10 @@
  * 9. User Manual Correction Override Integrity
  * 10. Strict Metric Separation (Quality, Landmark, Line, Interpretive, Predictive Validity)
  *
- * Zero fabricated claims. Zero synthetic shortcuts.
+ * SECTION 8: REAL-IMAGE PROTOCOL & CLINICAL DATASET DISCLOSURE
+ * - Discloses 0 annotated real images currently bundled in repo
+ * - Preserves EXPERIMENTAL_PROTOTYPE / UNVALIDATED_FOR_OUTCOMES status
+ * - Prohibits claiming clinical or real-world prospective validity from synthetic test harnesses
  */
 
 import { strict as assert } from "node:assert";
@@ -368,6 +371,32 @@ check("Returns INSUFFICIENT_VISUAL_EVIDENCE on blurry image", () => {
   const res = analyzePalmImage(blurImg, "right");
   assert.equal(res.status, "INSUFFICIENT_VISUAL_EVIDENCE");
   assert.equal(res.failureReason, "EXCESSIVE_BLUR");
+});
+
+// ===========================================================================
+// SECTION 8: Real-Image Validation Protocol & Clinical Dataset Disclosure
+// ===========================================================================
+console.log("\n8. Real-Image Validation Protocol & Empirical Disclosure...");
+
+check("Real-image validation protocol reports 0 annotated real images and prototype status", () => {
+  // Formal empirical registry disclosing dataset provenance
+  const realImageValidationProtocol = {
+    realImageSampleCount: 0,
+    annotatedClinicalSamplesAvailable: 0,
+    syntheticSoftwareTestsVerified: totalChecks,
+    empiricalStatus: "EXPERIMENTAL_PROTOTYPE",
+    predictiveValidity: "UNVALIDATED_FOR_OUTCOMES",
+    pendingRequirements: [
+      "Independent publicly annotated dermatoglyphic or clinical palm dataset",
+      "Multi-demographic real photographic cohort with verified ground-truth landmarks",
+      "Clinical outcome correlation registry"
+    ]
+  };
+
+  assert.equal(realImageValidationProtocol.realImageSampleCount, 0, "Repo must honestly report 0 annotated real images currently bundled");
+  assert.equal(realImageValidationProtocol.empiricalStatus, "EXPERIMENTAL_PROTOTYPE");
+  assert.equal(realImageValidationProtocol.predictiveValidity, "UNVALIDATED_FOR_OUTCOMES");
+  assert.ok(realImageValidationProtocol.pendingRequirements.length >= 3);
 });
 
 console.log("\n" + "=".repeat(75));

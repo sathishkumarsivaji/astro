@@ -245,16 +245,16 @@ export async function processEvidenceLinkedQA({ question, context, conversationH
   if (!question || typeof question !== "string") {
     throw new Error("Question string is required.");
   }
-  if (!context || (!context.chart && !context.planets)) {
-    throw new Error("Valid chart context is required for evidence retrieval.");
-  }
+  const safeContext = (context && (context.chart || context.planets))
+    ? context
+    : { chart: null, planets: [], isInsufficientData: true };
 
   // Reuse cached expert report if available to prevent recomputing 17 domains
-  const rawChart = context.chart || (context.planets ? context : null);
-  if (rawChart && !context.report) {
+  const rawChart = safeContext.chart || (safeContext.planets ? safeContext : null);
+  if (rawChart && !safeContext.report) {
     const cachedReport = getCachedLifeReport(rawChart, { lang: mode === "tamil" ? "ta" : "en" });
     if (cachedReport) {
-      context.report = cachedReport;
+      safeContext.report = cachedReport;
     }
   }
 
@@ -266,7 +266,7 @@ export async function processEvidenceLinkedQA({ question, context, conversationH
   const questionUnderstanding = understandQuestion({
     question: effectiveQuestion,
     conversationHistory,
-    context
+    context: safeContext
   });
 
   // 3. Question Decomposition Check (Section 3)
@@ -277,7 +277,7 @@ export async function processEvidenceLinkedQA({ question, context, conversationH
       for (const aq of atomicQuestions) {
         const atomicRes = await executeSingleQuestionQA({
           question: aq.questionText,
-          context,
+          context: safeContext,
           conversationHistory,
           mode,
           atomicMeta: aq,
@@ -293,7 +293,7 @@ export async function processEvidenceLinkedQA({ question, context, conversationH
   // 4. Single Question Execution Pipeline
   return await executeSingleQuestionQA({
     question: effectiveQuestion,
-    context,
+    context: safeContext,
     conversationHistory,
     mode,
     questionUnderstanding

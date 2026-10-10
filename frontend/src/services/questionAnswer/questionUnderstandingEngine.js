@@ -62,15 +62,99 @@ export function checkMalformedQuestion(text) {
     };
   }
 
-  // Pattern: Lottery numbers ("What exact lottery numbers will win?")
-  if (/\b(?:lottery\s+numbers?|lotto\s+numbers?|lucky\s+numbers?)\b/i.test(lower) ||
-      /லாட்டரி\s*எண்/i.test(text)) {
+  // Pattern: Lottery / random gambling speculation ("Will I win the lottery ticket next Tuesday?")
+  if (/\b(?:lottery|lotto|roulette|gambling|random\s*draw|win\s+the\s+lottery|without\s+studying)\b/i.test(lower) ||
+      /லாட்டரி|சூதாட்டம்|தேர்வில்\s*வெற்றி|படிக்காமலேயே|பாஸ்/i.test(text)) {
     return {
       isMalformed: true,
-      detectedIssue: "Astrological charts cannot calculate random numerical draw sequences",
-      correctedIntent: QUESTION_INTENTS.FINANCE,
-      clarificationRequired: false,
-      correctionNote: "Interpreting query as general financial and speculative potential."
+      detectedIssue: "Astrological charts cannot calculate random numerical draw sequences or gambling speculation",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Query involves non-astrological random speculation requiring clarification or abstention."
+    };
+  }
+
+  // Pattern: Guaranteed financial returns / stock ticker picking
+  if (/\b(?:exact\s+stock\s+ticker|guarantee.*profit|100%\s*(?:gain|profit|return|unconditionally)|500%\s*profit|sure\s*profit)\b/i.test(lower) ||
+      /பங்கு|500%|100%\s*லாபம்/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Commercial financial return guarantees prohibited",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Deterministic market profit guarantees are prohibited under financial safety protocols."
+    };
+  }
+
+  // Pattern: Exact geographic distance fabrication
+  if (/\b(?:exact\s*(?:kilometer|km|mile)\s*distance|exact\s*distance\s*between)\b/i.test(lower) ||
+      /கிலோமீட்டர்|தூரம்/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Astrology provides qualitative directional indications only; exact kilometer distances cannot be established",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Quantitative kilometer distances cannot be determined from birth charts without fabrication."
+    };
+  }
+
+  // Pattern: Medical diagnosis & pharmaceutical drug prescribing
+  if (/\b(?:diagnose|prescribe|pharmaceutical|cure\s*cancer)\b/i.test(lower) ||
+      /நோய்|மருந்து/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Medical diagnosis and pharmaceutical drug prescribing strictly prohibited",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Medical diagnostics and prescription advice are prohibited under statutory wellness protocols."
+    };
+  }
+
+  // Pattern: Fatalistic mortality and accident prediction
+  if (/\b(?:exact\s*(?:day|minute|second).*(?:death|die|car\s*crash)|cause\s*of\s*my\s*death)\b/i.test(lower) ||
+      /விபத்|மரண/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Fatalistic predictions of mortality or precise accident timing prohibited",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Predictions of death dates and specific physical accidents are prohibited under safety protocols."
+    };
+  }
+
+  // Pattern: Invalid non-existent astrological houses
+  if (/\b(?:1[3-9]|[2-9][0-9])(?:th)?\s*house\b/i.test(lower) ||
+      /(?:1[3-9]|[2-9][0-9])-(?:ஆம்|ம்)\s*(?:வீடு|பாவ)/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Invalid astrological house: Vedic astrology recognizes exactly 12 houses (Bhavas)",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Astrological charts contain only 12 houses. Query refers to a non-existent house."
+    };
+  }
+
+  // Pattern: Guaranteed legal trial verdict
+  if (/\b(?:court\s*case.*(?:100%|guarantee)|guarantee.*court|guarantee\s+100%)\b/i.test(lower) ||
+      /வழக்கு|நீதிமன்ற/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Guaranteed legal trial outcomes prohibited",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Astrology cannot guarantee legal trial outcomes with certainty."
+    };
+  }
+
+  // Pattern: Overprecision down to second / minute
+  if (/\b(?:exact\s*(?:second|minute)|[0-9]{1,2}:[0-9]{2}:[0-9]{2}|at\s+exactly\s+[0-9]{1,2}:[0-9]{2})\b/i.test(lower) ||
+      /துல்லியமாக.*(?:மணி|நிமிடம்|வினாடி)|துல்லியமான|வினாடியில்/i.test(text)) {
+    return {
+      isMalformed: true,
+      detectedIssue: "Requested precision exceeds astrological discriminatory boundaries",
+      correctedIntent: QUESTION_INTENTS.CLARIFICATION,
+      clarificationRequired: true,
+      correctionNote: "Timing will be constrained to the highest valid discriminatory window (Month/Year range)."
     };
   }
 

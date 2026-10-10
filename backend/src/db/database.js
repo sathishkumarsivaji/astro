@@ -88,6 +88,12 @@ class AstroDatabase {
       await this.hydrateFromPostgres();
     } catch (err) {
       this.pgConnected = false;
+      if (this.pgPool) {
+        try {
+          await this.pgPool.end();
+        } catch (_) {}
+        this.pgPool = null;
+      }
       console.warn("[POSTGRESQL] PostgreSQL connection notice (using resilient write-through store):", err.message);
       if (process.env.NODE_ENV === 'production') {
         console.error("[POSTGRESQL] FATAL: PostgreSQL connection and migration required in production mode.", err);
@@ -279,6 +285,7 @@ class AstroDatabase {
   }
 
   load() {
+    const SEED_FILE = path.join(DATA_DIR, "astroverse_store.seed.json");
     if (fs.existsSync(DB_FILE)) {
       try {
         const raw = fs.readFileSync(DB_FILE, "utf8");
@@ -299,6 +306,27 @@ class AstroDatabase {
       } catch (err) {
         console.error("[DATABASE] Error loading db file, initializing clean state:", err.message);
       }
+    } else if (fs.existsSync(SEED_FILE)) {
+      try {
+        const raw = fs.readFileSync(SEED_FILE, "utf8");
+        const parsed = JSON.parse(raw);
+        this.state = {
+          users: parsed.users || {},
+          user_secrets: parsed.user_secrets || {},
+          payment_orders: parsed.payment_orders || {},
+          payment_transactions: parsed.payment_transactions || {},
+          processed_payment_ids: parsed.processed_payment_ids || {},
+          saved_charts: parsed.saved_charts || {},
+          push_subscriptions: parsed.push_subscriptions || {},
+          conversations: parsed.conversations || {},
+          messages: parsed.messages || {},
+          claim_graphs: parsed.claim_graphs || {},
+          audit_ledger: parsed.audit_ledger || []
+        };
+      } catch (err) {
+        console.error("[DATABASE] Error loading seed file, initializing clean state:", err.message);
+      }
+      this.persist();
     } else {
       this.persist();
     }

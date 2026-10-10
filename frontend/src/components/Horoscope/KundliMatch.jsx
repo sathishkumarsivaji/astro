@@ -777,9 +777,25 @@ export default function KundliMatch({ profile = null, chartData = null, lang = "
                   <span className="text-4xl font-extrabold text-amber-700">
                     {matchResult.totalScore}
                   </span>
-                  <span className="text-stone-500 text-sm font-bold"> / 36</span>
-                  <div className="text-xs text-emerald-800 font-bold">{matchResult.percentage}% {t.matchLabel}</div>
+                  <div className="text-xs text-emerald-800 font-bold">
+                    {matchResult.percentage}% {isTamil ? "பாரம்பரிய அஷ்டகூட குண மதிப்பெண் (விதி முறை குறியீடு; திருமண வெற்றி நிகழ்தகவு அல்ல)" : "Traditional Ashtakoota Guna Score (Rule Index; Not an Empirical Probability)"}
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Epistemic Rule vs Probability & Birth-Time Sensitivity Notice */}
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-950 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold block">
+                  {isTamil ? "பாரம்பரிய விதிமுறை விளக்கம் & நேர உணர்திறன் அறிவிப்பு" : "Classical Scoring Rule & Birth-Time Uncertainty Disclosure"}
+                </span>
+                <p className="text-[11px] text-stone-700 leading-relaxed">
+                  {isTamil
+                    ? "36-புள்ளி அஷ்டகூடப் பொருத்தம் என்பது சந்திரனின் நட்சத்திரம் மற்றும் பாத அமைப்பைக் கணக்கிடும் ஒரு பாரம்பரிய ஜோதிட விதிமுறையாகும். இது திருமண உறவின் நீடிப்பு அல்லது வெற்றி குறித்த அனுபவபூர்வ நிகழ்தகவு (empirical probability) அல்ல. பிறப்பு நேர துல்லியம் நட்சத்திர/பாத எல்லைகளுக்கு அருகில் மாறும் போது குணப் புள்ளிகள் மாற வாய்ப்புள்ளது."
+                    : "The 36-point Ashtakoota score is an interpretive classical rule system based on Moon Nakshatra and Pada alignment. It is NOT an empirical probability or statistical guarantee of relationship longevity or marital success. Sensitivity note: Variations in reported birth time near Nakshatra or Pada boundary transitions may alter the resulting Guna score."}
+                </p>
               </div>
             </div>
 

@@ -269,6 +269,7 @@ const valFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/
 const blindFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/blind_test.json"));
 const holdoutFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/internal_holdout.json"));
 const overlapFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/split_manifest.json"));
+const adbFileHash = byteHash(adbBenchmarkPath);
 
 const b10Matches =
   trainFileHash === dataHashes.trainSplitHash &&
@@ -276,6 +277,7 @@ const b10Matches =
   blindFileHash === dataHashes.blindTestSplitHash &&
   holdoutFileHash === dataHashes.internalHoldoutSplitHash &&
   overlapFileHash === dataHashes.overlapManifestHash &&
+  adbFileHash === dataHashes.astroDatabankTrueIndependentHash &&
   bench.metadata?.trainingDatasetHash === dataHashes.trainSplitHash &&
   latestBench.provenance?.trainingDatasetHash === dataHashes.trainSplitHash &&
   latestBench.provenance?.validationDatasetHash === dataHashes.valSplitHash &&
@@ -284,7 +286,7 @@ check(
   10,
   "benchmark dataset hashes === manifest dataset hashes",
   b10Matches,
-  `train=${trainFileHash.slice(0, 16)}, blind=${blindFileHash.slice(0, 16)}`
+  `train=${trainFileHash.slice(0, 16)}, blind=${blindFileHash.slice(0, 16)}, adb=${adbFileHash.slice(0, 16)}`
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -334,6 +336,12 @@ try {
   const feLockExists = fs.existsSync(path.join(FRONTEND_DIR, "package-lock.json"));
   const trackedFiles = getTrackedFilesOrScan();
   const nodeModulesTracked = trackedFiles.split("\n").some(f => f.startsWith("node_modules/") || f.includes("/node_modules/"));
+  const distTracked = trackedFiles.split("\n").some(f => f.startsWith("dist/") || f.includes("/dist/") || f.startsWith("frontend/dist/"));
+  const storeTracked = trackedFiles.split("\n").some(f => f.endsWith("astroverse_store.json"));
+  const envTracked = trackedFiles.split("\n").some(f => {
+    const trimmed = f.trim();
+    return trimmed === ".env" || trimmed.endsWith("/.env") || trimmed.endsWith("\\.env") || trimmed.endsWith(".env.local");
+  });
   
   if (!feLockExists) {
     npmCiClean = false;
@@ -341,17 +349,51 @@ try {
   } else if (nodeModulesTracked) {
     npmCiClean = false;
     npmCiDetail = "node_modules is tracked in git index";
+  } else if (distTracked) {
+    npmCiClean = false;
+    npmCiDetail = "dist is tracked in git index";
+  } else if (storeTracked) {
+    npmCiClean = false;
+    npmCiDetail = "backend/data/astroverse_store.json runtime store is tracked in git index";
+  } else if (envTracked) {
+    npmCiClean = false;
+    npmCiDetail = "secret .env file is tracked in git index";
   } else if (!fePkg.scripts?.build || !fePkg.scripts?.lint) {
     npmCiClean = false;
     npmCiDetail = "package.json missing build or lint scripts";
   } else {
-    // If node_modules is missing (clean fresh distribution), execute npm ci to establish runtime
-    const nodeModulesExists = fs.existsSync(path.join(FRONTEND_DIR, "node_modules"));
-    if (!nodeModulesExists) {
-      execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
-      npmCiDetail = "clean npm ci executed successfully; zero node_modules in distribution archive";
+    // Audit any distribution archives (.zip) found in workspace
+    const zipFiles = fs.readdirSync(ROOT).filter(f => f.endsWith(".zip"));
+    let zipAuditFailures = [];
+    for (const zf of zipFiles) {
+      try {
+        const zipPath = path.join(ROOT, zf);
+        const entries = execSync(`tar -tf "${zipPath}"`, { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 }).split("\n");
+        const hasNodeModules = entries.some(e => e.includes("node_modules/"));
+        const hasDist = entries.some(e => e.includes("/dist/") || e.startsWith("dist/"));
+        const hasStore = entries.some(e => e.includes("astroverse_store.json"));
+        const hasEnv = entries.some(e => {
+          const trimmed = e.trim();
+          return trimmed === ".env" || trimmed.endsWith("/.env") || trimmed.endsWith("\\.env") || trimmed.endsWith(".env.local");
+        });
+        if (hasNodeModules || hasDist || hasStore || hasEnv) {
+          zipAuditFailures.push(`${zf} (contains: ${[hasNodeModules && 'node_modules', hasDist && 'dist', hasStore && 'runtime_store', hasEnv && 'secret .env'].filter(Boolean).join(', ')})`);
+        }
+      } catch (_ze) {}
+    }
+
+    if (zipAuditFailures.length > 0) {
+      npmCiClean = false;
+      npmCiDetail = `Contaminated release archives found: ${zipAuditFailures.join("; ")}`;
     } else {
-      npmCiDetail = "package.json and package-lock.json verified; zero node_modules in distribution";
+      // If node_modules is missing (clean fresh distribution), execute npm ci to establish runtime
+      const nodeModulesExists = fs.existsSync(path.join(FRONTEND_DIR, "node_modules"));
+      if (!nodeModulesExists) {
+        execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
+        npmCiDetail = "clean npm ci executed successfully; zero node_modules in distribution archives";
+      } else {
+        npmCiDetail = `package.json and lockfile verified; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
+      }
     }
   }
 } catch (err) {
@@ -371,14 +413,16 @@ check(
 let buildSucceeds = true;
 let buildDetail = "";
 try {
-  const distIndex = path.join(FRONTEND_DIR, "dist/index.html");
-  if (!fs.existsSync(distIndex)) {
-    execSync("npm run build", { cwd: FRONTEND_DIR, stdio: "pipe" });
+  const distDir = path.join(FRONTEND_DIR, "dist");
+  if (fs.existsSync(distDir)) {
+    fs.rmSync(distDir, { recursive: true, force: true });
   }
+  execSync("npm run build", { cwd: FRONTEND_DIR, stdio: "pipe" });
+  const distIndex = path.join(FRONTEND_DIR, "dist/index.html");
   if (fs.existsSync(distIndex)) {
     const html = fs.readFileSync(distIndex, "utf8");
     if (html.includes("<!DOCTYPE html>") || html.includes("<html")) {
-      buildDetail = "dist/index.html compiled cleanly and verified";
+      buildDetail = "dist cleaned and compiled freshly; dist/index.html verified";
     } else {
       buildSucceeds = false;
       buildDetail = "dist/index.html missing HTML structure";

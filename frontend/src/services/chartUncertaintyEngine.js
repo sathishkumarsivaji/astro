@@ -201,6 +201,28 @@ export function runBirthTimePerturbationAnalysis({
       isMoonNakshatraSensitive,
       overallSensitivityLevel
     },
+    boundaryAlternatives: {
+      d1Lagna: {
+        isSensitive: isD1LagnaSensitive,
+        baseline: baseline.ascendantSign,
+        alternatives: [...new Set(evaluatedPerturbations.filter(p => p.d1LagnaChanged).map(p => p.ascendantSign))]
+      },
+      d9Lagna: {
+        isSensitive: isD9LagnaSensitive,
+        baseline: baseline.d9AscendantSign,
+        alternatives: [...new Set(evaluatedPerturbations.filter(p => p.d9LagnaChanged).map(p => p.d9AscendantSign))]
+      },
+      d10Lagna: {
+        isSensitive: isD10LagnaSensitive,
+        baseline: baseline.d10AscendantSign,
+        alternatives: [...new Set(evaluatedPerturbations.filter(p => p.d10LagnaChanged).map(p => p.d10AscendantSign))]
+      },
+      moonNakshatra: {
+        isSensitive: isMoonNakshatraSensitive,
+        baseline: baseline.moonNakshatra,
+        alternatives: [...new Set(evaluatedPerturbations.filter(p => p.moonNakshatraChanged).map(p => p.moonNakshatra))]
+      }
+    },
     disclosure: {
       astronomicalRate: "Ascendant rotates 360° per ~1440 minutes (~1° every 4 minutes). Navamsha spans 3°20' (~13.3 minutes). Dashamsha spans 3°00' (~12 minutes).",
       caveat: "Conclusions dependent on Ascendant sign, divisional ascendants, or bhava cusps become unreliable and are classified as BIRTH_TIME_SENSITIVE when birth-time uncertainty exceeds the sensitivity threshold."

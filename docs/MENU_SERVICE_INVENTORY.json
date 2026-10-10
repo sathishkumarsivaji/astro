@@ -1,0 +1,893 @@
+{
+  "inventoryVersion": "1.0.0",
+  "generatedAt": "2026-10-09T16:15:00.000Z",
+  "application": "ASTROVERSE",
+  "menus": [
+    {
+      "id": "home",
+      "menuTitle": "Home / Daily Cosmic Overview",
+      "routeOrTab": "home",
+      "components": [
+        "src/components/Home/HomeDashboard.jsx",
+        "src/components/Horoscope/BirthChartForm.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js",
+        "src/services/calendarEngine.js",
+        "src/services/aiAstrologyService.js"
+      ],
+      "dataSources": [
+        "Client sessionStorage (astro_active_profile)",
+        "Deterministic local astronomical calculations",
+        "Guest session / User profile API"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "birthDate",
+        "birthTime",
+        "latitude",
+        "longitude",
+        "utcOffset",
+        "timezoneId"
+      ],
+      "calculationDependencies": [
+        "calculatePlanetaryPositions",
+        "calculateAccurateSunTimes",
+        "calculateDailyPanchanga",
+        "calculateTaraBala"
+      ],
+      "safetyBoundaries": [
+        "Zero medical or financial guarantees",
+        "Clear demo banner when DEMO_BIRTH_PROFILE is active",
+        "Statutory disclaimer on every advice card"
+      ],
+      "tests": [
+        "test_p0_p1_remediation_audit.mjs",
+        "test_user_facing_no_fabricated_values.mjs"
+      ],
+      "knownLimitations": [
+        "Transit moon changes sign every 2.25 days; requires daily refreshed client time or user date selection"
+      ],
+      "requiredEnhancements": [
+        "Ensure prompt chips route cleanly to Ask AstroVerse with exact domain classification and zero hallucinated pre-computed values"
+      ]
+    },
+    {
+      "id": "chart",
+      "menuTitle": "My Chart / Vedic Birth Kundli & Vargas",
+      "routeOrTab": "chart",
+      "components": [
+        "src/components/Horoscope/BirthChartForm.jsx",
+        "src/components/Horoscope/ChartViewer.jsx",
+        "src/components/Horoscope/PlanetDetailModal.jsx",
+        "src/components/Horoscope/CalculationCertificateModal.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js",
+        "src/astrology/index.js",
+        "src/services/chartUncertaintyEngine.js",
+        "src/services/historicalTime/historicalTimeEngine.js",
+        "src/services/geoService.js"
+      ],
+      "dataSources": [
+        "Meeus planetary algorithm + Swiss Ephemeris reference fixtures",
+        "IANA Time Zone database via Intl and historical time engine",
+        "Indian & International gazetteer coordinates"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "birthDate",
+        "birthTime",
+        "latitude",
+        "longitude",
+        "utcOffset",
+        "timezoneId",
+        "astrologySystem (lahiri, raman, krishnamurti, tropical, sayana)"
+      ],
+      "calculationDependencies": [
+        "calculatePlanetaryPositions",
+        "calculateAscendantAndHouses (Equal, Sripati, Placidus)",
+        "calculateShodashavarga (D1 through D60)",
+        "calculateShadbala",
+        "calculatePlanetaryAvasthas",
+        "calculateClassicalAshtakavarga",
+        "calculateJaiminiSystem",
+        "calculateKpCuspSubLords"
+      ],
+      "safetyBoundaries": [
+        "Fail-closed on missing coordinates or non-finite JD",
+        "Strict boundary sensitivity warnings on D60 (shifts every ~2.1 min) and D9 (shifts every ~13.3 min)",
+        "Zero fake percentage or certainty scores"
+      ],
+      "tests": [
+        "test_swiss_ephemeris_benchmark.mjs",
+        "test_true_node_independent_benchmark.mjs",
+        "test_cross_system_astronomical_consistency.mjs",
+        "test_independent_ephemeris_500_cases.mjs",
+        "test_golden_astronomy.mjs",
+        "test_historical_time_engine.mjs"
+      ],
+      "knownLimitations": [
+        "Extreme circumpolar latitudes (>66°) fallback to equal house or fail-safe polar boundary",
+        "Historical timezone changes prior to 1970 depend on historicalTimeEngine gazetteer entries"
+      ],
+      "requiredEnhancements": [
+        "Enforce single canonical chart object sharing across all downstream views and reports",
+        "Ensure Calculation Certificate renders reproducible hash and exact astronomical convention parameters"
+      ]
+    },
+    {
+      "id": "ask",
+      "menuTitle": "Ask AstroVerse / AI Master Consultation",
+      "routeOrTab": "ask",
+      "components": [
+        "src/components/Ask/AskAstroVerseView.jsx",
+        "src/components/Horoscope/FollowUpQuestions.jsx",
+        "src/components/Horoscope/FollowUpConversation.jsx",
+        "src/components/Horoscope/FollowUpAnswer.jsx"
+      ],
+      "services": [
+        "src/services/questionAnswer/qaEngine.js",
+        "src/services/questionAnswer/intentClassifier.js",
+        "src/services/questionAnswer/domainClassifier.js",
+        "src/services/questionAnswer/entityExtractor.js",
+        "src/services/questionAnswer/questionUnderstandingEngine.js",
+        "src/services/questionAnswer/evidencePlanner.js",
+        "src/services/questionAnswer/evidenceRetriever.js",
+        "src/services/questionAnswer/answerSynthesizer.js",
+        "src/services/questionAnswer/contradictionDetector.js",
+        "src/services/questionAnswer/qaCompletenessValidator.js",
+        "src/services/questionAnswer/qaFirewall.js",
+        "src/services/questionAnswer/qaSafetyValidator.js",
+        "src/services/questionAnswer/followUpMemory.js",
+        "src/services/consultationEngine.js",
+        "src/services/followUpContextBuilder.js",
+        "src/services/followUpRouter.js"
+      ],
+      "dataSources": [
+        "Canonical chart object from astroEngine",
+        "Historical dasha and transit timelines",
+        "User question string and conversational message history"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData",
+        "userQuestion",
+        "conversationHistory",
+        "language (en | ta)"
+      ],
+      "calculationDependencies": [
+        "Deterministic chart accessors (getAscendantName, getMoonSignName, etc.)",
+        "buildCanonicalChartFacts",
+        "buildEvidencePlan",
+        "retrieveFactChain",
+        "detectContradictions",
+        "synthesizeAnswer"
+      ],
+      "safetyBoundaries": [
+        "Universal Anti-Fabrication Firewall: rejects fake lottery numbers, stock picks, medical cures, lifespan predictions",
+        "Health-safe interpretation: strictly replaces diagnostic/clinical terms with traditional constitutional/lifestyle insights and statutory medical disclaimer",
+        "Fail-closed with INSUFFICIENT_DATA when chart or dasha is absent"
+      ],
+      "tests": [
+        "test_universal_qa_benchmark.mjs",
+        "test_follow_up_qa.mjs",
+        "test_multiturn_qa.mjs",
+        "test_precision_qa_engine.mjs",
+        "test_advanced_qa_engine.mjs",
+        "test_system_comparison_qa.mjs",
+        "test_universal_claim_firewall.mjs",
+        "test_tamil_purity.mjs"
+      ],
+      "knownLimitations": [
+        "LLM natural language synthesis requires strict grounding in deterministic facts to prevent hallucination"
+      ],
+      "requiredEnhancements": [
+        "Mandatory 14-stage execution pipeline for universal questions",
+        "Expand frozen benchmark evaluation to end-to-end production pipeline verification",
+        "Preserve English/Tamil semantic parity and structured evidence tags"
+      ]
+    },
+    {
+      "id": "timeline",
+      "menuTitle": "Timeline / Vimshottari Dasha, Gochar & Transits",
+      "routeOrTab": "timeline",
+      "components": [
+        "src/components/Horoscope/LifeTimeline.jsx",
+        "src/components/Horoscope/GocharDashboard.jsx",
+        "src/components/Calendar/PersonalizedCalendar.jsx",
+        "src/components/Journal/AstrologyJournal.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js",
+        "src/services/expertPrediction/lifeEventTimingEngine.js",
+        "src/services/questionAnswer/timingEngine.js",
+        "src/services/questionAnswer/milestoneTimelineEngine.js",
+        "src/services/calendarEngine.js"
+      ],
+      "dataSources": [
+        "Vimshottari Dasha calculation engine",
+        "Dynamic ephemeris transit root finder"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData",
+        "birthDate",
+        "birthTime",
+        "natal Moon longitude"
+      ],
+      "calculationDependencies": [
+        "computeDetailedVimshottari (MD, AD, PD)",
+        "calculateTransitEphemeris",
+        "calculateSadeSatiDetails",
+        "calculateAshtamaShani",
+        "calculateKantakaShani"
+      ],
+      "safetyBoundaries": [
+        "Separate exact dasha calculations from interpretive event timing",
+        "Reject ungrounded date-level predictions (use YEAR, SEASON, MONTH_RANGE, DATE_RANGE, or NOT_DISCRIMINATING)",
+        "Zero fake Active_Dasha fallbacks"
+      ],
+      "tests": [
+        "test_full_audit.mjs",
+        "test_golden_astronomy.mjs",
+        "test_p0_p1_remediation_audit.mjs"
+      ],
+      "knownLimitations": [
+        "High-order Pratyantardashas (PD) are sensitive to birth minute precision (~3-5 days per minute of error)"
+      ],
+      "requiredEnhancements": [
+        "Enforce uncertainty propagation to time window widths",
+        "Explicitly distinguish deterministic astronomy from interpretive event likelihood"
+      ]
+    },
+    {
+      "id": "relationships",
+      "menuTitle": "Relationships / Kundli Matching & Synastry",
+      "routeOrTab": "relationships",
+      "components": [
+        "src/components/Horoscope/KundliMatch.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js",
+        "src/services/consultationEngine.js"
+      ],
+      "dataSources": [
+        "Two independent birth profiles and canonical chart calculations"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "Boy & Girl birth dates, times, coordinates, Moon signs, and Moon nakshatras"
+      ],
+      "calculationDependencies": [
+        "calculateAshtakootaMatch (36 Gunas: Varna, Vashya, Tara, Yoni, Graha Maitri, Gana, Bhakoot, Nadi)",
+        "calculateManglikDosha",
+        "14-dimension matchmaking consultation"
+      ],
+      "safetyBoundaries": [
+        "Match score is documented as a classical scoring rule (out of 36), NOT a probability of marital success",
+        "No fatalistic claims regarding divorce, infidelity, or guaranteed marital doom",
+        "Propagate birth time uncertainty from both charts"
+      ],
+      "tests": [
+        "test_full_audit.mjs",
+        "test_consultation_engine.mjs"
+      ],
+      "knownLimitations": [
+        "Traditional Ashtakoota does not evaluate 7th house lord placements or D9 synastry by itself; supplemented by 14-dimension consultation"
+      ],
+      "requiredEnhancements": [
+        "Expose birth-time uncertainty impacts on Moon Nakshatra / Pada for both partners",
+        "Clarify traditional scoring threshold vs empirical relationship outcome"
+      ]
+    },
+    {
+      "id": "rectification",
+      "menuTitle": "Birth-Time Rectification Lab",
+      "routeOrTab": "explore?sub=rectification",
+      "components": [
+        "src/components/Rectification/BirthTimeRectificationLab.jsx"
+      ],
+      "services": [
+        "src/services/birthTimeRectification/rectificationService.js",
+        "src/services/birthTimeRectification/engine/candidateGenerator.js",
+        "src/services/birthTimeRectification/engine/scoringEngine.js",
+        "src/services/birthTimeRectification/engine/validationEngine.js",
+        "src/services/birthTimeRectification/engine/permutationEngine.js",
+        "src/services/birthTimeRectification/engine/stabilityAnalyzer.js",
+        "src/services/birthTimeRectification/engine/sensitivityAnalyzer.js"
+      ],
+      "dataSources": [
+        "User supplied approximate birth time",
+        "User supplied dated life events (marriage, job, education, child, relocation, etc.)"
+      ],
+      "implementedStatus": "EXPERIMENTAL",
+      "dataDependencies": [
+        "approximateBirthDate",
+        "approximateBirthTime",
+        "searchWindowMinutes (±5 to ±60 min)",
+        "lifeEvents array with ISO dates and categories"
+      ],
+      "calculationDependencies": [
+        "generateTimeCandidates",
+        "scoreCandidate across D1, D9, D10, transits, dasha activations",
+        "analyzeCandidateStability",
+        "evaluatePermutationNullDistribution",
+        "executeLoeoCrossValidation"
+      ],
+      "safetyBoundaries": [
+        "Fail closed to NOT_DISCRIMINATING or MULTI_MODAL on flat score plateaus or ambiguous peaks",
+        "Disclaim real-world prospective accuracy; identify as experimental computational tool",
+        "Mandatory baseline comparisons against approximate input, search window midpoint, and random candidate"
+      ],
+      "tests": [
+        "test_birth_time_rectification.mjs",
+        "test_rectification_suite.mjs",
+        "test_rectification_known_ground_truth.mjs",
+        "test_rectification_ground_truth_benchmark.mjs",
+        "test_rectification_margin.mjs",
+        "test_rectification_edge_boundary.mjs",
+        "test_rectification_null_distribution.mjs",
+        "test_rectification_multipeak.mjs"
+      ],
+      "knownLimitations": [
+        "Requires multiple verified high-impact dated life events to discriminate sub-minute intervals",
+        "LOEO cross-validation reflects internal model stability, not true-time recovery"
+      ],
+      "requiredEnhancements": [
+        "Report all 5 mandatory baselines with paired subject comparisons",
+        "Abstain from point prediction when peak is multimodal or boundary winner",
+        "Enforce EXPERIMENTAL status in all user-facing disclaimers"
+      ]
+    },
+    {
+      "id": "recovery",
+      "menuTitle": "Birth Recovery Wizard / Nashta Jataka",
+      "routeOrTab": "explore?sub=recovery",
+      "components": [
+        "src/components/Horoscope/BirthRecoveryWizard.jsx"
+      ],
+      "services": [
+        "src/services/nashtaJatakaEngine.js"
+      ],
+      "dataSources": [
+        "Prashna (query moment) coordinates and timestamp",
+        "Native physical attributes, memory landmarks, and life epoch clues"
+      ],
+      "implementedStatus": "TRADITIONAL_RECONSTRUCTION",
+      "dataDependencies": [
+        "queryDate",
+        "queryTime",
+        "queryLatitude",
+        "queryLongitude",
+        "userProvidedFeatures (approximate age, major life events, physical attributes)"
+      ],
+      "calculationDependencies": [
+        "calculatePrashnaChart",
+        "applyClassicalNashtaJatakaRules (Varahamihira / BPHS)",
+        "scoreReconstructionCandidates"
+      ],
+      "safetyBoundaries": [
+        "Audit every displayed score: replace 'Peak probability' with 'Highest-ranked heuristic candidate'",
+        "Disclose as a traditional astrological reconstruction technique, completely distinct from empirical forensic rectification",
+        "Return INSUFFICIENT_DATA when evidence cannot distinguish between plausible candidate windows"
+      ],
+      "tests": [
+        "test_full_audit.mjs",
+        "test_no_fabricated_calculated_values.mjs"
+      ],
+      "knownLimitations": [
+        "Nashta Jataka is an ancient heuristic methodology without prospective empirical validation; useful only when birth record is completely lost"
+      ],
+      "requiredEnhancements": [
+        "Expose assumptions, candidate windows, supporting evidence, contradictory evidence, and missing information in the UI"
+      ]
+    },
+    {
+      "id": "panchang",
+      "menuTitle": "Panchang & Muhurta / Daily Ephemeris & Electional Astrology",
+      "routeOrTab": "explore?sub=panchang",
+      "components": [
+        "src/components/Horoscope/PanchangMuhurta.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js",
+        "src/services/expertPrediction/muhurtaEngine.js"
+      ],
+      "dataSources": [
+        "Meeus solar/lunar ephemeris",
+        "Geographic latitude, longitude, and civil timezone"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "targetDate",
+        "latitude",
+        "longitude",
+        "utcOffset",
+        "timezoneId"
+      ],
+      "calculationDependencies": [
+        "calculateDailyPanchanga (Tithi, Vara, Nakshatra, Yoga, Karana)",
+        "calculateAccurateSunTimes (Sunrise, Sunset, Solar Noon)",
+        "calculateInauspiciousPeriods (Rahu Kalam, Yamaganda, Gulika Kalam)",
+        "calculateAbhijitMuhurta",
+        "calculateEventMuhurta"
+      ],
+      "safetyBoundaries": [
+        "Display favorable index as heuristic rule score, NOT empirical probability",
+        "Transparently list positive and negative classical factors contributing to electional score",
+        "Strict timezone and DST handling"
+      ],
+      "tests": [
+        "test_full_audit.mjs",
+        "test_golden_astronomy.mjs"
+      ],
+      "knownLimitations": [
+        "Polar regions with midnight sun / polar night require fall-back convention for solar horizon"
+      ],
+      "requiredEnhancements": [
+        "Refactor favorable indices to transparent rule-based metrics"
+      ]
+    },
+    {
+      "id": "palm",
+      "menuTitle": "Palmistry Analysis / Computer Vision & Samudrika Shastra",
+      "routeOrTab": "explore?sub=palm",
+      "components": [
+        "src/components/PalmReader/CameraCapture.jsx",
+        "src/components/PalmReader/PalmReport.jsx"
+      ],
+      "services": [
+        "src/services/palmistryEngine.js"
+      ],
+      "dataSources": [
+        "Client camera canvas image buffer",
+        "Samudrika Shastra traditional line interpretation rules"
+      ],
+      "implementedStatus": "EXPERIMENTAL_PROTOTYPE",
+      "dataDependencies": [
+        "imageData / HTMLCanvasElement",
+        "userGender",
+        "activeHand (left | right)"
+      ],
+      "calculationDependencies": [
+        "preprocessPalmImage",
+        "segmentPalmRegion",
+        "extractCreasesAndEdges",
+        "classifyMajorLines (Heart, Head, Life, Fate)",
+        "evaluateLineCharacteristics"
+      ],
+      "safetyBoundaries": [
+        "Strict separation between line segmentation confidence and life claims (wealth, marriage, lifespan)",
+        "Never assert lifespan or fatalistic health conditions from palm creases",
+        "Distinguish synthetic pipeline tests from real-image benchmarks; maintain prototype status until independently validated real-image dataset is published"
+      ],
+      "tests": [
+        "test_palm_vision_benchmark.mjs"
+      ],
+      "knownLimitations": [
+        "Mobile browser camera image quality, lighting, hand orientation, and skin tone variations affect edge contrast and crease detection"
+      ],
+      "requiredEnhancements": [
+        "Separate IMAGE_QUALITY_SCORE, LANDMARK_DETECTION_CONFIDENCE, LINE_DETECTION_CONFIDENCE, and INTERPRETIVE_CONFIDENCE",
+        "Remove arbitrary confidence defaults and allow manual adjustment/correction"
+      ]
+    },
+    {
+      "id": "numerology",
+      "menuTitle": "Vedic Numerology / Cheiro & Chaldean Systems",
+      "routeOrTab": "explore?sub=numerology",
+      "components": [
+        "src/components/Numerology/NumerologyCalc.jsx"
+      ],
+      "services": [
+        "src/services/numerologyEngine.js"
+      ],
+      "dataSources": [
+        "Chaldean & Pythagorean letter value mappings",
+        "User full birth name and birth date"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "fullName",
+        "birthDate"
+      ],
+      "calculationDependencies": [
+        "calculateDriverNumber (Moolank / Birth Day)",
+        "calculateDestinyNumber (Bhagyank / Full Date)",
+        "calculateNameNumber (Namank / Chaldean Sum)",
+        "calculateSoulUrgeNumber (Vowels)",
+        "calculatePersonalityNumber (Consonants)",
+        "checkMasterNumbers (11, 22, 33)"
+      ],
+      "safetyBoundaries": [
+        "Unicode normalization and Tamil/English transliteration consistency",
+        "No claims of empirical outcome or financial prosperity from name alterations",
+        "Zero arbitrary non-deterministic interpretations"
+      ],
+      "tests": [
+        "test_full_audit.mjs"
+      ],
+      "knownLimitations": [
+        "Different cultural transliterations of names produce different character counts; system uses standard Chaldean mapping with explicit phonetic rules"
+      ],
+      "requiredEnhancements": [
+        "Disclose numerology as a symbolic mapping system without empirical statistical guarantees"
+      ]
+    },
+    {
+      "id": "names",
+      "menuTitle": "Baby Name Generator / Nakshatra Pada Syllables",
+      "routeOrTab": "explore?sub=names",
+      "components": [
+        "src/components/BabyNames/NameGenerator.jsx"
+      ],
+      "services": [
+        "src/services/babyNameEngine.js"
+      ],
+      "dataSources": [
+        "27 Nakshatras x 4 Padas canonical starting syllables (Avakahada Chakra)",
+        "Curated Tamil and Sanskrit baby name lexicon with etymological meanings"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "birthDate",
+        "birthTime",
+        "birthPlace / coordinates",
+        "gender (boy | girl | any)",
+        "religion / culture preference"
+      ],
+      "calculationDependencies": [
+        "calculateNewbornAstroProfile (Moon Nakshatra, Pada, Syllable)",
+        "filterAndScoreNamesByNumerology",
+        "matchStartingSyllables"
+      ],
+      "safetyBoundaries": [
+        "Fail closed on missing birth coordinates without fabricating Moon sign or Nakshatra",
+        "Zero fabricated name meanings; strictly verified etymological lexicon",
+        "De-duplicate name candidates"
+      ],
+      "tests": [
+        "test_no_fabricated_calculated_values.mjs",
+        "test_negative_data_matrix.mjs"
+      ],
+      "knownLimitations": [
+        "Lexicon coverage includes ~5,000 verified names; non-traditional or modern hybrid names require manual custom analysis"
+      ],
+      "requiredEnhancements": [
+        "Preserve strict syllable matching and clear provenance for each suggested name"
+      ]
+    },
+    {
+      "id": "journal",
+      "menuTitle": "Astrology Journal / Retrospective & Prospective Event Logging",
+      "routeOrTab": "timeline?sub=journal",
+      "components": [
+        "src/components/Journal/AstrologyJournal.jsx"
+      ],
+      "services": [
+        "src/services/calendarEngine.js",
+        "src/services/customerReport/milestoneTimelineEngine.js"
+      ],
+      "dataSources": [
+        "Client localStorage / SessionStorage persistence",
+        "Natal chart dasha and transit correlations"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData",
+        "userEventDate",
+        "userEventDescription",
+        "userEventCategory"
+      ],
+      "calculationDependencies": [
+        "correlateLifeEventWithAstrology (Calculates operating MD, AD, PD and major transits on past event date)"
+      ],
+      "safetyBoundaries": [
+        "Distinguish retrospective reflection from prospective prediction validation",
+        "Prospective prediction logging must record immutable timestamp, prediction window, and locked status before outcome is known"
+      ],
+      "tests": [
+        "test_no_fabricated_calculated_values.mjs",
+        "test_full_audit.mjs"
+      ],
+      "knownLimitations": [
+        "Retrospective correlation can suffer from hindsight bias; prospective verification protocol is necessary for scientific validation"
+      ],
+      "requiredEnhancements": [
+        "Implement immutable prospective prediction log with cryptographic timestamping and outcome resolution tracking"
+      ]
+    },
+    {
+      "id": "calendar",
+      "menuTitle": "Personalized Calendar / Transit Calendar & Tara Bala",
+      "routeOrTab": "timeline?sub=calendar",
+      "components": [
+        "src/components/Calendar/PersonalizedCalendar.jsx"
+      ],
+      "services": [
+        "src/services/calendarEngine.js"
+      ],
+      "dataSources": [
+        "Natal Moon Nakshatra & Sign",
+        "Daily transit ephemeris for target month"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData",
+        "targetMonth",
+        "targetYear"
+      ],
+      "calculationDependencies": [
+        "calculateTaraBala (9-fold star compatibility: Janma, Sampat, Vipat, Kshema, Pratyak, Sadhana, Naidhana, Mitra, Parama Mitra)",
+        "calculateChandraBala (Moon sign distance from Janma Rasi)",
+        "calculatePersonalizedDayRating"
+      ],
+      "safetyBoundaries": [
+        "Return INSUFFICIENT_DATA if chart has no Moon sign or Nakshatra (no default to Aries/Ashwini)",
+        "Display favorable index as heuristic score, NOT probability of worldly success"
+      ],
+      "tests": [
+        "test_user_facing_no_fabricated_values.mjs",
+        "test_calculated_value_integrity.mjs"
+      ],
+      "knownLimitations": [
+        "Evaluates personal lunar transits; does not replace full horary election (Muhurta) for major life initiatives"
+      ],
+      "requiredEnhancements": [
+        "Audit displayed scores to ensure terminology clearly reflects traditional Tara Bala rules rather than statistical likelihood"
+      ]
+    },
+    {
+      "id": "gochar",
+      "menuTitle": "Gochar / Real-Time Planetary Transits Dashboard",
+      "routeOrTab": "timeline?sub=gochar",
+      "components": [
+        "src/components/Horoscope/GocharDashboard.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js"
+      ],
+      "dataSources": [
+        "Current real-time ephemeris calculations",
+        "Natal planetary positions"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData (natal Moon, Ascendant, and planets)",
+        "currentDate",
+        "currentCoordinates"
+      ],
+      "calculationDependencies": [
+        "calculateTransitEphemeris",
+        "calculateSadeSatiDetails (Rising, Peak, Setting phases of Saturn transit relative to natal Moon)",
+        "calculateAshtamaShani (8th house Saturn)",
+        "calculateKantakaShani (4th / 7th / 10th house Saturn)",
+        "calculateJupiterTransitSign"
+      ],
+      "safetyBoundaries": [
+        "Return INSUFFICIENT_DATA when chart is null",
+        "Present Saturn and Jupiter transits with traditional remedial advice rather than catastrophic fear-mongering"
+      ],
+      "tests": [
+        "test_negative_data_matrix.mjs",
+        "test_full_audit.mjs"
+      ],
+      "knownLimitations": [
+        "Orb of transit aspect is set to standard classical sign-to-sign (Rasi Drishti / Graha Drishti) with degree orb highlights"
+      ],
+      "requiredEnhancements": [
+        "Explicitly indicate exact ingress dates and retrograde stations"
+      ]
+    },
+    {
+      "id": "detailed_report",
+      "menuTitle": "Detailed Master Report / 16–18 Chapter Dossier",
+      "routeOrTab": "modal:DetailedReportModal",
+      "components": [
+        "src/components/Horoscope/DetailedReportModal.jsx"
+      ],
+      "services": [
+        "src/services/customerReport/domainReportEngine.js",
+        "src/services/customerReport/customerNarrativeEngine.js",
+        "src/services/customerReport/reportValidator.js",
+        "src/services/customerReport/reportSafetyGate.js"
+      ],
+      "dataSources": [
+        "Full chart calculation output (D1-D60, Bhavas, Shadbala, Ashtakavarga, Dashas)"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData",
+        "reportTier (free, standard, comprehensive, expert)",
+        "audienceMode (client, astrologer)",
+        "lang (en | ta)"
+      ],
+      "calculationDependencies": [
+        "generateComprehensiveReportDossier",
+        "validateReportDataIntegrity",
+        "sanitizeReportSafetyClaims"
+      ],
+      "safetyBoundaries": [
+        "Zero uncalibrated percentage guarantees",
+        "Health & vitality chapter bound by statutory medical disclaimer",
+        "Legal & finance sections bound by statutory advisory disclaimers"
+      ],
+      "tests": [
+        "test_detailed_report_integrity.mjs",
+        "test_report_accuracy_claim_integrity.mjs",
+        "test_full_audit.mjs"
+      ],
+      "knownLimitations": [
+        "Generating complete 18-chapter dossier in PDF format requires html2canvas and jspdf rendering"
+      ],
+      "requiredEnhancements": [
+        "Ensure single canonical fact source across all chapters and PDF export"
+      ]
+    },
+    {
+      "id": "expert_prediction",
+      "menuTitle": "Expert Prediction Report / 17-Domain Granular Timing",
+      "routeOrTab": "component:ExpertPredictionReportView",
+      "components": [
+        "src/components/Horoscope/ExpertPredictionReportView.jsx",
+        "src/components/Horoscope/DetailedReportModal.jsx"
+      ],
+      "services": [
+        "src/services/expertPrediction/index.js",
+        "src/services/expertPrediction/canonicalFactAdapter.js",
+        "src/services/expertPrediction/domainTimingEngine.js",
+        "src/services/expertPrediction/resolutionClassifier.js",
+        "src/services/expertPrediction/contradictionEngine.js",
+        "src/services/expertPrediction/domainValidationRegistry.js",
+        "src/services/expertPrediction/evidenceChainBuilder.js"
+      ],
+      "dataSources": [
+        "Canonical chart facts",
+        "17 Domain Rule Adapters"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "canonicalFacts (extracted via canonicalFactAdapter from chartData)"
+      ],
+      "calculationDependencies": [
+        "generateExpertPredictionReport (Marriage, Career, Job, Business, Finance, Property, Vehicle, Children, Education, Family, Foreign Travel, Leadership, Legal, Spirituality, Health Safety, Caution Periods, Milestones)"
+      ],
+      "safetyBoundaries": [
+        "Ordinal resolution ranking hierarchy: TIME_WINDOW > DAY > DATE_RANGE > MONTH_RANGE > SEASON > YEAR > NOT_DISCRIMINATING > INSUFFICIENT_DATA",
+        "Rule convergence score is an epistemic agreement index, NOT an empirical real-world probability",
+        "Every timing prediction includes WHY and WHY NOT contradictory evidence"
+      ],
+      "tests": [
+        "src/services/expertPrediction/__tests__/expertPrediction.test.mjs",
+        "test_full_audit.mjs",
+        "test_resolution_layers.mjs"
+      ],
+      "knownLimitations": [
+        "Validation status is domain-specific; marriage rule validation cannot be generalized to career or finance without dedicated domain benchmarks"
+      ],
+      "requiredEnhancements": [
+        "Explicitly document required chart facts, applicable rules, and validation status per domain adapter"
+      ]
+    },
+    {
+      "id": "follow_up_questions",
+      "menuTitle": "Follow-Up Questions & Dynamic Consultation Router",
+      "routeOrTab": "component:FollowUpQuestions",
+      "components": [
+        "src/components/Horoscope/FollowUpQuestions.jsx",
+        "src/components/Horoscope/FollowUpConversation.jsx",
+        "src/components/Horoscope/FollowUpAnswer.jsx"
+      ],
+      "services": [
+        "src/services/followUpContextBuilder.js",
+        "src/services/followUpRouter.js",
+        "src/services/followUpAnswerService.js",
+        "src/services/questionAnswer/followUpMemory.js"
+      ],
+      "dataSources": [
+        "Active report section, conversation history, canonical chart facts"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData",
+        "activeSection",
+        "query",
+        "history"
+      ],
+      "calculationDependencies": [
+        "buildFollowUpContext",
+        "routeFollowUpQuestion",
+        "answerFollowUpQuestion"
+      ],
+      "safetyBoundaries": [
+        "Retain chart identity, domain, timeframe, and astrology system across turns",
+        "Clean topic reset when user switches domains (e.g. from Career to Marriage)",
+        "Zero generic fallback answers"
+      ],
+      "tests": [
+        "test_follow_up_qa.mjs",
+        "test_multiturn_qa.mjs"
+      ],
+      "knownLimitations": [
+        "Short elliptical queries (e.g., 'What about 2027?') require active memory state to resolve domain"
+      ],
+      "requiredEnhancements": [
+        "Rigorous verification of topic reset and multi-turn consistency"
+      ]
+    },
+    {
+      "id": "calculation_certificate",
+      "menuTitle": "Calculation Certificate / Cryptographic Precision Audit",
+      "routeOrTab": "modal:CalculationCertificateModal",
+      "components": [
+        "src/components/Horoscope/CalculationCertificateModal.jsx"
+      ],
+      "services": [
+        "src/services/astroEngine.js",
+        "src/services/historicalTime/historicalTimeEngine.js"
+      ],
+      "dataSources": [
+        "Calculated chart data, ephemeris constants, and client environment"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "chartData"
+      ],
+      "calculationDependencies": [
+        "generateCalculationCertificate (Computes SHA-256 fingerprint, Delta-T, Ayanamsha value, house system, lunar node model)"
+      ],
+      "safetyBoundaries": [
+        "Exact reproducibility: certificate must match convention parameters exactly without fabrication"
+      ],
+      "tests": [
+        "test_pdf_and_fingerprint.mjs",
+        "test_full_audit.mjs"
+      ],
+      "knownLimitations": [
+        "Fingerprint is deterministic based on calculated planetary longitudes and birth parameters"
+      ],
+      "requiredEnhancements": [
+        "Include convention-specific disclosures and astronomical constants version in all certificates"
+      ]
+    },
+    {
+      "id": "real_world_accuracy_dashboard",
+      "menuTitle": "Real-World Accuracy Dashboard / Statistical Calibration",
+      "routeOrTab": "component:RealWorldAccuracyDashboard",
+      "components": [
+        "src/components/Horoscope/RealWorldAccuracyDashboard.jsx"
+      ],
+      "services": [
+        "src/services/realWorldValidation/authoritativeEmpiricalMetrics.js",
+        "src/services/realWorldValidation/empiricalEvaluationEngine.js"
+      ],
+      "dataSources": [
+        "Empirical validation artifacts, public cohort metrics, baseline models"
+      ],
+      "implementedStatus": "IMPLEMENTED",
+      "dataDependencies": [
+        "authoritativeEmpiricalMetrics constants"
+      ],
+      "calculationDependencies": [
+        "renderCalibrationMetrics",
+        "computeDiscreteHazardRate"
+      ],
+      "safetyBoundaries": [
+        "Never fabricate accuracy percentages or claim 100% precision",
+        "Disclose demographic hazard baseline parity and statistical uncertainty margins"
+      ],
+      "tests": [
+        "test_real_world_empirical_benchmark.mjs",
+        "test_v3_statistical_integrity.mjs",
+        "test_p0_p1_remediation_audit.mjs"
+      ],
+      "knownLimitations": [
+        "Astrological empirical effect sizes are historically modest; platform transparently displays baseline hazard comparison"
+      ],
+      "requiredEnhancements": [
+        "Maintain strict distinction between internal rule convergence and independent prospective empirical accuracy"
+      ]
+    }
+  ]
+}

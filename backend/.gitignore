@@ -1,4 +1,5 @@
 data/*.json
+!data/astroverse_store.seed.json
 data/*.tmp*
 .env
 .env.*

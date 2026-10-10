@@ -473,9 +473,9 @@ assert(uncoveredRes.uncoveredSubstantiveSentenceIds.length >= 1, "Uncovered sent
 console.log("\n==============================================================");
 if (failed === 0) {
   console.log(` ALL ${passed} PRODUCTION BACKEND & SECURITY CHECKS PASSED 100%!`);
-  process.exitCode = 0;
+  process.exit(0);
 } else {
   console.error(` FAILED: ${failed} checks failed, ${passed} passed.`);
-  process.exitCode = 1;
+  process.exit(1);
 }
 
