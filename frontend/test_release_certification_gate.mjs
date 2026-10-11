@@ -26,7 +26,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
-import { validateCacheEntry } from "./src/services/realWorldValidation/predictionCacheManager.js";
+import { validateCacheEntry, initCacheManager, getCurrentHashes } from "./src/services/realWorldValidation/predictionCacheManager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -270,7 +270,8 @@ const valFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/
 const blindFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/blind_test.json"));
 const holdoutFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/internal_holdout.json"));
 const overlapFileHash = byteHash(path.join(ROOT, "data/real_world_validation/splits/split_manifest.json"));
-const adbFileHash = byteHash(adbBenchmarkPath);
+const adbDatasetFileHash = byteHash(path.join(ROOT, "data/external_validation/astro_databank/astro_databank_true_independent.json"));
+const adbBenchmarkOutputHash = byteHash(adbBenchmarkPath);
 
 const b10Matches =
   trainFileHash === dataHashes.trainSplitHash &&
@@ -278,16 +279,17 @@ const b10Matches =
   blindFileHash === dataHashes.blindTestSplitHash &&
   holdoutFileHash === dataHashes.internalHoldoutSplitHash &&
   overlapFileHash === dataHashes.overlapManifestHash &&
-  adbFileHash === dataHashes.astroDatabankTrueIndependentHash &&
+  adbDatasetFileHash === dataHashes.astroDatabankTrueIndependentHash &&
+  (!dataHashes.externalBenchmarkOutputHash || adbBenchmarkOutputHash === dataHashes.externalBenchmarkOutputHash) &&
   bench.metadata?.trainingDatasetHash === dataHashes.trainSplitHash &&
   latestBench.provenance?.trainingDatasetHash === dataHashes.trainSplitHash &&
   latestBench.provenance?.validationDatasetHash === dataHashes.valSplitHash &&
   latestBench.provenance?.blindDatasetHash === dataHashes.blindTestSplitHash;
 check(
   10,
-  "benchmark dataset hashes === manifest dataset hashes",
+  "benchmark dataset hashes === manifest dataset hashes (authentic dataset files)",
   b10Matches,
-  `train=${trainFileHash.slice(0, 16)}, blind=${blindFileHash.slice(0, 16)}, adb=${adbFileHash.slice(0, 16)}`
+  `train=${trainFileHash.slice(0, 16)}, blind=${blindFileHash.slice(0, 16)}, adbDataset=${adbDatasetFileHash.slice(0, 16)}`
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -301,11 +303,16 @@ if (fs.existsSync(cachePath)) {
   let invalidCount = 0;
   let firstFailureReason = "";
 
+  initCacheManager();
+  const currentHashes = getCurrentHashes();
+
   const expectedValues = {
     astroEngineHash: authHashes.astroEngineHash,
     predictionEngineHash: authHashes.predictionEngineHash,
     calibrationModelHash: authHashes.calibrationModelHash,
+    calibrationInputHash: currentHashes.calibrationInputHash,
     trainingDatasetHash: dataHashes.trainSplitHash,
+    modelCoefficientsHash: currentHashes.modelCoefficientsHash,
     astronomyEngineVersion: manifest.astronomyEngineVersion || "4.2.0",
     historicalTimeEngineVersion: manifest.historicalTimeEngineVersion || "2.1.0",
     predictionSchemaVersion: manifest.schemaVersion || "3.0",

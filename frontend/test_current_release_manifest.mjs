@@ -113,8 +113,12 @@ const datasets = [
   { key: "valSplitHash", file: "data/real_world_validation/splits/val.json" },
   { key: "blindTestSplitHash", file: "data/real_world_validation/splits/blind_test.json" },
   { key: "internalHoldoutSplitHash", file: "data/real_world_validation/splits/internal_holdout.json" },
-  { key: "astroDatabankTrueIndependentHash", file: "data/real_world_validation/results/astro_databank_external_benchmark.json" },
-  { key: "overlapManifestHash", file: "data/real_world_validation/splits/split_manifest.json" }
+  { key: "astroDatabankTrueIndependentHash", file: "data/external_validation/astro_databank/astro_databank_true_independent.json" },
+  { key: "overlapManifestHash", file: "data/real_world_validation/splits/split_manifest.json" },
+  { key: "rawSourceExportHash", file: "data/external_validation/adb_extracted/c_sample_260919_1519.xml" },
+  { key: "parsedFullDatasetHash", file: "data/external_validation/astro_databank/astro_databank_c_sample.json" },
+  { key: "independentHoldoutDatasetHash", file: "data/external_validation/astro_databank/astro_databank_independent_holdout.json" },
+  { key: "externalBenchmarkOutputHash", file: "data/real_world_validation/results/astro_databank_external_benchmark.json" }
 ];
 
 for (const ds of datasets) {

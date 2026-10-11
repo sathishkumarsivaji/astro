@@ -233,7 +233,13 @@ export function createLifeReportModel(params = {}) {
       prospective: []
     },
     evidenceSummary: params.evidenceSummary || {
-      totalDomainsAnalyzed: 17,
+      requestedDomains: 17,
+      processedDomains: Array.isArray(params.domainReports) ? params.domainReports.length : 0,
+      totalDomainsAnalyzed: Array.isArray(params.domainReports) ? params.domainReports.length : 0,
+      domainsWithSufficientData: Array.isArray(params.domainReports) ? params.domainReports.filter(d => d?.evidenceStrength !== "INSUFFICIENT_DATA").length : 0,
+      domainsWithTraceableEvidence: Array.isArray(params.domainReports) ? params.domainReports.filter(d => (Array.isArray(d?.evidenceChain) && d.evidenceChain.length > 0) || (d?.technicalEvidence && Object.keys(d.technicalEvidence).length > 0)).length : 0,
+      domainsWithInsufficientData: Array.isArray(params.domainReports) ? params.domainReports.filter(d => d?.evidenceStrength === "INSUFFICIENT_DATA").length : 0,
+      empiricallyValidatedDomains: Array.isArray(params.domainReports) ? params.domainReports.filter(d => d?.empiricalStatus === "VALIDATED").length : 0,
       strongDomains: [],
       moderateDomains: [],
       cautionDomains: []

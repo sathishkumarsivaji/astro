@@ -772,7 +772,13 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
     lifeTimeline,
     majorMilestones,
     evidenceSummary: {
-      totalDomainsAnalyzed: 17,
+      requestedDomains: 17,
+      processedDomains: rawDomainReports.length,
+      totalDomainsAnalyzed: rawDomainReports.length,
+      domainsWithSufficientData: rawDomainReports.filter(d => d.evidenceStrength !== "INSUFFICIENT_DATA").length,
+      domainsWithTraceableEvidence: rawDomainReports.filter(d => (Array.isArray(d.evidenceChain) && d.evidenceChain.length > 0) || (d.technicalEvidence && Object.keys(d.technicalEvidence).length > 0)).length,
+      domainsWithInsufficientData: rawDomainReports.filter(d => d.evidenceStrength === "INSUFFICIENT_DATA").length,
+      empiricallyValidatedDomains: rawDomainReports.filter(d => d.empiricalStatus === "VALIDATED").length,
       strongDomains: rawDomainReports.filter(d => d.evidenceStrength === "VERY_STRONG" || d.evidenceStrength === "STRONG").map(d => d.domainId),
       moderateDomains: rawDomainReports.filter(d => d.evidenceStrength === "MODERATE").map(d => d.domainId),
       cautionDomains: rawDomainReports.filter(d => d.evidenceStrength === "MIXED" || d.evidenceStrength === "LIMITED").map(d => d.domainId)

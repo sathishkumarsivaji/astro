@@ -41,8 +41,12 @@ export function generateReleaseManifest() {
   const valSplitHash = byteHash(path.join(ROOT, 'data/real_world_validation/splits/val.json'));
   const blindTestSplitHash = byteHash(path.join(ROOT, 'data/real_world_validation/splits/blind_test.json'));
   const internalHoldoutSplitHash = byteHash(path.join(ROOT, 'data/real_world_validation/splits/internal_holdout.json'));
-  const astroDatabankTrueIndependentHash = byteHash(path.join(ROOT, 'data/real_world_validation/results/astro_databank_external_benchmark.json'));
+  const astroDatabankTrueIndependentHash = byteHash(path.join(ROOT, 'data/external_validation/astro_databank/astro_databank_true_independent.json'));
   const overlapManifestHash = byteHash(path.join(ROOT, 'data/real_world_validation/splits/split_manifest.json'));
+  const rawSourceExportHash = byteHash(path.join(ROOT, 'data/external_validation/adb_extracted/c_sample_260919_1519.xml'));
+  const parsedFullDatasetHash = byteHash(path.join(ROOT, 'data/external_validation/astro_databank/astro_databank_c_sample.json'));
+  const independentHoldoutDatasetHash = byteHash(path.join(ROOT, 'data/external_validation/astro_databank/astro_databank_independent_holdout.json'));
+  const externalBenchmarkOutputHash = byteHash(path.join(ROOT, 'data/real_world_validation/results/astro_databank_external_benchmark.json'));
 
   const nowIso = new Date().toISOString();
   const manifest = {
@@ -71,7 +75,11 @@ export function generateReleaseManifest() {
       blindTestSplitHash,
       internalHoldoutSplitHash,
       astroDatabankTrueIndependentHash,
-      overlapManifestHash
+      overlapManifestHash,
+      rawSourceExportHash,
+      parsedFullDatasetHash,
+      independentHoldoutDatasetHash,
+      externalBenchmarkOutputHash
     },
     updatedAt: nowIso
   };

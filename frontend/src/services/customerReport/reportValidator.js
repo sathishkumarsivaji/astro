@@ -284,12 +284,13 @@ export function validateLifeReport(lifeReport, options = {}) {
   const totalCount = checks.length;
   const passRate = (passedCount / totalCount) * 100;
 
-  // Real evidence verification across domains
+  // Real evidence verification across domains (must resolve to authentic non-empty nodes)
   const domainsWithRealEvidence = domainReports.filter(dr => {
     if (!dr || typeof dr !== "object") return false;
-    const hasChain = Array.isArray(dr.evidenceChain) && dr.evidenceChain.length > 0;
+    const hasChain = Array.isArray(dr.evidenceChain) && dr.evidenceChain.length > 0 &&
+      dr.evidenceChain.every(ec => ec && (ec.evidenceId || ec.ruleId || ec.source || ec.planetaryCombination));
     const techKeys = dr.technicalEvidence && typeof dr.technicalEvidence === "object"
-      ? Object.keys(dr.technicalEvidence).filter(k => k !== "evidenceNodeId")
+      ? Object.keys(dr.technicalEvidence).filter(k => k !== "evidenceNodeId" && dr.technicalEvidence[k] !== null && dr.technicalEvidence[k] !== undefined)
       : [];
     const hasTech = techKeys.length > 0;
     return hasChain || hasTech;
@@ -298,12 +299,37 @@ export function validateLifeReport(lifeReport, options = {}) {
     domainsWithRealEvidence.map(d => d.domainId).filter(id => ALL_17_DOMAINS.includes(id))
   );
 
+  // Timing completeness: ratio of domains having valid chronological timing windows or explicit NOT_ESTABLISHED
+  let domainsWithValidTiming = 0;
+  domainReports.forEach(dr => {
+    if (!dr || typeof dr !== "object") return;
+    const tws = dr.traditionalTimingWindows || [];
+    if (tws.length > 0) {
+      const allChronological = tws.every(tw => {
+        if (!tw.start || !tw.end) return true;
+        const s = new Date(tw.start).getTime();
+        const e = new Date(tw.end).getTime();
+        return !isNaN(s) && !isNaN(e) ? s <= e : tw.start <= tw.end;
+      });
+      if (allChronological) domainsWithValidTiming++;
+    } else if (dr.empiricalResolution === "NOT_ESTABLISHED") {
+      domainsWithValidTiming++;
+    }
+  });
+
+  // Personalization score: strictly grounded in client planetary table, ascendant, and dasha
+  let personalizationChecksPassed = 0;
+  if (validPlanets) personalizationChecksPassed += 40;
+  if (hasClient && hasCoords) personalizationChecksPassed += 20;
+  if (validDasha) personalizationChecksPassed += 20;
+  if (lifeReport.coreNatalProfile?.ascendant?.sign) personalizationChecksPassed += 20;
+
   const qualityScore = {
     evidenceCompleteness: parseFloat(((uniqueDomainsWithEvidence.size / 17) * 100).toFixed(1)),
     domainCompleteness: parseFloat(((uniqueValidDomainIds.size / 17) * 100).toFixed(1)),
-    timingCompleteness: timingValid ? 100 : 0,
+    timingCompleteness: parseFloat(((domainsWithValidTiming / Math.max(1, domainReports.length)) * 100).toFixed(1)),
     safetyCompliance: (healthSafe && legalSafe && finSafe && antiFabSafe) ? 100 : 0,
-    personalizationScore: validPlanets ? 100 : 0,
+    personalizationScore: personalizationChecksPassed,
     repetitionScore: parseFloat((repAudit.repetitionScore * 100).toFixed(1)),
     dataConsistency: (hasClient && hasCoords && validDasha && validPlanets) ? 100 : 0,
     resolutionCompliance: empiricalResValid ? 100 : 0,
