@@ -49,8 +49,11 @@ export function analyzeDualPalmsForBirthRecovery({
     palmShape: "Square palm with long, agile fingers",
     mountElevationMeasured: false,
     candidateScoringApplicable: false,
+    imageFeaturesExtracted: false,
+    isPersonalizedAnalysis: false,
+    isIllustrativeReferenceOnly: true,
     status: "EXPERIMENTAL_UNVALIDATED_REFERENCE",
-    disclosure: "2D photographs cannot measure 3D physical mount elevation. Mount elevation scoring is disabled for candidate Lagna differentiation until validated against annotated ground-truth datasets.",
+    disclosure: "2D photographs cannot measure 3D physical mount elevation. This hand profile is a static non-personal illustrative reference from classical chiromancy texts. It is NOT extracted from the user's uploaded images, has zero biometric sensor calibration, and does not influence birth-time candidate scoring.",
     mounts: [
       { name: "Jupiter", prominence: "Unmeasured (2D)", indicates: "Theoretical Jupiterian Lagna association (unverified from 2D image)" },
       { name: "Saturn", prominence: "Unmeasured (2D)", indicates: "Theoretical Saturnian structure association (unverified from 2D image)" },
@@ -73,7 +76,7 @@ export function analyzeDualPalmsForBirthRecovery({
           { segment: "Mid-distal zone", standardAge: 29.5, mark: "Venus mount vertical progeny striae", significance: "First child birth / family expansion" },
           { segment: "Lower arc", standardAge: 31.5, mark: "Fine square formation near Venus mount", significance: "Property, land, vehicle acquisition" },
           { segment: "Pre-basal zone", standardAge: 34.5, mark: "Upward branch towards Apollo/Saturn", significance: "Significant wealth expansion or leadership elevation" },
-          { segment: "Basal quadrant", standardAge: 38.0, mark: "Traverse stress line / island resolution", significance: "Health recalibration / major surgery or intense physical test" }
+          { segment: "Basal quadrant", standardAge: 38.0, mark: "Traverse stress line / island resolution", significance: "Classical chronological reference segment (archetypal career / life transition window; non-medical, non-surgical)" }
         ]
       },
       fateLine: {
@@ -561,9 +564,88 @@ export function reverseCalculateBirthTimeAndDOB({
     };
   }
 
+  // 1b. Check for chronologically contradictory dates
+  const qSchool = answeredEvents.find(e => e.id === "q1_school_start");
+  const q10th = answeredEvents.find(e => e.id === "q2_10th_board");
+  const q12th = answeredEvents.find(e => e.id === "q3_12th_board");
+  const qUG = answeredEvents.find(e => e.id === "q4_ug_degree");
+  const qPG = answeredEvents.find(e => e.id === "q5_pg_degree");
+
+  let hasContradiction = false;
+  let contradictionDetail = "";
+
+  if (q10th && q12th && q12th.fractionalDate <= q10th.fractionalDate) {
+    hasContradiction = true;
+    contradictionDetail = "12th Board exam date is prior to or identical with 10th Board exam date";
+  } else if (q10th && qSchool && q10th.fractionalDate <= qSchool.fractionalDate) {
+    hasContradiction = true;
+    contradictionDetail = "10th Board exam date is prior to or identical with primary school start date";
+  } else if (qUG && q12th && qUG.fractionalDate <= q12th.fractionalDate) {
+    hasContradiction = true;
+    contradictionDetail = "Undergraduate degree date is prior to or identical with 12th Board exam date";
+  } else if (qPG && qUG && qPG.fractionalDate <= qUG.fractionalDate) {
+    hasContradiction = true;
+    contradictionDetail = "Postgraduate degree date is prior to or identical with undergraduate degree date";
+  }
+
+  if (hasContradiction) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      candidateStability: "CONTRADICTORY_DATES",
+      reason: isTamil
+        ? `வாழ்க்கை நிகழ்வு காலவரிசையில் முரண்பாடு உள்ளது: ${contradictionDetail}`
+        : `Contradictory life milestone chronology detected: ${contradictionDetail}`,
+      highestRankedCandidate: null,
+      candidateWindows: [],
+      assumptions: [
+        "Vedic sidereal planetary positions computed with Lahiri (Chitra Paksha) ayanamsha",
+        "Geographical birth coordinates are accurately approximated by selected locality"
+      ],
+      missingInformation: [
+        "Chronologically consistent milestone sequence without inverted event dates"
+      ],
+      userProvidedEvents: answeredEvents,
+      supportingEvidence: [],
+      contradictoryEvidence: [contradictionDetail],
+      searchWindowLimits: {
+        searchSpanHours: 24,
+        candidateStepMinutes: 120,
+        totalCandidatesEvaluated: 0,
+        coordinates: { lat: effectiveLat, lng: effectiveLng }
+      },
+      source: "user_confirmed",
+      provenance: "user_confirmed",
+      isReconstructed: false,
+      reconstructionMode: "experimental_heuristic_reconstruction",
+      palmScoringApplied: false,
+      palmStatus: "EXCLUDED_UNVALIDATED",
+      heuristicEvidenceScore: 0,
+      confidenceScore: 0,
+      empiricalConfidence: null,
+      probabilityEstimate: null,
+      calibrationStatus: "UNCALIBRATED",
+      candidateResolution: "2_HOUR_LAGNA_STEP",
+      heuristicCandidateRanking: null,
+      estimatedBirthYear: null,
+      candidateBirthMonthNum: null,
+      candidateBirthDayNum: null,
+      candidateMonthWindow: null,
+      timeWindow: null,
+      probableLagna: null,
+      probableMoonRashi: null,
+      answeredCount: sampleCountNum,
+      errorMarginMonths: null,
+      errorMarginStatus: "UNCALIBRATED",
+      estimatedToleranceBand: "UNCALIBRATED_CONTRADICTORY_DATES",
+      verificationProofs: [],
+      astronomicalNotes: isTamil
+        ? `வாழ்க்கை நிகழ்வு காலவரிசையில் முரண்பாடு உள்ளதால் பிறந்த நாள் கணக்கீடு நிறுத்தப்பட்டது.`
+        : `Calculation halted due to chronologically contradictory life milestone dates.`
+    };
+  }
+
   // 2. Multilinear Intercept Solver with Outlier Suppression
   let estimatedBirthFraction = 0;
-  let estimatedErrorMarginMonths = 36.0;
 
   // Calculate individual estimates: T_birth_i = T_event_i - baselineAge_i
   const individualEstimates = answeredEvents.map(e => ({
@@ -600,11 +682,7 @@ export function reverseCalculateBirthTimeAndDOB({
     estimatedBirthFraction = rawWeightedMean;
   }
 
-  // Relative Educational & Career Interval Calibration:
-  const q10th = answeredEvents.find(e => e.id === "q2_10th_board");
-  const q12th = answeredEvents.find(e => e.id === "q3_12th_board");
-  const qUG = answeredEvents.find(e => e.id === "q4_ug_degree");
-
+  // Relative Educational & Career Interval Heuristic:
   if (q10th && q12th) {
     const delta10to12 = q12th.fractionalDate - q10th.fractionalDate;
     if (delta10to12 >= 1.7 && delta10to12 <= 2.5) {
@@ -612,22 +690,16 @@ export function reverseCalculateBirthTimeAndDOB({
       const lockedBirthFrom12th = q12th.fractionalDate - (q12th.baselineAge || 17.5);
       const eduLock = (lockedBirthFrom10th + lockedBirthFrom12th) / 2.0;
       estimatedBirthFraction = (eduLock * 0.75) + (estimatedBirthFraction * 0.25);
-      estimatedErrorMarginMonths = 3.0;
     }
   } else if (q12th) {
     const lockedBirthFrom12th = q12th.fractionalDate - (q12th.baselineAge || 17.5);
     estimatedBirthFraction = (lockedBirthFrom12th * 0.65) + (estimatedBirthFraction * 0.35);
-    estimatedErrorMarginMonths = 4.0;
   } else if (q10th) {
     const lockedBirthFrom10th = q10th.fractionalDate - (q10th.baselineAge || 15.5);
     estimatedBirthFraction = (lockedBirthFrom10th * 0.65) + (estimatedBirthFraction * 0.35);
-    estimatedErrorMarginMonths = 4.0;
   } else if (qUG) {
     const lockedBirthFromUG = qUG.fractionalDate - (qUG.baselineAge || 21.5);
     estimatedBirthFraction = (lockedBirthFromUG * 0.55) + (estimatedBirthFraction * 0.45);
-    estimatedErrorMarginMonths = 5.0;
-  } else {
-    estimatedErrorMarginMonths = Math.max(4.0, 12.0 - (sampleCountNum * 1.0));
   }
 
   // 3. Derive exact Candidate Birth Year, Month, and approximate Day
@@ -774,12 +846,21 @@ export function reverseCalculateBirthTimeAndDOB({
   let candidateStability = "UNRESOLVED_NO_EVENTS";
   let status = "INSUFFICIENT_DATA";
 
+  const isTied = bestCandidate && runnerUpCandidate && (bestCandidate.score === runnerUpCandidate.score);
+  const isWeaklySeparated = scoreDiff < 3;
+
   if (sampleCountNum === 0) {
     status = "INSUFFICIENT_DATA";
     candidateStability = "UNRESOLVED_NO_EVENTS";
-  } else if (sampleCountNum === 1 || scoreDiff < 2) {
+  } else if (sampleCountNum === 1) {
     status = "INSUFFICIENT_DATA";
     candidateStability = "AMBIGUOUS_MULTI_CANDIDATE";
+  } else if (isTied || scoreDiff === 0) {
+    status = "NOT_DISCRIMINATING";
+    candidateStability = "NOT_DISCRIMINATING_EQUAL_SCORES";
+  } else if (isWeaklySeparated) {
+    status = "NOT_DISCRIMINATING";
+    candidateStability = "WEAK_SCORE_SEPARATION";
   } else if (scoreDiff < 5) {
     status = "PLAUSIBLE_CANDIDATE_FOUND";
     candidateStability = "MODERATE_DIFFERENTIATION";
@@ -789,8 +870,9 @@ export function reverseCalculateBirthTimeAndDOB({
   }
 
   const assumptions = [
+    "Assumption: Educational progression ages (10th Board: ~15.5 yrs, 12th Board: ~17.5 yrs, UG: ~21.5 yrs) are standard cultural baselines, not measured facts.",
+    "Candidate birth date is derived by subtracting assumed milestone ages from reported milestone dates; it is an uncalibrated heuristic estimate, not an independently verified civil birth date.",
     "Uniform prior across unstated diurnal and nocturnal birth times within the 24-hour search envelope",
-    "Standard educational progression age baselines (10th Board: ~15.5 yrs, 12th Board: ~17.5 yrs, UG: ~21.5 yrs)",
     "Vedic sidereal planetary positions computed with Lahiri (Chitra Paksha) ayanamsha",
     "Geographical birth coordinates are accurately approximated by selected locality"
   ];
@@ -801,32 +883,52 @@ export function reverseCalculateBirthTimeAndDOB({
     "Parental or sibling chronological milestone dates to constrain family bhavas"
   ].filter(Boolean);
 
-  if (!bestCandidate) {
+  if (!bestCandidate || status !== "PLAUSIBLE_CANDIDATE_FOUND") {
     return {
-      status: "INSUFFICIENT_DATA",
+      status,
       candidateStability,
-      reason: "No plausible astrological candidate could be evaluated for the calculated date window",
+      reason: !bestCandidate
+        ? "No plausible astrological candidate could be evaluated for the calculated date window"
+        : isTamil
+          ? "லக்ன தேர்வுகளுக்கு இடையே போதுமான வேறுபாடு இல்லாததால் உத்தேச நேரம் உறுதிப்படுத்தப்படவில்லை (NOT_DISCRIMINATING)."
+          : "Candidate scores are not discriminating; weak or equal score separation between top candidates (NOT_DISCRIMINATING / INSUFFICIENT_DATA).",
       highestRankedCandidate: null,
-      candidateWindows: [],
+      candidateWindows: candidateWindows.map(c => ({
+        rank: c.rank,
+        start: c.start,
+        mid: c.mid,
+        end: c.end,
+        labelEn: c.labelEn,
+        labelTa: c.labelTa,
+        score: c.score,
+        ascendantSign: c.ascendantSign,
+        supportingEvidence: c.supportingEvidence,
+        contradictoryEvidence: c.contradictoryEvidence
+      })),
       assumptions,
       missingInformation,
       userProvidedEvents: answeredEvents,
-      supportingEvidence: [],
-      contradictoryEvidence: [],
+      supportingEvidence: bestCandidate?.supportingEvidence || [],
+      contradictoryEvidence: bestCandidate?.contradictoryEvidence || [],
       searchWindowLimits: {
         searchSpanHours: 24,
         candidateStepMinutes: 120,
-        totalCandidatesEvaluated: 0,
+        totalCandidatesEvaluated: candidateWindows.length,
         coordinates: { lat: effectiveLat, lng: effectiveLng }
       },
-      source: "inferred_from_user_milestones",
-      provenance: "user_confirmed",
+      source: sampleCountNum > 0 ? "inferred_from_user_milestones" : "uncalibrated_initial_state",
+      provenance: sampleCountNum > 0 ? "user_confirmed" : "system_assumption",
       isReconstructed: false,
       reconstructionMode: "experimental_heuristic_reconstruction",
       palmScoringApplied: false,
       palmStatus: "EXCLUDED_UNVALIDATED",
-      heuristicEvidenceScore: 0,
+      heuristicEvidenceScore: sampleCountNum > 0 ? Math.min(88, Math.round(50.0 + sampleCountNum * 6.0)) : 0,
       confidenceScore: 0,
+      empiricalConfidence: null,
+      probabilityEstimate: null,
+      calibrationStatus: "UNCALIBRATED",
+      candidateResolution: "2_HOUR_LAGNA_STEP",
+      heuristicCandidateRanking: bestCandidate ? bestCandidate.rank : null,
       estimatedBirthYear: candidateBirthYear,
       candidateBirthMonthNum,
       candidateBirthDayNum,
@@ -835,12 +937,13 @@ export function reverseCalculateBirthTimeAndDOB({
       probableLagna: null,
       probableMoonRashi: null,
       answeredCount: sampleCountNum,
-      errorMarginMonths: Number(estimatedErrorMarginMonths.toFixed(1)),
-      estimatedToleranceBand: "UNCALIBRATED_NO_CANDIDATES",
+      errorMarginMonths: null,
+      errorMarginStatus: "UNCALIBRATED",
+      estimatedToleranceBand: "UNCALIBRATED_INSUFFICIENT_DISCRIMINATION",
       verificationProofs: [],
       astronomicalNotes: isTamil
-        ? "தேர்வு செய்யப்பட்ட நாளுக்கான லக்ன கணக்கீட்டில் போதுமான பொருத்தங்கள் அமையவில்லை."
-        : "Candidate search did not isolate a valid astrological match for the estimated date window."
+        ? "தேர்வு செய்ய போதுமான தனித்துவ லக்ன பொருத்தம் அமையவில்லை (NOT_DISCRIMINATING)."
+        : "Candidate search did not isolate a sufficiently discriminating astrological match (NOT_DISCRIMINATING)."
     };
   }
 
@@ -952,6 +1055,11 @@ export function reverseCalculateBirthTimeAndDOB({
     methodologyNoticeTa: "பாரம்பரிய உத்தேச நஷ்ட ஜாதக மறுகட்டமைப்பு. இவை கருதுகோள் அடிப்படையிலானவை மட்டுமே; அறிவியல் ரீதியான துல்லிய உத்தரவாதம் இல்லை.",
     heuristicEvidenceScore,
     confidenceScore: heuristicEvidenceScore, // Backwards compatible alias
+    empiricalConfidence: null,
+    probabilityEstimate: null,
+    calibrationStatus: "UNCALIBRATED",
+    candidateResolution: "2_HOUR_LAGNA_STEP",
+    heuristicCandidateRanking: bestCandidate ? bestCandidate.rank : null,
     estimatedBirthYear: candidateBirthYear,
     candidateBirthMonthNum,
     candidateBirthDayNum,
@@ -960,8 +1068,9 @@ export function reverseCalculateBirthTimeAndDOB({
     probableLagna,
     probableMoonRashi,
     answeredCount: sampleCountNum,
-    errorMarginMonths: Number(estimatedErrorMarginMonths.toFixed(1)),
-    estimatedToleranceBand: sampleCountNum > 0 ? "heuristic convergence estimate; no empirical error guarantee" : "Uncalibrated",
+    errorMarginMonths: null,
+    errorMarginStatus: "UNCALIBRATED",
+    estimatedToleranceBand: "UNCALIBRATED_HEURISTIC_ESTIMATE",
     verificationProofs,
     astronomicalNotes
   };

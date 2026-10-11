@@ -194,14 +194,6 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
     return q.section === selectedCategory;
   });
 
-  // Calculate live dynamic precision error margin
-  let liveErrorMarginMonths = 4.2;
-  if (answeredAnchorCount >= 2) liveErrorMarginMonths = 2.4;
-  else if (answeredAnchorCount === 1) liveErrorMarginMonths = 3.2;
-  else if (answeredCount >= 6) liveErrorMarginMonths = 3.8;
-  else if (answeredCount >= 3) liveErrorMarginMonths = 5.5;
-  else liveErrorMarginMonths = 8.0;
-
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn">
       {/* Wizard Header */}
@@ -466,11 +458,11 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
               {analyzingPalms ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>{isTamil ? "மில்லிமீட்டர் ரேகை விகிதங்கள் பிரித்தெடுக்கப்படுகிறது..." : "Extracting Millimeter Lines & Mount Radians..."}</span>
+                  <span>{isTamil ? "சாமுத்ரிகா மாதிரி குறிப்புகள் ஏற்றப்படுகிறது..." : "Loading Classical Reference Milestones..."}</span>
                 </>
               ) : (
                 <>
-                  <span>{isTamil ? "இரு கைகளையும் ஆய்வு செய்து வாழ்நாள் நிகழ்வு கேள்விகளை பெறுக" : "Analyze Dual Palms & Load Month/Year Calibration Suite"}</span>
+                  <span>{isTamil ? "மாதிரி குறிப்புகளை ஏற்று வாழ்க்கை நிகழ்வு படிக்குச் செல்க" : "Review Reference Template & Continue to Life Milestones"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -493,8 +485,8 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                 </h3>
                 <p className="text-xs text-stone-600 mt-1">
                   {isTamil
-                    ? "வயது தெரிய வேண்டியதில்லை! ஒவ்வொரு நிகழ்வும் உங்கள் நினைவில் உள்ள மாதம் மற்றும் ஆண்டை மட்டும் குறிப்பிட்டால் போதும். அதிக நிகழ்வுகளை உள்ளிட சில மாதங்களுக்குள் துல்லியம் உயரும்."
-                    : "No age required! Simply enter the calendar Month & Year when each event occurred. Answering more milestones pins the date within a few months."}
+                    ? "வயது தெரிய வேண்டியதில்லை! ஒவ்வொரு நிகழ்வும் உங்கள் நினைவில் உள்ள மாதம் மற்றும் ஆண்டை மட்டும் குறிப்பிட்டால் போதும். பல நிகழ்வுகளை உள்ளிட உத்தேச பிறந்த தேடல் சாளரம் சுருங்கும் (அளவீடு செய்யப்படாத சோதனை முறை கணிப்பு)."
+                    : "No age required! Simply enter the calendar Month & Year when each event occurred. Milestone dates constrain the heuristic search window (uncalibrated experimental hypothesis)."}
                 </p>
               </div>
 
@@ -703,8 +695,8 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
 
               <div className="flex items-center gap-4">
                 <div className="text-center sm:text-right">
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold block mb-1">
-                    {isTamil ? `உத்தேச தேடல் சாளரம்: ~${result.errorMarginMonths} மாதங்கள்` : `Heuristic Search Window: ~${result.errorMarginMonths} Mo`}
+                  <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold block mb-1">
+                    {isTamil ? "பிழை இடைவெளி: கணக்கிடப்படவில்லை (UNCALIBRATED)" : "Error Margin: UNCALIBRATED (Heuristic Candidate)"}
                   </span>
                   <span className="text-lg font-bold text-amber-800 block">
                     {result.hypothesisStrength || (result.heuristicEvidenceScore > 0 ? (isTamil ? "சோதனை முறை கருதுகோள்" : "Experimental Heuristic Hypothesis") : (isTamil ? "ஆரம்ப நிலை கருதுகோள்" : "Baseline Heuristic Candidate"))}
@@ -730,8 +722,8 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                 <p className="text-[11px] text-stone-600">
                   {result.candidateMonthWindow?.season || (isTamil ? "போதிய மைல்கற்கள் இல்லை" : "Insufficient milestone data")}
                 </p>
-                <div className="text-[10px] text-emerald-700 font-semibold pt-1">
-                  ✓ {result.errorMarginMonths !== null ? (isTamil ? `உத்தேச தேடல் சாளரம்: ~${result.errorMarginMonths} மாத இடைவெளிக்குள்` : `Heuristic Search Window: ~${result.errorMarginMonths} months span`) : (isTamil ? "வரையறுக்கப்படாத இடைவெளி" : "Uncalibrated span")}
+                <div className="text-[10px] text-amber-700 font-semibold pt-1">
+                  ✓ {isTamil ? "உத்தேச கருதுகோள் தேதி (அளவீடு செய்யப்படாத பிழை இடைவெளி)" : "Heuristic Candidate Date (Uncalibrated Error Margin)"}
                 </div>
               </div>
 
@@ -907,6 +899,17 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                       alert(isTamil ? "போதுமான தகவல்கள் இல்லாததால் பிறந்த நேரத்தை நிர்ணயிக்க இயலவில்லை (INSUFFICIENT_DATA)." : "Insufficient discriminating data. A valid candidate birth time could not be resolved (INSUFFICIENT_DATA / NOT_DISCRIMINATING).");
                       return;
                     }
+
+                    const confirmMsg = isTamil
+                      ? `உத்தேச பிறந்த நேரம் (${validCandidateTime}) மற்றும் தேதியை (${result.candidateMonthWindow?.formattedDate || result.candidateMonthWindow?.exactEstimatedDOB}) கொண்டு உங்கள் ஜாதகத்தை கணக்கிட உறுதிப்படுத்துகிறீர்களா?\n\n(குறிப்பு: இது வாழ்க்கை நிகழ்வு காலக்கோடு அடிப்படையிலான சோதனை முறை நஷ்ட ஜாதக கணிப்பு மட்டுமே; சிவில் பிறப்புச் சான்றிதழ் அல்ல).`
+                      : `Confirm applying the candidate birth time (${validCandidateTime}) and date (${result.candidateMonthWindow?.formattedDate || result.candidateMonthWindow?.exactEstimatedDOB}) to calculate your natal chart?\n\n(Note: This is an uncalibrated experimental heuristic estimate based on subjective milestone recollections, not an independently verified civil birth record).`;
+
+                    if (typeof window !== "undefined" && typeof window.confirm === "function") {
+                      if (!window.confirm(confirmMsg)) {
+                        return;
+                      }
+                    }
+
                     onApplyEstimatedChart({
                       birthDate: result.candidateMonthWindow.exactEstimatedDOB,
                       birthTime: validCandidateTime,

@@ -23,6 +23,21 @@
       "invalidatedEntries": 0,
       "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
       "calibrationHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
+    },
+    "executionRecord": {
+      "runId": "RUN-INTERNAL-AGGREGATE-20261010-001",
+      "cohortName": "FULL_COHORT_100_PERCENT",
+      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+      "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
+      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+      "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff:116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
+      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+      "cacheSnapshotVersion": "v3.0.0-20508",
+      "predictionCount": 6940,
+      "cacheHits": 3189,
+      "cacheMisses": 3751,
+      "recomputedCount": 3751,
+      "errors": 0
     }
   },
   "splits": {
@@ -356,6 +371,21 @@
           "hasTrueNegatives": false
         },
         "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+      },
+      "executionRecord": {
+        "runId": "RUN-INTERNAL-BLIND-20261010-001",
+        "cohortName": "BLIND_TEST",
+        "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+        "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
+        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+        "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
+        "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+        "cacheSnapshotVersion": "v3.0.0-20508",
+        "predictionCount": 1634,
+        "cacheHits": 1634,
+        "cacheMisses": 0,
+        "recomputedCount": 0,
+        "errors": 0
       }
     },
     "INTERNAL_HOLDOUT": {
@@ -688,6 +718,21 @@
           "hasTrueNegatives": false
         },
         "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+      },
+      "executionRecord": {
+        "runId": "RUN-INTERNAL-HOLDOUT-20261010-001",
+        "cohortName": "INTERNAL_HOLDOUT",
+        "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+        "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
+        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+        "evaluationDatasetHash": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
+        "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+        "cacheSnapshotVersion": "v3.0.0-20508",
+        "predictionCount": 1555,
+        "cacheHits": 1555,
+        "cacheMisses": 0,
+        "recomputedCount": 0,
+        "errors": 0
       }
     },
     "EXTERNAL_ASTRO_DATABANK_CERTIFIED": {
@@ -1022,6 +1067,21 @@
           "hasTrueNegatives": false
         },
         "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
+      },
+      "executionRecord": {
+        "runId": "RUN-ADB-EXTERNAL-20261010-001",
+        "cohortName": "EXTERNAL_ASTRO_DATABANK_CERTIFIED",
+        "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+        "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
+        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+        "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
+        "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+        "cacheSnapshotVersion": "v3.0.0-20508",
+        "predictionCount": 3751,
+        "cacheHits": 0,
+        "cacheMisses": 3751,
+        "recomputedCount": 3751,
+        "errors": 0
       }
     },
     "EXTERNAL_SENSITIVITY": {

@@ -4,7 +4,7 @@
   "schemaVersion": "3.0",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
-  "generatedAt": "2026-10-11T10:55:12.299Z",
+  "generatedAt": "2026-10-11T11:28:54.485Z",
   "status": {
     "astronomicalEngine": "CALCULATION_VALIDATED",
     "softwareInfrastructure": "SOFTWARE_VALIDATED",
@@ -28,7 +28,7 @@
     "rawSourceExportHash": "7d42ac78520685b3013e929f3f238989a78c2f1ae1a360248a9b3b459d93549c",
     "parsedFullDatasetHash": "cc59b4f32aeb63e45befd0a8a7d9110a380a0375744d689ebaf08ce057d5b1ff",
     "independentHoldoutDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "externalBenchmarkOutputHash": "c46a702e9474a7b1f2a4cb8da00ac7b851a845617d4e66a2d1e514fccf0b6600"
+    "externalBenchmarkOutputHash": "a5c95dd9ecb04fb6801ac9d88250809a1250613893ac2d5e2155858c42f7aa44"
   },
-  "updatedAt": "2026-10-11T10:55:12.299Z"
+  "updatedAt": "2026-10-11T11:28:54.485Z"
 }

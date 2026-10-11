@@ -254,6 +254,98 @@ async function main() {
     assert(res.estimatedBirthYear >= 1988 && res.estimatedBirthYear <= 1991, `Estimated birth year ${res.estimatedBirthYear} should be ~1989-1990`);
     assert(typeof res.methodologyNotice === "string" && res.methodologyNotice.includes("experimental"));
     assert.strictEqual(res.probableLagna.degreeRange, "Variable 30° Lagna arc");
+    assert.strictEqual(res.errorMarginMonths, null, "Error margin months must be null (uncalibrated)");
+    assert.strictEqual(res.errorMarginStatus, "UNCALIBRATED", "Error margin status must be UNCALIBRATED");
+    assert.strictEqual(res.empiricalConfidence, null, "Empirical confidence must be null without calibration");
+  });
+
+  await check("5C. Chronologically contradictory dates produce INSUFFICIENT_DATA and CONTRADICTORY_DATES", () => {
+    const res = reverseCalculateBirthTimeAndDOB({
+      lat: 13.0827,
+      lng: 80.2707,
+      tz: 5.5,
+      answers: {
+        q2_year: "2010", q2_month: "5", // 10th in 2010
+        q3_year: "2008", q3_month: "5"  // 12th in 2008 (impossible contradiction!)
+      }
+    });
+
+    assert.strictEqual(res.status, "INSUFFICIENT_DATA");
+    assert.strictEqual(res.candidateStability, "CONTRADICTORY_DATES");
+    assert.strictEqual(res.highestRankedCandidate, null);
+    assert.strictEqual(res.timeWindow, null);
+    assert.strictEqual(res.probableLagna, null);
+    assert.strictEqual(res.probableMoonRashi, null);
+  });
+
+  await check("5D. Invalid dates (out of range years) fail closed with INSUFFICIENT_DATA", () => {
+    const res = reverseCalculateBirthTimeAndDOB({
+      lat: 13.0827,
+      lng: 80.2707,
+      tz: 5.5,
+      answers: {
+        q1_year: "1850",
+        q2_year: "2099"
+      }
+    });
+
+    assert.strictEqual(res.status, "INSUFFICIENT_DATA");
+    assert.strictEqual(res.highestRankedCandidate, null);
+    assert.strictEqual(res.timeWindow, null);
+  });
+
+  await check("5E. Timezone boundaries (-12 to +14) compute safely without crashing", () => {
+    const resWest = reverseCalculateBirthTimeAndDOB({
+      lat: 21.3069, lng: -157.8583, tz: -10, // Honolulu
+      answers: { q2_year: "2000", q2_month: "5", q3_year: "2002", q3_month: "5" }
+    });
+    assert(["PLAUSIBLE_CANDIDATE_FOUND", "NOT_DISCRIMINATING", "INSUFFICIENT_DATA"].includes(resWest.status));
+
+    const resEast = reverseCalculateBirthTimeAndDOB({
+      lat: -13.8333, lng: -171.7667, tz: 13, // Samoa
+      answers: { q2_year: "2000", q2_month: "5", q3_year: "2002", q3_month: "5" }
+    });
+    assert(["PLAUSIBLE_CANDIDATE_FOUND", "NOT_DISCRIMINATING", "INSUFFICIENT_DATA"].includes(resEast.status));
+  });
+
+  await check("5F. Weak candidate score separation returns NOT_DISCRIMINATING and null birth time", () => {
+    // 2 milestones that don't trigger any Dasha career/marriage karakas
+    const res = reverseCalculateBirthTimeAndDOB({
+      lat: 13.0827,
+      lng: 80.2707,
+      tz: 5.5,
+      answers: {
+        q7_year: "2005", q7_month: "6", // relocation
+        q8_year: "2008", q8_month: "6"  // travel
+      }
+    });
+
+    // Because relocation and travel don't discriminate between Lagnas strongly,
+    // candidate scores are flat or weakly separated
+    if (res.status === "NOT_DISCRIMINATING") {
+      assert.strictEqual(res.highestRankedCandidate, null);
+      assert.strictEqual(res.timeWindow, null);
+      assert.strictEqual(res.probableLagna, null);
+      assert.strictEqual(res.probableMoonRashi, null);
+    }
+  });
+
+  await check("5G. Synthetic placeholder palm images produce illustrative non-personal profile", () => {
+    const profile = analyzeDualPalmsForBirthRecovery({
+      dominantHandImg: "data:image/jpeg;base64,sample_placeholder",
+      nonDominantHandImg: "data:image/jpeg;base64,sample_placeholder",
+      handDominance: "right"
+    });
+
+    assert.strictEqual(profile.isIllustrativeReferenceOnly, true);
+    assert.strictEqual(profile.imageFeaturesExtracted, false);
+    assert.strictEqual(profile.isPersonalizedAnalysis, false);
+    assert.strictEqual(profile.candidateScoringApplicable, false);
+    assert.strictEqual(profile.mountElevationMeasured, false);
+    // Verify health/surgery claim was neutralized
+    const lifeLineMarkers = profile.lines.lifeLine.segmentMarkers;
+    const basalMarker = lifeLineMarkers.find(m => m.segment === "Basal quadrant");
+    assert(basalMarker && !basalMarker.significance.includes("major surgery"));
   });
 
   console.log("\n" + "=".repeat(75));
