@@ -146,11 +146,20 @@ if (isMainThread) {
       predictDivorce,
       predictUnionMode
     } = await import(empiricalPath);
-    const { getCurrentHashes, computeInputHash } = await import(cacheManagerPath);
+    const { initCacheManager, getCurrentHashes, computeInputHash } = await import(cacheManagerPath);
+    initCacheManager();
 
-    const { predictionEngineHash, calibrationModelHash, modelCoefficientsHash } = getCurrentHashes();
-    const trainSha256 = '7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849';
+    const {
+      astroEngineHash,
+      predictionEngineHash,
+      calibrationModelHash,
+      calibrationInputHash,
+      trainingDatasetHash,
+      modelCoefficientsHash
+    } = getCurrentHashes();
+    const trainSha256 = trainingDatasetHash || '7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849';
     const authoritativeCoeffHash = modelCoefficientsHash || 'ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f';
+    const authoritativeCalInputHash = calibrationInputHash || crypto.createHash('sha256').update(trainSha256).digest('hex');
 
     const results = [];
     const t0 = Date.now();
@@ -177,10 +186,10 @@ if (isMainThread) {
       const entry = {
         recordId: clean.sourceRecordId,
         inputHash,
-        astroEngineHash: '7fd206c8d34db29cfe9cd2207481b8adc1af0e4bcef7fee8cc2138ff110ec5a8',
+        astroEngineHash,
         predictionEngineHash,
         calibrationModelHash,
-        calibrationInputHash: crypto.createHash('sha256').update(trainSha256).digest('hex'),
+        calibrationInputHash: authoritativeCalInputHash,
         trainingDatasetHash: trainSha256,
         modelCoefficientsHash: authoritativeCoeffHash,
         astronomyEngineVersion: '4.2.0',

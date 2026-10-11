@@ -227,6 +227,7 @@ export function getCacheStats() {
 
 export function getCurrentHashes() {
   return {
+    astroEngineHash: currentAstroEngineHash,
     predictionEngineHash: currentPredictionEngineHash,
     calibrationModelHash: currentCalibrationModelHash,
     calibrationInputHash: currentCalibrationInputHash,

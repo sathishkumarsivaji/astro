@@ -15,6 +15,12 @@
 
 import assert from "node:assert";
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import {
   calculatePlanetaryPositions,
   calculateD60,
@@ -406,7 +412,7 @@ console.log(`   ✓ Global timezone resolver strictly validated across ${GLOBAL_
 // ============================================================================
 console.log("\n10. Testing Static Golden Reference Fixtures (JSON Data File)...");
 
-const fixturesRaw = fs.readFileSync("./test_fixtures/golden_reference_fixtures.json", "utf8");
+const fixturesRaw = fs.readFileSync(path.resolve(__dirname, "./test_fixtures/golden_reference_fixtures.json"), "utf8");
 const fixtures = JSON.parse(fixturesRaw);
 
 // 10a. D60 static benchmarks

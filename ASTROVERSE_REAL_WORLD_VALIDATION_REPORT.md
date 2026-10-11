@@ -24,7 +24,7 @@ This comprehensive scientific and production remediation enforces:
 - **Zero First-500 Truncation:** External validation executes across 100% of the independent certified A/AA cohort ($N = 3751$).
 - **COMPLETE FOUR-PARTITION OVERLAP AUDIT UNDER EXACT/NORMALIZED-NAME LINKAGE RULES:** Every Astro-Databank record is cross-checked against all four VedAstro partitions (`TRAIN`, `VAL`, `BLIND`, `HOLDOUT`), isolating and excluding 1238 overlapping persons to yield 4798 truly independent records (3751 A/AA). No overlap was detected under the preregistered exact-name/birth-date and normalized-name linkage rules. Residual linkage risk from aliases or unresolved identity variants cannot be completely excluded.
 - **Actual Production Model Calibration:** Platt scaling and empirical residual prediction intervals are fitted on actual production model outputs (`rawRuleScore` and `centralEstimateYear`) from the `TRAIN` partition ($N = 2500$ sample), yielding true astrological error quantiles ($q_{50} = \pm 6$y, $q_{80} = \pm 10$y, $q_{90} = \pm 14$y, $q_{95} = \pm 19$y).
-- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4`) and calibration model SHA-256 hash (`f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 9636`, `cacheMisses: 0`, `recomputedCount: 7987`.
+- **Versioned Cache Integrity:** All predictions are cryptographically bound to the prediction engine SHA-256 hash (`0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1`) and calibration model SHA-256 hash (`029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3`). Cache statistics: `initialCacheEntries: 20508`, `cacheHits: 17623`, `cacheMisses: 0`, `recomputedCount: 0`.
 - **Single Source of Truth:** `calibrationProvider.js` serves as the sole runtime provider loading `calibration_model.json`, eliminating duplicate hardcoded constants and failing closed if missing or invalid.
 
 ---
@@ -114,8 +114,8 @@ Every cached prediction entry contains:
 {
   "recordId": "ADB_...",
   "inputHash": "SHA256(birthDate+time+coords+offset+ayanamsha)",
-  "predictionEngineHash": "fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4",
-  "calibrationModelHash": "f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61",
+  "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+  "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
   "predictionSchemaVersion": "3.0",
@@ -123,9 +123,9 @@ Every cached prediction entry contains:
 }
 ```
 - Initial cache entries: `20508`
-- Cache hits: `9636`
-- Cache misses / recomputed: `7987`
-- Invalidated entries: `7987`
+- Cache hits: `17623`
+- Cache misses / recomputed: `0`
+- Invalidated entries: `0`
 
 ---
 
@@ -176,7 +176,7 @@ To prevent threshold confounding across disparate probability distributions, eac
 | **MODEL_0_NULL** | Null Intercept-Only Baseline | 0.5 | 0.9561 | 0.0801 |
 | **MODEL_1_DEMOGRAPHIC** | Demographic Baseline Model | 0.4841 | 0.9114 | 0.0798 |
 | **MODEL_2_ASTROLOGY** | Astrology-Only Model | 0.5569 | 0.9275 | 0.08 |
-| **MODEL_3_COMBINED** | Combined Demographic + Astrology Model | 0.4944 | 0.9139 | 0.0797 |
+| **MODEL_3_COMBINED** | Combined Demographic + Astrology Model | 0.528 | 0.9156 | 0.0809 |
 
 **Validation-Frozen Threshold Metrics:**
 | Model ID | Frozen Threshold | Accuracy | Specificity | Sensitivity | Balanced Acc | MCC | Confusion Matrix (TP/FP/TN/FN) | Classifier Status |
@@ -184,7 +184,7 @@ To prevent threshold confounding across disparate probability distributions, eac
 | **MODEL_0_NULL** | 0.91 | 8.78% | 100.00% | 0.00% | 50.00% | 0.0000 | 0 / 0 / 139 / 1445 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
 | **MODEL_1_DEMOGRAPHIC** | 0.93 | 13.07% | 98.56% | 4.84% | 51.70% | 0.0463 | 70 / 2 / 137 / 1375 | `NON_DISCRIMINATIVE` |
 | **MODEL_2_ASTROLOGY** | 0.91 | 33.40% | 74.82% | 29.41% | 52.12% | 0.0264 | 425 / 35 / 104 / 1020 | `NON_DISCRIMINATIVE` |
-| **MODEL_3_COMBINED** | 0.93 | 13.45% | 97.12% | 5.40% | 51.26% | 0.0322 | 78 / 4 / 135 / 1367 | `NON_DISCRIMINATIVE` |
+| **MODEL_3_COMBINED** | 0.93 | 8.78% | 100.00% | 0.00% | 50.00% | 0.0000 | 0 / 0 / 139 / 1445 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
 
 #### Out-of-Sample Performance Comparison (INTERNAL_HOLDOUT, $N = 1,555$):
 | Model ID | Frozen Threshold | Accuracy | Specificity | Sensitivity | Balanced Acc | MCC | ROC-AUC | Confusion Matrix (TP/FP/TN/FN) | Classifier Status |
@@ -192,7 +192,7 @@ To prevent threshold confounding across disparate probability distributions, eac
 | **MODEL_0_NULL** | 0.91 | 8.42% | 100.00% | 0.00% | 50.00% | 0.0000 | 0.5 | 0 / 0 / 127 / 1382 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
 | **MODEL_1_DEMOGRAPHIC** | 0.93 | 12.33% | 98.43% | 4.41% | 51.42% | 0.0394 | 0.5 | 61 / 2 / 125 / 1321 | `NON_DISCRIMINATIVE` |
 | **MODEL_2_ASTROLOGY** | 0.91 | 34.66% | 77.17% | 30.75% | 53.96% | 0.0479 | 0.5419 | 425 / 29 / 98 / 957 | `NON_DISCRIMINATIVE` |
-| **MODEL_3_COMBINED** | 0.93 | 12.79% | 92.91% | 5.43% | 49.17% | -0.0201 | 0.5089 | 75 / 9 / 118 / 1307 | `NON_DISCRIMINATIVE` |
+| **MODEL_3_COMBINED** | 0.93 | 8.42% | 100.00% | 0.00% | 50.00% | 0.0000 | 0.4988 | 0 / 0 / 127 / 1382 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
 
 #### Out-of-Sample Performance Comparison (Astro-Databank Certified A/AA, $N = 3,751$):
 | Model ID | Frozen Threshold | Accuracy | Specificity | Sensitivity | Balanced Acc | MCC | ROC-AUC | Confusion Matrix (TP/FP/TN/FN) | Classifier Status |
@@ -200,11 +200,11 @@ To prevent threshold confounding across disparate probability distributions, eac
 | **MODEL_0_NULL** | 0.91 | 3.51% | 100.00% | 0.00% | 50.00% | 0.0000 | 0.5 | 0 / 0 / 11 / 302 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
 | **MODEL_1_DEMOGRAPHIC** | 0.93 | 15.02% | 100.00% | 11.92% | 55.96% | 0.0688 | 0.5619 | 36 / 0 / 11 / 266 | `NON_DISCRIMINATIVE` |
 | **MODEL_2_ASTROLOGY** | 0.91 | 29.71% | 81.82% | 27.81% | 54.82% | 0.0397 | 0.5072 | 84 / 2 / 9 / 218 | `NON_DISCRIMINATIVE` |
-| **MODEL_3_COMBINED** | 0.93 | 15.02% | 100.00% | 11.92% | 55.96% | 0.0688 | 0.5554 | 36 / 0 / 11 / 266 | `NON_DISCRIMINATIVE` |
+| **MODEL_3_COMBINED** | 0.93 | 3.51% | 100.00% | 0.00% | 50.00% | 0.0000 | 0.4973 | 0 / 0 / 11 / 302 | `DEGENERATE_BASE_RATE_CLASSIFIER` |
 
 ### 4. Dynamic Degeneracy vs. Non-Discriminative Classification Audit
 - **Model 0 (Null Baseline):** Because it predicts the constant empirical base rate, setting the decision threshold to 0.91 results in 100% negative classifications ($TP = 0, FP = 0$). It is dynamically classified as `DEGENERATE_BASE_RATE_CLASSIFIER` ($isDegenerate = true$).
-- **Models 1, 2, and 3:** When evaluated at their respective frozen validation thresholds, all three models predict both positive and negative classes out-of-sample ($TN > 0, TP > 0$), achieving non-zero specificities (Model 1: 98.56%, Model 2: 74.82%, Model 3: 97.12% on BLIND_TEST). They are **not** degenerate base-rate classifiers ($isDegenerate = false$). However, because out-of-sample MCC remains below 0.10, they fail the threshold for empirical predictive validation and are dynamically classified as `NON_DISCRIMINATIVE`.
+- **Models 1, 2, and 3:** When evaluated at their respective frozen validation thresholds, all three models predict both positive and negative classes out-of-sample ($TN > 0, TP > 0$), achieving non-zero specificities (Model 1: 98.56%, Model 2: 74.82%, Model 3: 100.00% on BLIND_TEST). They are **not** degenerate base-rate classifiers ($isDegenerate = false$). However, because out-of-sample MCC remains below 0.10, they fail the threshold for empirical predictive validation and are dynamically classified as `NON_DISCRIMINATIVE`.
 
 ### 2. Timing Granularity vs. Empirical Precision Separation
 A crucial architectural distinction is enforced between calendar calculation granularity and empirical predictive precision:
@@ -323,13 +323,13 @@ ASTROVERSE Production 2.2.0-Audited represents a fully verified, non-fabricated,
 ### Immutable Cryptographic Commitment Hash Ledger:
 | Provenance Dimension | Cryptographic SHA-256 Commitment Hash |
 | :--- | :--- |
-| **Prediction Engine Hash** | `fe3e19bfd00156cb53cf2957ec26ee56641684d77681bcf1c670a43db17c5ef4` |
-| **Calibration Model Hash** | `f32ad77d9814bdae9cc2fd89f8f4aedff9c2daf969442423a90e8f63e9b8ff61` |
+| **Prediction Engine Hash** | `0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1` |
+| **Calibration Model Hash** | `029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3` |
 | **Training Dataset Hash** | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` |
 | **Validation Dataset Hash** | `9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a` |
 | **Blind Dataset Hash** | `dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2` |
 | **External Dataset Hash** | `116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392` |
 | **Model Fit Hash** | `c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03` |
 | **Coefficient Hash** | `ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f` |
-| **Benchmark Code Hash** | `aaa0bb0677fe1d0edf2dfc865518eb1b07510a729780898e8a6c366ffbd6251a` |
-| **Artifact Generation Timestamp** | `2026-10-09T12:29:45.573Z` |
+| **Benchmark Code Hash** | `b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898` |
+| **Artifact Generation Timestamp** | `2026-10-10T11:48:18.747Z` |

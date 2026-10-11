@@ -389,8 +389,12 @@ swissEphemerisBenchmarks.forEach(({ epoch, birthData, referenceTropical, toleran
 console.log("\n5.1 Testing Placidus House Cusps Precision Across Latitudes...");
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const ephemerisFixturePath = path.resolve("./test_fixtures/ephemeris_reference.json");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const ephemerisFixturePath = path.resolve(__dirname, "./test_fixtures/ephemeris_reference.json");
 assert(fs.existsSync(ephemerisFixturePath), "ephemeris_reference.json fixture file must exist");
 const ephemerisFixture = JSON.parse(fs.readFileSync(ephemerisFixturePath, "utf8"));
 assert(Array.isArray(ephemerisFixture.placidus_benchmarks), "ephemeris_reference.json must contain placidus_benchmarks");

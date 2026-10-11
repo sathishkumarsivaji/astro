@@ -232,23 +232,33 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                   <div className="grid grid-cols-2 gap-3 text-xs font-mono">
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-stone-500 block uppercase">Accuracy</span>
-                      <strong className="text-base text-stone-900">{BENCHMARK_DATA.metrics.blindTest.occurrence.accuracy}%</strong>
+                      <strong className="text-base text-stone-900">
+                        {typeof BENCHMARK_DATA.metrics.blindTest.occurrence.accuracy === "number" ? `${(BENCHMARK_DATA.metrics.blindTest.occurrence.accuracy * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-stone-500 block uppercase">Precision</span>
-                      <strong className="text-base text-stone-900">{BENCHMARK_DATA.metrics.blindTest.occurrence.precision}%</strong>
+                      <strong className="text-base text-stone-900">
+                        {typeof BENCHMARK_DATA.metrics.blindTest.occurrence.precision === "number" ? `${(BENCHMARK_DATA.metrics.blindTest.occurrence.precision * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-stone-500 block uppercase">Recall (Sensitivity)</span>
-                      <strong className="text-base text-stone-900">{BENCHMARK_DATA.metrics.blindTest.occurrence.recall}%</strong>
+                      <strong className="text-base text-stone-900">
+                        {typeof BENCHMARK_DATA.metrics.blindTest.occurrence.recall === "number" ? `${(BENCHMARK_DATA.metrics.blindTest.occurrence.recall * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-rose-600 block uppercase font-bold">Specificity</span>
-                      <strong className="text-base text-rose-600">{BENCHMARK_DATA.metrics.blindTest.occurrence.specificity}%</strong>
+                      <strong className="text-base text-rose-600">
+                        {typeof BENCHMARK_DATA.metrics.blindTest.occurrence.specificity === "number" ? `${(BENCHMARK_DATA.metrics.blindTest.occurrence.specificity * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-stone-500 block uppercase">Balanced Accuracy</span>
-                      <strong className="text-stone-900">{BENCHMARK_DATA.metrics.blindTest.occurrence.balancedAccuracy}%</strong>
+                      <strong className="text-stone-900">
+                        {typeof BENCHMARK_DATA.metrics.blindTest.occurrence.balancedAccuracy === "number" ? `${(BENCHMARK_DATA.metrics.blindTest.occurrence.balancedAccuracy * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                      </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-stone-500 block uppercase">Brier Score / ECE</span>
@@ -265,7 +275,7 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                   <div className="flex items-center justify-between border-b border-stone-200 pb-2">
                     <h4 className="text-sm font-bold text-stone-900">Target: MARRIAGE_TIMING_V2</h4>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-bold">
-                      Evaluated N={BENCHMARK_DATA.metrics.blindTest.timing.evalN}
+                      Evaluated N={BENCHMARK_DATA.metrics.blindTest.timing.n ?? "NOT AVAILABLE"}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs font-mono">
@@ -291,7 +301,9 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                     </div>
                     <div className="p-2.5 rounded-xl bg-white border border-stone-200">
                       <span className="text-[10px] text-stone-500 block uppercase">Conformal 80% Coverage</span>
-                      <strong className="text-stone-900">{BENCHMARK_DATA.metrics.blindTest.timing.coverage80}%</strong>
+                      <strong className="text-stone-900">
+                        {BENCHMARK_DATA.metrics.blindTest.timing.coverage?.observed80 ? `${(BENCHMARK_DATA.metrics.blindTest.timing.coverage.observed80 * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                      </strong>
                     </div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-amber-50 text-[11px] text-amber-950 border border-amber-200">
@@ -311,23 +323,25 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                   <div className="p-2.5 rounded-xl bg-white border border-purple-100">
                     <span className="text-[10px] text-stone-500 block uppercase">Evaluated N</span>
-                    <strong className="text-stone-900">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.censoring.evaluatedCount} (302 event, 11 no-event)</strong>
+                    <strong className="text-stone-900">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence?.censoringBreakdown?.evaluatedCount ?? "NOT AVAILABLE"} (302 event, 11 no-event)</strong>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-purple-100">
                     <span className="text-[10px] text-stone-500 block uppercase">Occurrence Acc / Specificity</span>
-                    <strong className="text-stone-900">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence.accuracy}% / {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence.specificity}%</strong>
+                    <strong className="text-stone-900">
+                      {typeof BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence.accuracy === "number" ? `${(BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence.accuracy * 100).toFixed(1)}%` : "NOT AVAILABLE"} / {typeof BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence.specificity === "number" ? `${(BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence.specificity * 100).toFixed(1)}%` : "NOT AVAILABLE"}
+                    </strong>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-purple-100">
                     <span className="text-[10px] text-rose-700 block uppercase">Astro Timing MAE</span>
-                    <strong className="text-rose-700">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.mae} yrs (±1y: {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.within1yPct}%)</strong>
+                    <strong className="text-rose-700">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.mae ? `${BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.mae} yrs` : "NOT AVAILABLE"} (±1y: {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.within1yPct ? `${BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.within1yPct}%` : "NOT AVAILABLE"})</strong>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-purple-100">
                     <span className="text-[10px] text-emerald-700 block uppercase">Baseline MAE</span>
-                    <strong className="text-emerald-800">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.demographicBaselineMAE} yrs (±1y: {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.timing.baselineWithin1yPct}%)</strong>
+                    <strong className="text-emerald-800">{BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.demographicBaseline?.mae ? `${BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.demographicBaseline.mae} yrs` : "NOT AVAILABLE"} (±1y: {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.demographicBaseline?.within1yPct ? `${BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.demographicBaseline.within1yPct}%` : "NOT AVAILABLE"})</strong>
                   </div>
                 </div>
                 <p className="text-[11px] text-purple-900">
-                  {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.censoring.missingOutcomeCount} records lacking documented marriage notes were rigorously quarantined as <code>MISSING_OUTCOME</code>, and {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.censoring.rightCensoredCount} records were classified as <code>RIGHT_CENSORED</code>.
+                  {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence?.censoringBreakdown?.missingOutcomeCount ?? "NOT AVAILABLE"} records lacking documented marriage notes were rigorously quarantined as <code>MISSING_OUTCOME</code>, and {BENCHMARK_DATA.metrics.astroDatabankCertifiedAAA.occurrence?.censoringBreakdown?.rightCensoredCount ?? "NOT AVAILABLE"} records were classified as <code>RIGHT_CENSORED</code>.
                 </p>
               </div>
             </div>
@@ -562,7 +576,9 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                 <span>
                   <strong>Expert Mode Epistemic Standard:</strong> Separation of Astronomical Calculation Resolution (<code>DAY</code> / <code>0.01°</code>), Traditional Interpretive Resolution (<code>DATE_RANGE</code>), and Empirical Predictive Resolution.
                 </span>
-                <span className="font-mono text-[10px] bg-stone-200 px-2.5 py-1 rounded-full font-bold self-start sm:self-auto shrink-0">17/17 Domains Certified</span>
+                <span className="font-mono text-[10px] bg-stone-200 px-2.5 py-1 rounded-full font-bold self-start sm:self-auto shrink-0">
+                  {isTamil ? "17 களங்கள் கண்காணிக்கப்படுகின்றன — சரிபார்ப்பு நிலை தனித்தனியாகக் காட்டப்படுகிறது" : "17 domains tracked — validation status shown individually"}
+                </span>
               </div>
 
               <div className="overflow-x-auto rounded-2xl border border-stone-200 bg-white">
