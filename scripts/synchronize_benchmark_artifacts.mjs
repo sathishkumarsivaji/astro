@@ -147,6 +147,10 @@ if (fs.existsSync(ADB_BENCHMARK_PATH)) {
     adbBench.primaryBenchmarkMetrics.occurrenceClassifierStatus = adbBench.primaryBenchmark?.occurrence?.classifierStatus || "NON_DISCRIMINATIVE";
     adbBench.primaryBenchmarkMetrics.occurrenceIsDegenerate = adbBench.primaryBenchmark?.occurrence?.isDegenerate ?? false;
     adbBench.primaryBenchmarkMetrics.occurrenceQualityGate = adbBench.primaryBenchmark?.occurrence?.validationStatus || "NOT_EMPIRICALLY_VALIDATED";
+    adbBench.primaryBenchmarkMetrics.superiorityDisclosure = "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%) on the independent external Astro-Databank cohort (N=320). Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.";
+  }
+  if (adbBench.primaryBenchmark?.comparativeSummary) {
+    adbBench.primaryBenchmark.comparativeSummary.superiorityDisclosure = "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%) on the independent external Astro-Databank cohort (N=320). Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.";
   }
   setTimingResolution(adbBench.primaryBenchmark?.timing);
 
