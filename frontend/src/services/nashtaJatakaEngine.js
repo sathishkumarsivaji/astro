@@ -47,14 +47,18 @@ export function analyzeDualPalmsForBirthRecovery({
   const handProfile = {
     element: "Earth-Air Hybrid (Practical Mystic)",
     palmShape: "Square palm with long, agile fingers",
+    mountElevationMeasured: false,
+    candidateScoringApplicable: false,
+    status: "EXPERIMENTAL_UNVALIDATED_REFERENCE",
+    disclosure: "2D photographs cannot measure 3D physical mount elevation. Mount elevation scoring is disabled for candidate Lagna differentiation until validated against annotated ground-truth datasets.",
     mounts: [
-      { name: "Jupiter", prominence: "High", indicates: "Sagittarius / Pisces Jupiterian Lagna inclination, leadership drive" },
-      { name: "Saturn", prominence: "Medium-High", indicates: "Disciplined life structure, Shani influence in Kendra" },
-      { name: "Sun (Apollo)", prominence: "High", indicates: "Creative recognition, Surya strength in 10th or 1st house" },
-      { name: "Mercury", prominence: "Very High", indicates: "Gemini / Virgo sub-harmonics, commercial agility, sharp speech" },
-      { name: "Mars (Upper/Lower)", prominence: "Well-developed", indicates: "High physical courage, Mars aspect on 3rd or 6th" },
-      { name: "Venus", prominence: "Expansive", indicates: "Vital somatic energy, strong 7th house aesthetic synergy" },
-      { name: "Moon (Luna)", prominence: "High & Curved", indicates: "Deep emotional intuition, imaginative Moon placement" }
+      { name: "Jupiter", prominence: "Unmeasured (2D)", indicates: "Theoretical Jupiterian Lagna association (unverified from 2D image)" },
+      { name: "Saturn", prominence: "Unmeasured (2D)", indicates: "Theoretical Saturnian structure association (unverified from 2D image)" },
+      { name: "Sun (Apollo)", prominence: "Unmeasured (2D)", indicates: "Theoretical Surya recognition association (unverified from 2D image)" },
+      { name: "Mercury", prominence: "Unmeasured (2D)", indicates: "Theoretical Mercurial agility association (unverified from 2D image)" },
+      { name: "Mars (Upper/Lower)", prominence: "Unmeasured (2D)", indicates: "Theoretical Martian courage association (unverified from 2D image)" },
+      { name: "Venus", prominence: "Unmeasured (2D)", indicates: "Theoretical Venusian vitality association (unverified from 2D image)" },
+      { name: "Moon (Luna)", prominence: "Unmeasured (2D)", indicates: "Theoretical Lunar intuition association (unverified from 2D image)" }
     ],
     lines: {
       lifeLine: {
@@ -460,7 +464,8 @@ export function reverseCalculateBirthTimeAndDOB({
   const isTamil = lang === "ta";
   const questions = generateVerificationQuestions(palmProfile, lang);
 
-  // 1. Ingest all valid answered events (with fractional date: Year + (Month - 0.5) / 12)
+  // 1. Ingest all valid answered events (with fractional date)
+  // If month is omitted, treat as mid-year (month: null, fractionalDate: yearNum + 0.5) without fabricating May
   const answeredEvents = inputAnsweredEvents ? [...inputAnsweredEvents] : [];
 
   questions.forEach((q, idx) => {
@@ -468,14 +473,18 @@ export function reverseCalculateBirthTimeAndDOB({
     const monthKey = `q${idx + 1}_month`;
 
     const rawYear = answers[yearKey];
-    const rawMonth = answers[monthKey] || "5"; // default May if month is not set
+    const rawMonth = answers[monthKey];
 
     if (rawYear && !isNaN(parseInt(rawYear, 10)) && parseInt(rawYear, 10) > 1900 && parseInt(rawYear, 10) <= new Date().getFullYear()) {
       const yearNum = parseInt(rawYear, 10);
-      const monthNum = Math.min(12, Math.max(1, parseInt(rawMonth, 10) || 5));
-      const fractionalDate = yearNum + (monthNum - 0.5) / 12.0;
+      const parsedMonth = (rawMonth && !isNaN(parseInt(rawMonth, 10))) ? parseInt(rawMonth, 10) : null;
+      const monthNum = (parsedMonth !== null && parsedMonth >= 1 && parsedMonth <= 12) ? parsedMonth : null;
+      const hasExactMonth = monthNum !== null;
+      const fractionalDate = hasExactMonth
+        ? yearNum + (monthNum - 0.5) / 12.0
+        : yearNum + 0.5;
 
-      // Effective weight: Anchor questions have much higher weight and lower variance
+      // Effective weight: Anchor questions have higher weight and lower variance
       const effectiveWeight = q.weight * (1.0 / (q.variance || 1.0));
 
       answeredEvents.push({
@@ -483,6 +492,7 @@ export function reverseCalculateBirthTimeAndDOB({
         category: q.category,
         year: yearNum,
         month: monthNum,
+        hasExactMonth,
         fractionalDate,
         baselineAge: q.baselineProportionalAge,
         variance: q.variance || 1.0,
@@ -494,82 +504,130 @@ export function reverseCalculateBirthTimeAndDOB({
     }
   });
 
+  const sampleCountNum = answeredEvents.length;
+
+  // If no milestones are provided, do not fabricate a birth year or chart
+  if (sampleCountNum === 0) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      candidateStability: "UNRESOLVED_NO_EVENTS",
+      reason: isTamil
+        ? "துல்லியமான பிறந்த தேதியைக் கணக்கிட குறைந்தபட்சம் 1 அல்லது 2 முக்கிய வாழ்க்கை நிகழ்வுகளை (கல்வி, திருமணம், அல்லது வேலை) உள்ளிடவும்."
+        : "At least 1-2 verified chronological life milestones are required to perform heuristic birth reconstruction.",
+      highestRankedCandidate: null,
+      candidateWindows: [],
+      assumptions: [
+        "Vedic sidereal planetary positions computed with Lahiri (Chitra Paksha) ayanamsha",
+        "Geographical birth coordinates are accurately approximated by selected locality"
+      ],
+      missingInformation: [
+        "At least 2-3 confirmed chronological life milestones (education, career start, marriage)",
+        "Diurnal / Nocturnal birth constraint (born during daylight vs night)",
+        "Parental or sibling chronological milestone dates to constrain family bhavas"
+      ],
+      userProvidedEvents: [],
+      supportingEvidence: [],
+      contradictoryEvidence: [],
+      searchWindowLimits: {
+        searchSpanHours: 24,
+        candidateStepMinutes: 120,
+        totalCandidatesEvaluated: 0,
+        coordinates: { lat: effectiveLat, lng: effectiveLng }
+      },
+      source: "uncalibrated_initial_state",
+      provenance: "system_assumption",
+      isReconstructed: false,
+      reconstructionMode: "experimental_heuristic_reconstruction",
+      palmScoringApplied: false,
+      palmStatus: "EXCLUDED_UNVALIDATED",
+      methodologyNotice: "Traditional experimental reconstruction. Results are hypothesis-based and not empirically validated. Nashta Jataka uses iterative reverse-ephemeris fitting against subjective milestone recollections.",
+      methodologyNoticeTa: "பாரம்பரிய உத்தேச நஷ்ட ஜாதக மறுகட்டமைப்பு. இவை கருதுகோள் அடிப்படையிலானவை மட்டுமே; அறிவியல் ரீதியான துல்லிய உத்தரவாதம் இல்லை.",
+      heuristicEvidenceScore: 0,
+      confidenceScore: 0,
+      estimatedBirthYear: null,
+      candidateBirthMonthNum: null,
+      candidateBirthDayNum: null,
+      candidateMonthWindow: null,
+      timeWindow: null,
+      probableLagna: null,
+      probableMoonRashi: null,
+      answeredCount: 0,
+      errorMarginMonths: null,
+      estimatedToleranceBand: "UNCALIBRATED_INSUFFICIENT_DATA",
+      verificationProofs: [],
+      astronomicalNotes: isTamil
+        ? "துல்லியமான பிறந்த தேதியைக் கணக்கிட குறைந்தபட்சம் 1 அல்லது 2 முக்கிய வாழ்க்கை நிகழ்வுகளை (கல்வி, திருமணம், அல்லது வேலை) உள்ளிடவும்."
+        : "Please enter at least 1 or 2 key life milestones (schooling, marriage, or first career) to reconstruct your birth chart."
+    };
+  }
+
   // 2. Multilinear Intercept Solver with Outlier Suppression
-  const currentCalendarYear = new Date().getFullYear();
-  let estimatedBirthFraction = currentCalendarYear - 30; // nominal starting baseline
-  const sampleCount = answeredEvents.length;
-  let estimatedErrorMarginMonths = sampleCount > 0 ? 3.6 : 36.0;
+  let estimatedBirthFraction = 0;
+  let estimatedErrorMarginMonths = 36.0;
 
-  if (sampleCount > 0) {
-    // Check for high-anchor questions (e.g. 10th board, 12th board, school start)
-    const anchorEvents = answeredEvents.filter(e => e.isAnchor);
+  // Calculate individual estimates: T_birth_i = T_event_i - baselineAge_i
+  const individualEstimates = answeredEvents.map(e => ({
+    ...e,
+    estBirth: e.fractionalDate - e.baselineAge
+  }));
 
-    // Calculate individual estimates: T_birth_i = T_event_i - baselineAge_i
-    const individualEstimates = answeredEvents.map(e => ({
-      ...e,
-      estBirth: e.fractionalDate - e.baselineAge
-    }));
+  // Calculate weighted average
+  let totalWeightedBirth = 0;
+  let totalWeight = 0;
 
-    // Calculate weighted average
-    let totalWeightedBirth = 0;
-    let totalWeight = 0;
+  individualEstimates.forEach(ev => {
+    totalWeightedBirth += ev.estBirth * ev.weight;
+    totalWeight += ev.weight;
+  });
 
-    individualEstimates.forEach(ev => {
-      totalWeightedBirth += ev.estBirth * ev.weight;
-      totalWeight += ev.weight;
-    });
+  const rawWeightedMean = totalWeightedBirth / (totalWeight || 1.0);
 
-    let rawWeightedMean = totalWeightedBirth / totalWeight;
-
-    // Filter outliers beyond 2.0 standard deviations if sampleCount >= 3
-    if (sampleCount >= 3) {
-      const validEstimates = individualEstimates.filter(ev => Math.abs(ev.estBirth - rawWeightedMean) < 3.5);
-      if (validEstimates.length > 0) {
-        let refinedWeightedBirth = 0;
-        let refinedWeight = 0;
-        validEstimates.forEach(ev => {
-          refinedWeightedBirth += ev.estBirth * ev.weight;
-          refinedWeight += ev.weight;
-        });
-        estimatedBirthFraction = refinedWeightedBirth / refinedWeight;
-      } else {
-        estimatedBirthFraction = rawWeightedMean;
-      }
+  // Filter outliers beyond 2.0 standard deviations if sampleCount >= 3
+  if (sampleCountNum >= 3) {
+    const validEstimates = individualEstimates.filter(ev => Math.abs(ev.estBirth - rawWeightedMean) < 3.5);
+    if (validEstimates.length > 0) {
+      let refinedWeightedBirth = 0;
+      let refinedWeight = 0;
+      validEstimates.forEach(ev => {
+        refinedWeightedBirth += ev.estBirth * ev.weight;
+        refinedWeight += ev.weight;
+      });
+      estimatedBirthFraction = refinedWeightedBirth / (refinedWeight || 1.0);
     } else {
       estimatedBirthFraction = rawWeightedMean;
     }
+  } else {
+    estimatedBirthFraction = rawWeightedMean;
+  }
 
-    // Relative Educational & Career Interval Calibration:
-    // Uses the actual baselineProportionalAge and variance defined for the confirmed questions
-    const q10th = answeredEvents.find(e => e.id === "q2_10th_board");
-    const q12th = answeredEvents.find(e => e.id === "q3_12th_board");
-    const qUG = answeredEvents.find(e => e.id === "q4_ug_degree");
+  // Relative Educational & Career Interval Calibration:
+  const q10th = answeredEvents.find(e => e.id === "q2_10th_board");
+  const q12th = answeredEvents.find(e => e.id === "q3_12th_board");
+  const qUG = answeredEvents.find(e => e.id === "q4_ug_degree");
 
-    if (q10th && q12th) {
-      const delta10to12 = q12th.fractionalDate - q10th.fractionalDate;
-      if (delta10to12 >= 1.7 && delta10to12 <= 2.5) {
-        // Educational milestone alignment
-        const lockedBirthFrom10th = q10th.fractionalDate - (q10th.baselineAge || 15.5);
-        const lockedBirthFrom12th = q12th.fractionalDate - (q12th.baselineAge || 17.5);
-        const eduLock = (lockedBirthFrom10th + lockedBirthFrom12th) / 2.0;
-        estimatedBirthFraction = (eduLock * 0.75) + (estimatedBirthFraction * 0.25);
-        estimatedErrorMarginMonths = 3.0;
-      }
-    } else if (q12th) {
-      const lockedBirthFrom12th = q12th.fractionalDate - (q12th.baselineAge || 17.5);
-      estimatedBirthFraction = (lockedBirthFrom12th * 0.65) + (estimatedBirthFraction * 0.35);
-      estimatedErrorMarginMonths = 4.0;
-    } else if (q10th) {
+  if (q10th && q12th) {
+    const delta10to12 = q12th.fractionalDate - q10th.fractionalDate;
+    if (delta10to12 >= 1.7 && delta10to12 <= 2.5) {
       const lockedBirthFrom10th = q10th.fractionalDate - (q10th.baselineAge || 15.5);
-      estimatedBirthFraction = (lockedBirthFrom10th * 0.65) + (estimatedBirthFraction * 0.35);
-      estimatedErrorMarginMonths = 4.0;
-    } else if (qUG) {
-      const lockedBirthFromUG = qUG.fractionalDate - (qUG.baselineAge || 21.5);
-      estimatedBirthFraction = (lockedBirthFromUG * 0.55) + (estimatedBirthFraction * 0.45);
-      estimatedErrorMarginMonths = 5.0;
-    } else {
-      estimatedErrorMarginMonths = Math.max(4.0, 12.0 - (sampleCount * 1.0));
+      const lockedBirthFrom12th = q12th.fractionalDate - (q12th.baselineAge || 17.5);
+      const eduLock = (lockedBirthFrom10th + lockedBirthFrom12th) / 2.0;
+      estimatedBirthFraction = (eduLock * 0.75) + (estimatedBirthFraction * 0.25);
+      estimatedErrorMarginMonths = 3.0;
     }
+  } else if (q12th) {
+    const lockedBirthFrom12th = q12th.fractionalDate - (q12th.baselineAge || 17.5);
+    estimatedBirthFraction = (lockedBirthFrom12th * 0.65) + (estimatedBirthFraction * 0.35);
+    estimatedErrorMarginMonths = 4.0;
+  } else if (q10th) {
+    const lockedBirthFrom10th = q10th.fractionalDate - (q10th.baselineAge || 15.5);
+    estimatedBirthFraction = (lockedBirthFrom10th * 0.65) + (estimatedBirthFraction * 0.35);
+    estimatedErrorMarginMonths = 4.0;
+  } else if (qUG) {
+    const lockedBirthFromUG = qUG.fractionalDate - (qUG.baselineAge || 21.5);
+    estimatedBirthFraction = (lockedBirthFromUG * 0.55) + (estimatedBirthFraction * 0.45);
+    estimatedErrorMarginMonths = 5.0;
+  } else {
+    estimatedErrorMarginMonths = Math.max(4.0, 12.0 - (sampleCountNum * 1.0));
   }
 
   // 3. Derive exact Candidate Birth Year, Month, and approximate Day
@@ -606,7 +664,6 @@ export function reverseCalculateBirthTimeAndDOB({
   const solarMonth = tamilSolarMonths[solarMonthIndex] || tamilSolarMonths[7];
 
   // 4. Dynamic Multi-Candidate Search Across 24-Hour Day
-  // Evaluate 12 candidate windows (2-hr steps) against actual life events and palm mounts
   const candidateTimes = [
     { start: "05:00", mid: "06:00", end: "07:00", labelEn: "05:00 AM - 07:00 AM", labelTa: "காலை 05:00 - 07:00" },
     { start: "07:00", mid: "08:00", end: "09:00", labelEn: "07:00 AM - 09:00 AM", labelTa: "காலை 07:00 - 09:00" },
@@ -630,41 +687,20 @@ export function reverseCalculateBirthTimeAndDOB({
     const contradictoryEvidence = [];
     try {
       const testChart = calculateChartBySystem("lahiri", {
-        birthDate: formattedCandidateDate,
+        birthDate: isoFormattedDate,
         birthTime: cTime.mid,
-        latitude: lat,
-        longitude: lng,
-        utcOffset: typeof tz === "number" ? tz : null,
-        timezoneId: typeof tz === "string" ? tz : null
+        latitude: effectiveLat,
+        longitude: effectiveLng,
+        utcOffset: typeof effectiveTz === "number" ? effectiveTz : null,
+        timezoneId: typeof effectiveTz === "string" ? effectiveTz : null
       }, { lightweight: true });
       const ascName = testChart.ascendantSign.name;
       const ascTamil = testChart.ascendantSign.tamil;
       const ascLagnaLord = testChart.ascendantSign.ruler;
 
-      // 1. Palm mount prominence correlation
-      if (palmProfile?.mounts) {
-        const jupMount = palmProfile.mounts.find(m => m.name === "Jupiter");
-        if (jupMount && ((jupMount.rating && jupMount.rating >= 90) || ["High", "Very High", "Prominent"].includes(jupMount.prominence))) {
-          if (["Sagittarius", "Pisces"].includes(ascName)) {
-            fitScore += 8;
-            supportingEvidence.push("Jupiterian mount prominence aligns with Sagittarius/Pisces Lagna");
-          }
-        }
-        const mercMount = palmProfile.mounts.find(m => m.name === "Mercury");
-        if (mercMount && ((mercMount.rating && mercMount.rating >= 90) || ["High", "Very High", "Prominent"].includes(mercMount.prominence))) {
-          if (["Gemini", "Virgo"].includes(ascName)) {
-            fitScore += 8;
-            supportingEvidence.push("Mercurial mount prominence aligns with Gemini/Virgo Lagna");
-          }
-        }
-        const sunMount = palmProfile.mounts.find(m => m.name === "Sun (Apollo)");
-        if (sunMount && ((sunMount.rating && sunMount.rating >= 85) || ["High", "Very High", "Prominent"].includes(sunMount.prominence))) {
-          if (ascName === "Leo") {
-            fitScore += 7;
-            supportingEvidence.push("Sun mount prominence aligns with Leo Lagna");
-          }
-        }
-      }
+      // 1. Palm mount scoring is disabled per forensic audit policy (Approach B)
+      // until real 3D annotated datasets validate mount elevation measurements.
+      // (Static mount profiles must not inflate candidate scores).
 
       // 2. Cross-check reported milestone ages against Dasha table of this candidate
       if (testChart.dashaTable && answeredEvents.length > 0) {
@@ -676,30 +712,30 @@ export function reverseCalculateBirthTimeAndDOB({
             const lord = operatingDasha.lord;
             let matched = false;
             // Education milestones (4th/5th house or Mercury/Jupiter)
-            if (["q1_school_start", "q2_10th_board", "q3_12th_board", "q4_ug_degree"].includes(ev.id)) {
+            if (["q1_school_start", "q2_10th_board", "q3_12th_board", "q4_ug_degree", "q5_pg_degree"].includes(ev.id)) {
               if (["Mercury", "Jupiter"].includes(lord) || lord === ascLagnaLord) {
                 fitScore += 6;
                 supportingEvidence.push(`${ev.category || "Education"} aligns with ${lord} dasha period`);
                 matched = true;
               }
             }
-            // Career milestone (10th/11th house or Sun/Saturn)
-            if (["q5_first_job"].includes(ev.id)) {
+            // Career milestone (10th/11th house or Sun/Saturn/Mars) - authoritative ID: q6_first_job
+            if (["q6_first_job", "q9_career_promotion", "q10_career_pivot"].includes(ev.id)) {
               if (["Sun", "Saturn", "Mars"].includes(lord) || lord === ascLagnaLord) {
                 fitScore += 7;
                 supportingEvidence.push(`${ev.category || "Career"} aligns with ${lord} dasha period`);
                 matched = true;
               }
             }
-            // Marriage milestone (Venus or 7th lord)
-            if (["q6_marriage"].includes(ev.id)) {
+            // Marriage milestone (Venus or 7th lord / Jupiter) - authoritative ID: q13_marriage
+            if (["q12_engagement", "q13_marriage"].includes(ev.id)) {
               if (["Venus", "Jupiter"].includes(lord)) {
                 fitScore += 8;
                 supportingEvidence.push(`${ev.category || "Marriage"} aligns with ${lord} dasha period`);
                 matched = true;
               }
             }
-            if (!matched && ["q5_first_job", "q6_marriage"].includes(ev.id)) {
+            if (!matched && ["q6_first_job", "q13_marriage"].includes(ev.id)) {
               contradictoryEvidence.push(`${ev.category} occurs during ${lord} dasha without primary karaka alignment`);
             }
           }
@@ -720,7 +756,7 @@ export function reverseCalculateBirthTimeAndDOB({
         contradictoryEvidence
       });
     } catch (e) {
-      // Fallback
+      // Ephemeris candidate error fallback
     }
   }
 
@@ -735,7 +771,6 @@ export function reverseCalculateBirthTimeAndDOB({
   const scoreDiff = (bestCandidate && runnerUpCandidate) ? (bestCandidate.score - runnerUpCandidate.score) : 0;
   const maxFitScore = bestCandidate ? bestCandidate.score : 0;
 
-  const sampleCountNum = answeredEvents.length;
   let candidateStability = "UNRESOLVED_NO_EVENTS";
   let status = "INSUFFICIENT_DATA";
 
@@ -762,17 +797,58 @@ export function reverseCalculateBirthTimeAndDOB({
 
   const missingInformation = [
     sampleCountNum < 2 ? "At least 2-3 confirmed chronological life milestones (education, career start, marriage)" : null,
-    !palmProfile ? "Biometric palm mount and major line prominence markings" : null,
     "Diurnal / Nocturnal birth constraint (born during daylight vs night)",
     "Parental or sibling chronological milestone dates to constrain family bhavas"
   ].filter(Boolean);
 
-  // If candidate search yielded a best candidate, extract realistic values
-  const selTime = bestCandidate?.timeSlot || candidateTimes[1];
-  const selChart = bestCandidate?.chart;
-  const selAsc = selChart?.ascendantSign || { name: "Aries", tamil: "மேஷம்", ruler: "Mars" };
-  const selMoon = selChart?.moonSign || { name: "Aries", tamil: "மேஷம்" };
-  const selNak = selChart?.moonNakshatra || { name: "Ashwini", tamil: "அசுவினி" };
+  if (!bestCandidate) {
+    return {
+      status: "INSUFFICIENT_DATA",
+      candidateStability,
+      reason: "No plausible astrological candidate could be evaluated for the calculated date window",
+      highestRankedCandidate: null,
+      candidateWindows: [],
+      assumptions,
+      missingInformation,
+      userProvidedEvents: answeredEvents,
+      supportingEvidence: [],
+      contradictoryEvidence: [],
+      searchWindowLimits: {
+        searchSpanHours: 24,
+        candidateStepMinutes: 120,
+        totalCandidatesEvaluated: 0,
+        coordinates: { lat: effectiveLat, lng: effectiveLng }
+      },
+      source: "inferred_from_user_milestones",
+      provenance: "user_confirmed",
+      isReconstructed: false,
+      reconstructionMode: "experimental_heuristic_reconstruction",
+      palmScoringApplied: false,
+      palmStatus: "EXCLUDED_UNVALIDATED",
+      heuristicEvidenceScore: 0,
+      confidenceScore: 0,
+      estimatedBirthYear: candidateBirthYear,
+      candidateBirthMonthNum,
+      candidateBirthDayNum,
+      candidateMonthWindow: null,
+      timeWindow: null,
+      probableLagna: null,
+      probableMoonRashi: null,
+      answeredCount: sampleCountNum,
+      errorMarginMonths: Number(estimatedErrorMarginMonths.toFixed(1)),
+      estimatedToleranceBand: "UNCALIBRATED_NO_CANDIDATES",
+      verificationProofs: [],
+      astronomicalNotes: isTamil
+        ? "தேர்வு செய்யப்பட்ட நாளுக்கான லக்ன கணக்கீட்டில் போதுமான பொருத்தங்கள் அமையவில்லை."
+        : "Candidate search did not isolate a valid astrological match for the estimated date window."
+    };
+  }
+
+  const selTime = bestCandidate.timeSlot;
+  const selChart = bestCandidate.chart;
+  const selAsc = selChart.ascendantSign;
+  const selMoon = selChart.moonSign;
+  const selNak = selChart.moonNakshatra;
 
   const timeWindow = {
     start: selTime.start,
@@ -785,11 +861,11 @@ export function reverseCalculateBirthTimeAndDOB({
 
   const probableLagna = {
     sign: isTamil ? `${selAsc.tamil} (${selAsc.name})` : `${selAsc.name} (${selAsc.tamil})`,
-    degreeRange: "10° - 20°",
+    degreeRange: "Variable 30° Lagna arc",
     lord: isTamil ? `${selAsc.ruler} பகவான்` : selAsc.ruler,
     reasoning: isTamil
-      ? `${selAsc.tamil} லக்னம்: நீங்கள் குறிப்பிட்ட வாழ்க்கை நிகழ்வுகள் மற்றும் கைரேகை மேடுகளின் பலத்துடன் ${maxFitScore} புள்ளிகள் பொருந்தி முதன்மையான தேர்வாக அமைகிறது.`
-      : `${selAsc.name} Lagna isolates the highest alignment with your reported milestones and palm feature markers (Score: ${maxFitScore}).`
+      ? `${selAsc.tamil} லக்னம்: நீங்கள் குறிப்பிட்ட வாழ்க்கை நிகழ்வுகள் தசா காலங்களுடன் ${maxFitScore} புள்ளிகள் பொருந்தி முதன்மையான தேர்வாக அமைகிறது.`
+      : `${selAsc.name} Lagna isolates the highest alignment with your reported milestones and dasha periods (Score: ${maxFitScore}).`
   };
 
   const probableMoonRashi = {
@@ -803,25 +879,23 @@ export function reverseCalculateBirthTimeAndDOB({
   // 5. Build Dasha-Gochar Corroboration Proofs based on user's actual entered events
   const verificationProofs = [];
 
-  if (answeredEvents.length > 0) {
-    answeredEvents.slice(0, 8).forEach((ev) => {
-      const monthLabel = MONTHS[ev.month - 1] ? (isTamil ? MONTHS[ev.month - 1].ta : MONTHS[ev.month - 1].en) : "";
-      const eventAge = (ev.fractionalDate - estimatedBirthFraction).toFixed(1);
+  answeredEvents.slice(0, 8).forEach((ev) => {
+    const monthLabel = ev.month && MONTHS[ev.month - 1] ? (isTamil ? MONTHS[ev.month - 1].ta : MONTHS[ev.month - 1].en) : (isTamil ? "ஆண்டு" : "Year");
+    const eventAge = (ev.fractionalDate - estimatedBirthFraction).toFixed(1);
 
-      verificationProofs.push({
-        milestone: `${ev.category} (${monthLabel} ${ev.year})`,
-        palmEvidence: isTamil ? `${ev.lineCorrelated}` : `${ev.lineCorrelated}`,
-        dashaCorrelation: isTamil
-          ? `${ev.bhava} தூண்டப்பட்டு, தசா சுழற்சி மற்றும் கோச்சார பலன் (வயது ~${eventAge})`
-          : `${ev.bhava} activated via dasha progression & Gochar transit (approx. Age ${eventAge})`,
-        verified: false,
-        userConfirmed: true,
-        verificationStatus: "user_confirmed",
-        source: "user_confirmed",
-        isAnchor: ev.isAnchor
-      });
+    verificationProofs.push({
+      milestone: `${ev.category} (${monthLabel} ${ev.year})`,
+      palmEvidence: isTamil ? `${ev.lineCorrelated}` : `${ev.lineCorrelated}`,
+      dashaCorrelation: isTamil
+        ? `${ev.bhava} தூண்டப்பட்டு, தசா சுழற்சி மற்றும் கோச்சார பலன் (வயது ~${eventAge})`
+        : `${ev.bhava} activated via dasha progression & Gochar transit (approx. Age ${eventAge})`,
+      verified: false,
+      userConfirmed: true,
+      verificationStatus: "user_confirmed",
+      source: "user_confirmed",
+      isAnchor: ev.isAnchor
     });
-  }
+  });
 
   // Heuristic interview consistency index (non-empirical scoring based on confirmed milestone anchors)
   const heuristicEvidenceScore = sampleCountNum > 0
@@ -837,13 +911,9 @@ export function reverseCalculateBirthTimeAndDOB({
       : `${monthName} ${candidateBirthDayNum}, ${candidateBirthYear}`
   };
 
-  const astronomicalNotes = sampleCountNum > 0
-    ? (isTamil
-        ? `சாமுத்ரிகா சாஸ்திரம் மற்றும் நஷ்ட ஜாதக எபிமெரிஸ் ஒப்பீட்டு கணிப்பின்படி, ${sampleCountNum} உறுதிப்படுத்தப்பட்ட வாழ்க்கை நிகழ்வுகளின் அடிப்படையில் பிறந்த நாள் உத்தேசமாக கணிக்கப்பட்டுள்ளது (குறிப்பு: இது ஒரு பாரம்பரிய உத்தேச மறுகட்டமைப்பு முறை மட்டுமே; அறிவியல் ரீதியான பிழை உத்தரவாதம் இல்லை).`
-        : `Based on classical Samudrika chiromancy and ephemeris transit regression, your birth window is estimated via a heuristic convergence estimate (no empirical error guarantee) using ${sampleCountNum} user-reported milestone anchors. (Note: This is an experimental astrological reconstruction, not a civil birth certificate).`)
-    : (isTamil
-        ? "துல்லியமான பிறந்த தேதியைக் கணக்கிட குறைந்தபட்சம் 1 அல்லது 2 முக்கிய வாழ்க்கை நிகழ்வுகளை (கல்வி, திருமணம், அல்லது வேலை) உள்ளிடவும்."
-        : "Please enter at least 1 or 2 key life milestones (schooling, marriage, or first career) to reconstruct your birth chart.");
+  const astronomicalNotes = isTamil
+    ? `சாமுத்ரிகா சாஸ்திரம் மற்றும் நஷ்ட ஜாதக எபிமெரிஸ் ஒப்பீட்டு கணிப்பின்படி, ${sampleCountNum} உறுதிப்படுத்தப்பட்ட வாழ்க்கை நிகழ்வுகளின் அடிப்படையில் பிறந்த நாள் உத்தேசமாக கணிக்கப்பட்டுள்ளது (குறிப்பு: இது ஒரு பாரம்பரிய உத்தேச மறுகட்டமைப்பு முறை மட்டுமே; அறிவியல் ரீதியான பிழை உத்தரவாதம் இல்லை).`
+    : `Based on classical Samudrika chiromancy and ephemeris transit regression, your birth window is estimated via a heuristic convergence estimate (no empirical error guarantee) using ${sampleCountNum} user-reported milestone anchors. (Note: This is an experimental astrological reconstruction, not a civil birth certificate).`;
 
   return {
     status,
@@ -870,12 +940,14 @@ export function reverseCalculateBirthTimeAndDOB({
       searchSpanHours: 24,
       candidateStepMinutes: 120,
       totalCandidatesEvaluated: candidateWindows.length,
-      coordinates: { lat, lng }
+      coordinates: { lat: effectiveLat, lng: effectiveLng }
     },
     source: sampleCountNum > 0 ? "inferred_from_user_milestones" : "uncalibrated_initial_state",
     provenance: sampleCountNum > 0 ? "user_confirmed" : "system_assumption",
     isReconstructed: sampleCountNum > 0,
     reconstructionMode: "experimental_heuristic_reconstruction",
+    palmScoringApplied: false,
+    palmStatus: "EXCLUDED_UNVALIDATED",
     methodologyNotice: "Traditional experimental reconstruction. Results are hypothesis-based and not empirically validated. Nashta Jataka uses iterative reverse-ephemeris fitting against subjective milestone recollections.",
     methodologyNoticeTa: "பாரம்பரிய உத்தேச நஷ்ட ஜாதக மறுகட்டமைப்பு. இவை கருதுகோள் அடிப்படையிலானவை மட்டுமே; அறிவியல் ரீதியான துல்லிய உத்தரவாதம் இல்லை.",
     heuristicEvidenceScore,

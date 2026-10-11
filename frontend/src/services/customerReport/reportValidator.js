@@ -299,14 +299,15 @@ export function validateLifeReport(lifeReport, options = {}) {
     domainsWithRealEvidence.map(d => d.domainId).filter(id => ALL_17_DOMAINS.includes(id))
   );
 
-  // Timing completeness: ratio of domains having valid chronological timing windows or explicit NOT_ESTABLISHED
+  // Timing completeness: ratio of domains having valid chronological timing windows with non-empty boundaries or explicit NOT_ESTABLISHED
   let domainsWithValidTiming = 0;
   domainReports.forEach(dr => {
     if (!dr || typeof dr !== "object") return;
     const tws = dr.traditionalTimingWindows || [];
     if (tws.length > 0) {
       const allChronological = tws.every(tw => {
-        if (!tw.start || !tw.end) return true;
+        if (!tw || typeof tw !== "object") return false;
+        if (!tw.start || !tw.end || typeof tw.start !== "string" || typeof tw.end !== "string") return false;
         const s = new Date(tw.start).getTime();
         const e = new Date(tw.end).getTime();
         return !isNaN(s) && !isNaN(e) ? s <= e : tw.start <= tw.end;

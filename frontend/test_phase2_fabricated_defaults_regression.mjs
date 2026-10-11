@@ -186,6 +186,35 @@ async function main() {
     assert(!code.includes("const cAge = rec.currentAge || 45.0;"), "Must not contain 'const cAge = rec.currentAge || 45.0;'");
   });
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 9. nashtaJatakaEngine.js: No fabricated defaults (May, Aries, Ashwini, etc.)
+  // ─────────────────────────────────────────────────────────────────────────────
+  await check("9A. nashtaJatakaEngine.js: Missing month does not silently default to May ('5')", () => {
+    const code = fs.readFileSync(path.join(__dirname, "src/services/nashtaJatakaEngine.js"), "utf8");
+    assert(!code.includes('answers[monthKey] || "5"'), "Must not contain 'answers[monthKey] || \"5\"'");
+  });
+
+  await check("9B. nashtaJatakaEngine.js: Zero answered events returns INSUFFICIENT_DATA and null chart fields", async () => {
+    const { reverseCalculateBirthTimeAndDOB } = await import("./src/services/nashtaJatakaEngine.js");
+    const res = reverseCalculateBirthTimeAndDOB({
+      lat: 13.0827,
+      lng: 80.2707,
+      tz: 5.5,
+      answers: {}
+    });
+    assert.strictEqual(res.status, "INSUFFICIENT_DATA", "Status must be INSUFFICIENT_DATA when 0 events answered");
+    assert.strictEqual(res.estimatedBirthYear, null, "estimatedBirthYear must be null");
+    assert.strictEqual(res.candidateMonthWindow, null, "candidateMonthWindow must be null");
+    assert.strictEqual(res.timeWindow, null, "timeWindow must be null");
+    assert.strictEqual(res.probableLagna, null, "probableLagna must be null");
+    assert.strictEqual(res.probableMoonRashi, null, "probableMoonRashi must be null");
+  });
+
+  await check("9C. nashtaJatakaEngine.js: Palm mounts do not inflate candidate fit scores", () => {
+    const code = fs.readFileSync(path.join(__dirname, "src/services/nashtaJatakaEngine.js"), "utf8");
+    assert(!code.includes("palmProfile?.mounts"), "Must not inspect palmProfile?.mounts to add score");
+  });
+
   console.log("\n" + "=".repeat(75));
   console.log(` SUMMARY: ${passed} passed, ${failed} failed.`);
   console.log("=".repeat(75) + "\n");

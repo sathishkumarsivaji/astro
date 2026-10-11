@@ -212,8 +212,8 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
         </div>
         <h2 className="text-2xl md:text-3xl font-serif font-bold text-stone-900">
           {isTamil 
-            ? "பிறந்த தேதி, நேரம் தெரியவில்லையா? சில மாதங்களுக்குள் துல்லியமாக கண்டறியுங்கள்" 
-            : "Unknown Birth Time or Date? Calculate Within Few Months Precision via Life Events"}
+            ? "பிறந்த தேதி, நேரம் தெரியவில்லையா? வாழ்க்கை நிகழ்வுகள் மூலம் சோதனை முறை நஷ்ட ஜாதக ஆய்வு" 
+            : "Unknown Birth Time or Date? Experimental Heuristic Birth Reconstruction via Life Events"}
         </h2>
         <p className="text-xs text-stone-600 max-w-2xl mx-auto leading-relaxed">
           {isTamil
@@ -225,12 +225,12 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
         <div className="inline-flex flex-wrap items-center justify-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-100/80 via-purple-50 to-emerald-50 border border-amber-300 text-xs">
           <span className="flex items-center gap-1.5 font-bold text-amber-900">
             <Target className="w-4 h-4 text-amber-700" />
-            {isTamil ? "துல்லிய இலக்கு: சில மாதங்கள் / 1 ஆண்டுக்குள்" : "Precision Target: Within Few Months / ~1 Year"}
+            {isTamil ? "சோதனை முறை கருதுகோள்: அறிவியல் பிழை உத்தரவாதம் இல்லை" : "Experimental Heuristic Search (Hypothesis-Based, Non-Empirical)"}
           </span>
           <span className="text-stone-400 hidden sm:inline">•</span>
           <span className="text-emerald-800 font-semibold flex items-center gap-1">
             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            {isTamil ? "10/12-ம் வகுப்பு, கல்லூரி தேதிகள் துல்லியத்தை மேலும் அதிகரிக்கும்" : "10th/12th Board & Degree dates maximize accuracy"}
+            {isTamil ? "10/12-ம் வகுப்பு, கல்லூரி தேதிகள் நிகழ்வு பொருத்தத்தை வலுப்படுத்தும்" : "10th/12th Board & Degree dates provide chronological anchors"}
           </span>
         </div>
 
@@ -499,10 +499,10 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                {/* Live Error Margin Badge */}
+                {/* Anchors Count Badge */}
                 <div className="px-3 py-1 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-1.5 shrink-0">
                   <Target className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{isTamil ? `துல்லிய இடைவெளி: ± ${liveErrorMarginMonths} மாதங்கள்` : `Current Margin: ± ${liveErrorMarginMonths} Months`}</span>
+                  <span>{isTamil ? `நிகழ்வு பொருத்தங்கள்: ${answeredAnchorCount} முதன்மை / ${answeredCount} மொத்தம்` : `Anchors: ${answeredAnchorCount} Primary / ${answeredCount} Total`}</span>
                 </div>
 
                 {/* Progress Counter */}
@@ -725,13 +725,13 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {isTamil ? "கணிக்கப்பட்ட பிறந்த தேதி" : "Estimated Birth Date Window"}
                 </div>
                 <h4 className="text-xl font-serif font-bold text-stone-900">
-                  {result.candidateMonthWindow.formattedDate}
+                  {result.candidateMonthWindow?.formattedDate || (isTamil ? "நிர்ணயிக்கப்படவில்லை" : "Not Determined")}
                 </h4>
                 <p className="text-[11px] text-stone-600">
-                  {result.candidateMonthWindow.season}
+                  {result.candidateMonthWindow?.season || (isTamil ? "போதிய மைல்கற்கள் இல்லை" : "Insufficient milestone data")}
                 </p>
                 <div className="text-[10px] text-emerald-700 font-semibold pt-1">
-                  ✓ {isTamil ? `உத்தேச தேடல் சாளரம்: ~${result.errorMarginMonths} மாத இடைவெளிக்குள்` : `Heuristic Search Window: ~${result.errorMarginMonths} months span`}
+                  ✓ {result.errorMarginMonths !== null ? (isTamil ? `உத்தேச தேடல் சாளரம்: ~${result.errorMarginMonths} மாத இடைவெளிக்குள்` : `Heuristic Search Window: ~${result.errorMarginMonths} months span`) : (isTamil ? "வரையறுக்கப்படாத இடைவெளி" : "Uncalibrated span")}
                 </div>
               </div>
 
@@ -742,10 +742,10 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {isTamil ? "துல்லிய பிறந்த நேர எல்லை" : "Narrowed Birth Time Range"}
                 </div>
                 <h4 className="text-xl font-serif font-bold text-purple-900">
-                  {result.timeWindow.start} - {result.timeWindow.end}
+                  {result.timeWindow ? `${result.timeWindow.start} - ${result.timeWindow.end}` : (isTamil ? "நிர்ணயிக்கப்படவில்லை" : "Not Determined")}
                 </h4>
                 <p className="text-[11px] text-stone-600">
-                  {isTamil ? `உயர் தரவரிசை உத்தேச நேரம்: ${result.timeWindow.mostProbable} (${result.timeWindow.span})` : `Highest-ranked heuristic candidate: ${result.timeWindow.mostProbable} (${result.timeWindow.span})`}
+                  {result.timeWindow ? (isTamil ? `உயர் தரவரிசை உத்தேச நேரம்: ${result.timeWindow.mostProbable} (${result.timeWindow.span})` : `Highest-ranked heuristic candidate: ${result.timeWindow.mostProbable} (${result.timeWindow.span})`) : (isTamil ? "தேர்வு செய்ய லக்னம் இல்லை" : "No candidate Lagna isolated")}
                 </p>
               </div>
 
@@ -756,10 +756,10 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {isTamil ? "கணிக்கப்பட்ட லக்னம்" : "Probable Lagna (Ascendant)"}
                 </div>
                 <h4 className="text-xl font-serif font-bold text-stone-900">
-                  {result.probableLagna.sign}
+                  {result.probableLagna?.sign || (isTamil ? "நிர்ணயிக்கப்படவில்லை" : "Not Determined")}
                 </h4>
                 <p className="text-[11px] text-stone-600">
-                  {result.probableLagna.reasoning}
+                  {result.probableLagna?.reasoning || (isTamil ? "குறைந்தபட்சம் 1 அல்லது 2 முக்கிய நிகழ்வுகளை உள்ளிடவும்" : "Enter at least 1-2 life milestones to evaluate candidate Lagnas")}
                 </p>
               </div>
             </div>

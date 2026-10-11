@@ -21,7 +21,9 @@ export const TRADITIONAL_ASSESSMENT = Object.freeze({
   MODERATE: "MODERATE",
   GUARDED: "GUARDED",
   LIMITED: "LIMITED",
-  INSUFFICIENT: "INSUFFICIENT"
+  INSUFFICIENT: "INSUFFICIENT",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA",
+  UNASSESSED: "UNASSESSED"
 });
 
 export const EMPIRICAL_STATUS = Object.freeze({
@@ -286,8 +288,8 @@ export function createDomainReport(domainData = {}) {
     domainName: domainData.domainName || names,
     ruleId: domainData.ruleId || null,
     executiveConclusion: domainData.executiveConclusion || "",
-    overallTraditionalAssessment: domainData.overallTraditionalAssessment || TRADITIONAL_ASSESSMENT.SUPPORTED,
-    evidenceStrength: domainData.evidenceStrength || EVIDENCE_STRENGTH.MODERATE,
+    overallTraditionalAssessment: domainData.overallTraditionalAssessment || TRADITIONAL_ASSESSMENT.UNASSESSED,
+    evidenceStrength: domainData.evidenceStrength || EVIDENCE_STRENGTH.INSUFFICIENT_DATA,
     positiveIndicators: Array.isArray(domainData.positiveIndicators) ? domainData.positiveIndicators : [],
     challengingIndicators: Array.isArray(domainData.challengingIndicators) ? domainData.challengingIndicators : [],
     neutralIndicators: Array.isArray(domainData.neutralIndicators) ? domainData.neutralIndicators : [],

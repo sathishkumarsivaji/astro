@@ -409,13 +409,63 @@ try {
       npmCiClean = false;
       npmCiDetail = `Contaminated release archives found: ${zipAuditFailures.join("; ")}`;
     } else {
-      // If node_modules is missing (clean fresh distribution), execute npm ci to establish runtime
-      const nodeModulesExists = fs.existsSync(path.join(FRONTEND_DIR, "node_modules"));
-      if (!nodeModulesExists) {
-        execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
-        npmCiDetail = "clean npm ci executed successfully; zero node_modules in distribution archives";
+      // Gate 12 Strengthening: Verify installation completeness, not mere directory existence.
+      const nodeModulesDir = path.join(FRONTEND_DIR, "node_modules");
+      const nodeModulesExists = fs.existsSync(nodeModulesDir);
+      
+      // Verify all required production and dev packages exist in node_modules
+      const requiredPackages = [
+        "astronomy-engine",
+        "react",
+        "react-dom",
+        "lucide-react",
+        "jspdf",
+        "dompurify",
+        "vite",
+        "oxlint"
+      ];
+      
+      let missingPackages = [];
+      let missingBinaries = [];
+      
+      if (nodeModulesExists) {
+        for (const pkgName of requiredPackages) {
+          const pkgPath = path.join(nodeModulesDir, pkgName, "package.json");
+          if (!fs.existsSync(pkgPath)) {
+            missingPackages.push(pkgName);
+          }
+        }
+
+        // Verify required executable binaries in node_modules/.bin
+        const binDir = path.join(nodeModulesDir, ".bin");
+        const requiredBins = process.platform === "win32"
+          ? ["vite.cmd", "oxlint.cmd"]
+          : ["vite", "oxlint"];
+
+        for (const binName of requiredBins) {
+          const binPath = path.join(binDir, binName);
+          if (!fs.existsSync(binPath)) {
+            missingBinaries.push(binName);
+          }
+        }
+      }
+
+      if (!nodeModulesExists || missingPackages.length > 0 || missingBinaries.length > 0) {
+        // If missing or partial, fail if partial, or execute clean npm ci if cleanly absent
+        if (nodeModulesExists && (missingPackages.length > 0 || missingBinaries.length > 0)) {
+          npmCiClean = false;
+          npmCiDetail = `Incomplete / corrupted node_modules detected. Missing packages: [${missingPackages.join(", ")}]; missing binaries: [${missingBinaries.join(", ")}]. Must run clean npm ci.`;
+        } else {
+          try {
+            execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
+            npmCiDetail = "clean npm ci executed successfully; all dependencies and binaries verified";
+          } catch (ciErr) {
+            npmCiClean = false;
+            npmCiDetail = `npm ci failed with non-zero exit: ${ciErr.message}`;
+          }
+        }
       } else {
-        npmCiDetail = `package.json and lockfile verified; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
+        npmCiDetail = `package.json and lockfile verified; all ${requiredPackages.length} dependencies and binaries verified in node_modules; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
       }
     }
   }

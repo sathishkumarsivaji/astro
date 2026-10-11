@@ -30,8 +30,8 @@
       "cacheMisses": 0,
       "recomputedCount": 0,
       "invalidatedEntries": 0,
-      "predictionEngineHash": "3f080bd4f6aeaefe5420a6493c73e479d1accdcb6aa655f5c3ab7d7914b444b0",
-      "calibrationHash": "d44b0d4ca0cdbab351fbf74d4b9cf296473061d72462aa730fbf6c311b3497c9"
+      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+      "calibrationHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
     }
   },
   "primaryBenchmark": {
@@ -62,7 +62,7 @@
       "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
       "classifierStatus": "NON_DISCRIMINATIVE",
       "isDegenerate": false,
-      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=0.5072 (95% CI [0.334, 0.6804]). Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
       "status": "NOT_DISCRIMINATIVE",
       "confusionMatrix": {
         "tp": 33,
@@ -249,7 +249,8 @@
         "within90DaysPct": 1.56,
         "within180DaysPct": 2.5,
         "within365DaysPct": 5.94
-      }
+      },
+      "baselineComparisonStatus": "STATISTICALLY_TIED"
     },
     "unionMode": {
       "status": "NOT_AVAILABLE",

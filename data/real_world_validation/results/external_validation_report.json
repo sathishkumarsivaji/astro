@@ -26,8 +26,8 @@
       "tn": 10,
       "fn": 269
     },
-    "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
-    "occurrenceIsDegenerate": true,
+    "occurrenceClassifierStatus": "NON_DISCRIMINATIVE",
+    "occurrenceIsDegenerate": false,
     "fourModelComparison": [
       {
         "modelId": "MODEL_0_NULL",
