@@ -23,11 +23,31 @@ const ephemerisVersion = 'AstronomyEngine/VSOP87';
 const dashaEngineVersion = '2.2.0';
 const resolutionClassifierVersion = '2.0.0';
 
+export const MANDATORY_CACHE_FIELDS = Object.freeze([
+  'recordId',
+  'inputHash',
+  'astroEngineHash',
+  'predictionEngineHash',
+  'calibrationModelHash',
+  'calibrationInputHash',
+  'trainingDatasetHash',
+  'modelCoefficientsHash',
+  'astronomyEngineVersion',
+  'historicalTimeEngineVersion',
+  'featureSchemaVersion',
+  'predictionSchemaVersion',
+  'ruleVersion',
+  'ephemerisVersion',
+  'dashaEngineVersion',
+  'resolutionClassifierVersion',
+  'modelVersion'
+]);
+
 let predictionCache = {};
-let cacheStats = { hits: 0, misses: 0, invalidated: 0, total: 0 };
+let cacheStats = { hits: 0, misses: 0, invalidated: 0, recomputed: 0, failedRecomputations: 0, total: 0 };
 let cacheFilePath = null;
 
-function computeFileHash(filePath) {
+export function computeFileHash(filePath) {
   if (!fs.existsSync(filePath)) return null;
   const content = fs.readFileSync(filePath);
   if (/\.(js|jsx|mjs|json|md|txt)$/i.test(filePath)) {
@@ -97,10 +117,58 @@ export function computeInputHash(record) {
   return crypto.createHash('sha256').update(payload).digest('hex');
 }
 
+export function validateCacheEntry(entry, expectedValues = {}) {
+  if (!entry || typeof entry !== 'object') {
+    return { isValid: false, failedField: 'entry', reason: 'Cache entry is null or not an object' };
+  }
+  for (const field of MANDATORY_CACHE_FIELDS) {
+    if (entry[field] === undefined || entry[field] === null || entry[field] === '') {
+      return { isValid: false, failedField: field, reason: `Mandatory field ${field} is missing or empty` };
+    }
+  }
+
+  const expected = {
+    astroEngineHash: expectedValues.astroEngineHash || currentAstroEngineHash,
+    predictionEngineHash: expectedValues.predictionEngineHash || currentPredictionEngineHash,
+    calibrationModelHash: expectedValues.calibrationModelHash || currentCalibrationModelHash,
+    calibrationInputHash: expectedValues.calibrationInputHash || currentCalibrationInputHash,
+    trainingDatasetHash: expectedValues.trainingDatasetHash || currentTrainingDatasetHash,
+    modelCoefficientsHash: expectedValues.modelCoefficientsHash || currentModelCoefficientsHash,
+    astronomyEngineVersion: expectedValues.astronomyEngineVersion || astronomyEngineVersion,
+    historicalTimeEngineVersion: expectedValues.historicalTimeEngineVersion || historicalTimeEngineVersion,
+    featureSchemaVersion: expectedValues.featureSchemaVersion || featureSchemaVersion,
+    predictionSchemaVersion: expectedValues.predictionSchemaVersion || predictionSchemaVersion,
+    ruleVersion: expectedValues.ruleVersion || ruleVersion,
+    ephemerisVersion: expectedValues.ephemerisVersion || ephemerisVersion,
+    dashaEngineVersion: expectedValues.dashaEngineVersion || dashaEngineVersion,
+    resolutionClassifierVersion: expectedValues.resolutionClassifierVersion || resolutionClassifierVersion,
+    modelVersion: expectedValues.modelVersion || modelVersion
+  };
+
+  for (const [key, val] of Object.entries(expected)) {
+    if (!val) {
+      return { isValid: false, failedField: key, reason: `Authoritative current value for ${key} is unavailable` };
+    }
+    if (entry[key] !== val) {
+      return { isValid: false, failedField: key, reason: `Value for ${key} (${entry[key]}) does not match authoritative value (${val})` };
+    }
+  }
+
+  return { isValid: true, failedField: null, reason: null };
+}
+
+export function recordRecomputation(success = true) {
+  if (success) {
+    cacheStats.recomputed++;
+  } else {
+    cacheStats.failedRecomputations++;
+  }
+}
+
 export function loadCache(filePath) {
   cacheFilePath = filePath;
   predictionCache = {};
-  cacheStats = { hits: 0, misses: 0, invalidated: 0, total: 0 };
+  cacheStats = { hits: 0, misses: 0, invalidated: 0, recomputed: 0, failedRecomputations: 0, total: 0 };
   if (fs.existsSync(filePath)) {
     try {
       predictionCache = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -120,31 +188,20 @@ export function getCachedPrediction(recordId, inputHash) {
     cacheStats.misses++;
     return null;
   }
-  
-  const isValid = 
-    cached.inputHash === inputHash &&
-    (!currentAstroEngineHash || cached.astroEngineHash === currentAstroEngineHash) &&
-    cached.predictionEngineHash === currentPredictionEngineHash &&
-    cached.calibrationModelHash === currentCalibrationModelHash &&
-    cached.calibrationInputHash === currentCalibrationInputHash &&
-    cached.trainingDatasetHash === currentTrainingDatasetHash &&
-    (!currentModelCoefficientsHash || cached.modelCoefficientsHash === currentModelCoefficientsHash) &&
-    cached.astronomyEngineVersion === astronomyEngineVersion &&
-    cached.historicalTimeEngineVersion === historicalTimeEngineVersion &&
-    cached.predictionSchemaVersion === predictionSchemaVersion &&
-    cached.featureSchemaVersion === featureSchemaVersion &&
-    cached.ruleVersion === ruleVersion &&
-    cached.ephemerisVersion === ephemerisVersion &&
-    cached.dashaEngineVersion === dashaEngineVersion &&
-    cached.resolutionClassifierVersion === resolutionClassifierVersion &&
-    cached.modelVersion === modelVersion;
-    
-  if (!isValid) {
+
+  if (cached.inputHash !== inputHash || cached.recordId !== recordId) {
     cacheStats.invalidated++;
     delete predictionCache[recordId];
     return null;
   }
-  
+
+  const check = validateCacheEntry(cached);
+  if (!check.isValid) {
+    cacheStats.invalidated++;
+    delete predictionCache[recordId];
+    return null;
+  }
+
   cacheStats.hits++;
   return cached;
 }

@@ -26,6 +26,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
+import { validateCacheEntry } from "./src/services/realWorldValidation/predictionCacheManager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -290,29 +291,43 @@ check(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 11. cache hashes = manifest hashes
+// 11. cache hashes = manifest hashes (record-level cryptographic binding)
 // ─────────────────────────────────────────────────────────────────────────────
 let cacheMatches = true;
 let cacheDetail = "";
 if (fs.existsSync(cachePath)) {
   const cacheData = JSON.parse(fs.readFileSync(cachePath, "utf8"));
   const recordKeys = Object.keys(cacheData);
+  let invalidCount = 0;
+  let firstFailureReason = "";
+
+  const expectedValues = {
+    astroEngineHash: authHashes.astroEngineHash,
+    predictionEngineHash: authHashes.predictionEngineHash,
+    calibrationModelHash: authHashes.calibrationModelHash,
+    trainingDatasetHash: dataHashes.trainSplitHash,
+    astronomyEngineVersion: manifest.astronomyEngineVersion || "4.2.0",
+    historicalTimeEngineVersion: manifest.historicalTimeEngineVersion || "2.1.0",
+    predictionSchemaVersion: manifest.schemaVersion || "3.0",
+    modelVersion: manifest.modelVersion || "2.2.0"
+  };
+
   for (let i = 0; i < recordKeys.length; i++) {
     const entry = cacheData[recordKeys[i]];
-    if (!entry || typeof entry !== "object") continue;
-    if (entry.predictionEngineHash && entry.predictionEngineHash !== authHashes.predictionEngineHash) {
-      cacheMatches = false;
-      cacheDetail = `entry ${entry.recordId || recordKeys[i]} predictionEngineHash mismatch`;
-      break;
-    }
-    if (entry.calibrationModelHash && entry.calibrationModelHash !== authHashes.calibrationModelHash) {
-      cacheMatches = false;
-      cacheDetail = `entry ${entry.recordId || recordKeys[i]} calibrationModelHash mismatch`;
-      break;
+    const validation = validateCacheEntry(entry, expectedValues);
+    if (!validation.isValid) {
+      invalidCount++;
+      if (!firstFailureReason) {
+        firstFailureReason = `entry ${entry?.recordId || recordKeys[i]}: ${validation.reason || validation.failedField}`;
+      }
     }
   }
-  if (cacheMatches) {
-    cacheDetail = `Verified 100% of ${recordKeys.length} prediction cache entries cryptographically bound to manifest hashes`;
+
+  if (invalidCount > 0 || recordKeys.length === 0) {
+    cacheMatches = false;
+    cacheDetail = `Found ${invalidCount} invalid cache entries among ${recordKeys.length} records. First failure: ${firstFailureReason}`;
+  } else {
+    cacheDetail = `Verified 100% of ${recordKeys.length} prediction cache entries cryptographically bound to manifest hashes across all 17 mandatory fields`;
   }
 } else {
   cacheMatches = false;
@@ -320,7 +335,7 @@ if (fs.existsSync(cachePath)) {
 }
 check(
   11,
-  "cache hashes === manifest hashes (record-level cryptographic binding)",
+  "cache hashes === manifest hashes (record-level cryptographic binding across 17 mandatory fields)",
   cacheMatches,
   cacheDetail
 );
