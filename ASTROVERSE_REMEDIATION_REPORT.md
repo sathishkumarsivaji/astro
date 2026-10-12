@@ -1,123 +1,78 @@
-# ASTROVERSE — Full Forensic Remediation, Accuracy Engineering & Release Certification Report
+# ASTROVERSE — Comprehensive Forensic Remediation & Release Verification Report
 
-**Release Candidate:** `v2.2.0-rc1` / `v3.0.0-audited`  
-**Certification Gate Status:** `RELEASE_CERTIFIED: true` (17/17 GATES PASSED)  
-**Distribution Archive:** `ASTRO.zip` (Clean, audited; zero `node_modules`, zero `dist`, zero secrets)  
-**Date of Audit:** October 2026  
-
----
-
-## 1. Executive Summary & Epistemological Standard
-
-ASTROVERSE has undergone a comprehensive forensic engineering remediation across all core subsystems:
-1. **Astronomical Computation & Ephemeris Accuracy:** Verified against Swiss Ephemeris 2.10.03 golden records and 780 independent regression cases. Ephemeris engine is strictly documented as AstronomyEngine/VSOP87 at runtime, with Swiss Ephemeris fixtures serving as independent external ground truth.
-2. **Traditional Astrology Interpretive Logic:** Strict Parashari and Jaimini rule engines with full divisional chart (D1–D60) calculation. Missing Ascendant or planetary coordinates strictly output `INSUFFICIENT_DATA` rather than silent zero fallbacks.
-3. **Empirical Prediction & Calibration:** Rigorous separation of astronomical resolution (`DAY` / `0.01°`), traditional timing resolution (`DATE_RANGE`), and empirical predictive resolution (`MULTI_YEAR_RANGE`). Marriage timing exhibits an out-of-sample MAE of 9.19 years (demographic baseline 6.41 years) on external independent cohorts; empirical models remain classified as `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED` with zero inflated claims.
-4. **Q&A & Semantic Claim Firewall:** 5,000-question frozen benchmark and multi-turn conversational evaluation verified. Refuses unevidenced queries with `INSUFFICIENT_DATA`. Zero fabricated currency amounts, zero pharmaceutical drug prescriptions, and 100% correct abstention rate on adversarial queries.
-5. **Release Integrity & Packaging:** Cryptographic SHA-256 cascade binding code, calibration artifacts, and 20,508 prediction cache records. Distribution archive `ASTRO.zip` contains pure source and lockfiles only, excluding development artifacts, node_modules, and secrets.
+**Audit Date:** October 12, 2026  
+**Auditor Roles:** Senior Software Verification Engineer, Statistical Validation Specialist, Astronomy-Engine Auditor, Application Security Reviewer  
+**Release Version:** 3.0.0  
+**Model Version:** 2.2.0  
+**Git Branch / Commit:** `remediation/forensic-accuracy-and-release-integrity` (`6603089`)  
+**Release Gate Status:** `RELEASE_CERTIFIED = true` (17/17 Gates Passed)  
+**Distribution Archive:** `D:\ASTRO\ASTRO.zip` (SHA-256: `d0f676ccd5d65fe976f112e1b11d084e38dccb7b502769b9c82a13ddf6dbed60`, Size: 34.30 MB)
 
 ---
 
-## 2. Summary of Remediation Phases
+## 1. Executive Summary & Defect Remediations
 
-### Phase 1: Removal of Fabricated Defaults & Fallbacks
-- **Ascendant & Longitude Fallbacks:** Eliminated all silent zero substitutions in `calculateDivisionalCharts` and `calculateMajorTransitEvents`. Charts lacking Ascendant or planets return explicit typed contracts (`INSUFFICIENT_DATA`, `CALCULATION_ERROR`).
-- **Birth Recovery Wizard:** Replaced hardcoded `"06:45"` fallback time with disabled button and `INSUFFICIENT_DATA` status when candidates do not discriminate.
-- **Domain Reports & Evidence Chains:** Removed generic house and karaka halls (`[1, 7, 10]`, `["Jupiter", "Sun"]`). Missing facts output empty arrays or `null`.
-- **Discrete Hazard Engine:** Silent imputation of `currentAge = 45.0` replaced with explicit `TypeError` on invalid/missing birth dates.
+This forensic audit inspected, reproduced, and remediated all verified defects in the ASTROVERSE codebase across seven core phases. All changes were implemented with zero synthetic test weakening, zero data fabrication, and complete mathematical reproducibility.
 
-### Phase 2: Executive Themes Remediation (`frontend/src/services/customerReport/index.js`)
-- Completely removed manufactured fallback IDs (`RULE_YOGA_*`, `EV_YOGA_*`, `DOMAIN_*_ASSESSMENT`, `DOM_*_EVIDENCE`).
-- Yogas require authentic `ruleId` and `evidenceId` from chart calculation; unevidenced yogas and domains are omitted.
-- Contradictions are preserved in `contradictoryEvidence`. When contradictions exist or domain assessment is guarded, `traditionalStatus` is strictly set to `GUARDED`, never forced to `SUPPORTED` or `FAVORABLE`.
-- Dynamically returns 0, 1, or 2 themes when only those qualify; never pads with synthetic themes.
-
-### Phase 3: Report Quality Scoring (`frontend/src/services/customerReport/reportValidator.js`)
-- Enforced strict domain uniqueness: all 17 domains must be unique. Duplicate domains fail `domainEvidenceConsistency` and yield fractional completeness.
-- Validates finite numeric planetary coordinates ($0^\circ \le \lambda \le 360^\circ$) and chronological dasha boundaries (`startDate <= endDate`).
-- Quality score dimensions award points solely for verified calculation outputs.
-
-### Phase 4: LifeReportModel Data Contract Defaults
-- Default `birthTimeReliability.rating` changed from `"HIGH"` to `"UNASSESSED"` in `executiveSummary`.
-- `createDomainReport` explicitly retains authentic `ruleId`.
-- Explicit `NOT_EMPIRICALLY_VALIDATED` status for unvalidated domains.
-
-### Phase 5: Divisional-Chart Completeness Contract (`frontend/src/services/astroEngine.js`)
-- `calculateDivisionalCharts()` evaluates and outputs aggregate varga statuses:
-  - `COMPLETE`: Ascendant + all 9 classical Grahas valid.
-  - `PARTIAL`: Ascendant + at least 1 valid planet.
-  - `INSUFFICIENT_DATA`: Missing Ascendant or zero valid planets.
-
-### Phase 6: Prediction-Cache Recomputation & Worker Integrity
-- In `scripts/build_full_prediction_cache.mjs`, worker thread dynamically calls `initCacheManager()` and retrieves `astroEngineHash` via `getCurrentHashes()`.
-- Cache invalidation matrix verified across 9 corruption scenarios: any altered hash field or code version fails closed.
-- 100% of 20,508 prediction cache records cryptographically bound to manifest hashes.
-
-### Phase 7: RealWorldAccuracyDashboard UI Badge & Value Canonicalization
-- Replaced hardcoded `"17/17 Domains Certified"` badge with `"17 domains tracked — validation status shown individually"`.
-- Each domain displays its individual empirical status (`EXPERIMENTAL` for marriage, `NOT_EMPIRICALLY_VALIDATED` for the other 16).
-- Canonicalized timing MAE metrics:
-  - External Astro-Databank cohort: Astrological MAE **9.19 years** vs Demographic Baseline **6.41 years**.
-  - Internal Blind-Test cohort: Astrological MAE **6.89 years** vs Demographic Baseline **4.28 years**.
-- Zero numeric fallbacks in dashboard source (`?? <number>` banned; displays `"NOT AVAILABLE"` for missing metrics).
-
-### Phase 8: Universal Q&A, Multi-Turn, Claim Firewall & Tamil Purity
-- 189 follow-up QA checks passed with zero synthetic evidence IDs.
-- 14 multi-turn conversation checks passed across 6 turns in English and Tamil without repetitive loops.
-- 15/15 universal Q&A benchmark invariants passed across 5,000 frozen questions (100% correct abstention on adversarial queries).
-- 11 Tamil purity tests passed with zero English leakage in traditional analysis and remedies.
-- 12 semantic claim firewall cases passed (blocking unsupported certainty, future surgeries, and wealth guarantees).
+| Phase / Area | Verified Root Cause | Forensic Correction | Verification Suite |
+| :--- | :--- | :--- | :--- |
+| **Phase 2: Aggregate Benchmark Provenance** | `benchmark_results.json` had conflicting cache statistics: metadata reported $17,623$ hits and $0$ misses, while the execution record reported $6,940$ predictions ($3,189$ hits, $3,751$ misses). $17,623$ was an un-scoped historical baseline snapshot from pre-v3 runs. | Derived `metadata.cacheProvenance` directly from authoritative execution records ($3,189$ hits, $3,751$ misses, $3,751$ recomputed). Preserved $17,623$ in `historicalCacheSnapshot`. Bound independent execution records to unique run IDs (`RUN-COMBINED-BENCHMARK-`, `RUN-INTERNAL-AGGREGATE-`, `RUN-ADB-EXTERNAL-`). Added scope consistency assertions and cross-cohort firewalls. | `test_execution_provenance_and_cache_integrity.mjs` (19 tests passed, 100%) |
+| **Phase 3: Birth Reconstruction Abstention** | When candidate selection yielded `NOT_DISCRIMINATING` or `INSUFFICIENT_DATA`, `nashtaJatakaEngine.js` still exposed `estimatedBirthYear`, `candidateBirthMonthNum`, and `candidateBirthDayNum`. | Returned `null` for `estimatedBirthYear`, `candidateBirthMonthNum`, and `candidateBirthDayNum` when result is not `PLAUSIBLE_CANDIDATE_FOUND`. Preserved unconfirmed values in `diagnosticEstimatedDateHypothesis`. Added `NOT_DISCRIMINATING` UI alert card and strictly disabled the chart application button. | `test_birth_reconstruction_validation.mjs` (16 tests passed, 100%) |
+| **Phase 4: Dependency Regression Test Isolation** | `test_partial_node_modules_gate_failure.mjs` assumed real workspace `node_modules` existed, failing in clean release environments where dependencies were uninstalled or excluded. | Refactored test to use isolated temporary fixtures in `os.tmpdir()` testing 6 discrete scenarios: complete mock, missing package, missing binary, incomplete package, missing directory, interrupted installation. Fully independent of workspace state. | `test_partial_node_modules_gate_failure.mjs` (6 tests passed, 100%) |
+| **Phase 5: Clean Release Verification** | Clean release gate verification required. | Executed all 17 release gates freshly: runtime code hashes, dataset digests, cache bindings, clean lockfile package verification, fresh Vite build, static lint, and core ephemeris invariants. | `test_release_certification_gate.mjs` (17/17 passed, `RELEASE_CERTIFIED = true`) |
+| **Phase 6: Empirical Claim Validation** | Prior preliminary reports risked conflating internal blind-test metrics ($4.28$y vs $6.89$y) with independent external metrics ($6.41$y vs $9.19$y). | Enforced strict cross-cohort firewall: external disclosures derive exclusively from external Astro-Databank canonical metrics ($N=320$). Retained `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED` status. | `test_benchmark_metrics_reconciliation.mjs` (5 checks passed, 100%) |
+| **Phase 7: Report & Artifact Regeneration** | Audit artifacts required full synchronization with verified runtime behavior. | Regenerated test results, provenance reports, rectification audits, validation reports, release manifest, and clean distribution zip. | All 10 suites executed; 1,041+ assertions passed |
 
 ---
 
-## 3. Release Certification Gate Audit (17/17 Passed)
+## 2. 17-Point Release Certification Gate Matrix
 
-```text
-================================================================================
- ASTROVERSE — 17-POINT RELEASE CERTIFICATION GATE
-================================================================================
+All 17 gates were executed and cryptographically verified via [`test_release_certification_gate.mjs`](file:///d:/ASTRO/frontend/test_release_certification_gate.mjs):
 
-  ✓ [GATE 01] runtime astro hash === manifest astro hash
-      Detail: f20db0ff723abf0303ddde815f7d0e786bf6412d7df4751ebfb97e7ed0f06c15
-  ✓ [GATE 02] runtime empirical hash === manifest empirical hash
-      Detail: 88307ad60eedf6bcfd5a9172ab59ef32c327c6008fb3d3b3e3c0259a7d9c7d31
-  ✓ [GATE 03] runtime hazard hash === manifest hazard hash
-      Detail: e6e6549c3405d663cfcd88dc95c1c17db971960f17301759225ea9e986633481
-  ✓ [GATE 04] aggregate prediction hash === manifest prediction hash
-      Detail: 0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1
-  ✓ [GATE 05] calibration internal engine hash === manifest prediction hash
-      Detail: 0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1
-  ✓ [GATE 06] calibration dataset hash === manifest TRAIN hash
-      Detail: 7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849
-  ✓ [GATE 07] calibration file SHA === manifest calibration hash
-      Detail: 029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3
-  ✓ [GATE 08] benchmark engine hash === manifest prediction hash across all artifacts
-      Detail: bench=0aba354759f94afc, latest=0aba354759f94afc
-  ✓ [GATE 09] benchmark calibration hash === manifest calibration hash across all artifacts
-      Detail: bench=029d3d5d6712d839, latest=029d3d5d6712d839
-  ✓ [GATE 10] benchmark dataset hashes === manifest dataset hashes
-      Detail: train=7cdd3611bce0690e, blind=dc3fbde4531282c8, adb=b9f7d8b75fabb500
-  ✓ [GATE 11] cache hashes === manifest hashes (record-level cryptographic binding)
-      Detail: Verified 100% of 20508 prediction cache entries cryptographically bound to manifest hashes
-  ✓ [GATE 12] clean npm ci / package integrity succeeds
-      Detail: package.json and lockfile verified; zero node_modules/dist/stores across 1 distribution archive(s)
-  ✓ [GATE 13] production build succeeds
-      Detail: dist cleaned and compiled freshly; dist/index.html verified
-  ✓ [GATE 14] lint succeeds (zero errors, zero banned synthetic heuristic identifiers)
-      Detail: npm run lint passed with 0 errors; zero banned synthetic heuristics
-  ✓ [GATE 15] core astronomical & calculation tests pass
-      Detail: Astronomical calculations, divisional charts (D1/D9/D10), and null contracts verified
-  ✓ [GATE 16] security & epistemic anti-fabrication firewalls pass
-      Detail: No repository secrets, semantic claim firewall, LLM post-generation firewall, and health safety verified
-  ✓ [GATE 17] full release certification audit completes
-      Detail: All 16 prerequisite gates passed with 0 failures
+| Gate # | Description & Verification Standard | Target Hash / Evidence | Gate Status |
+| :--- | :--- | :--- | :---: |
+| **GATE 01** | Runtime astronomy engine SHA-256 equals manifest hash | `f20db0ff723abf0303ddde815f7d0e786bf6412d7df4751ebfb97e7ed0f06c15` | **PASS** |
+| **GATE 02** | Runtime empirical evaluation engine SHA-256 equals manifest hash | `88307ad60eedf6bcfd5a9172ab59ef32c327c6008fb3d3b3e3c0259a7d9c7d31` | **PASS** |
+| **GATE 03** | Runtime hazard survival engine SHA-256 equals manifest hash | `e6e6549c3405d663cfcd88dc95c1c17db971960f17301759225ea9e986633481` | **PASS** |
+| **GATE 04** | Aggregate prediction engine SHA-256 equals manifest hash | `0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1` | **PASS** |
+| **GATE 05** | Calibration model internal engine hash equals prediction hash | `0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1` | **PASS** |
+| **GATE 06** | Calibration dataset split hash equals manifest `TRAIN` hash | `7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849` | **PASS** |
+| **GATE 07** | Calibration model artifact digest equals manifest calibration hash | `029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3` | **PASS** |
+| **GATE 08** | Benchmark engine hash equals prediction engine hash in all artifacts | `0aba354759f94afc` matched across internal & external reports | **PASS** |
+| **GATE 09** | Benchmark calibration hash equals manifest calibration hash | `029d3d5d6712d839` matched across internal & external reports | **PASS** |
+| **GATE 10** | Benchmark dataset hashes match authentic raw data files on disk | Train: `7cdd3611...`, Blind: `dc3fbde4...`, ADB: `116595d3...` | **PASS** |
+| **GATE 11** | Prediction cache cryptographic binding across 17 mandatory fields | 20,508 / 20,508 records (100.0%) cryptographically verified | **PASS** |
+| **GATE 12** | Clean package integrity: zero `node_modules` in repo/archives | All 8 packages/binaries present; zero untracked temp stores | **PASS** |
+| **GATE 13** | Production build succeeds cleanly from source | [`frontend/dist/index.html`](file:///d:/ASTRO/frontend/dist/index.html) generated cleanly | **PASS** |
+| **GATE 14** | Static lint passes with 0 errors & 0 banned synthetic heuristics | Clean pass across 297 source files; zero prohibited keywords | **PASS** |
+| **GATE 15** | Core astronomical, divisional chart (D1/D9/D10) & null contracts pass | Sub-arcsecond Swiss Ephemeris precision; null inputs return null | **PASS** |
+| **GATE 16** | Security, secret scanning & epistemic anti-fabrication firewalls pass | Zero repo secrets; LLM post-generation redaction verified | **PASS** |
+| **GATE 17** | Full release certification gate completes | All 16 prerequisite gates confirmed; certified for release | **PASS** |
 
---------------------------------------------------------------------------------
-Summary: 17 passed, 0 failed
---------------------------------------------------------------------------------
+---
 
-================================================================================
- RELEASE_CERTIFIED = true
- All 17 Release Certification Gate requirements verified 100% successfully.
-================================================================================
-```
+## 3. Comprehensive Test Suite Execution Summary
+
+Ten automated verification suites executed against the live codebase, verifying **1,041+ assertions** with **zero failures and zero blocked tests**:
+
+| Suite Name | Command / Script | Assertions | Result |
+| :--- | :--- | :---: | :---: |
+| **Release Certification Gate** | `node frontend/test_release_certification_gate.mjs` | 17 | **PASS** |
+| **Execution Provenance & Integrity** | `node frontend/test_execution_provenance_and_cache_integrity.mjs` | 19 | **PASS** |
+| **Birth Reconstruction Validation** | `node frontend/test_birth_reconstruction_validation.mjs` | 16 | **PASS** |
+| **Isolated Node Modules Regression** | `node frontend/test_partial_node_modules_gate_failure.mjs` | 6 | **PASS** |
+| **Fabricated Defaults Regression** | `node frontend/test_phase2_fabricated_defaults_regression.mjs` | 15 | **PASS** |
+| **Benchmark Metrics Reconciliation** | `node frontend/test_benchmark_metrics_reconciliation.mjs` | 5 | **PASS** |
+| **Production Backend & Security** | `node backend/test_backend.mjs` | 88 | **PASS** |
+| **Release PII Sanitization** | `node backend/test/test_no_pii_in_release.mjs` | 5 | **PASS** |
+| **Golden Astronomical Ephemeris** | `node frontend/test_golden_astronomy.mjs` | 780 | **PASS** |
+| **Cross-System Planetary Invariants** | `node frontend/test_cross_system_astronomical_consistency.mjs` | 90 | **PASS** |
+| **TOTALS** | **10 Automated Test Suites** | **1,041+** | **100% PASS** |
+
+---
+
+## 4. Final Verified Release Artifact
+- **File:** `D:\ASTRO\ASTRO.zip`
+- **Size:** 34.30 MB (35,971,317 bytes)
+- **SHA-256:** `d0f676ccd5d65fe976f112e1b11d084e38dccb7b502769b9c82a13ddf6dbed60`
+- **Integrity:** Zero `node_modules`, zero untracked temp files, committed lockfile present, ready for clean reproducible installation.

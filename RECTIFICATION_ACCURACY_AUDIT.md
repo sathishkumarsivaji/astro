@@ -1,86 +1,113 @@
-# ASTROVERSE — Evidence-Based Birth-Time Rectification Accuracy & Technical Audit
+# ASTROVERSE — Birth-Time Rectification (Nashta Jataka) Accuracy & Abstention Audit
 
-**Date**: October 2, 2026  
-**Module**: Birth-Time Rectification & Statistical Evidence Engine  
-**Status**: Independently Audited & Corrected (Production Standard)
-
----
-
-## 1. Executive Summary
-
-A comprehensive forensic audit and methodological overhaul of the **Birth-Time Rectification** system in ASTROVERSE was conducted. While the underlying astronomy engine provides high-precision ephemeris calculations (Sun MAE 3.55″, Moon MAE 9.74″, Moon max 63.27″ vs Swiss Ephemeris 2.10.03), this audit addressed specific methodological vulnerabilities in the rectification and candidate evaluation layer.
-
-All 10 independent review points have been fully addressed:
-1. **Window Margin Integrity**: Search grids (coarse & fine) are strictly clamped within $[T_{\text{approx}} - \text{margin}, T_{\text{approx}} + \text{margin}]$. Windows $\le 60$ minutes utilize direct 1-minute discrete grids.
-2. **Permutation Null Distribution Test**: Incorporates a $K=200$ permutation null distribution test over shuffled event dates and categories. Resolution is declared `NOT_DISCRIMINATING` and `centralEstimate = null` unless peak score statistically exceeds the 95th percentile ($p \le 0.05$).
-3. **Edge-of-Window Detection**: If peak candidate lies within $\le 2$ minutes of the search window boundary, resolution is marked `AT_SEARCH_BOUNDARY`, `centralEstimate` is nulled, and the user is prompted to widen the search range.
-4. **SYNTHETIC SELF-CONSISTENCY / GROUND-TRUTH RECOVERY TEST**: Verified that synthetic ground-truth birth time $T$ generates chart-dependent events (Dasha + transits) that recover $T$ within $\le 3$ minutes under algorithmic self-consistency. **SCIENTIFIC DISCLAIMER: Synthetic recovery demonstrates algorithm self-consistency only and DOES NOT establish real-world prospective predictive accuracy.**
-5. **Canonical Varga Sensitivity Analysis**: Perturbations ($\pm 1, \pm 5, \pm 10$ mins) compute actual $D_1, D_9, D_{60}$ lagna signs via `buildCanonicalVarga`. Missing coordinates return `computed: false, sensitivityLevel: null`.
-6. **Cross-Validation (LOEO) Semantics**: Held-out pass criterion requires candidate time error $\le 10.0$ minutes, held-out score $\ge 12$, and no contradiction. Overfit risk or low stability caps evidence strength at `LOW`.
-7. **Elimination of Astronomical Fallbacks**: All `?? 0` fallbacks on Ascendant longitudes have been purged across all 9 evaluators and adapters, returning `INSUFFICIENT_DATA` if Ascendant is uncalculated.
-8. **Tightened Custom-Event Scoring**: Removed unconditional base points; points are strictly contingent on tight lagna transits ($\le 4.0^\circ$) or Lagna lord Dasha.
-9. **ScoringEngine Weight Enforcement**: Evidence group weights are strictly applied as normalized weighted averages across life domain groups.
-10. **UI Resolution Gate**: The "Apply Rectified Time" action in `BirthTimeRectificationLab.jsx` is strictly gated to `resolution === "MINUTE_LEVEL"`.
+**Audit Date:** October 12, 2026  
+**Release Version:** 3.0.0  
+**Model Version:** 2.2.0  
+**Auditor:** Senior Software Verification Engineer, Statistical Validation Specialist & Astronomy-Engine Auditor  
+**Epistemic Certification:** `EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED`
 
 ---
 
-## 2. Astronomical Precision & Ephemeris Baseline
+## 1. Executive Summary & Epistemic Verdict
 
-The ASTROVERSE astronomical calculations operate on high-precision numerical ephemeris models benchmarked against Swiss Ephemeris 2.10.03 (120 independent benchmark checks across 1900–2100):
+Birth-time reconstruction (*Nashta Jataka*) is an inverse estimation problem: attempting to recover unknown birth dates, times, and rising signs (*Lagna*) from reported milestone events (education, marriage, employment, relocation) and physical palm characteristics.
 
-| Celestial Body | Benchmark Mean Absolute Error (MAE) | Median Residual | Max Residual | Frame / Model |
-|---|---|---|---|---|
-| **Sun** | 3.55″ (0.000986°) | 0.79″ | 14.19″ | VSOP87 Geocentric True Ecliptic |
-| **Moon** | 9.74″ (0.002706°) | 3.03″ | 63.27″ | ELP-2000/82 Lunar Theory |
-| **Mars** | 4.08″ (0.001133°) | 2.05″ | 14.25″ | VSOP87 Planetary Theory |
-| **Mercury** | 4.51″ (0.001253°) | 1.50″ | 16.88″ | VSOP87 Planetary Theory |
-| **Jupiter** | 5.32″ (0.001478°) | 4.22″ | 16.94″ | VSOP87 Planetary Theory |
-| **Venus** | 4.05″ (0.001125°) | 1.85″ | 14.07″ | VSOP87 Planetary Theory |
-| **Saturn** | 5.78″ (0.001606°) | 5.15″ | 13.21″ | VSOP87 Planetary Theory |
-| **Mean Lunar Node** | 7.52″ (0.002089°) | 5.65″ | 17.73″ | Chapront (2002) Polynomial Model |
-| **True Lunar Node** | 8.07″ (0.002242°) | 5.55″ | 19.05″ | Osculating State Vector Perturbations |
-| **Ascendant** | 0.81″ (0.000225°) | 0.23″ | 4.06″ | Sidereal True Ecliptic Calculation |
+### Critical Verdict:
+1. **Synthetic Unit Tests Do Not Prove Real-World Predictive Validity**: The automated test suites demonstrate numerical convergence, fail-closed abstention, and schema contract conformance. However, **the repository contains zero annotated real human palm photographs linked to verified civil hospital birth certificates**. Passing synthetic tests confirms software implementation stability, **not** real-world birth-time estimation accuracy.
+2. **Abstention & Nullification of Unconfirmed Birth Dates**:
+   - A critical defect in prior releases was that when candidate evaluation returned `status: "NOT_DISCRIMINATING"` or `INSUFFICIENT_DATA`, the return object still exposed `estimatedBirthYear`, `candidateBirthMonthNum`, and `candidateBirthDayNum`.
+   - **Remediation**: When candidate evaluation does not yield `status: "PLAUSIBLE_CANDIDATE_FOUND"`, the engine strictly returns `estimatedBirthYear: null`, `candidateBirthMonthNum: null`, `candidateBirthDayNum: null`, `candidateMonthWindow: null`, `timeWindow: null`, `probableLagna: null`, and `probableMoonRashi: null`. Unconfirmed diagnostic hypothesis numbers are sequestered under `diagnosticEstimatedDateHypothesis` with clear warnings.
+3. **Decoupling of Palm Analysis**: Because consumer 2D smartphone photographs cannot physically measure 3D palmar mount elevation, the static palm profile and placeholder image analysis have been **completely decoupled from candidate Lagna scoring** (`candidateScoringApplicable: false`). Palm analysis is presented solely as an illustrative reference (`isIllustrativeReferenceOnly: true`).
+4. **Elimination of Unsupported Precision & Error Margins**: Fabricated error margins ($\pm 3$, $\pm 4$, $\pm 5$ months) and the UI counter (`liveErrorMarginMonths`) have been completely eliminated. All reconstructed birth windows are labeled as `UNCALIBRATED_HEURISTIC_ESTIMATE` with `errorMarginStatus: "UNCALIBRATED"`.
+5. **User Agency & Confirmation Gate**: The wizard UI strictly disables the "Generate Natal Chart With This Time" button unless `result.status === "PLAUSIBLE_CANDIDATE_FOUND"`. Even then, it enforces an un-bypassable modal confirmation prompt (`window.confirm`) with statutory disclosures before applying the estimated chart to the active session.
 
 ---
 
-## 3. Core Rectification Architecture
+## 2. Forensic Analysis of Past Deficiencies & Remediations
 
-### 3.1 Candidate Generator (`candidateGenerator.js`)
-- Full DateTime object representations (`localDate`, `localTime`, `utcInstant`, `timezoneId`, `utcOffset`, `totalMinutes`, `minuteOffset`).
-- Midnight rollover and rollback safety across forward and backward civil date boundaries.
-- Strict margin clamping to input bounds $[T_{\text{center}} - \text{margin}, T_{\text{center}} + \text{margin}]$.
+### 2.1 The Premature Date Exposure Defect
+- **Original Defect:** In `nashtaJatakaEngine.js`, when candidate scores were flat or weakly separated ($\Delta < 3.0$), the engine marked `status = "NOT_DISCRIMINATING"`, yet returned `estimatedBirthYear: candidateBirthYear, candidateBirthMonthNum, candidateBirthDayNum`. UI consumers or API callers could therefore misinterpret this as a confirmed estimated birth date.
+- **Remediation:**
+  ```javascript
+  // In nashtaJatakaEngine.js (fail-closed return for NOT_DISCRIMINATING / INSUFFICIENT_DATA):
+  estimatedBirthYear: null,
+  candidateBirthMonthNum: null,
+  candidateBirthDayNum: null,
+  diagnosticEstimatedDateHypothesis: {
+    unconfirmedBirthYear: candidateBirthYear,
+    unconfirmedBirthMonthNum: candidateBirthMonthNum,
+    unconfirmedBirthDayNum: candidateBirthDayNum,
+    note: "Diagnostic hypothesis only; unconfirmed and unusable as estimated birth date due to non-discriminating or insufficient astrological candidate separation."
+  },
+  candidateMonthWindow: null,
+  timeWindow: null,
+  probableLagna: null,
+  probableMoonRashi: null
+  ```
 
-### 3.2 Canonical Varga Adapter (`rectificationVargaAdapter.js`)
-- Preserves absolute planetary identities across all 16 vargas ($D_1..D_{60}$).
-- Eliminates schema collisions between $D_1$ signs and divisional harmonic signs.
+### 2.2 UI Consumer Audit (`BirthRecoveryWizard.jsx`)
+- **Banner Added:** An explicit high-visibility warning banner is rendered for `NOT_DISCRIMINATING`:
+  *"Non-Discriminating Candidate Separation (NOT_DISCRIMINATING): The evaluated astrological candidates do not exhibit sufficient score separation (< 3.0 points). Reconstructed birth date and birth time are withheld to prevent applying ambiguous results."*
+- **Action Guard:** The action button is strictly disabled:
+  ```jsx
+  disabled={result.status !== "PLAUSIBLE_CANDIDATE_FOUND" || !result.timeWindow?.mostProbable || !result.candidateMonthWindow?.exactEstimatedDOB}
+  ```
+  Attempting to apply an unresolved chart triggers an immediate alert and aborts.
 
-### 3.3 Historical Transit & Dasha Calculators (`transitCalculator.js`, `dashaTimingCalculator.js`)
-- Calculates authentic historical ephemeris positions of Jupiter, Saturn, Rahu, Ketu, and Mars at the exact Julian Day of historical events.
-- Evaluates 3-tier Vimshottari Dasha (Mahadasha, Antardasha, Pratyantardasha) active periods.
+### 2.3 The Hardcoded Palm Profile Problem
+- Disabled palm mount score contribution in `reverseCalculateBirthTimeAndDOB`. Palm features add exactly **0 points** to candidate Lagna rankings.
+- In `analyzeDualPalmsForBirthRecovery`, returned metadata explicitly sets:
+  ```json
+  {
+    "isIllustrativeReferenceOnly": true,
+    "imageFeaturesExtracted": false,
+    "isPersonalizedAnalysis": false,
+    "mountElevationMeasured": false,
+    "candidateScoringApplicable": false,
+    "biometricStatus": "UNCALIBRATED_REFERENCE_TEMPLATE"
+  }
+  ```
+- Neutralized medical claims: surgical and health references were excised from palm analysis outputs.
 
-### 3.4 Permutation Null Test Engine (`permutationEngine.js`)
-- Runs 200 randomized permutations of event dates and categories to compute an empirical null distribution.
-- Computes empirical percentile and $p$-value ($p \le 0.05$ required for discriminating resolution).
-
-### 3.5 Stability & Resolution Analyzer (`stabilityAnalyzer.js`)
-- Evaluates chronological run-length stability with a 5% threshold (`maxScore * 0.95`).
-- Requires candidate count $\ge 2$ for stable regions (isolated spikes classified as `ISOLATED_SPIKE`).
-- Nulls `centralEstimate` for multimodal, non-discriminating, interval, or boundary conditions.
+### 2.4 Chronological Inconsistencies & Weak Score Separation
+- Contradictory event dates (e.g., 12th board in 2008, 10th board in 2010) immediately return `status: "INSUFFICIENT_DATA"` and `candidateStability: "CONTRADICTORY_DATES"`, with all birth date and time fields null.
+- Weak score separation between candidate rising signs ($\Delta < 3.0$) returns `status: "NOT_DISCRIMINATING"`.
+- Dates outside $1900 \le \text{year} \le 2100$ fail closed.
 
 ---
 
-## 4. Verification Test Suites
+## 3. Automated Validation Suite Verification (16/16 Passed)
 
-The following test suites verify the complete rectification pipeline:
+The validation suite `frontend/test_birth_reconstruction_validation.mjs` executes 16 automated test checks with 100% pass rate:
 
-1. `test_rectification_margin.mjs`: Clamping over 1m, 5m, 20m search windows.
-2. `test_rectification_null_distribution.mjs`: Permutation null distribution and noise rejection.
-3. `test_rectification_edge_boundary.mjs`: `AT_SEARCH_BOUNDARY` detection.
-4. `test_rectification_known_ground_truth.mjs`: Synthetic ground truth recovery.
-5. `test_rectification_d9_identity.mjs`, `d10_identity.mjs`, `d7_identity.mjs`: Varga planet identity preservation.
-6. `test_rectification_flat_score.mjs`: Flat score detection.
-7. `test_rectification_multipeak.mjs`: Multimodal peak separation.
-8. `test_rectification_loeo.mjs`, `test_rectification_holdout.mjs`: Cross-validation.
-9. `test_rectification_transit_accuracy.mjs`: Historical transit calculation.
-10. `test_rectification_midnight_boundary.mjs`: Date rollover.
-11. `test_rectification_timezone_dst.mjs`: IANA timezone and DST resolution.
+| Test Case | Description | Result |
+| :--- | :--- | :---: |
+| **Check 1A** | Zero life events returns `INSUFFICIENT_DATA` and `null` chart fields | **PASS** |
+| **Check 1B** | Missing location coordinates returns `INSUFFICIENT_DATA` | **PASS** |
+| **Check 2A** | Answer with year only sets `month: null` and $T = \text{year} + 0.5$ | **PASS** |
+| **Check 2B** | Answer with explicit month preserves exact fractional month | **PASS** |
+| **Check 3A** | `analyzeDualPalmsForBirthRecovery` discloses unmeasured 2D elevation | **PASS** |
+| **Check 3B** | Palm mounts do not influence candidate scores in `reverseCalculateBirthTimeAndDOB` | **PASS** |
+| **Check 4A** | Question registry matches authoritative question IDs | **PASS** |
+| **Check 4B** | Career (`q6_first_job`) and Marriage (`q13_marriage`) activate Dasha alignment scoring | **PASS** |
+| **Check 5A** | Single event produces `INSUFFICIENT_DATA`, `AMBIGUOUS_MULTI_CANDIDATE`, and null date fields | **PASS** |
+| **Check 5B** | Multiple consistent anchors yield `PLAUSIBLE_CANDIDATE_FOUND` with honest notices | **PASS** |
+| **Check 5C** | Chronologically contradictory dates produce `INSUFFICIENT_DATA`, `CONTRADICTORY_DATES`, and null date fields | **PASS** |
+| **Check 5D** | Invalid dates (out of range years) fail closed with `INSUFFICIENT_DATA` and null date fields | **PASS** |
+| **Check 5E** | Timezone boundaries (-12 to +14) compute safely without crashing | **PASS** |
+| **Check 5F** | Weak candidate score separation returns `NOT_DISCRIMINATING` and null birth date/time | **PASS** |
+| **Check 5G** | Synthetic placeholder palm images produce illustrative non-personal profile | **PASS** |
+| **Check 5H** | Tied candidates and unresolvable dates cannot expose usable estimated birth date | **PASS** |
+
+---
+
+## 4. Required Real-World Validation Protocol
+
+Before claiming real-world birth-time rectification accuracy, the following empirical validation protocol must be executed:
+1. **IRB-Compliant Consented Cohort**: A prospective sample of at least $N = 500$ subjects with official hospital-issued birth certificates with recorded minute-precision delivery times.
+2. **Standardized Photographic Protocol**: Calibrated high-resolution stereoscopic 3D imagery of palmar surfaces under controlled lighting with millimeter scale references.
+3. **Double-Blind Event Collection**: Blinded recording of major chronological life events (education, marriage, surgery, career promotions, relocations) with documentary verification.
+4. **Independent Holdout Evaluation**: Strict partitioning into training, tuning, and blind holdout cohorts.
+5. **Comparative Baselines**: Comparison against non-astrological demographic median baselines.
+
+Until such a protocol is independently conducted and peer-reviewed, ASTROVERSE strictly designates all birth reconstruction outputs as **EXPERIMENTAL HEURISTIC HYPOTHESES**.
