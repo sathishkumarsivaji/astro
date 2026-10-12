@@ -929,9 +929,15 @@ export function reverseCalculateBirthTimeAndDOB({
       calibrationStatus: "UNCALIBRATED",
       candidateResolution: "2_HOUR_LAGNA_STEP",
       heuristicCandidateRanking: bestCandidate ? bestCandidate.rank : null,
-      estimatedBirthYear: candidateBirthYear,
-      candidateBirthMonthNum,
-      candidateBirthDayNum,
+      estimatedBirthYear: null,
+      candidateBirthMonthNum: null,
+      candidateBirthDayNum: null,
+      diagnosticEstimatedDateHypothesis: {
+        unconfirmedBirthYear: candidateBirthYear,
+        unconfirmedBirthMonthNum: candidateBirthMonthNum,
+        unconfirmedBirthDayNum: candidateBirthDayNum,
+        note: "Diagnostic hypothesis only; unconfirmed and unusable as estimated birth date due to non-discriminating or insufficient astrological candidate separation."
+      },
       candidateMonthWindow: null,
       timeWindow: null,
       probableLagna: null,

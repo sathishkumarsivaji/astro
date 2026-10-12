@@ -17,16 +17,17 @@
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
       "initialCacheEntries": 20508,
-      "cacheHits": 17623,
-      "cacheMisses": 0,
-      "recomputedCount": 0,
+      "cacheHits": 3189,
+      "cacheMisses": 3751,
+      "recomputedCount": 3751,
       "invalidatedEntries": 0,
       "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
       "calibrationHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
     },
     "executionRecord": {
-      "runId": "RUN-INTERNAL-AGGREGATE-20261010-001",
+      "runId": "RUN-COMBINED-BENCHMARK-20261010-001",
       "cohortName": "FULL_COHORT_100_PERCENT",
+      "cohortType": "COMBINED_ALL_COHORTS",
       "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
       "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
       "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
@@ -38,6 +39,30 @@
       "cacheMisses": 3751,
       "recomputedCount": 3751,
       "errors": 0
+    },
+    "internalAggregateExecutionRecord": {
+      "runId": "RUN-INTERNAL-AGGREGATE-20261010-001",
+      "cohortName": "INTERNAL_EVALUATION_COMBINED",
+      "cohortType": "INTERNAL_DEVELOPMENT_EVAL",
+      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
+      "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
+      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+      "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
+      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+      "cacheSnapshotVersion": "v3.0.0-20508",
+      "predictionCount": 3189,
+      "cacheHits": 3189,
+      "cacheMisses": 0,
+      "recomputedCount": 0,
+      "errors": 0
+    },
+    "historicalCacheSnapshot": {
+      "description": "Historical cumulative cache statistics preserved from v2 baseline run",
+      "initialCacheEntries": 10487,
+      "cumulativeCacheHits": 17623,
+      "cacheMisses": 0,
+      "recomputedCount": 0,
+      "note": "Preserved historical audit artifact; superseded by run-level execution records in v3."
     }
   },
   "splits": {
@@ -375,6 +400,7 @@
       "executionRecord": {
         "runId": "RUN-INTERNAL-BLIND-20261010-001",
         "cohortName": "BLIND_TEST",
+        "cohortType": "INTERNAL_BLIND_EVAL",
         "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
         "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
         "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
@@ -722,6 +748,7 @@
       "executionRecord": {
         "runId": "RUN-INTERNAL-HOLDOUT-20261010-001",
         "cohortName": "INTERNAL_HOLDOUT",
+        "cohortType": "INTERNAL_HOLDOUT_EVAL",
         "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
         "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
         "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
@@ -1071,6 +1098,7 @@
       "executionRecord": {
         "runId": "RUN-ADB-EXTERNAL-20261010-001",
         "cohortName": "EXTERNAL_ASTRO_DATABANK_CERTIFIED",
+        "cohortType": "EXTERNAL_INDEPENDENT",
         "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
         "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
         "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",

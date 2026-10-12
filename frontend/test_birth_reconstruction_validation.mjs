@@ -232,6 +232,9 @@ async function main() {
 
     assert.strictEqual(res.status, "INSUFFICIENT_DATA");
     assert.strictEqual(res.candidateStability, "AMBIGUOUS_MULTI_CANDIDATE");
+    assert.strictEqual(res.estimatedBirthYear, null, "Single event must not expose usable estimated birth year");
+    assert.strictEqual(res.candidateBirthMonthNum, null, "Single event must not expose usable candidate birth month");
+    assert.strictEqual(res.candidateBirthDayNum, null, "Single event must not expose usable candidate birth day");
   });
 
   await check("5B. Multiple consistent anchors yield PLAUSIBLE_CANDIDATE_FOUND with honest notices", () => {
@@ -276,6 +279,9 @@ async function main() {
     assert.strictEqual(res.timeWindow, null);
     assert.strictEqual(res.probableLagna, null);
     assert.strictEqual(res.probableMoonRashi, null);
+    assert.strictEqual(res.estimatedBirthYear, null);
+    assert.strictEqual(res.candidateBirthMonthNum, null);
+    assert.strictEqual(res.candidateBirthDayNum, null);
   });
 
   await check("5D. Invalid dates (out of range years) fail closed with INSUFFICIENT_DATA", () => {
@@ -292,6 +298,7 @@ async function main() {
     assert.strictEqual(res.status, "INSUFFICIENT_DATA");
     assert.strictEqual(res.highestRankedCandidate, null);
     assert.strictEqual(res.timeWindow, null);
+    assert.strictEqual(res.estimatedBirthYear, null);
   });
 
   await check("5E. Timezone boundaries (-12 to +14) compute safely without crashing", () => {
@@ -308,7 +315,7 @@ async function main() {
     assert(["PLAUSIBLE_CANDIDATE_FOUND", "NOT_DISCRIMINATING", "INSUFFICIENT_DATA"].includes(resEast.status));
   });
 
-  await check("5F. Weak candidate score separation returns NOT_DISCRIMINATING and null birth time", () => {
+  await check("5F. Weak candidate score separation returns NOT_DISCRIMINATING and null birth date/time", () => {
     // 2 milestones that don't trigger any Dasha career/marriage karakas
     const res = reverseCalculateBirthTimeAndDOB({
       lat: 13.0827,
@@ -327,6 +334,10 @@ async function main() {
       assert.strictEqual(res.timeWindow, null);
       assert.strictEqual(res.probableLagna, null);
       assert.strictEqual(res.probableMoonRashi, null);
+      assert.strictEqual(res.estimatedBirthYear, null, "estimatedBirthYear must be null on NOT_DISCRIMINATING");
+      assert.strictEqual(res.candidateBirthMonthNum, null, "candidateBirthMonthNum must be null on NOT_DISCRIMINATING");
+      assert.strictEqual(res.candidateBirthDayNum, null, "candidateBirthDayNum must be null on NOT_DISCRIMINATING");
+      assert(res.diagnosticEstimatedDateHypothesis, "Must preserve unconfirmed diagnostic date hypothesis");
     }
   });
 
@@ -346,6 +357,21 @@ async function main() {
     const lifeLineMarkers = profile.lines.lifeLine.segmentMarkers;
     const basalMarker = lifeLineMarkers.find(m => m.segment === "Basal quadrant");
     assert(basalMarker && !basalMarker.significance.includes("major surgery"));
+  });
+
+  await check("5H. Tied candidates and unresolvable dates cannot expose usable estimated birth date", () => {
+    // 2 identical uninformative milestones yielding tied candidate rankings
+    const res = reverseCalculateBirthTimeAndDOB({
+      lat: 13.0827, lng: 80.2707, tz: 5.5,
+      answers: { q9_year: "2006", q10_year: "2008" }
+    });
+
+    if (res.status === "NOT_DISCRIMINATING" || res.status === "INSUFFICIENT_DATA") {
+      assert.strictEqual(res.estimatedBirthYear, null);
+      assert.strictEqual(res.candidateBirthMonthNum, null);
+      assert.strictEqual(res.candidateBirthDayNum, null);
+      assert.strictEqual(res.timeWindow, null);
+    }
   });
 
   console.log("\n" + "=".repeat(75));

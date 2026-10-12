@@ -97,13 +97,23 @@ test('1A. Astro-Databank external execution record is intact and verified', () =
   assert.strictEqual(adb.metadata.executionRecord.recomputedCount, 3751);
 });
 
-test('1B. Internal benchmark aggregate execution record is intact and verified', () => {
-  const res = validateExecutionRecord(bench.metadata.executionRecord, 'FULL_COHORT_100_PERCENT', 'RUN-INTERNAL-AGGREGATE-');
+test('1B. Combined benchmark aggregate execution record is intact and verified', () => {
+  const res = validateExecutionRecord(bench.metadata.executionRecord, 'FULL_COHORT_100_PERCENT', 'RUN-COMBINED-BENCHMARK-');
   assert.strictEqual(res.valid, true, res.reason);
   assert.strictEqual(bench.metadata.executionRecord.predictionCount, 1634 + 1555 + 3751);
+  assert.strictEqual(bench.metadata.executionRecord.cacheHits, 1634 + 1555);
+  assert.strictEqual(bench.metadata.executionRecord.cacheMisses, 3751);
 });
 
-test('1C. External validation report execution record matches ADB run', () => {
+test('1C. Internal benchmark aggregate execution record is intact and verified', () => {
+  const res = validateExecutionRecord(bench.metadata.internalAggregateExecutionRecord, 'INTERNAL_EVALUATION_COMBINED', 'RUN-INTERNAL-AGGREGATE-');
+  assert.strictEqual(res.valid, true, res.reason);
+  assert.strictEqual(bench.metadata.internalAggregateExecutionRecord.predictionCount, 1634 + 1555);
+  assert.strictEqual(bench.metadata.internalAggregateExecutionRecord.cacheHits, 1634 + 1555);
+  assert.strictEqual(bench.metadata.internalAggregateExecutionRecord.cacheMisses, 0);
+});
+
+test('1D. External validation report execution record matches ADB run', () => {
   const res = validateExecutionRecord(extReport.metadata.executionRecord, 'ASTRO_DATABANK_CERTIFIED_AAA', 'RUN-ADB-EXTERNAL-');
   assert.strictEqual(res.valid, true, res.reason);
   assert.strictEqual(extReport.metadata.executionRecord.runId, adb.metadata.executionRecord.runId);
@@ -118,6 +128,60 @@ test('2A. External benchmark metadata cacheProvenance strictly matches run execu
   assert.strictEqual(meta.cacheHits, run.cacheHits, 'Metadata cacheHits must equal primaryBenchmark cacheHits (0)');
   assert.strictEqual(meta.cacheMisses, run.cacheMisses, 'Metadata cacheMisses must equal primaryBenchmark cacheMisses (3751)');
   assert.strictEqual(meta.recomputedCount, run.recomputedCount, 'Metadata recomputedCount must equal primaryBenchmark recomputedCount (3751)');
+});
+
+test('2B. Aggregate benchmark metadata cacheProvenance strictly derives from execution record', () => {
+  const meta = bench.metadata.cacheProvenance;
+  const exec = bench.metadata.executionRecord;
+  assert.strictEqual(meta.cacheHits, exec.cacheHits, 'Metadata cacheHits must match executionRecord cacheHits (3189)');
+  assert.strictEqual(meta.cacheMisses, exec.cacheMisses, 'Metadata cacheMisses must match executionRecord cacheMisses (3751)');
+  assert.strictEqual(meta.recomputedCount, exec.recomputedCount, 'Metadata recomputedCount must match executionRecord recomputedCount (3751)');
+  assert.strictEqual(bench.metadata.historicalCacheSnapshot.cumulativeCacheHits, 17623, 'Historical baseline cumulative hits must be preserved in historicalCacheSnapshot');
+});
+
+function validateScopeConsistency(metadata) {
+  if (!metadata || !metadata.cacheProvenance || !metadata.executionRecord) {
+    return { valid: false, reason: 'Missing provenance or execution record' };
+  }
+  const cp = metadata.cacheProvenance;
+  const er = metadata.executionRecord;
+  if (cp.cacheHits !== er.cacheHits) {
+    return { valid: false, reason: `Scope contradiction: cacheProvenance.cacheHits (${cp.cacheHits}) !== executionRecord.cacheHits (${er.cacheHits})` };
+  }
+  if (cp.cacheMisses !== er.cacheMisses) {
+    return { valid: false, reason: `Scope contradiction: cacheProvenance.cacheMisses (${cp.cacheMisses}) !== executionRecord.cacheMisses (${er.cacheMisses})` };
+  }
+  if (cp.recomputedCount !== er.recomputedCount) {
+    return { valid: false, reason: `Scope contradiction: cacheProvenance.recomputedCount (${cp.recomputedCount}) !== executionRecord.recomputedCount (${er.recomputedCount})` };
+  }
+  return { valid: true };
+}
+
+test('2C. Scope consistency helper verifies legitimate benchmark metadata', () => {
+  const res = validateScopeConsistency(bench.metadata);
+  assert.strictEqual(res.valid, true, res.reason);
+});
+
+test('2D. Contradictory cache counters within same scope fail validation', () => {
+  const tamperedMeta = {
+    ...bench.metadata,
+    cacheProvenance: {
+      ...bench.metadata.cacheProvenance,
+      cacheHits: 17623 // Stale historical counter injected into run scope
+    }
+  };
+  const res = validateScopeConsistency(tamperedMeta);
+  assert.strictEqual(res.valid, false);
+  assert(res.reason.includes('Scope contradiction'));
+});
+
+test('2E. Internal and external cohorts cannot share datasets or execution counters', () => {
+  const internalRecord = bench.metadata.internalAggregateExecutionRecord;
+  const adbRecord = adb.metadata.executionRecord;
+  assert.notStrictEqual(internalRecord.runId, adbRecord.runId, 'Run IDs must be distinct');
+  assert.strictEqual(internalRecord.cacheMisses, 0, 'Internal aggregate must have zero misses');
+  assert.strictEqual(adbRecord.cacheHits, 0, 'External ADB run must have zero hits');
+  assert(!internalRecord.evaluationDatasetHash.includes('116595d3a3cbdd61'), 'Internal evaluation dataset must NOT include ADB external dataset');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

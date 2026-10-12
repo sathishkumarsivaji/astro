@@ -773,6 +773,23 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
               </div>
             )}
 
+            {/* Non-Discriminating Candidate Alert */}
+            {result.status === "NOT_DISCRIMINATING" && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 text-xs text-rose-900 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold block">
+                    {isTamil ? "லக்ன தெரிவு வேறுபாடின்மை எச்சரிக்கை (NOT_DISCRIMINATING)" : "Non-Discriminating Candidate Separation (NOT_DISCRIMINATING)"}
+                  </span>
+                  <p className="text-stone-700">
+                    {isTamil
+                      ? "உயர்மட்ட லக்ன தேர்வுகளுக்கு இடையே போதுமான வேறுபாடு அமையவில்லை (மதிப்பெண் வேறுபாடு < 3.0). இதனால் பிறந்த தேதி மற்றும் நேரம் உறுதிப்படுத்தப்படாமல் தவிர்க்கப்படுகிறது."
+                      : "The evaluated astrological candidates do not exhibit sufficient score separation (< 3.0 points). Reconstructed birth date and birth time are withheld to prevent applying ambiguous results."}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Candidate Windows Ranking Table */}
             {result.candidateWindows && result.candidateWindows.length > 0 && (
               <div className="space-y-3 pt-2">
@@ -885,8 +902,12 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                   {isTamil ? "மீண்டும் கணக்கிடு" : "Recalculate"}
                 </button>
                 <button
-                  disabled={!result.timeWindow?.mostProbable || result.timeWindow?.status === "INSUFFICIENT_DATA" || result.timeWindow?.status === "NOT_DISCRIMINATING"}
+                  disabled={result.status !== "PLAUSIBLE_CANDIDATE_FOUND" || !result.timeWindow?.mostProbable || !result.candidateMonthWindow?.exactEstimatedDOB}
                   onClick={() => {
+                    if (result.status !== "PLAUSIBLE_CANDIDATE_FOUND" || !result.timeWindow?.mostProbable || !result.candidateMonthWindow?.exactEstimatedDOB) {
+                      alert(isTamil ? "தேர்வு செய்ய போதுமான தனித்துவ லக்ன பொருத்தம் அமையவில்லை (NOT_DISCRIMINATING / INSUFFICIENT_DATA)." : "Candidate search did not isolate a sufficiently discriminating astrological match (NOT_DISCRIMINATING / INSUFFICIENT_DATA).");
+                      return;
+                    }
                     const lat = answers.latitude ?? result.latitude;
                     const lng = answers.longitude ?? result.longitude;
                     if (lat === null || lng === null || lat === undefined || lng === undefined) {
@@ -894,11 +915,7 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                       setCurrentStep(2);
                       return;
                     }
-                    const validCandidateTime = result.timeWindow?.mostProbable ? result.timeWindow.mostProbable.replace(/\s*(AM|PM)/i, "").trim() : null;
-                    if (!validCandidateTime || result.timeWindow?.status === "INSUFFICIENT_DATA" || result.timeWindow?.status === "NOT_DISCRIMINATING") {
-                      alert(isTamil ? "போதுமான தகவல்கள் இல்லாததால் பிறந்த நேரத்தை நிர்ணயிக்க இயலவில்லை (INSUFFICIENT_DATA)." : "Insufficient discriminating data. A valid candidate birth time could not be resolved (INSUFFICIENT_DATA / NOT_DISCRIMINATING).");
-                      return;
-                    }
+                    const validCandidateTime = result.timeWindow.mostProbable.replace(/\s*(AM|PM)/i, "").trim();
 
                     const confirmMsg = isTamil
                       ? `உத்தேச பிறந்த நேரம் (${validCandidateTime}) மற்றும் தேதியை (${result.candidateMonthWindow?.formattedDate || result.candidateMonthWindow?.exactEstimatedDOB}) கொண்டு உங்கள் ஜாதகத்தை கணக்கிட உறுதிப்படுத்துகிறீர்களா?\n\n(குறிப்பு: இது வாழ்க்கை நிகழ்வு காலக்கோடு அடிப்படையிலான சோதனை முறை நஷ்ட ஜாதக கணிப்பு மட்டுமே; சிவில் பிறப்புச் சான்றிதழ் அல்ல).`
@@ -922,7 +939,7 @@ export default function BirthRecoveryWizard({ onApplyEstimatedChart, lang = "en"
                     });
                   }}
                   className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 ${
-                    !result.timeWindow?.mostProbable || result.timeWindow?.status === "INSUFFICIENT_DATA" || result.timeWindow?.status === "NOT_DISCRIMINATING"
+                    result.status !== "PLAUSIBLE_CANDIDATE_FOUND" || !result.timeWindow?.mostProbable || !result.candidateMonthWindow?.exactEstimatedDOB
                       ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
                       : "bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 shadow-amber-500/20 hover:brightness-110"
                   }`}
