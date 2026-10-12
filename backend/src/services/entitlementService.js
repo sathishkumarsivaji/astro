@@ -93,7 +93,7 @@ export function createPaymentOrder(userId, planId, billingPeriod = "one_time", c
 /**
  * Authoritative Webhook Processor with Strict Cryptographic Verification & Replay Protection
  */
-export function processPaymentWebhook({ orderId, paymentId, signature, secretKey, timestamp = null }) {
+export async function processPaymentWebhook({ orderId, paymentId, signature, secretKey, timestamp = null }) {
   // 1. Mandatory Parameter Validation
   if (!orderId || typeof orderId !== "string") {
     throw new Error("Missing required orderId in payment webhook.");
@@ -153,46 +153,30 @@ export function processPaymentWebhook({ orderId, paymentId, signature, secretKey
     };
   }
 
-  // 5. Atomic Entitlement Mutation & Ledger Commit
-  const user = getOrCreateEntitlements(order.userId);
-  const now = new Date();
+  // 5. Atomic Entitlement Mutation & Transaction Ledger Commit
   const validDurationDays = order.billingPeriod === "yearly" ? 365 : 60;
-  const expiresAt = new Date(now.getTime() + validDurationDays * 24 * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + validDurationDays * 24 * 60 * 60 * 1000).toISOString();
 
-  user.subscriptionTier = order.planId;
-  user.isRegistered = true; // Purchasing automatically grants registered status
-  user.validUntil = expiresAt;
-  user.monthlyCredits = (user.monthlyCredits || 0) + (order.creditsToAdd || 0);
-  user.availableCredits = (user.availableCredits || 0) + (order.creditsToAdd || 0);
-  user.pdfExport = true;
-  if (order.planId === "complete_200" || order.planId === "full_100") {
-    user.profilesAllowance = 6;
-  }
-
-  const txRecord = db.recordPaymentTransaction({
+  // Execute database-authoritative payment transaction
+  await db.executePaymentTransaction({
     orderId,
     paymentId,
     userId: order.userId,
-    type: "report_access_payment",
     amountINR: order.amountINR,
-    amountUSD: order.amountUSD,
     currency: order.currency || "INR",
-    creditsAdded: order.creditsToAdd,
+    creditsAdded: order.creditsToAdd || 0,
     planId: order.planId,
-    billingPeriod: order.billingPeriod,
-    timestamp: now.toISOString(),
-    status: "completed"
+    billingPeriod: order.billingPeriod
   });
 
-  user.transactionHistory = user.transactionHistory || [];
-  user.transactionHistory.push(txRecord);
-  db.saveUser(order.userId, user);
-
-  // Mark order as paid
-  order.status = "paid";
-  order.paymentId = paymentId;
-  order.completedAt = now.toISOString();
-  db.saveOrder(orderId, order);
+  const updatedUser = db.getUser(order.userId);
+  if (updatedUser) {
+    updatedUser.validUntil = expiresAt;
+    if (order.planId === "complete_200" || order.planId === "full_100") {
+      updatedUser.profilesAllowance = 6;
+    }
+    db.saveUser(order.userId, updatedUser);
+  }
 
   return {
     success: true,
@@ -201,8 +185,8 @@ export function processPaymentWebhook({ orderId, paymentId, signature, secretKey
     paymentId,
     status: "paid",
     creditsAdded: order.creditsToAdd,
-    newBalance: user.availableCredits,
-    subscriptionTier: user.subscriptionTier,
-    validUntil: user.validUntil
+    newBalance: updatedUser ? updatedUser.availableCredits : 0,
+    subscriptionTier: updatedUser ? updatedUser.subscriptionTier : order.planId,
+    validUntil: updatedUser ? updatedUser.validUntil : expiresAt
   };
 }

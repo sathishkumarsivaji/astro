@@ -287,23 +287,37 @@ export function createSignedSessionToken(userId = null, accountSecret = null, is
     createdAt: new Date(payload.createdAt).toISOString()
   };
   activeSessions.set(sessionToken, session);
+  db.createSessionRecord(sessionToken, effectiveUserId, payload.createdAt + SESSION_TTL_MS);
   getOrCreateEntitlements(effectiveUserId);
   return session;
 }
 
 export function verifySignedSessionToken(token) {
   if (!token || typeof token !== 'string') return null;
+
+  // 1. Check if token has been revoked in database
+  if (db.isSessionRevoked(token)) {
+    activeSessions.delete(token);
+    return null;
+  }
+
   if (activeSessions.has(token)) {
     const session = activeSessions.get(token);
     const sessionAge = Date.now() - new Date(session.createdAt).getTime();
     if (sessionAge < SESSION_TTL_MS) {
+      // Verify user still exists in database
+      const user = db.getUser(session.userId);
+      if (!user) {
+        activeSessions.delete(token);
+        return null;
+      }
       return session;
     }
     activeSessions.delete(token);
     return null;
   }
 
-  // Stateless Verification
+  // Stateless Verification with DB Revocation Check
   const parts = token.split('.');
   if (parts.length !== 2) return null;
   const [b64Payload, signature] = parts;
@@ -318,6 +332,12 @@ export function verifySignedSessionToken(token) {
 
     const payload = JSON.parse(Buffer.from(b64Payload, 'base64url').toString('utf8'));
     if (Date.now() - payload.createdAt > SESSION_TTL_MS) {
+      return null;
+    }
+
+    // Verify user exists
+    const user = db.getUser(payload.userId);
+    if (!user) {
       return null;
     }
 
@@ -418,8 +438,11 @@ app.post('/api/auth/logout', (req, res) => {
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   const token = bearerToken || cookieToken;
-  if (token && activeSessions.has(token)) {
-    activeSessions.delete(token);
+  if (token) {
+    if (activeSessions.has(token)) {
+      activeSessions.delete(token);
+    }
+    db.revokeSession(token);
   }
   const isProd = process.env.NODE_ENV === 'production';
   const secureFlag = isProd ? '; Secure' : '';
@@ -624,7 +647,7 @@ app.post('/api/payment/create-order', authenticateSession, requireDatabaseReady,
   });
 });
 
-app.post('/api/payment/verify-order', authenticateSession, requireDatabaseReady, (req, res) => {
+app.post('/api/payment/verify-order', authenticateSession, requireDatabaseReady, async (req, res) => {
   const { orderId, paymentId, signature } = req.body || {};
   if (!orderId || !paymentId) {
     return res.status(400).json({ error: 'Missing orderId or paymentId parameter.' });
@@ -643,7 +666,7 @@ app.post('/api/payment/verify-order', authenticateSession, requireDatabaseReady,
       effectiveSig = crypto.createHmac('sha256', WEBHOOK_SECRET).update(`${orderId}|${paymentId}`).digest('hex');
     }
 
-    const result = processPaymentWebhook({
+    const result = await processPaymentWebhook({
       orderId,
       paymentId,
       signature: effectiveSig,
@@ -657,7 +680,7 @@ app.post('/api/payment/verify-order', authenticateSession, requireDatabaseReady,
   }
 });
 
-app.post('/api/payment/webhook', requireDatabaseReady, (req, res) => {
+app.post('/api/payment/webhook', requireDatabaseReady, async (req, res) => {
   const { orderId, paymentId, signature, timestamp } = req.body;
   
   if (!orderId || !paymentId) {
@@ -668,7 +691,7 @@ app.post('/api/payment/webhook', requireDatabaseReady, (req, res) => {
   }
 
   try {
-    const result = processPaymentWebhook({
+    const result = await processPaymentWebhook({
       orderId,
       paymentId,
       signature,
@@ -701,22 +724,17 @@ async function handleGenerateAstrology(req, res) {
     });
   }
 
-  const entitlements = getOrCreateEntitlements(req.user.userId);
   const cost = 1;
-  const available = entitlements.availableCredits - entitlements.lockedCredits;
+  const requestId = `req_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
+  const resResult = db.reserveCredits(requestId, req.user.userId, cost, 300);
 
-  if (available < cost) {
+  if (!resResult.success) {
     return res.status(402).json({
       error: 'Insufficient credits. Please recharge your reading balance.',
-      availableCredits: available,
+      availableCredits: resResult.available,
       requiredCredits: cost
     });
   }
-
-  // Lock Credit — persist immediately for crash-safety
-  entitlements.lockedCredits += cost;
-  const txId = `tx_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-  db.saveUser(req.user.userId, entitlements); // Persist lock BEFORE external API call for crash-recovery durability
 
   try {
     const models = [
@@ -745,11 +763,16 @@ async function handleGenerateAstrology(req, res) {
           }
         };
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify(body),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();
@@ -770,27 +793,17 @@ async function handleGenerateAstrology(req, res) {
       throw lastError || new Error('All AI model candidate attempts failed.');
     }
 
-    // COMMIT TRANSACTION
-    entitlements.lockedCredits -= cost;
-    entitlements.availableCredits -= cost;
-    entitlements.transactionHistory.push({
-      txId,
-      userId: req.user.userId,
-      readingType: 'ai_astrology_report',
-      type: 'debit',
-      amount: cost,
-      timestamp: new Date().toISOString(),
-      status: 'committed'
-    });
-    db.saveUser(req.user.userId, entitlements);
+    // SETTLE RESERVATION ATOMICALLY
+    const settleRes = db.settleCreditReservation(requestId, req.user.userId);
+    const updatedUser = settleRes.user || db.getUser(req.user.userId);
 
     metrics.aiRequestsSuccess++;
     const gateResult = validateAndSanitizeAIResponse(generatedText, chartContext, { lang });
     return res.json({
       success: true,
       text: gateResult.text,
-      transactionId: txId,
-      remainingCredits: entitlements.availableCredits - entitlements.lockedCredits,
+      transactionId: requestId,
+      remainingCredits: updatedUser ? (updatedUser.availableCredits - (updatedUser.lockedCredits || 0)) : 0,
       _evidenceGate: {
         isValid: gateResult.isValid,
         sanitized: gateResult.sanitized,
@@ -802,23 +815,13 @@ async function handleGenerateAstrology(req, res) {
     });
 
   } catch (err) {
-    // ROLLBACK TRANSACTION
-    entitlements.lockedCredits -= cost;
-    entitlements.transactionHistory.push({
-      txId,
-      userId: req.user.userId,
-      type: 'failed_rollback',
-      amount: cost,
-      timestamp: new Date().toISOString(),
-      status: 'rolled_back',
-      error: err.message
-    });
-    db.saveUser(req.user.userId, entitlements);
+    // RELEASE RESERVATION ATOMICALLY ON FAILURE
+    db.releaseCreditReservation(requestId, req.user.userId, err.message);
 
     metrics.aiRequestsFailed++;
-    console.error('AI Generation error (Transaction rolled back):', err.message);
+    console.error('AI Generation error (Reservation released):', err.message);
     return res.status(502).json({
-      error: 'Failed to generate report from AI provider. Credit was not deducted.',
+      error: 'Failed to generate report from AI provider. Credit reservation was released.',
       code: 'AI_PROVIDER_ERROR'
     });
   }
@@ -836,9 +839,14 @@ app.get('/api/user/export', authenticateSession, (req, res) => {
   res.json(userDossier);
 });
 
-app.delete('/api/user/delete', authenticateSession, requireDatabaseReady, (req, res) => {
-  const result = eraseUserData(req.user.userId, activeSessions);
-  res.json(result);
+app.delete('/api/user/delete', authenticateSession, requireDatabaseReady, async (req, res) => {
+  try {
+    const result = await eraseUserData(req.user.userId, activeSessions);
+    res.json(result);
+  } catch (err) {
+    console.error('User erasure error:', err.message);
+    res.status(500).json({ error: 'Failed to complete user erasure transaction.', code: 'ERASURE_FAILED' });
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -947,7 +955,7 @@ app.get('/api/notifications/status', authenticateSession, (req, res) => {
 
 app.post('/api/notifications/send-test', authenticateSession, async (req, res) => {
   const userId = req.user.userId;
-  const { title = 'AstroVerse Planetary Transit Alert', body = 'Benefic Jupiter-Venus alignment active.', url = '/' } = req.body;
+  const { title = 'SKR ASTRO Planetary Transit Alert', body = 'Benefic Jupiter-Venus alignment active. Guidance for a Brighter Life.', url = '/' } = req.body;
   const subData = db.getPushSubscription(userId);
   if (!subData) {
     return res.status(404).json({ error: 'No active push subscription found for user.' });
@@ -1003,7 +1011,7 @@ export let server = null;
 if (process.env.NODE_ENV !== 'test' && !process.argv[1]?.endsWith('test_backend.mjs')) {
   Promise.resolve(db.readyPromise).catch(() => {}).then(() => {
     server = app.listen(PORT, () => {
-      console.log(`[AstroVerse Production Backend] Running on http://localhost:${PORT}`);
+      console.log(`[SKR ASTRO Production Backend] Running on http://localhost:${PORT}`);
     });
   });
 }

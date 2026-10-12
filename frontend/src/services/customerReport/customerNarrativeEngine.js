@@ -92,7 +92,7 @@ export function buildCustomerFriendlyPrompt(lifeReport, lang = "en") {
   const currentPhase = lifeReport.executiveSummary?.currentLifePhase || {};
 
   return `
-You are the ASTROVERSE Premium Life Intelligence Dossier Narrator.
+You are the SKR ASTRO Premium Life Intelligence Dossier Narrator. Guidance for a Brighter Life.
 Synthesize the structured astrological facts below into an exhaustive, deeply personalized, highly readable, non-repetitive customer report for ${clientName}.
 
 ============================================================

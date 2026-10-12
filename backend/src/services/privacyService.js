@@ -28,22 +28,22 @@ export function exportUserData(userId, entitlements) {
     exportMetadata: {
       userId,
       exportedAt: new Date().toISOString(),
-      format: "AstroVerse_Data_Dossier_v2.0",
+      format: "SKR_ASTRO_Data_Dossier_v2.0",
       complianceStandards: ["GDPR Article 20", "Digital Personal Data Protection Act 2023 (Oriented)"]
     },
     profileEntitlements: entitlements || user || {},
     savedHoroscopes: charts,
     auditTrail: (entitlements?.transactionHistory || user?.transactionHistory || []),
-    disclaimer: "This archive contains all personal birth parameters and transaction records associated with your AstroVerse account."
+    disclaimer: "This archive contains all personal birth parameters and transaction records associated with your SKR ASTRO account."
   };
 }
 
 /**
  * Permanently and irreversibly purges user records from durable database and active sessions
  */
-export function eraseUserData(userId, activeSessions) {
-  // 1. Purge from persistent database
-  db.purgeUser(userId);
+export async function eraseUserData(userId, activeSessions) {
+  // 1. Purge from persistent database with awaited transaction
+  await db.purgeUser(userId);
 
   // 2. Purge Active Sessions in memory
   if (activeSessions) {

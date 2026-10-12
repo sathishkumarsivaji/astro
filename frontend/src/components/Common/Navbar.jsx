@@ -48,22 +48,21 @@ export default function Navbar({
 
             {/* Brand Logo & Name */}
             <div className="flex items-center gap-2.5 cursor-pointer select-none">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
-                <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center shadow-inner">
-                  <Sparkles className="w-5 h-5 text-amber-600" />
-                </div>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden p-0.5 shadow-md shadow-amber-500/20 shrink-0 bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600">
+                <img
+                  src="/skr-astro-logo.jpg"
+                  alt="SKR ASTRO"
+                  className="w-full h-full object-cover rounded-[9px]"
+                />
               </div>
               <div className="hidden sm:block">
                 <div className="flex items-center gap-1.5">
                   <span className="font-serif text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-amber-950 via-amber-900 to-orange-900 bg-clip-text text-transparent">
                     {t.appName}
                   </span>
-                  <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                    V2
-                  </span>
                 </div>
-                <p className="text-[10px] text-stone-500 font-medium">
-                  {isTamil ? "வேத வானியல் நுண்ணறிவு" : "Vedic Astrology Intelligence"}
+                <p className="text-[9.5px] text-amber-800 font-bold uppercase tracking-wider">
+                  GUIDANCE FOR A BRIGHTER LIFE
                 </p>
               </div>
             </div>

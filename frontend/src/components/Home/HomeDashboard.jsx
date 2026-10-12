@@ -52,47 +52,50 @@ export default function HomeDashboard({
   const moonSign = chartData?.moonSign?.name ?? (typeof chartData?.moonSign === "string" ? chartData.moonSign : null);
   const ascSign = chartData?.ascendantSign?.name ?? (typeof chartData?.ascendantSign === "string" ? chartData.ascendantSign : null);
 
-  // Daily Curated Focus Metrics (Qualitative Traditional Indicators)
+  // Daily Curated Focus Metrics (Qualitative Traditional Mindfulness Themes)
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
+
   const DAILY_THEMES = [
     {
       id: "career",
       title: isTamil ? "தொழில் & காரியம் (Career)" : "Career & Focus",
       icon: Briefcase,
-      rating: "★★★★☆",
+      focusTag: isTamil ? "தொழில் சிந்தனை" : "Vocational Reflection",
       color: "text-amber-700 bg-amber-50 border-amber-200",
       indicator: isTamil
-        ? (dashaLord ? `தற்போது ${dashaLord} தசா செல்வாக்குடன் 10-ம் பாவ தொழில் சார்ந்த திட்டமிடலுக்கு சாதகமான நாள்.` : "தொழில் சார்ந்த திட்டமிடலுக்கு சாதகமான நாள்.")
-        : (dashaLord ? `Active ${dashaLord} Mahadasha favors strategic execution and vocational leadership today.` : "Favorable period for strategic execution and vocational leadership.")
+        ? (dashaLord ? `தற்போது ${dashaLord} தசா காலத்தில் 10-ம் பாவ தொழில் சார்ந்த திட்டமிடலுக்கு விழிப்புணர்வுடன் இருக்கவும்.` : "தொழில் சார்ந்த உத்தேச திட்டமிடலுக்கான பாரம்பரிய சிந்தனை பகுதி.")
+        : (dashaLord ? `Current ${dashaLord} Mahadasha highlights strategic planning and professional mindfulness today.` : "Traditional qualitative focus area for structured career planning.")
     },
     {
       id: "relationships",
       title: isTamil ? "உறவுகள் & குடும்பம் (Relationships)" : "Relationships & Harmony",
       icon: Heart,
-      rating: "★★★★☆",
+      focusTag: isTamil ? "உறவு நலம்" : "Interpersonal Harmony",
       color: "text-rose-700 bg-rose-50 border-rose-200",
       indicator: isTamil
-        ? "சந்திரனின் சஞ்சாரம் உணர்ச்சிப் புரிதலையும் உரையாடல்களையும் இனிமையாக்கும்."
-        : (moonSign ? `Moon transit relative to natal ${moonSign} encourages empathetic dialogue and emotional clarity.` : "Transit Moon encourages empathetic dialogue and emotional clarity.")
+        ? "உணர்ச்சிப் புரிதலையும் அமைதியான குடும்ப உரையாடல்களையும் முன்னெடுக்க வேண்டிய பாரம்பரிய வழிகாட்டல்."
+        : (moonSign ? `Reflective focus relative to natal ${moonSign} encourages empathetic dialogue and emotional composure.` : "Traditional focus area encouraging open, compassionate dialogue.")
     },
     {
       id: "money",
       title: isTamil ? "நிதி & முதலீடு (Money & Wealth)" : "Money & Planning",
       icon: Coins,
-      rating: "★★★★★",
+      focusTag: isTamil ? "நிதி விவேகம்" : "Financial Prudence",
       color: "text-emerald-700 bg-emerald-50 border-emerald-200",
       indicator: isTamil
-        ? "அவசர நிதி முடிவுகளைத் தவிர்த்து நிலையான வரவு-செலவு திட்டமிடலுக்கு உகந்த நாள்."
-        : "Favorable day for structured budgeting and evaluating long-term asset security."
+        ? "அவசர நிதி முடிவுகளைத் தவிர்த்து நிலையான வரவு-செலவு மதிப்பாய்விற்கு உகந்த நாள்."
+        : "Traditional guideline recommending disciplined budgeting and careful assessment of commitments."
     },
     {
       id: "energy",
       title: isTamil ? "உடல் ஆற்றல் & சிந்தனை (Vitality)" : "Vitality & Energy",
       icon: Activity,
-      rating: "★★★☆☆",
+      focusTag: isTamil ? "மன அமைதி" : "Mindful Rest",
       color: "text-purple-700 bg-purple-50 border-purple-200",
       indicator: isTamil
         ? "அமைதியான சிந்தனை, தியானம் மற்றும் உடல் புத்துணர்ச்சிக்கு முன்னுரிமை அளியுங்கள்."
-        : "Chart indicates reflective, inward focus rather than high-strain physical exertion."
+        : "Traditional qualitative reminder prioritizing mindful pacing, hydration, and restorative rest."
     }
   ];
 
@@ -109,8 +112,8 @@ export default function HomeDashboard({
       domain: "career"
     },
     {
-      qEn: "What does the year 2027 look like for me?",
-      qTa: "2027-ம் ஆண்டு எனக்கு எவ்வாறு அமையக்கூடும்?",
+      qEn: `What does the year ${nextYear} look like for me?`,
+      qTa: `${nextYear}-ம் ஆண்டு எனக்கு எவ்வாறு அமையக்கூடும்?`,
       domain: "timeline"
     },
     {
@@ -135,18 +138,27 @@ export default function HomeDashboard({
       {/* 1. If No Chart Data: Show Friendly Welcome Onboarding Form */}
       {!chartData ? (
         <div className="space-y-8">
-          <div className="text-center space-y-3 max-w-2xl mx-auto pt-4">
+          <div className="text-center space-y-4 max-w-2xl mx-auto pt-4">
+            <div className="flex justify-center items-center">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden p-0.5 shadow-lg border-2 border-amber-300 bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600">
+                <img
+                  src="/skr-astro-logo.jpg"
+                  alt="SKR ASTRO"
+                  className="w-full h-full object-cover rounded-[14px]"
+                />
+              </div>
+            </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold uppercase tracking-wider shadow-sm">
               <Sparkles className="w-4 h-4 text-amber-600" />
-              <span>{isTamil ? "தனிப்பயனாக்கப்பட்ட ஜோதிட நுண்ணறிவு" : "Personal Astrology Intelligence"}</span>
+              <span>SKR ASTRO — GUIDANCE FOR A BRIGHTER LIFE</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-stone-900 leading-tight">
-              {isTamil ? "உங்கள் ஜாதகம். உங்கள் காலக்கோடு. தெளிவான விளக்கம்." : "Calculate Precisely. Explain Transparently. Understand Your Timing."}
+              {isTamil ? "உங்கள் ஜாதகம். உங்கள் காலக்கோடு. தெளிவான வழிகாட்டல்." : "Calculate Precisely. Explain Transparently. Guidance for a Brighter Life."}
             </h1>
             <p className="text-sm text-stone-600 max-w-lg mx-auto leading-relaxed">
               {isTamil
-                ? "சுவிஸ்/நாசா எபிமெரிஸ் கணிப்புத் துல்லியம் மற்றும் வேத சாஸ்திர ஆதாரங்களுடன் கூடிய உலகத்தரம் வாய்ந்த ஜோதிட தளம்."
-                : "A world-class personal astrology platform grounded in high-precision astronomy, transparent evidence chains, and AI explanations."}
+                ? "சுவிஸ்/நாசா எபிமெரிஸ் கணிப்புத் துல்லியம் மற்றும் வேத சாஸ்திர ஆதாரங்களுடன் கூடிய SKR ASTRO தளம் — வழிகாட்டல் ஒரு பிரகாசமான வாழ்க்கைக்கு."
+                : "A world-class personal astrology platform grounded in high-precision astronomy, transparent evidence chains, and authentic Jyotish wisdom."}
             </p>
           </div>
 
@@ -219,7 +231,9 @@ export default function HomeDashboard({
                           </div>
                           <span className="font-serif font-bold text-sm text-stone-900">{theme.title.split("(")[0]}</span>
                         </div>
-                        <span className="text-xs font-bold text-amber-600">{theme.rating}</span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200">
+                          {theme.focusTag}
+                        </span>
                       </div>
                       <p className="text-xs text-stone-600 leading-relaxed">
                         {theme.indicator}
@@ -263,13 +277,13 @@ export default function HomeDashboard({
             </div>
           </div>
 
-          {/* Ask AstroVerse Quick AI Prompts */}
+          {/* Ask SKR ASTRO Quick AI Prompts */}
           <div className="p-6 md:p-8 rounded-3xl bg-white border border-amber-200/90 shadow-md space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider">
                   <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{isTamil ? "ஆஸ்ட்ரோவர்ஸிடம் கேளுங்கள்" : "Ask AstroVerse"}</span>
+                  <span>{isTamil ? "SKR ASTRO-விடம் கேளுங்கள்" : "Ask SKR ASTRO"}</span>
                 </div>
                 <h2 className="text-xl md:text-2xl font-serif font-bold text-stone-900">
                   {isTamil ? "உங்கள் ஜாதகம் பற்றி என்ன தெரிந்துகொள்ள விரும்புகிறீர்கள்?" : "What Would You Like to Know Today?"}

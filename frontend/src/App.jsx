@@ -428,7 +428,7 @@ export default function App() {
         )}
 
         {/* ======================================================== */}
-        {/* EXPERIENCE 3: ASK ASTROVERSE (Conversational AI Copilot) */}
+        {/* EXPERIENCE 3: ASK SKR ASTRO (Conversational AI Copilot)  */}
         {/* ======================================================== */}
         {activeTab === "ask" && (
           <AskAstroVerseView

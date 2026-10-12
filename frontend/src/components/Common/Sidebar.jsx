@@ -45,7 +45,7 @@ export default function Sidebar({
   const mainNavItems = [
     { id: "home", label: isTamil ? "முகப்பு" : "Home", icon: Sparkles, desc: isTamil ? "தினசரி பார்வை & வழிகாட்டல்" : "Daily Cosmic Overview" },
     { id: "chart", label: isTamil ? "என் ஜாதகம்" : "My Chart", icon: Compass, desc: isTamil ? "D1-D60 சக்கரங்கள் & கிரகங்கள்" : "Vedic Birth Kundli & Vargas" },
-    { id: "ask", label: isTamil ? "கேளுங்கள்" : "Ask AstroVerse", icon: MessageSquare, desc: isTamil ? "AI ஜோதிட வழிகாட்டல்" : "AI Master Consultation" },
+    { id: "ask", label: isTamil ? "கேளுங்கள்" : "Ask SKR ASTRO", icon: MessageSquare, desc: isTamil ? "AI ஜோதிட வழிகாட்டல்" : "AI Master Consultation" },
     { id: "timeline", label: isTamil ? "காலக்கோடு" : "Timeline", icon: Calendar, desc: isTamil ? "0-120 ஆண்டு தசா கட்டங்கள்" : "0–120 Yrs Dasha & Gochara" },
     { id: "relationships", label: isTamil ? "பொருத்தம்" : "Relationships", icon: Heart, desc: isTamil ? "14 பரிமாண திருமண பொருத்தம்" : "14-Domain Kundli Matching" },
     { id: "explore", label: isTamil ? "ஆராய்க" : "Explore Tools", icon: Layers, desc: isTamil ? "பஞ்சாங்கம், கைரேகை, எண்கள்" : "Panchang, Palm, Numerology" }
@@ -105,23 +105,22 @@ export default function Sidebar({
             onClick={() => { setActiveTab("home"); if (window.innerWidth < 1024) setIsOpen(false); }}
             className="flex items-center gap-3 cursor-pointer group overflow-hidden"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 p-0.5 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-all shrink-0">
-              <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center shadow-inner">
-                <Sparkles className="w-5 h-5 text-amber-600" />
-              </div>
+            <div className="w-10 h-10 rounded-xl overflow-hidden p-0.5 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-all shrink-0 bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600">
+              <img
+                src="/skr-astro-logo.jpg"
+                alt="SKR ASTRO"
+                className="w-full h-full object-cover rounded-[9px]"
+              />
             </div>
             {!isCollapsed && (
               <div className="truncate">
                 <div className="flex items-center gap-1.5">
                   <span className="font-serif text-lg font-bold tracking-wide bg-gradient-to-r from-amber-900 to-orange-800 bg-clip-text text-transparent">
-                    {t.appName}
-                  </span>
-                  <span className="text-[9px] font-extrabold uppercase px-1 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                    V2
+                    SKR ASTRO
                   </span>
                 </div>
-                <p className="text-[10px] text-stone-500 font-medium truncate">
-                  {isTamil ? "வேத வானியல் நுண்ணறிவு" : "Vedic Astrology Intelligence"}
+                <p className="text-[9px] text-amber-700 font-bold uppercase tracking-tight truncate">
+                  GUIDANCE FOR A BRIGHTER LIFE
                 </p>
               </div>
             )}
@@ -248,7 +247,7 @@ export default function Sidebar({
           {!isCollapsed && (
             <div className="pt-2 text-[9px] text-stone-400 font-mono text-center leading-tight">
               VSOP87 / Meeus Ephemeris
-              <div className="text-[8px] text-stone-400 font-sans mt-0.5">Vedic AstroVerse v4.2</div>
+              <div className="text-[8px] text-stone-400 font-sans mt-0.5">SKR ASTRO v4.2</div>
             </div>
           )}
         </div>

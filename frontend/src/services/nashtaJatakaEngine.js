@@ -1016,8 +1016,15 @@ export function reverseCalculateBirthTimeAndDOB({
     candidateBirthDate: isoFormattedDate,
     exactEstimatedDOB: isoFormattedDate,
     formattedDate: isTamil
-      ? `${monthName} ${candidateBirthDayNum}, ${candidateBirthYear}`
-      : `${monthName} ${candidateBirthDayNum}, ${candidateBirthYear}`
+      ? `${monthName} ${candidateBirthDayNum}, ${candidateBirthYear} (உத்தேச காலக்கட்டம்)`
+      : `${monthName} ${candidateBirthDayNum}, ${candidateBirthYear} (Heuristic Date Window)`,
+    candidateInterval: {
+      earliestMonth: Math.max(1, candidateBirthMonthNum - 1),
+      centralMonth: candidateBirthMonthNum,
+      latestMonth: Math.min(12, candidateBirthMonthNum + 1),
+      approximateYear: candidateBirthYear,
+      precisionDisclosure: "INTERVIEW_HEURISTIC_INTERVAL"
+    }
   };
 
   const astronomicalNotes = isTamil

@@ -1973,7 +1973,7 @@ export default function ChartViewer({
           </div>
           <div>
             <h4 className="font-serif font-bold text-stone-900 text-sm">
-              {isTamil ? "மறுஉருவாக்க கணிப்பு சான்றிதழ் (AstroVerse Certificate)" : "AstroVerse Reproducible Calculation Certificate"}
+              {isTamil ? "மறுஉருவாக்க கணிப்பு சான்றிதழ் (SKR ASTRO Certificate)" : "SKR ASTRO Reproducible Calculation Certificate"}
             </h4>
             <p className="text-xs text-stone-600">
               {isTamil ? "சர்வதேச எபிமெரிஸ் ஆயங்கள், UTC தருணம் மற்றும் அயனாம்ச பதிவேடு." : "Inspect exact Julian Day, UTC Instant, Ayanamsha convention, and ephemeris ledger."}

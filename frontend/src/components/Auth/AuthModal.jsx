@@ -59,13 +59,20 @@ export default function AuthModal({ isOpen, onClose, lang = "en", onAuthSuccess 
 
         {/* Modal Header */}
         <div className="text-center space-y-2 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-300 flex items-center justify-center mx-auto text-amber-600">
-            <Sparkles className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl overflow-hidden p-0.5 shadow-md border-2 border-amber-300 mx-auto bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600">
+            <img
+              src="/skr-astro-logo.jpg"
+              alt="SKR ASTRO"
+              className="w-full h-full object-cover rounded-[12px]"
+            />
+          </div>
+          <div className="text-[10px] text-amber-800 font-bold tracking-wider uppercase">
+            SKR ASTRO — GUIDANCE FOR A BRIGHTER LIFE
           </div>
           <h2 className="text-xl font-serif font-black text-stone-900">
             {mode === "register"
               ? (isTamil ? "இலவச கணக்கு தொடங்குக" : "Create Free Account")
-              : (isTamil ? "உள்நுழைக" : "Sign In to AstroVerse")}
+              : (isTamil ? "உள்நுழைக" : "Sign In to SKR ASTRO")}
           </h2>
           <p className="text-xs text-stone-600">
             {mode === "register"

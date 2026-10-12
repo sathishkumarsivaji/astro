@@ -64,7 +64,7 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("ASTROVERSE SAMUDRIKA SHASTRA PALM REPORT", margin, 35);
+      doc.text("SKR ASTRO SAMUDRIKA SHASTRA PALM REPORT", margin, 35);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
@@ -304,7 +304,7 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(148, 163, 184);
         doc.text(
-          `AstroVerse Intelligence Platform | Page ${i} of ${totalPages}`,
+          `SKR ASTRO — Guidance for a Brighter Life | Page ${i} of ${totalPages}`,
           pageWidth / 2,
           pageHeight - 20,
           { align: "center" }
@@ -312,7 +312,7 @@ export default function PalmReport({ telemetry, onRetake, lang = "en" }) {
       }
 
       const fileHand = handType === "left" ? "left" : "right";
-      doc.save(`AstroVerse_Palm_Reading_${fileHand}.pdf`);
+      doc.save(`SKR_ASTRO_Palm_Reading_${fileHand}.pdf`);
     } catch (err) {
       console.error("Palm report PDF generation failed:", err);
     } finally {

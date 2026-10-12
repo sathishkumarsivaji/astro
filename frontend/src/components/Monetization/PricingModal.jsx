@@ -179,8 +179,8 @@ export default function PricingModal({ isOpen, onClose, lang = "en", onPlanUpgra
             key: createdOrder.gatewayKey || "rzp_checkout_key",
             amount: createdOrder.amountInCents || Math.round(createdOrder.amount * 100),
             currency: createdOrder.currency || "INR",
-            name: "ASTROVERSE",
-            description: `${selectedPlan.toUpperCase()} Subscription`,
+            name: "SKR ASTRO",
+            description: `${selectedPlan.toUpperCase()} Subscription — Guidance for a Brighter Life`,
             order_id: createdOrder.gatewayOrderId || createdOrder.orderId,
             handler: async (gatewayResponse) => {
               try {

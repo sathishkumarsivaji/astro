@@ -182,7 +182,7 @@ export default function HistoricalReplayModal({ isOpen, onClose, lang = "en" }) 
                 <div className="flex items-center justify-between">
                   <div className="font-bold text-stone-900 flex items-center gap-2 text-sm">
                     <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                    <span>{isTamil ? "1. காலக்கெடு தேதியில் கணிக்கப்பட்டவை (Predictions at Cutoff):" : "1. What ASTROVERSE Predicted at Cutoff Date:"}</span>
+                    <span>{isTamil ? "1. காலக்கெடு தேதியில் கணிக்கப்பட்டவை (Predictions at Cutoff):" : "1. What SKR ASTRO Predicted at Cutoff Date:"}</span>
                   </div>
                   <span className="text-[10px] font-mono bg-stone-100 text-stone-600 px-2 py-0.5 rounded border border-stone-200">
                     Strict Anti-Leakage Enforced
@@ -356,7 +356,7 @@ export default function HistoricalReplayModal({ isOpen, onClose, lang = "en" }) 
         <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
           <div className="text-[10px] text-stone-500 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>AstroVerse Blind-Test Validation Hash: SHA-256 Verified</span>
+            <span>SKR ASTRO Blind-Test Validation Hash: SHA-256 Verified</span>
           </div>
           <button
             onClick={onClose}

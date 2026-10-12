@@ -760,7 +760,7 @@ function buildFollowUpAIPrompt(questionText, context, route, conversationHistory
 - Core Requirement: Directly answer the user's specific question using relevant houses, lords, and dasha factors. Never output a generic horoscope summary.`;
   }
 
-  const prompt = `You are the AstroVerse Follow-Up Astrological Scholar answering a seeker's question about their already calculated report.
+  const prompt = `You are the SKR ASTRO Follow-Up Astrological Scholar answering a seeker's question about their already calculated report. Guidance for a Brighter Life.
 
 SYSTEM INSTRUCTION:
 - Answer ONLY using the supplied calculated report facts, findings, and evidence in RELEVANT REPORT CONTEXT.

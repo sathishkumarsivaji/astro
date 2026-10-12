@@ -994,7 +994,7 @@ export default function NameGenerator({ lang = "en" }) {
 
             <div className="p-3 rounded-xl bg-white border border-amber-200 flex items-center justify-between shadow-sm">
               <span className="text-xs text-stone-600 truncate font-mono">
-                https://astroverse.ai/vote?token=fam-8492-baby
+                https://skr-astro.com/vote?token=fam-8492-baby
               </span>
               <button
                 onClick={() => alert(isTamil ? "இணைப்பு நகலெடுக்கப்பட்டது!" : "Voting link copied to clipboard!")}

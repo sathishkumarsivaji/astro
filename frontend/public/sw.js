@@ -40,11 +40,11 @@ self.addEventListener('activate', (event) => {
 // 3. Web Push Notification Handling
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'AstroVerse Astrological Alert',
+    title: 'SKR ASTRO — Guidance for a Brighter Life',
     body: 'Favorable planetary transit window active today.',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    tag: 'astroverse-notification',
+    icon: '/skr-astro-logo.jpg',
+    badge: '/skr-astro-logo.jpg',
+    tag: 'skr-astro-notification',
     data: {
       url: '/'
     }

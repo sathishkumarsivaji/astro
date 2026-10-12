@@ -32,7 +32,7 @@ export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErase
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dossier, null, 2));
         const downloadAnchor = document.createElement("a");
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `astroverse_user_dossier_${dossier.userId || "data"}.json`);
+        downloadAnchor.setAttribute("download", `skr_astro_user_dossier_${dossier.userId || "data"}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
@@ -240,8 +240,8 @@ export default function PrivacyModal({ isOpen, onClose, lang = "en", onDataErase
         <div className="pt-2 border-t border-amber-200 text-center">
           <p className="text-[11px] text-stone-500">
             {isTamil
-              ? "AstroVerse உங்கள் தனிப்பட்ட ஜாதக தகவல்களை மூன்றாம் தரப்பினருக்கு விற்பனை செய்வதில்லை."
-              : "AstroVerse commits to zero third-party data broker transmission. All birth ephemeris computation occurs on privacy-shielded nodes."}
+              ? "SKR ASTRO உங்கள் தனிப்பட்ட ஜாதக தகவல்களை மூன்றாம் தரப்பினருக்கு விற்பனை செய்வதில்லை."
+              : "SKR ASTRO commits to zero third-party data broker transmission. All birth ephemeris computation occurs on privacy-shielded nodes."}
           </p>
         </div>
       </div>

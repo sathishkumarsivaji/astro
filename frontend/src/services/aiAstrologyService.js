@@ -704,7 +704,7 @@ ${retrospectiveSummary}
     - Cross-verify the calculated historical candidate windows (education, career progressions, marriage, assets) against the native's past dasha sequences. Guide senior natives to validate calculated timing windows against their lived experiences.
 
 17. **Chapter 17: Astrologer Evidence Dossier & 9-Level Prediction Reasoning Chain**
-    - Multi-layer reasoning chain breakdown across Natal Promise, Functional Lordship, Shadbala Capacity, Divisional Confirmation, Dasha Activation, Gochara Transits, Jaimini System, Mitigations, and AstroVerse Synthesis.
+    - Multi-layer reasoning chain breakdown across Natal Promise, Functional Lordship, Shadbala Capacity, Divisional Confirmation, Dasha Activation, Gochara Transits, Jaimini System, Mitigations, and SKR ASTRO Synthesis.
 
 18. **Chapter 18: Comprehensive Technical Calculation Appendix & Astronomical Dataset**
     - Complete deterministic computational ledger: Ephemeris & Dispositors, Whole-Sign vs Bhava Chalit Cusps, Shodashavarga Matrix (D1–D60), 6-Fold Shadbala virupas, 337-Bindu Ashtakavarga, Jaimini 7-Karaka System & Arudha Padas, Planetary Avasthas, and Root-Solved Panchanga.
@@ -859,7 +859,7 @@ ${bhavasText}
 - **Ephemeris Engine:** Astronomy Engine 2.1 (VSOP87 / Meeus algorithms)`;
     }
 
-    return `# ASTROVERSE — WESTERN TROPICAL (SAYANA) NATAL DOSSIER
+    return `# SKR ASTRO — WESTERN TROPICAL (SAYANA) NATAL DOSSIER
 
 **Native:** ${name} | **Birth Date:** ${bDate} | **Time:** ${bTime} | **Place:** ${bPlace}
 **System:** Tropical / Sayana (Western) | **Rising Sign (Ascendant):** ${ascSignName} (${ascDegStr}) | **Sun Sign:** ${sunSignName} | **Moon Sign:** ${moonSignName}
@@ -921,7 +921,7 @@ ${bhavasText}
 - **Ephemeris Engine:** Astronomy Engine 2.1 (VSOP87 / Meeus)`;
     }
 
-    return `# ASTROVERSE — KRISHNAMURTI PADHDHATI (KP) STELLAR DOSSIER
+    return `# SKR ASTRO — KRISHNAMURTI PADHDHATI (KP) STELLAR DOSSIER
 
 **Native:** ${name} | **Birth Date:** ${bDate} | **Time:** ${bTime} | **Place:** ${bPlace}
 **System:** Krishnamurti Padhdhati (KP) | **Ascendant:** ${ascSignName} (${ascDegStr}) | **Moon:** ${moonSignName} | **Nakshatra:** ${moonNakName} (${moonPada}) | **Active Dasha:** ${dashaText}
@@ -1048,7 +1048,7 @@ ${stagesText}
 லஹிரி, கே.பி. மற்றும் மேற்கத்திய முறைகளின் வானியல் பாகைகள் சீரான ஒருமுகத்தன்மையை காட்டுகின்றன.`;
   }
 
-  return `# ASTROVERSE — COMPREHENSIVE VEDIC ASTROLOGICAL MASTER DOSSIER
+  return `# SKR ASTRO — COMPREHENSIVE VEDIC ASTROLOGICAL MASTER DOSSIER — GUIDANCE FOR A BRIGHTER LIFE
 
 **Native:** ${name} | **Birth Date:** ${bDate} | **Time:** ${bTime} | **Place:** ${bPlace}
 **Astrology System:** ${sysName} | **Ascendant:** ${ascSignName} (${ascDegStr}) | **Moon:** ${moonSignName} | **Nakshatra:** ${moonNakName} Pada ${moonPada} | **Sun:** ${sunSignName}

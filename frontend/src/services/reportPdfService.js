@@ -155,7 +155,7 @@ function renderSouthIndianChartHTML(title, planets, ascSignName, isTamil, widthP
         // Center Box (2x2)
         cellsHTML += `
           <div style="grid-column: span 2; grid-row: span 2; background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border: 1.5px solid #D97706; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; text-align: center;">
-            <div style="font-size: 7.5px; font-weight: 800; color: #92400E; letter-spacing: 0.5px; text-transform: uppercase;">ASTROVERSE</div>
+            <div style="font-size: 7.5px; font-weight: 800; color: #92400E; letter-spacing: 0.5px; text-transform: uppercase;">SKR ASTRO</div>
             <div style="font-size: 10px; font-weight: bold; color: #78350F; margin: 2px 0;">${title}</div>
             <div style="font-size: 7px; color: #B45309; font-weight: 600;">${isTamil ? "தென்னிந்திய முறை" : "South Indian"}</div>
           </div>
@@ -498,7 +498,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
     const modeTag = isAstrologer ? "Astrologer_Evidence_Dossier" : "Client_Life_Dossier";
     const tierTag = isMinimal ? "Snapshot" : (viewMode === "ai" ? "AI_Master" : "Master_10Page");
     const langTag = isTamil ? "Tamil" : "English";
-    const fileName = `AstroVerse_${langTag}_${modeTag}_${tierTag}_${reportId}.pdf`;
+    const fileName = `SKR_ASTRO_${langTag}_${modeTag}_${tierTag}_${reportId}.pdf`;
 
     if (onProgress) onProgress(isTamil ? "பதிவிறக்கம் தொடங்குகிறது..." : "Downloading PDF...");
     pdf.save(fileName);
@@ -513,8 +513,8 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
 
   function renderHeaderHTML(title, subtitle, pageNum = 1, totalPages = 1) {
     const badgeText = isAstrologer
-      ? (isTamil ? "ஆஸ்ட்ரோவெர்ஸ் ஜோதிட நிபுணர் சான்றளிக்கப்பட்ட ஆய்வேடு" : "ASTROVERSE PROFESSIONAL ASTROLOGER EVIDENCE DOSSIER")
-      : (isTamil ? "ஆஸ்ட்ரோவெர்ஸ் வேத ஜோதிட வாழ்க்கை வழிகாட்டி" : "ASTROVERSE VEDIC LIFE PATH DOSSIER");
+      ? (isTamil ? "SKR ASTRO ஜோதிட நிபுணர் சான்றளிக்கப்பட்ட ஆய்வேடு" : "SKR ASTRO PROFESSIONAL ASTROLOGER EVIDENCE DOSSIER")
+      : (isTamil ? "SKR ASTRO வேத ஜோதிட வாழ்க்கை வழிகாட்டி" : "SKR ASTRO VEDIC LIFE PATH DOSSIER — GUIDANCE FOR A BRIGHTER LIFE");
 
     return `
       <div style="background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%); color: #FFFFFF; padding: 14px 24px; border-bottom: 3px solid #F59E0B; display: flex; justify-content: space-between; align-items: center;">
@@ -756,7 +756,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
       <div style="width: 794px; min-height: 1123px; box-sizing: border-box; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 14px;">
         <div>
           ${renderHeaderHTML(
-            isTamil ? "வேத ஜோதிட சுருக்க அறிக்கை (Client Essential Snapshot)" : "AstroVerse Client Essential Snapshot",
+            isTamil ? "வேத ஜோதிட சுருக்க அறிக்கை (Client Essential Snapshot)" : "SKR ASTRO Client Essential Snapshot",
             isTamil ? `${systemName} அயனாம்சம் & மூல ஜாதக சுருக்கம்` : `${systemName} Ephemeris & Essential Kundli Overview`,
             1, 1
           )}
@@ -847,7 +847,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
       <div style="width: 794px; min-height: 1123px; box-sizing: border-box; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 14px;">
         <div>
           ${renderHeaderHTML(
-            isTamil ? "ஜோதிட நிபுணர் சுருக்க அறிக்கை (Astrologer Technical Snapshot)" : "AstroVerse Astrologer Technical Snapshot",
+            isTamil ? "ஜோதிட நிபுணர் சுருக்க அறிக்கை (Astrologer Technical Snapshot)" : "SKR ASTRO Astrologer Technical Snapshot",
             isTamil ? "வானியல் ஆயத்தொலைவுகள், D1/D9 சக்கரங்கள், ஷட்பல விரூபைகள் & ஜைமினி காரகங்கள்" : "VSOP87 Ephemeris Coordinates, D1/D9 Vargas, Shadbala Virupas & Jaimini Karakas",
             1, 1
           )}
@@ -906,7 +906,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
       <div style="width: 794px; min-height: 1123px; box-sizing: border-box; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 16px;">
         <div>
           ${renderHeaderHTML(
-            isTamil ? "வேத ஜோதிட மகா ஆயுள் வழிகாட்டி (Client Life Dossier)" : "AstroVerse Client Life Destiny Dossier",
+            isTamil ? "வேத ஜோதிட மகா ஆயுள் வழிகாட்டி (Client Life Dossier)" : "SKR ASTRO Client Life Destiny Dossier",
             isTamil ? "முழு வாழ்க்கை பாதை, யோகங்கள், தசா பலன்கள் & சாஸ்திர வழிகாட்டல்" : "Comprehensive Life Path, Auspicious Yogas, Dasha Matrix & Vedic Guidance",
             1, 10
           )}
@@ -1883,7 +1883,7 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
         <div style="width: 794px; min-height: 1123px; box-sizing: border-box; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 16px;">
           <div>
             ${renderHeaderHTML(
-              isTamil ? "செயற்கை நுண்ணறிவு ஆழமான ஆய்வு (AI Master Reading)" : "AstroVerse AI Comprehensive Astrological Reading",
+              isTamil ? "செயற்கை நுண்ணறிவு ஆழமான ஆய்வு (AI Master Reading)" : "SKR ASTRO AI Comprehensive Astrological Reading",
               isTamil ? `அத்தியாயம் ${pIdx + 1} - நவகிரக அமைப்புகள் & தனிப்பயன் பலன்கள்` : `Master Life Chapter ${pIdx + 1} — Synthesized Cosmological Reading`,
               pIdx + 1, totalCalculatedPages
             )}

@@ -172,7 +172,7 @@ export default function FollowUpQuestions({
   return (
     <div
       className="follow-up-questions-container mt-6 rounded-3xl bg-[#FAF6EE] border border-amber-300/80 p-4 md:p-6 shadow-sm space-y-4"
-      aria-label="AstroVerse Follow-Up Questions"
+      aria-label="SKR ASTRO Follow-Up Questions"
     >
       {/* Header Bar */}
       <div className="flex items-center justify-between gap-3 border-b border-amber-200/80 pb-3">
@@ -184,7 +184,7 @@ export default function FollowUpQuestions({
             <h3 className="text-sm md:text-base font-serif font-bold text-stone-900 flex items-center gap-2">
               <span>{sectionTitle}</span>
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
-                AstroVerse Follow-Up
+                SKR ASTRO Follow-Up
               </span>
             </h3>
             <p className="text-[11px] text-stone-600">

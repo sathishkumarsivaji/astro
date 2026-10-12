@@ -56,7 +56,7 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-serif font-bold tracking-tight">
-                  {isTamil ? "ஆஸ்ட்ரோவர்ஸ் உண்மை வாழ்க்கை சான்றியல் சரிபார்ப்பு அறிக்கை" : "ASTROVERSE Real-World Scientific Validation Dashboard"}
+                  {isTamil ? "SKR ASTRO உண்மை வாழ்க்கை சான்றியல் சரிபார்ப்பு அறிக்கை" : "SKR ASTRO Real-World Scientific Validation Dashboard"}
                 </h2>
                 <p className="text-xs text-stone-400 mt-0.5">
                   {isTamil
@@ -100,7 +100,7 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
             <Scale className="w-4 h-4 text-amber-400 shrink-0" />
             <span>
               <strong>NON-NEGOTIABLE AXIOM:</strong> ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION.
-              ASTROVERSE never fabricates or inflates accuracy claims.
+              SKR ASTRO never fabricates or inflates accuracy claims.
             </span>
           </div>
 
@@ -354,7 +354,7 @@ export default function RealWorldAccuracyDashboard({ isTamil = false, onClose })
                 <span className="font-bold block uppercase tracking-wider text-[11px]">Requirement 17: Scientific Baseline Protocol</span>
                 <p>
                   Every empirical astrological prediction must be compared against standard demographic and population baselines (cohort median age at marriage).
-                  AstroVerse does NOT claim predictive superiority unless it outperforms the demographic baseline on blind data.
+                  SKR ASTRO does NOT claim predictive superiority unless it outperforms the demographic baseline on blind data.
                 </p>
               </div>
 

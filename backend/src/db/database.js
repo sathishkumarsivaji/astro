@@ -45,6 +45,8 @@ class AstroDatabase {
       conversations: {},
       messages: {},
       claim_graphs: {},
+      user_sessions: {},
+      credit_reservations: {},
       audit_ledger: []
     };
 
@@ -190,11 +192,34 @@ class AstroDatabase {
         status VARCHAR(32) DEFAULT 'active'
       );
 
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        session_token TEXT PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
+        token_hash VARCHAR(128) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        revoked_at TIMESTAMPTZ
+      );
+
+      CREATE TABLE IF NOT EXISTS credit_reservations (
+        request_id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
+        credits_reserved INTEGER NOT NULL DEFAULT 1,
+        status VARCHAR(32) NOT NULL DEFAULT 'reserved',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        completed_at TIMESTAMPTZ
+      );
+
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       CREATE INDEX IF NOT EXISTS idx_saved_charts_user ON saved_charts(user_id);
       CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders(user_id);
       CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_tx_payment_id ON payment_transactions(payment_id);
       CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash);
+      CREATE INDEX IF NOT EXISTS idx_credit_reservations_user ON credit_reservations(user_id);
+      CREATE INDEX IF NOT EXISTS idx_credit_reservations_status ON credit_reservations(status);
     `;
 
     await client.query(ddl);
@@ -301,6 +326,8 @@ class AstroDatabase {
           conversations: parsed.conversations || {},
           messages: parsed.messages || {},
           claim_graphs: parsed.claim_graphs || {},
+          user_sessions: parsed.user_sessions || {},
+          credit_reservations: parsed.credit_reservations || {},
           audit_ledger: parsed.audit_ledger || []
         };
       } catch (err) {
@@ -321,6 +348,8 @@ class AstroDatabase {
           conversations: parsed.conversations || {},
           messages: parsed.messages || {},
           claim_graphs: parsed.claim_graphs || {},
+          user_sessions: parsed.user_sessions || {},
+          credit_reservations: parsed.credit_reservations || {},
           audit_ledger: parsed.audit_ledger || []
         };
       } catch (err) {
@@ -720,27 +749,313 @@ class AstroDatabase {
     return sub;
   }
 
-  // --- Privacy Erasure ---
-  purgeUser(userId) {
-    // 1. Delete user record & secret
+  // --- Durable Sessions Registry ---
+  createSessionRecord(token, userId, expiresAtMs) {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const now = new Date().toISOString();
+    const expiresAt = new Date(expiresAtMs).toISOString();
+    const record = {
+      sessionToken: token,
+      userId,
+      tokenHash,
+      createdAt: now,
+      expiresAt,
+      revokedAt: null
+    };
+    this.state.user_sessions[token] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO user_sessions (session_token, user_id, token_hash, created_at, expires_at, revoked_at)
+         VALUES ($1, $2, $3, $4, $5, NULL)
+         ON CONFLICT (session_token) DO UPDATE SET
+          expires_at = EXCLUDED.expires_at,
+          revoked_at = NULL`,
+        [token, userId, tokenHash, now, expiresAt]
+      ).catch(err => console.warn("[POSTGRESQL] Session insert warning:", err.message));
+    }
+    return record;
+  }
+
+  isSessionRevoked(token) {
+    const session = this.state.user_sessions[token];
+    if (session && session.revokedAt) {
+      return true;
+    }
+    return false;
+  }
+
+  revokeSession(token) {
+    const session = this.state.user_sessions[token];
+    const now = new Date().toISOString();
+    if (session) {
+      session.revokedAt = now;
+    } else {
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      this.state.user_sessions[token] = {
+        sessionToken: token,
+        tokenHash,
+        revokedAt: now
+      };
+    }
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        "UPDATE user_sessions SET revoked_at = NOW() WHERE session_token = $1",
+        [token]
+      ).catch(err => console.warn("[POSTGRESQL] Session revoke warning:", err.message));
+    }
+    return true;
+  }
+
+  revokeAllUserSessions(userId) {
+    const now = new Date().toISOString();
+    for (const s of Object.values(this.state.user_sessions)) {
+      if (s.userId === userId) {
+        s.revokedAt = now;
+      }
+    }
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        "UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = $1",
+        [userId]
+      ).catch(err => console.warn("[POSTGRESQL] User sessions revoke warning:", err.message));
+    }
+    return true;
+  }
+
+  // --- Credit Reservation Ledger ---
+  reserveCredits(requestId, userId, cost = 1, ttlSeconds = 300) {
+    const user = this.getUser(userId);
+    if (!user) {
+      throw new Error(`User not found: ${userId}`);
+    }
+    const available = (user.availableCredits || 0) - (user.lockedCredits || 0);
+    if (available < cost) {
+      return { success: false, reason: "INSUFFICIENT_CREDITS", available, cost };
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + ttlSeconds * 1000).toISOString();
+    const reservation = {
+      requestId,
+      userId,
+      creditsReserved: cost,
+      status: "reserved",
+      createdAt: now.toISOString(),
+      expiresAt,
+      completedAt: null
+    };
+
+    user.lockedCredits = (user.lockedCredits || 0) + cost;
+    this.state.credit_reservations[requestId] = reservation;
+    this.state.users[userId] = user;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO credit_reservations (request_id, user_id, credits_reserved, status, created_at, expires_at)
+         VALUES ($1, $2, $3, 'reserved', $4, $5)
+         ON CONFLICT (request_id) DO UPDATE SET status = 'reserved', expires_at = EXCLUDED.expires_at`,
+        [requestId, userId, cost, reservation.createdAt, expiresAt]
+      ).catch(err => console.warn("[POSTGRESQL] Credit reservation insert warning:", err.message));
+    }
+
+    return { success: true, reservation, user };
+  }
+
+  settleCreditReservation(requestId, userId) {
+    const reservation = this.state.credit_reservations[requestId];
+    const user = this.getUser(userId);
+    if (!reservation || reservation.status !== "reserved") {
+      return { success: false, reason: "RESERVATION_NOT_FOUND_OR_CLOSED" };
+    }
+
+    const cost = reservation.creditsReserved || 1;
+    reservation.status = "settled";
+    reservation.completedAt = new Date().toISOString();
+
+    if (user) {
+      user.lockedCredits = Math.max(0, (user.lockedCredits || 0) - cost);
+      user.availableCredits = Math.max(0, (user.availableCredits || 0) - cost);
+      this.state.users[userId] = user;
+    }
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        "UPDATE credit_reservations SET status = 'settled', completed_at = NOW() WHERE request_id = $1",
+        [requestId]
+      ).catch(err => console.warn("[POSTGRESQL] Credit reservation settle warning:", err.message));
+    }
+
+    return { success: true, reservation, user };
+  }
+
+  releaseCreditReservation(requestId, userId, errorReason = null) {
+    const reservation = this.state.credit_reservations[requestId];
+    const user = this.getUser(userId);
+    if (!reservation || reservation.status !== "reserved") {
+      return { success: false, reason: "RESERVATION_NOT_FOUND_OR_CLOSED" };
+    }
+
+    const cost = reservation.creditsReserved || 1;
+    reservation.status = "released";
+    reservation.completedAt = new Date().toISOString();
+    reservation.errorReason = errorReason;
+
+    if (user) {
+      user.lockedCredits = Math.max(0, (user.lockedCredits || 0) - cost);
+      this.state.users[userId] = user;
+    }
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        "UPDATE credit_reservations SET status = 'released', completed_at = NOW() WHERE request_id = $1",
+        [requestId]
+      ).catch(err => console.warn("[POSTGRESQL] Credit reservation release warning:", err.message));
+    }
+
+    return { success: true, reservation, user };
+  }
+
+  // --- Authoritative Transactional Payment Execution ---
+  async executePaymentTransaction({ orderId, paymentId, userId, amountINR, currency, creditsAdded, planId, billingPeriod }) {
+    // 1. If PostgreSQL is connected, execute within an ACID transaction
+    if (this.pgConnected && this.pgPool) {
+      const client = await this.pgPool.connect();
+      try {
+        await client.query("BEGIN");
+
+        // Lock order row
+        const orderRes = await client.query("SELECT * FROM payment_orders WHERE order_id = $1 FOR UPDATE", [orderId]);
+        if (orderRes.rows.length === 0) {
+          throw new Error(`Order ${orderId} not found in database for transaction commit.`);
+        }
+
+        // Insert unique payment transaction
+        const txId = `tx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+        const txInsertRes = await client.query(
+          `INSERT INTO payment_transactions (
+            tx_id, order_id, payment_id, user_id, type, amount_inr, currency,
+            credits_added, plan_id, status, timestamp, details
+          ) VALUES ($1, $2, $3, $4, 'report_access_payment', $5, $6, $7, $8, 'completed', NOW(), $9)
+          ON CONFLICT (payment_id) DO NOTHING
+          RETURNING tx_id`,
+          [txId, orderId, paymentId, userId, amountINR, currency || 'INR', creditsAdded, planId, JSON.stringify({ billingPeriod })]
+        );
+
+        if (txInsertRes.rows.length === 0) {
+          // Conflict: Already processed
+          await client.query("ROLLBACK");
+          return { alreadyProcessed: true, orderId, paymentId };
+        }
+
+        // Lock & update user
+        await client.query(
+          `UPDATE users SET
+            subscription_tier = $1,
+            is_registered = TRUE,
+            available_credits = available_credits + $2,
+            monthly_credits = monthly_credits + $2,
+            pdf_export = TRUE,
+            updated_at = NOW()
+          WHERE user_id = $3`,
+          [planId, creditsAdded, userId]
+        );
+
+        // Mark order paid
+        await client.query(
+          "UPDATE payment_orders SET status = 'paid', payment_id = $1, updated_at = NOW() WHERE order_id = $2",
+          [paymentId, orderId]
+        );
+
+        await client.query("COMMIT");
+      } catch (err) {
+        await client.query("ROLLBACK");
+        client.release();
+        throw err;
+      }
+      client.release();
+    }
+
+    // Update in-memory state & disk backup
+    const txId = `tx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const txRecord = {
+      txId,
+      orderId,
+      paymentId,
+      userId,
+      type: "report_access_payment",
+      amountINR,
+      currency: currency || "INR",
+      creditsAdded,
+      planId,
+      billingPeriod,
+      status: "completed",
+      timestamp: new Date().toISOString()
+    };
+    this.state.payment_transactions[txId] = txRecord;
+    this.state.processed_payment_ids[paymentId] = txId;
+
+    const order = this.state.payment_orders[orderId];
+    if (order) {
+      order.status = "paid";
+      order.paymentId = paymentId;
+      order.completedAt = txRecord.timestamp;
+    }
+
+    const user = this.state.users[userId];
+    if (user) {
+      user.subscriptionTier = planId;
+      user.isRegistered = true;
+      user.availableCredits = (user.availableCredits || 0) + creditsAdded;
+      user.monthlyCredits = (user.monthlyCredits || 0) + creditsAdded;
+      user.pdfExport = true;
+      user.transactionHistory = user.transactionHistory || [];
+      user.transactionHistory.push(txRecord);
+    }
+
+    this.persist();
+    return { success: true, txRecord, order, user };
+  }
+
+  // --- Privacy Erasure with Awaited DB Purge ---
+  async purgeUser(userId) {
+    // 1. Revoke all user sessions
+    this.revokeAllUserSessions(userId);
+
+    // 2. Delete user record & secret from state
     delete this.state.users[userId];
     delete this.state.user_secrets[userId];
 
-    // 2. Delete charts
+    // 3. Delete charts
     for (const [id, c] of Object.entries(this.state.saved_charts)) {
       if (c.userId === userId) {
         delete this.state.saved_charts[id];
       }
     }
 
-    // 3. Delete push subscriptions
+    // 4. Delete push subscriptions
     for (const [ep, s] of Object.entries(this.state.push_subscriptions)) {
       if (s.userId === userId) {
         delete this.state.push_subscriptions[ep];
       }
     }
 
-    // 4. Anonymize transactions
+    // 5. Delete credit reservations
+    for (const [reqId, r] of Object.entries(this.state.credit_reservations)) {
+      if (r.userId === userId) {
+        delete this.state.credit_reservations[reqId];
+      }
+    }
+
+    // 6. Anonymize transactions
     for (const tx of Object.values(this.state.payment_transactions)) {
       if (tx.userId === userId) {
         tx.userId = "ANONYMIZED_USER";
@@ -757,12 +1072,26 @@ class AstroDatabase {
 
     this.persist();
 
+    // 7. Awaited PostgreSQL Deletion Transaction
     if (this.pgConnected && this.pgPool) {
-      this.pgPool.query("DELETE FROM user_secrets WHERE user_id = $1", [userId]).catch(() => {});
-      this.pgPool.query("DELETE FROM saved_charts WHERE user_id = $1", [userId]).catch(() => {});
-      this.pgPool.query("DELETE FROM push_subscriptions WHERE user_id = $1", [userId]).catch(() => {});
-      this.pgPool.query("UPDATE payment_transactions SET user_id = 'ANONYMIZED_USER' WHERE user_id = $1", [userId]).catch(() => {});
-      this.pgPool.query("DELETE FROM users WHERE user_id = $1", [userId]).catch(() => {});
+      const client = await this.pgPool.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query("DELETE FROM user_secrets WHERE user_id = $1", [userId]);
+        await client.query("DELETE FROM saved_charts WHERE user_id = $1", [userId]);
+        await client.query("DELETE FROM push_subscriptions WHERE user_id = $1", [userId]);
+        await client.query("DELETE FROM credit_reservations WHERE user_id = $1", [userId]);
+        await client.query("UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = $1", [userId]);
+        await client.query("UPDATE payment_transactions SET user_id = 'ANONYMIZED_USER' WHERE user_id = $1", [userId]);
+        await client.query("DELETE FROM users WHERE user_id = $1", [userId]);
+        await client.query("COMMIT");
+      } catch (err) {
+        await client.query("ROLLBACK");
+        client.release();
+        console.error("[POSTGRESQL] Purge transaction failed:", err.message);
+        throw err;
+      }
+      client.release();
     }
 
     return { success: true, userId, purgedAt: new Date().toISOString() };

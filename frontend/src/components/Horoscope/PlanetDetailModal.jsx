@@ -217,7 +217,7 @@ export default function PlanetDetailModal({ isOpen, onClose, planet, chartData, 
             className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/20 hover:brightness-105 flex items-center justify-center gap-2 transition-all"
           >
             <MessageSquare className="w-4 h-4 text-amber-100" />
-            <span>{isTamil ? `${planet.name} பற்றி கேள் (Ask AstroVerse)` : `Ask AstroVerse About ${planet.name}`}</span>
+            <span>{isTamil ? `${planet.name} பற்றி கேள் (Ask SKR ASTRO)` : `Ask SKR ASTRO About ${planet.name}`}</span>
           </button>
 
           <button

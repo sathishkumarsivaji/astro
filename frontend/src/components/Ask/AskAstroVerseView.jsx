@@ -70,7 +70,7 @@ export default function AskAstroVerseView({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider">
             <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
-            <span>{isTamil ? "ஆஸ்ட்ரோவர்ஸ் ஆழ்ந்த ஜோதிட ஆலோசனை மையம்" : "AstroVerse Deep Consultation Engine"}</span>
+            <span>{isTamil ? "SKR ASTRO ஆழ்ந்த ஜோதிட ஆலோசனை மையம்" : "SKR ASTRO Deep Consultation Engine"}</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -100,8 +100,8 @@ export default function AskAstroVerseView({
           </h1>
           <p className="text-xs text-stone-600 max-w-3xl leading-relaxed mt-1">
             {isTamil
-              ? "ஆஸ்ட்ரோவர்ஸ் அனுபவம் வாய்ந்த ஜோதிடரைப் போல உங்கள் கேள்விகளை ஆராய்கிறது: ஜன்ம வாக்குறுதி (Natal Promise), தசா புக்தி, கோச்சார தூண்டுதல்கள் மற்றும் வர்க்க சக்கரங்களை (D1-D60) ஒருங்கிணைத்து துல்லியமான காரண காரிய விளக்கத்தை அளிக்கிறது."
-              : "AstroVerse operates like an expert consulting astrologer: determining natal promise, verifying dasha and transit triggers, cross-checking Vargas (D1–D60), searching counter-indicators, and explaining uncertainty transparently without false precision."}
+              ? "SKR ASTRO அனுபவம் வாய்ந்த ஜோதிடரைப் போல உங்கள் கேள்விகளை ஆராய்கிறது: ஜன்ம வாக்குறுதி (Natal Promise), தசா புக்தி, கோச்சார தூண்டுதல்கள் மற்றும் வர்க்க சக்கரங்களை (D1-D60) ஒருங்கிணைத்து துல்லியமான காரண காரிய விளக்கத்தை அளிக்கிறது."
+              : "SKR ASTRO operates like an expert consulting astrologer: determining natal promise, verifying dasha and transit triggers, cross-checking Vargas (D1–D60), searching counter-indicators, and explaining uncertainty transparently without false precision."}
           </p>
         </div>
 

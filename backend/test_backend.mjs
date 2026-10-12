@@ -128,7 +128,7 @@ const validPaymentId = `pay_${Date.now()}_abc`;
 // 4A. Missing signature test -> MUST throw
 let unsignedBlocked = false;
 try {
-  processPaymentWebhook({
+  await processPaymentWebhook({
     orderId: order200.orderId,
     paymentId: validPaymentId,
     signature: null,
@@ -142,7 +142,7 @@ assert(unsignedBlocked, "Unsigned webhook request is strictly rejected with erro
 // 4B. Invalid/Forged signature test -> MUST throw
 let forgedSigBlocked = false;
 try {
-  processPaymentWebhook({
+  await processPaymentWebhook({
     orderId: order200.orderId,
     paymentId: validPaymentId,
     signature: "forged_invalid_signature_hex_12345",
@@ -159,7 +159,7 @@ const validSignature = crypto
   .update(`${order200.orderId}|${validPaymentId}`)
   .digest("hex");
 
-const webhookResult = processPaymentWebhook({
+const webhookResult = await processPaymentWebhook({
   orderId: order200.orderId,
   paymentId: validPaymentId,
   signature: validSignature,
@@ -174,7 +174,7 @@ const balanceAfterPayment = updatedEntitlements.availableCredits;
 assert(balanceAfterPayment > initialCredits, "Credits added to user balance upon purchase");
 
 // 4D. REPLAY ATTACK TEST: Same signed webhook replayed -> MUST NOT credit twice!
-const replayResult = processPaymentWebhook({
+const replayResult = await processPaymentWebhook({
   orderId: order200.orderId,
   paymentId: validPaymentId,
   signature: validSignature,
@@ -184,6 +184,23 @@ assert(replayResult.success === true && replayResult.alreadyProcessed === true, 
 
 const entitlementsAfterReplay = getOrCreateEntitlements(testUserId);
 assert(entitlementsAfterReplay.availableCredits === balanceAfterPayment, "Replay attack prevented: Zero duplicate credits added on replayed webhook");
+
+// 4E. Testing Credit Reservation Ledger
+console.log("\n4E. Testing Credit Reservation Ledger...");
+const reqTestId = `req_test_${Date.now()}`;
+const resv1 = db.reserveCredits(reqTestId, testUserId, 1, 300);
+assert(resv1.success === true, "Credit reservation succeeds");
+assert(resv1.user.lockedCredits >= 1, "User lockedCredits incremented");
+
+const settle1 = db.settleCreditReservation(reqTestId, testUserId);
+assert(settle1.success === true, "Credit reservation settlement succeeds");
+assert(settle1.user.availableCredits === balanceAfterPayment - 1, "Available credits decremented upon settlement");
+
+const reqTestId2 = `req_test_rel_${Date.now()}`;
+const resv2 = db.reserveCredits(reqTestId2, testUserId, 1, 300);
+assert(resv2.success === true, "Second credit reservation succeeds");
+const release1 = db.releaseCreditReservation(reqTestId2, testUserId, "AI timeout test");
+assert(release1.success === true, "Credit reservation release succeeds without debit");
 
 // 5. Privacy & Durable Database Erasure Tests
 console.log("\n5. Testing Privacy, Data Export & User Erasure...");
@@ -198,11 +215,18 @@ const exportedDossier = exportUserData(testUserId, updatedEntitlements);
 assert(exportedDossier.savedHoroscopes.length === 1, "Saved chart exported in user dossier");
 assert(exportedDossier.exportMetadata.complianceStandards.includes("GDPR Article 20"), "Dossier includes compliance metadata");
 
-const eraseResult = eraseUserData(testUserId, null);
+// Test durable session revocation before purge
+const testSession = createSignedSessionToken(testUserId, null, true);
+assert(verifySignedSessionToken(testSession.sessionToken) !== null, "New session verifies successfully");
+db.revokeSession(testSession.sessionToken);
+assert(verifySignedSessionToken(testSession.sessionToken) === null, "Explicitly revoked session is rejected even with valid signature");
+
+const eraseResult = await eraseUserData(testUserId, null);
 assert(eraseResult.success === true, "User erasure request processed");
 
 const remainingCharts = getUserSavedCharts(testUserId);
 assert(remainingCharts.length === 0, "All saved charts permanently purged from database");
+assert(verifySignedSessionToken(testSession.sessionToken) === null, "Purged user tokens remain strictly rejected");
 
 // 6. Pricing Configuration Tests
 console.log("\n6. Testing Pricing Plans (₹20, ₹50, ₹100, ₹200) Integrity...");

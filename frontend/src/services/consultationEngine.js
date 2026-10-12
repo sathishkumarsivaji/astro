@@ -1320,7 +1320,7 @@ export function evaluateJointVsSeparateResidence(chartData) {
     jointScore,
     separateScore,
     evidenceFactors: factors,
-    nonAccusatoryNotice: "AstroVerse analyzes structural household and relocation indicators. Astrological indications of independent living represent life-stage or career transitions and must never be construed as personal fault or intention of either partner."
+    nonAccusatoryNotice: "SKR ASTRO analyzes structural household and relocation indicators. Astrological indications of independent living represent life-stage or career transitions and must never be construed as personal fault or intention of either partner."
   };
 }
 
@@ -2295,7 +2295,7 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   });
 
   // Section 11: Counter-Indicators & Delays
-  let delaysEn = "Saturnian or nodal influences introduce moderation or gradual maturation. Therefore, AstroVerse provides an extended supportive window rather than a single rigid date.";
+  let delaysEn = "Saturnian or nodal influences introduce moderation or gradual maturation. Therefore, SKR ASTRO provides an extended supportive window rather than a single rigid date.";
   let delaysTa = "சனி அல்லது ராகுவின் குறுக்கீடு காரணத்தால் காலதாமதம் ஏற்படலாம்; இதனால் குறிப்பிட்ட ஒரு நாளை நிச்சயிப்பதை விட கால வரம்பாகக் கருதுவது சிறந்தது.";
 
   if (intent.domain === "HEALTH") {

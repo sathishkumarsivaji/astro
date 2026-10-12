@@ -43,8 +43,8 @@ export default function EvidenceDrawerModal({
           </h2>
           <p className="text-xs text-stone-600">
             {isTamil
-              ? "ஆஸ்ட்ரோவர்ஸ் இயந்திரக் கற்றல் மாதிரியானது முன்கணிப்புகளைத் தானே உருவாக்குவதில்லை. இது துல்லியமான பராசர விதிகளின் அடிப்படையில் ஆதாரங்களை ஒருங்கிணைக்கிறது."
-              : "AstroVerse does not invent astrological claims. Predictions are derived via deterministic multi-factor convergence rules."}
+              ? "SKR ASTRO தளமானது முன்கணிப்புகளைத் தானே உருவாக்குவதில்லை. இது துல்லியமான பராசர விதிகளின் அடிப்படையில் ஆதாரங்களை ஒருங்கிணைக்கிறது."
+              : "SKR ASTRO does not invent astrological claims. Predictions are derived via deterministic multi-factor convergence rules."}
           </p>
         </div>
 

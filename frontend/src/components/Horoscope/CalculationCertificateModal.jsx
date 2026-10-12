@@ -54,7 +54,7 @@ export default function CalculationCertificateModal({ isOpen, onClose, chartData
             <span>{isTamil ? "மறுஉருவாக்க கணிப்பு சான்றிதழ்" : "Reproducible Calculation Certificate"}</span>
           </div>
           <h2 id="cert-title" className="text-2xl md:text-3xl font-serif font-bold text-stone-900">
-            AstroVerse {isTamil ? "கணக்கீட்டு சான்றிதழ்" : "Calculation Certificate"}
+            SKR ASTRO {isTamil ? "கணக்கீட்டு சான்றிதழ்" : "Calculation Certificate"}
           </h2>
           <p className="text-xs text-stone-600 max-w-lg mx-auto">
             {isTamil

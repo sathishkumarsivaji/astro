@@ -1,8 +1,14 @@
 {
-  "short_name": "AstroVerse",
-  "name": "AstroVerse — Vedic Sidereal Ephemeris & Kundli Platform",
-  "description": "High-Precision Vedic Sidereal Ephemeris, Kundli, Navamsa, Ashtakoota Matching, and Classical Jyotish Engine",
+  "short_name": "SKR ASTRO",
+  "name": "SKR ASTRO — Guidance for a Brighter Life",
+  "description": "SKR ASTRO — Guidance for a Brighter Life | Vedic Sidereal Ephemeris, Kundli, Navamsa, Ashtakoota Matching, and Classical Jyotish Engine",
   "icons": [
+    {
+      "src": "/skr-astro-logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    },
     {
       "src": "/favicon.svg",
       "type": "image/svg+xml",

@@ -570,7 +570,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
             <span><strong>Ephemeris:</strong> Astronomy Engine 2.1.19 ({isTropical ? "Western Tropical / Sayana" : isKP ? "KP Sidereal" : chartSys === "raman" ? "Raman Sidereal" : "Lahiri / Chitrapaksha"})</span>
             <span><strong>Synthesis:</strong> {isTropical ? "Western Psychological & Modern Tropical" : isKP ? "Krishnamurti Padhdhati (KP Sub-Lords)" : "Parashari & Jaimini"}</span>
             <span><strong>House System:</strong> {isTropical ? "Placidus Quadrant Houses" : isKP ? "Placidus Cusps (Siderealized)" : "Whole Sign / Equal-House Bhava Chalit"}</span>
-            <span><strong>Engine:</strong> AstroVerse Engine 4.2.0</span>
+            <span><strong>Engine:</strong> SKR ASTRO Engine 4.2.0</span>
           </div>
           <span className="text-[10px] text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded font-sans font-medium">
             Report ID: {chartData?.reportId || `AV-${(chartData?.profile?.name || "NATAL").slice(0, 3).toUpperCase()}-${(chartData?.profile?.year ?? chartData?.year ?? "GEN")}`}
@@ -1072,7 +1072,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               </button>
             </div>
 
-            {/* ASTROVERSE FOLLOW-UP QUESTIONS & ANSWERS (SHORT REPORT) */}
+            {/* SKR ASTRO FOLLOW-UP QUESTIONS & ANSWERS (SHORT REPORT) */}
             <FollowUpQuestions
               chartData={chartData}
               activeSection="fullReport"
@@ -3575,7 +3575,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11px] font-mono text-stone-700">
-                      <div><strong>Sidereal Engine:</strong> AstroVerse {chartSys === "raman" ? "B.V. Raman" : "Lahiri"} (VSOP87)</div>
+                      <div><strong>Sidereal Engine:</strong> SKR ASTRO {chartSys === "raman" ? "B.V. Raman" : "Lahiri"} (VSOP87)</div>
                       <div><strong>Ayanamsha:</strong> {chartData.system?.ayanamshaName || (chartSys === "raman" ? "B.V. Raman (397 AD Zero Epoch)" : "Lahiri / Chitrapaksha")} {typeof chartData.ayanamsa === "number" ? `(${chartData.ayanamsa.toFixed(4)}° at birth; ${chartSys === "raman" ? "397 AD Epoch" : "J2000 Anchor: 23° 51' 25.5\""})` : ""}</div>
                       <div><strong>House System:</strong> {chartData.system?.houseSystem || "Whole-Sign + Sripati / Equal Chalit"}</div>
                       <div><strong>Dasha Year:</strong> 365.24219878 Tropical Solar Days (Vimshottari)</div>
@@ -3757,7 +3757,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                     Computational Integrity & Anti-Fabrication Guarantee
                   </span>
                   <p className="text-[10px] text-indigo-800 leading-relaxed">
-                    AstroVerse enforces absolute mathematical isolation across astrology systems. Lahiri, KP, Raman, and Tropical models share astronomical ephemeris observations (VSOP87) but strictly execute their own coordinate transformations and interpretation logic. Classical techniques (Shadbala, Ashtakavarga, Vargas) are never fabricated or silently evaluated on Sayana tropical coordinates.
+                    SKR ASTRO enforces absolute mathematical isolation across astrology systems. Lahiri, KP, Raman, and Tropical models share astronomical ephemeris observations (VSOP87) but strictly execute their own coordinate transformations and interpretation logic. Classical techniques (Shadbala, Ashtakavarga, Vargas) are never fabricated or silently evaluated on Sayana tropical coordinates.
                   </p>
                 </div>
               </div>
@@ -3843,7 +3843,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               </div>
             )}
 
-            {/* ASTROVERSE FOLLOW-UP QUESTIONS & ANSWERS (SECTION-WISE & FULL-REPORT) */}
+            {/* SKR ASTRO FOLLOW-UP QUESTIONS & ANSWERS (SECTION-WISE & FULL-REPORT) */}
             <FollowUpQuestions
               chartData={chartData}
               activeSection={activeTab}
@@ -3918,7 +3918,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                 <div><strong>Dasha Year:</strong> 365.2422 Days</div>
               </div>
               <div className="text-[10px] text-stone-500 pt-1 border-t border-stone-200 leading-relaxed">
-                <strong>Technical Disclosure:</strong> All planetary coordinates are computed via Astronomy Engine (VSOP87/NOVAS-derived planetary model) with AstroVerse Lahiri / Chitrapaksha Sidereal conversion. Planetary war (Graha Yuddha) is evaluated under ASTROVERSE_DECLARED_SHADBALA_CONVENTION (classical 1.0° angular threshold with proximity-scaled ±30 Virupa correction per BPHS). Traditional wellness correspondences and gemstone suggestions represent traditional symbolic interpretations and do NOT constitute medical diagnoses or commercial performance guarantees.
+                <strong>Technical Disclosure:</strong> All planetary coordinates are computed via Astronomy Engine (VSOP87/NOVAS-derived planetary model) with SKR ASTRO Lahiri / Chitrapaksha Sidereal conversion. Planetary war (Graha Yuddha) is evaluated under SKR_ASTRO_DECLARED_SHADBALA_CONVENTION (classical 1.0° angular threshold with proximity-scaled ±30 Virupa correction per BPHS). Traditional wellness correspondences and gemstone suggestions represent traditional symbolic interpretations and do NOT constitute medical diagnoses or commercial performance guarantees.
               </div>
             </div>
           </div>

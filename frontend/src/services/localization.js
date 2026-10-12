@@ -1,10 +1,10 @@
-/* English & Tamil Complete Bilingual Localization Dictionary for AstroVerse */
+/* English & Tamil Complete Bilingual Localization Dictionary for SKR ASTRO */
 
 export const TRANSLATIONS = {
   en: {
     // Navigation
-    appName: "AstroVerse",
-    appSubtitle: "Vedic & Western Life Guidance Platform",
+    appName: "SKR ASTRO",
+    appSubtitle: "Guidance for a Brighter Life",
     navHoroscope: "Horoscope & Kundli",
     navPalm: "Palmistry (Demo)",
     navNumerology: "Numerology Matrix",
@@ -192,7 +192,7 @@ export const TRANSLATIONS = {
     votingModalDesc: "Send this private link to your family via WhatsApp, iMessage, or Telegram. Each relative can upvote their favorites!",
 
     // Pricing & Monetization
-    pricingTag: "AstroVerse Membership Plans",
+    pricingTag: "SKR ASTRO Membership Plans",
     pricingTitle: "Choose Your Sacred Guidance Pass",
     pricingDesc: "Unlock comprehensive palmistry reference, Vedic Kundli, Nakshatra baby name engines, and planetary ephemeris reports.",
     monthlyBilling: "Monthly Billing",
@@ -229,15 +229,15 @@ export const TRANSLATIONS = {
 
     // Disclaimer
     disclaimerLabel: "Statutory Guidance & App Store Compliance Disclaimer:",
-    disclaimerText: "AstroVerse provides astrological calculations, Vedic ephemeris readings, palm line analyses, and numerology projections purely for personal entertainment, self-reflection, and spiritual insight. Content should never replace qualified professional advice (legal, medical, or financial).",
+    disclaimerText: "SKR ASTRO provides astrological calculations, Vedic ephemeris readings, palm line analyses, and numerology projections purely for personal entertainment, self-reflection, and spiritual insight. Content should never replace qualified professional advice (legal, medical, or financial).",
     dismiss: "Dismiss",
     encrypted: "Client-Side Privacy & Secure HTTPS",
     complianceBadge: "Compliance & Disclaimer"
   },
   ta: {
     // Navigation
-    appName: "ஆஸ்ட்ரோவெர்ஸ்",
-    appSubtitle: "வேத ஜோதிடம், கைரேகை & எண் கணித வழிகாட்டி",
+    appName: "SKR ASTRO",
+    appSubtitle: "வழிகாட்டல் ஒரு பிரகாசமான வாழ்க்கைக்கு (Guidance for a Brighter Life)",
     navHoroscope: "ஜாதகம் & குண்டலி",
     navPalm: "கைரேகை (முன்வடிவம்)",
     navNumerology: "எண் கணித மேட்ரிக்ஸ்",
@@ -425,7 +425,7 @@ export const TRANSLATIONS = {
     votingModalDesc: "இந்த இணைப்பை WhatsApp அல்லது Telegram மூலம் உங்கள் குடும்பத்தினருக்கு அனுப்பி விருப்பமான பெயரை தேர்வு செய்ய வையுங்கள்!",
 
     // Pricing & Monetization
-    pricingTag: "ஆஸ்ட்ரோவெர்ஸ் உறுப்பினர் திட்டங்கள்",
+    pricingTag: "SKR ASTRO உறுப்பினர் திட்டங்கள்",
     pricingTitle: "உங்களுக்கான ஜோதிட சேவையை தேர்வு செய்யவும்",
     pricingDesc: "முழுமையான கைரேகை ஸ்கேன், வேத குண்டலி, குழந்தை பெயர் தேர்வு மற்றும் வாழ்நாள் ஜாதக அறிக்கைகளை அன்லாக் செய்யுங்கள்.",
     monthlyBilling: "மாதாந்திர கட்டணம்",
@@ -462,7 +462,7 @@ export const TRANSLATIONS = {
 
     // Disclaimer
     disclaimerLabel: "சட்டரீதியான ஜோதிட வழிகாட்டல் மற்றும் விழிப்புணர்வு அறிவிப்பு:",
-    disclaimerText: "ஆஸ்ட்ரோவெர்ஸ் வழங்கும் வேத ஜோதிட கணக்கீடுகள், கைரேகை ஆய்வுகள் மற்றும் எண் கணித பலன்கள் யாவும் சுய சிந்தனை, ஆன்மீக புரிதல் மற்றும் வழிகாட்டலுக்காக மட்டுமே வழங்கப்படுகிறது. இது சட்ட, மருத்துவ அல்லது நிதி நிபுணர்களின் ஆலோசனைகளுக்கு மாற்றாகாது.",
+    disclaimerText: "SKR ASTRO வழங்கும் வேத ஜோதிட கணக்கீடுகள், கைரேகை ஆய்வுகள் மற்றும் எண் கணித பலன்கள் யாவும் சுய சிந்தனை, ஆன்மீக புரிதல் மற்றும் வழிகாட்டலுக்காக மட்டுமே வழங்கப்படுகிறது. இது சட்ட, மருத்துவ அல்லது நிதி நிபுணர்களின் ஆலோசனைகளுக்கு மாற்றாகாது.",
     dismiss: "மூடுக",
     encrypted: "தனிப்பட்ட பாதுகாப்பான இணைப்பு (HTTPS)",
     complianceBadge: "விதிமுறைகள் & அறிவிப்பு"
