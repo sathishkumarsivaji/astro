@@ -1698,11 +1698,17 @@ function generateDeterministicAnswer(questionText, context, route) {
     if (topShadbala) strengthPointsTa.push(`${toTamilPlanet(topShadbala.planet)} (உயர் ஷட்பல பலம்)`);
     if (topYoga) strengthPointsTa.push(`${cleanEnglishParentheses(topYoga.nameTamil || topYoga.name)}`);
     if (lagnaLord?.lordName) strengthPointsTa.push(`லக்னாதிபதி ${toTamilPlanet(lagnaLord.lordName)} (${toTamilRasi(lagnaLord.signName)})`);
-    const strengthStrTa = strengthPointsTa.length > 0 ? strengthPointsTa.join(", ") : "சமச்சீரான கிரக அமைப்புகள்";
-
-    body = isTamil
-      ? `[அறிக்கை முடிவு] உங்கள் ${sysName} கணிதத்தின்படி, லக்னம் ${toTamilRasi(asc) || 'லக்னம்'}, ராசி ${toTamilRasi(moon) || 'ராசி'}${moonNak ? ` (${toTamilNakshatra(moonNak)})` : ""}, மற்றும் சூரியன் ${toTamilRasi(sunSign) || 'ராசி'} அமைப்புகள் உங்கள் முக்கிய ஜோதிட அடித்தளத்தை உருவாக்குகின்றன. உங்கள் ஜாதகத்தின் முக்கிய வலிமைத் தூண்கள்: ${strengthStrTa}.${dashaDescTa ? ` தற்போதைய இயக்க சுழற்சி: ${dashaDescTa}.` : ""}\n\n[பாரம்பரிய விளக்கம்] பராசர சாஸ்திர விதிகளின்படி, லக்னம் மற்றும் சந்திரனின் நிலைகள் உங்கள் தனித்தன்மை மற்றும் மனோதிடத்தை வடிவமைக்கின்றன. நடப்பு தசா-அந்தர்தச நாதனின் ஆதிபத்தியம் உங்கள் தற்போதைய கவனத்தையும் கர்ம கடமைகளையும் வழிநடத்துகிறது.`
-      : `[Report Finding] According to your calculated ${sysName} report, your Ascendant (${asc || 'Lagna'}), Moon sign (${moon || 'Rashi'}${moonNak ? ` in ${moonNak}` : ""}), and Sun sign (${sunSign || 'Solar placement'}) establish your foundational astrological blueprint. Core planetary pillars of strength in this chart: ${strengthStr}.${dashaDesc ? ` Operating cycle: ${dashaDesc}.` : ""}\n\n[Traditional Context] Under classical Parashari principles, your Ascendant and operating dasha govern vitality, psychological inclinations, and seasonal life priorities. Verified planetary dignities directly shape how your natural potential and timing unfold.`;
+    const hasSufficientNatalLedger = Boolean(asc && context.chart.planets && context.chart.planets.length >= 5);
+    if (!hasSufficientNatalLedger) {
+      status = "INSUFFICIENT_DATA";
+      body = isTamil
+        ? `[அறிக்கை முடிவு] இந்த கேள்விக்குரிய பாவக, காரக அல்லது தசா விவரங்கள் உங்கள் ஜாதகப் பதிவேட்டில் முழுமையாக கிடைக்கவில்லை (INSUFFICIENT_DATA).\n\n[பாரம்பரிய விளக்கம்] போதிய ஜாதகக் கணிதத் தரவுகள் இன்றி பொதுவான முடிவுகளை ஊகிப்பது ஜோதிட சாஸ்திர விதிகளுக்கு எதிரானது.`
+        : `[Report Finding] Sufficient astrological factors for this specific inquiry are not available in the calculated chart context (INSUFFICIENT_DATA).\n\n[Traditional Context] Speculative deduction is strictly withheld when primary house and planetary significators are missing from the ledger.`;
+    } else {
+      body = isTamil
+        ? `[அறிக்கை முடிவு] உங்கள் ${sysName} கணிதத்தின்படி, லக்னம் ${toTamilRasi(asc) || 'லக்னம்'}, ராசி ${toTamilRasi(moon) || 'ராசி'}${moonNak ? ` (${toTamilNakshatra(moonNak)})` : ""}, மற்றும் சூரியன் ${toTamilRasi(sunSign) || 'ராசி'} அமைப்புகள் உங்கள் முக்கிய ஜோதிட அடித்தளத்தை உருவாக்குகின்றன. உங்கள் ஜாதகத்தின் முக்கிய வலிமைத் தூண்கள்: ${strengthStrTa}.${dashaDescTa ? ` தற்போதைய இயக்க சுழற்சி: ${dashaDescTa}.` : ""}\n\n[பாரம்பரிய விளக்கம்] பராசர சாஸ்திர விதிகளின்படி, லக்னம் மற்றும் சந்திரனின் நிலைகள் உங்கள் தனித்தன்மை மற்றும் மனோதிடத்தை வடிவமைக்கின்றன. நடப்பு தசா-அந்தர்தச நாதனின் ஆதிபத்தியம் உங்கள் தற்போதைய கவனத்தையும் கர்ம கடமைகளையும் வழிநடத்துகிறது.`
+        : `[Report Finding] According to your calculated ${sysName} report, your Ascendant (${asc || 'Lagna'}), Moon sign (${moon || 'Rashi'}${moonNak ? ` in ${moonNak}` : ""}), and Sun sign (${sunSign || 'Solar placement'}) establish your foundational astrological blueprint. Core planetary pillars of strength in this chart: ${strengthStr}.${dashaDesc ? ` Operating cycle: ${dashaDesc}.` : ""}\n\n[Traditional Context] Under classical Parashari principles, your Ascendant and operating dasha govern vitality, psychological inclinations, and seasonal life priorities. Verified planetary dignities directly shape how your natural potential and timing unfold.`;
+    }
   }
 
   return {
@@ -1712,7 +1718,7 @@ function generateDeterministicAnswer(questionText, context, route) {
     evidenceIds,
     dataUsed: [`Calculated ${sysName} Chart Data`, ...relevantSections.map(s => `Chapter: ${s}`)],
     status,
-    limitations: []
+    limitations: status === "INSUFFICIENT_DATA" ? ["Chart factors absent"] : []
   };
 }
 
@@ -1859,7 +1865,8 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
     const proxyResponse = await apiFetch("/api/generate-astrology", {
       method: "POST",
       headers,
-      body: JSON.stringify({ prompt, lang: context.lang || "en" })
+      body: JSON.stringify({ prompt, lang: context.lang || "en" }),
+      timeoutMs: 1500
     });
 
     if (proxyResponse && proxyResponse.ok) {

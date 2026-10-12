@@ -223,6 +223,81 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
     plan.specificFactors.push("CHRONOLOGICAL_LIFE_STAGE_TRANSITIONS", "MAJOR_TRANSIT_SHIFTS");
   }
 
+  // 13. Luxury Vehicle vs Standard Vehicle
+  if (intents.has(QUESTION_INTENTS.LUXURY_VEHICLE)) {
+    plan.requiredHouses.add(4); // Sukha / Vahana
+    plan.requiredHouses.add(2); // Wealth reserves
+    plan.requiredHouses.add(11); // Flow of surplus gains
+    plan.requiredLords.add("4thLord");
+    plan.requiredPlanets.add("Venus"); // Vehicle luxury
+    plan.requiredPlanets.add("Mars"); // Mechanical machinery
+    plan.requiredVargas.add("D4");
+    plan.requiredVargas.add("D16");
+    plan.specificFactors.push("LUXURY_VEHICLE_VS_STANDARD_CONVEYANCE", "MAHA_DHANA_YOGA_TIER");
+  }
+
+  // 14. Research / PhD / Doctorate
+  if (intents.has(QUESTION_INTENTS.RESEARCH_PHD)) {
+    plan.requiredHouses.add(5); // Higher intellect
+    plan.requiredHouses.add(8); // Deep research / occult / hidden knowledge
+    plan.requiredHouses.add(9); // Higher philosophy / doctorate / university
+    plan.requiredLords.add("5thLord");
+    plan.requiredLords.add("9thLord");
+    plan.requiredPlanets.add("Jupiter"); // Jnana
+    plan.requiredPlanets.add("Mercury"); // Logic / analysis
+    plan.requiredPlanets.add("Saturn"); // Deep sustained inquiry / labor
+    plan.requiredVargas.add("D24");
+    plan.specificFactors.push("DOCTORAL_RESEARCH_ALIGNMENT", "8TH_HOUSE_INVESTIGATION_DEPTH");
+  }
+
+  // 15. Business: Continue vs Change
+  if (intents.has(QUESTION_INTENTS.BUSINESS_CONTINUE_VS_CHANGE)) {
+    plan.requiredHouses.add(7); // Business trade / partnerships
+    plan.requiredHouses.add(10); // Professional standing
+    plan.requiredHouses.add(11); // Profit margins / growth
+    plan.requiredHouses.add(6); // Competition / debt
+    plan.requiredPlanets.add("Mercury"); // Commerce
+    plan.requiredPlanets.add("Saturn"); // Persistence vs restructuring
+    plan.requiredVargas.add("D10");
+    plan.specificFactors.push("BUSINESS_CONTINUATION_VIABILITY", "BUSINESS_PIVOT_RESTRUCTURING");
+  }
+
+  // 16. Politics vs Administration
+  if (intents.has(QUESTION_INTENTS.POLITICS_VS_ADMINISTRATION)) {
+    plan.requiredHouses.add(10); // Executive status / governance
+    plan.requiredHouses.add(6); // Public competition / service
+    plan.requiredHouses.add(1); // Personal charisma / presence
+    plan.requiredPlanets.add("Sun"); // Sovereign authority / administrative rank
+    plan.requiredPlanets.add("Mars"); // Executive command
+    plan.requiredPlanets.add("Rahu"); // Mass popularity / political strategy
+    plan.requiredVargas.add("D10");
+    plan.specificFactors.push("POLITICAL_VS_ADMINISTRATIVE_ALIGNMENT", "PUBLIC_AUTHORITY_POTENTIAL");
+  }
+
+  // 17. Foreign Settlement
+  if (intents.has(QUESTION_INTENTS.FOREIGN_SETTLEMENT)) {
+    plan.requiredHouses.add(9); // Long distance horizons
+    plan.requiredHouses.add(12); // Distant lands / permanent relocation
+    plan.requiredHouses.add(4); // Home land / roots
+    plan.requiredPlanets.add("Rahu"); // Cross-cultural migration
+    plan.requiredPlanets.add("Moon"); // Mind / residence
+    plan.requiredVargas.add("D4");
+    plan.specificFactors.push("FOREIGN_SETTLEMENT_VS_TEMPORARY_STAY", "4TH_HOUSE_DISTANCE_DISPLACEMENT");
+  }
+
+  // 18. Mega Wealth / Extreme Affluence
+  if (intents.has(QUESTION_INTENTS.MEGA_WEALTH)) {
+    plan.requiredHouses.add(2); // Treasury
+    plan.requiredHouses.add(5); // Purva punya / speculative fortune
+    plan.requiredHouses.add(9); // Fortune / Lakshmi
+    plan.requiredHouses.add(11); // Highest gains
+    plan.requiredLords.add("2ndLord");
+    plan.requiredLords.add("11thLord");
+    plan.requiredPlanets.add("Jupiter");
+    plan.requiredPlanets.add("Venus");
+    plan.specificFactors.push("MAHA_DHANA_YOGA_COMBINATIONS", "ACCUMULATION_CEILING_TIER");
+  }
+
   return {
     ...plan,
     requiredPlanets: Array.from(plan.requiredPlanets),

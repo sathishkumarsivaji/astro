@@ -49,7 +49,8 @@ export async function ensureSessionToken() {
   try {
     const res = await apiFetch("/api/auth/session", {
       method: "POST",
-      headers
+      headers,
+      timeoutMs: 1500
     });
 
     if (res && res.ok) {

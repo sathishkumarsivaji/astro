@@ -15,17 +15,36 @@ export const QUESTION_INTENTS = Object.freeze({
   SPOUSE_DIRECTION: "SPOUSE_DIRECTION",
   SPOUSE_DISTANCE: "SPOUSE_DISTANCE",
   MARRIAGE: "MARRIAGE",
+  MARRIAGE_TIMING: "MARRIAGE_TIMING",
+  MARRIAGE_AGE: "MARRIAGE_AGE",
+  LOVE_VS_ARRANGED: "LOVE_VS_ARRANGED",
+  JOINT_VS_SEPARATE: "JOINT_VS_SEPARATE",
+  FAMILY_PRESTIGE: "FAMILY_PRESTIGE",
+  SPOUSE_CAREER: "SPOUSE_CAREER",
   PROPERTY: "PROPERTY",
+  PROPERTY_ACQUISITION: "PROPERTY_ACQUISITION",
   CAREER: "CAREER",
+  CAREER_TIMING: "CAREER_TIMING",
+  PROMOTION_TIMING: "PROMOTION_TIMING",
+  GOVERNMENT_JOB: "GOVERNMENT_JOB",
+  BUSINESS_GROWTH: "BUSINESS_GROWTH",
+  BUSINESS_CONTINUE_VS_CHANGE: "BUSINESS_CONTINUE_VS_CHANGE",
   EDUCATION: "EDUCATION",
+  RESEARCH_PHD: "RESEARCH_PHD",
+  HIGHER_STUDIES: "HIGHER_STUDIES",
+  COMPETITIVE_EXAMS: "COMPETITIVE_EXAMS",
   CHILDREN: "CHILDREN",
   FOREIGN_TRAVEL: "FOREIGN_TRAVEL",
+  FOREIGN_SETTLEMENT: "FOREIGN_SETTLEMENT",
   VEHICLE: "VEHICLE",
+  LUXURY_VEHICLE: "LUXURY_VEHICLE",
   BUSINESS: "BUSINESS",
   JOB: "JOB",
   FINANCE: "FINANCE",
+  MEGA_WEALTH: "MEGA_WEALTH",
   FAMILY: "FAMILY",
   LEADERSHIP: "LEADERSHIP",
+  POLITICS_VS_ADMINISTRATION: "POLITICS_VS_ADMINISTRATION",
   WELLNESS: "WELLNESS",
   LEGAL: "LEGAL",
   SPIRITUAL: "SPIRITUAL",
@@ -81,8 +100,30 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.SPOUSE_CHARACTERISTICS);
   }
 
+  if (/(joint\s*family|separate\s*(?:house|household|home)|nuclear\s*family|live\s+with\s+(?:my\s+)?parents|தனிக்குடித்தனம்|கூட்டுக்\s*குடும்பம்)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.JOINT_VS_SEPARATE);
+  }
+
+  if (/(prestige|respect|reputation|elders|values|கௌரவம்|மதிப்பாரா|பெரியோரை)/i.test(text) && /spouse|family|துணை|குடும்ப/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.FAMILY_PRESTIGE);
+  }
+
+  if (/(love|arranged|proposal|self-choice|relatives|காதல்|நிச்சய)/i.test(text) && /(marri|wedding|spouse|திருமண|கல்யாண)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.LOVE_VS_ARRANGED);
+  }
+
+  if (/(what\s+age|age\s+will\s+i|marriage\s+age|வயதில்\s*திருமணம்)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.MARRIAGE_AGE);
+    detectedIntents.add(QUESTION_INTENTS.TIMING);
+  }
+
+  if (/spouse.*(career|job|work|profession)|துணை.*(வேலை|தொழில்)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.SPOUSE_CAREER);
+  }
+
   if (/marriage|wedding|spouse|partner|bride|groom|திருமணம்|கல்யாணம்|களத்திரம்/i.test(text)) {
     detectedIntents.add(QUESTION_INTENTS.MARRIAGE);
+    if (cues.isTiming) detectedIntents.add(QUESTION_INTENTS.MARRIAGE_TIMING);
   }
 
   // 2. Dasha & Planetary Period Intents
@@ -104,15 +145,73 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.VARGA_INTERPRETATION);
   }
 
-  // 4. Domains
+  // 4. Domains & Specific Life Scenarios
+  if (/(rolls\s*royce|luxury\s*car|expensive\s*car|luxury\s*vehicle|விலையுயர்ந்த\s*கார்|சொகுசு\s*வாகனம்)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.LUXURY_VEHICLE);
+    detectedIntents.add(QUESTION_INTENTS.VEHICLE);
+  }
+
+  if (/(billionaire|millionaire|crorepati|super\s*rich|ultra\s*rich|mega\s*wealth|கோடீஸ்வரன்|மகா\s*தன)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.MEGA_WEALTH);
+    detectedIntents.add(QUESTION_INTENTS.FINANCE);
+  }
+
+  if (/(government\s*job|civil\s*services?|ias|ips|upsc|அரசு\s*பணி|அரசு\s*வேலை)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.GOVERNMENT_JOB);
+    detectedIntents.add(QUESTION_INTENTS.CAREER);
+  }
+
+  if (/(continue.*business.*change|change.*business|business.*pivot|expand.*business|business.*expansion|தொழில்\s*மாற்ற|தொழில்\s*விரிவாக்க)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.BUSINESS_CONTINUE_VS_CHANGE);
+    detectedIntents.add(QUESTION_INTENTS.BUSINESS);
+  } else if (/business\s*growth|व्यापार|சுயதொழில்\s*வளர்ச்சி|வியாபார\s*வளர்ச்சி/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.BUSINESS_GROWTH);
+    detectedIntents.add(QUESTION_INTENTS.BUSINESS);
+  }
+
+  if (/(politics|minister|electoral|mla|mp|governance|அரசியல்|தேர்தல்)/i.test(text) && /(corporate|executive|administrative|நிர்வாக)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.POLITICS_VS_ADMINISTRATION);
+    detectedIntents.add(QUESTION_INTENTS.LEADERSHIP);
+  }
+
+  if (/(phd|doctorate|doctoral|research\s*degree|thesis|முனைவர்\s*பட்டம்|ஆராய்ச்சி)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.RESEARCH_PHD);
+    detectedIntents.add(QUESTION_INTENTS.EDUCATION);
+  }
+
+  if (/(higher\s*studies|master\s*degree|post\s*grad|foreign\s*degree|உயர்\s*கல்வி)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.HIGHER_STUDIES);
+    detectedIntents.add(QUESTION_INTENTS.EDUCATION);
+  }
+
+  if (/(competitive\s*exam|entrance|neet|upsc|போட்டித்\s*தேர்வு)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.COMPETITIVE_EXAMS);
+    detectedIntents.add(QUESTION_INTENTS.EDUCATION);
+  }
+
+  if (/(overseas\s*settlement|foreign\s*settlement|live\s*abroad|pr\s*visa|வெளிநாட்டு\s*குடியேற்றம்)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.FOREIGN_SETTLEMENT);
+    detectedIntents.add(QUESTION_INTENTS.FOREIGN_TRAVEL);
+  }
+
+  if (/(buy.*house|buy.*land|buy.*flat|property\s*purchase|வீடு\s*வாங்க|நிலம்\s*வாங்க)/i.test(text)) {
+    detectedIntents.add(QUESTION_INTENTS.PROPERTY_ACQUISITION);
+    detectedIntents.add(QUESTION_INTENTS.PROPERTY);
+  }
+
   if (/career|job|profession|promotion|work|office|தொழில்|வேலை|உத்தியோகம்|பதவி\s*உயர்வு/i.test(text)) {
-    if (/job|employment|service|அலுவலக\s*பணி|வேலை/i.test(text)) {
+    if (/(promotion|salary\s*hike|பதவி\s*உயர்வு)/i.test(text)) {
+      detectedIntents.add(QUESTION_INTENTS.PROMOTION_TIMING);
+      detectedIntents.add(QUESTION_INTENTS.CAREER);
+    } else if (/job|employment|service|அலுவலக\s*பணி|வேலை/i.test(text)) {
       detectedIntents.add(QUESTION_INTENTS.JOB);
+      detectedIntents.add(QUESTION_INTENTS.CAREER);
     } else if (/business|startup|trade|venture|commerce|சுயதொழில்|வியாபாரம்/i.test(text)) {
       detectedIntents.add(QUESTION_INTENTS.BUSINESS);
     } else {
       detectedIntents.add(QUESTION_INTENTS.CAREER);
     }
+    if (cues.isTiming) detectedIntents.add(QUESTION_INTENTS.CAREER_TIMING);
   }
 
   if (/property|real\s*estate|house|land|flat|bhoomi|நிலம்|சொத்து|வீடு|மனை/i.test(text)) {

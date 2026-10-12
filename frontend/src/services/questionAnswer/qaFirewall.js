@@ -99,6 +99,18 @@ export function verifyGeneratedAnswer({ text, answerObject, isTamil = false }) {
     sanitized = sanitized.replace(/\b(?:pluto|neptune|uranus)\b/gi, "uncalculated factor");
   }
 
+  // 5. REPETITIVE CLICHÉ & GENERIC PARAGRAPH SUPPRESSION
+  const forbiddenGenericParagraphs = [
+    /Favorable Dasha-Transit Window/i,
+    /தசா-கோச்சார சுப பார்வை காலம்$/i
+  ];
+  for (const fbp of forbiddenGenericParagraphs) {
+    if (fbp.test(sanitized)) {
+      violations.push("GENERIC_PLACEHOLDER: Output contains uncalculated placeholder phrase.");
+      sanitized = sanitized.replace(fbp, isTamil ? "தசா-கோச்சார சுப பார்வை காலம் (காலக்கோடு வரம்பு நிர்ணயிக்கப்படவில்லை)" : "Dasha-Transit Period (No specific narrow window isolated)");
+    }
+  }
+
   return {
     isValid: violations.length === 0,
     sanitizedText: sanitized,

@@ -681,25 +681,181 @@ export function synthesizeAnswer({
     }
   }
 
-  // DEFAULT / GENERAL / FACTUAL FALLBACK
-  else {
-    const p1 = Object.values(pMap)[0] || { name: "Lagna", sign: ascSign, house: 1 };
+  // CASE 11: LUXURY VEHICLES (ROLLS-ROYCE / SUPERCARS VS STANDARD CONVEYANCES)
+  else if (intentResult.intents?.includes("LUXURY_VEHICLE")) {
+    const h4 = hMap[4] || {};
+    const h2 = hMap[2] || {};
+    const h11 = hMap[11] || {};
+    const ven = pMap["Venus"] || {};
+    const mars = pMap["Mars"] || {};
+
     if (isTamil) {
-      directAnswer = `உங்கள் ஜாதக அமைப்பின்படி லக்னம் ${ascSign} ராசியாக அமைந்து, முக்கிய கிரக அமைப்புகள் இந்த கேள்விக்குரிய பாவகத்தில் சாதகமான தாக்கத்தை ஏற்படுத்துகின்றன.`;
-      reasoningChain = `லக்னாதிபதி, ராசி அதிபதி மற்றும் பாவக அமைப்புகளின் கணித ஆதாரங்கள் அடிப்படையில் இந்த பகுப்பாய்வு கட்டமைக்கப்பட்டுள்ளது.`;
-      whatCannotBeConcluded = "ஜாதகக் குறியீடுகள் வாழ்வின் பொதுவான போக்கை காட்டுகின்றன; புறநிலை காரணிகள் முடிவுகளை மாற்றக்கூடும்.";
+      directAnswer = `பாரம்பரிய ஜோதிட கணிப்பில் சொகுசு வாகனங்கள் (Luxury Vehicles) என்பது 4-ம் பாவகமான வாகன சுக ஸ்தானம் (${h4.sign ? `${toTamilRasi(h4.sign)}, அதிபதி: ${toTamilPlanet(h4.lord)}` : "4-ம் பாவகம்"}), உயர் தன யோக பாவகங்கள் (2-ம் தன மற்றும் 11-ம் லாப ஸ்தானங்கள்) மற்றும் வாகன காரகனான சுக்கிரனின் உச்ச/சுப வலிமையால் மட்டுமே தீர்மானிக்கப்படுகிறது. ஜோதிடக் கணிதம் அதி ஆடம்பர வாகன யோகத்தின் சாத்தியக்கூறை (Tier of Luxury Conveyance) மட்டுமே குறிக்க முடியும்; ரோல்ஸ் ராய்ஸ் போன்ற குறிப்பிட்ட வர்த்தக முத்திரையையோ அல்லது பிராண்டையோ உறுதியாக உறுதிப்படுத்த முடியாது.`;
+      reasoningChain = `4-ம் பாவக அதிபதியின் பலம், 2 மற்றும் 11-ம் பாவகங்களின் உபரி நிதி திரட்சி யோகம், மற்றும் சுக்கிரனின் காரகத்துவங்கள் ஆடம்பர வாகன சேர்க்கையை அளவிட பகுப்பாய்வு செய்யப்பட்டன.`;
+      whatCannotBeConcluded = "ஜோதிடம் வாகன யோகத்தின் பொருளாதார அடுக்கை மட்டுமே சுட்டிக்காட்டும்; குறிப்பிட்ட வாகன பிராண்ட் அல்லது வணிக வர்த்தக முத்திரையை ஜாதகத்தால் உறுதி செய்ய முடியாது.";
     } else {
-      directAnswer = `According to your calculated report, your Ascendant (Lagna) is ${ascSign}, with primary planetary dispositors defining the energetic framework for this inquiry.`;
-      reasoningChain = `Synthesized chart blueprint dispositions and calculated planetary houses from the natal ledger.`;
-      whatCannotBeConcluded = "Traditional chart factors indicate tendencies; external mundane variables influence final outcomes.";
+      directAnswer = `In classical Jyotish, extreme luxury conveyances (such as premier luxury marques) require convergence of the 4th house of vehicular comfort (${h4.sign ? `${h4.sign}, ruled by ${h4.lord}` : "Vahana Bhava"}), extreme wealth surplus (2nd and 11th Maha Dhana yogas), and exalted/dignified Venus. Astrology evaluates the tier of luxury conveyance and vehicular comfort; it cannot guarantee specific commercial automobile trademarks (such as Rolls-Royce).`;
+      reasoningChain = `Evaluated 4th house vehicular strength alongside 2nd/11th house treasury surplus and Venus dispositorship to classify conveyance affluence tier.`;
+      whatCannotBeConcluded = "Astrological analysis classifies vehicular luxury tiers; specific automobile brand trademarks and model purchases cannot be concluded from planetary configurations.";
     }
 
     astroEvidenceList = [
-      `Ascendant: ${ascSign}`,
-      `Primary Factor: ${p1.name} in House ${p1.house}`
+      `4th House (Vahana Bhava): ${h4.sign || "-"} ${h4.lord ? `(Lord: ${h4.lord})` : ""}`.trim(),
+      `2nd House (Treasury Reserves): ${h2.sign || "-"} ${h2.lord ? `(Lord: ${h2.lord})` : ""}`.trim(),
+      `11th House (Surplus Liquidity): ${h11.sign || "-"} ${h11.lord ? `(Lord: ${h11.lord})` : ""}`.trim(),
+      `Venus (Luxury Karaka): House ${ven.house || "-"}${ven.sign ? ` in ${ven.sign}` : ""}${ven.dignity ? ` (${ven.dignity})` : ""}`,
+      `Conveyance Classification: ULTRA_LUXURY_TIER_ANALYSIS`
     ];
-    relevantSections = ["blueprint", "overview"];
-    evidenceIds = [`CHART_FACT_ASC_${ascSign}`];
+    relevantSections = ["property", "wealth", "assets"];
+    evidenceIds = ["HOUSE_FACT_H4", "HOUSE_FACT_H2", "HOUSE_FACT_H11", "PLANET_FACT_VENUS", "CONVEYANCE_TIER_ANALYSIS"];
+  }
+
+  // CASE 12: RESEARCH / PHD / DOCTORATE COMPLETION
+  else if (intentResult.intents?.includes("RESEARCH_PHD") || /ph\.?d|doctorate|ஆராய்ச்சி|முனைவர்/i.test(rawQ)) {
+    const h5 = hMap[5] || {};
+    const h8 = hMap[8] || {};
+    const h9 = hMap[9] || {};
+    const jup = pMap["Jupiter"] || {};
+    const merc = pMap["Mercury"] || {};
+
+    if (isTamil) {
+      directAnswer = `முனைவர் பட்டம் (PhD) மற்றும் தீவிர ஆராய்ச்சி கல்வி ஆகியவை உங்கள் 5-ம் பாவகமான மேதைமை ஸ்தானம் (${h5.sign ? `${toTamilRasi(h5.sign)}, அதிபதி: ${toTamilPlanet(h5.lord)}` : "5-ம் பாவகம்"}), 8-ம் பாவகமான மறைபொருள் மற்றும் ஆழ்ந்த ஆய்வு ஸ்தானம் (${h8.sign ? `${toTamilRasi(h8.sign)}, அதிபதி: ${toTamilPlanet(h8.lord)}` : "8-ம் பாவகம்"}), 9-ம் உயர்கல்வி தத்துவ ஸ்தானம் மற்றும் குரு, புதன் கிரகங்களின் இணைவால் தீர்மானிக்கப்படுகின்றன. இந்த அமைப்புகள் ஆராய்ச்சி சிந்தனை மற்றும் ஆய்வுக் கட்டுரைகளை நிறைவு செய்வதற்கான சாதகமான கல்வித்திறனை அளிக்கின்றன.`;
+      reasoningChain = `ஆராய்ச்சிக்குரிய 8-ம் பாவகத்தின் நுண்ணறிவு, 5-ம் இடத்து படைப்பாற்றல் மற்றும் 9-ம் இடத்து உயர்கல்வி தத்துவ ஆதிபத்தியங்கள் ஒருங்கிணைக்கப்பட்டு முனைவர் பட்ட ஆய்வு சாத்தியக்கூறுகள் பகுப்பாய்வு செய்யப்பட்டன.`;
+      whatCannotBeConcluded = "ஜாதகம் ஆராய்ச்சி மனப்பான்மையையும் ஆய்வுத் திறனையும் குறிக்கிறது; பல்கலைக்கழக ஆய்வு சமர்ப்பிப்பு மற்றும் பட்டமளிப்பு கல்வி நிறுவன நடைமுறைகளை சார்ந்தவை.";
+    } else {
+      directAnswer = `Doctoral research and PhD completion synthesize your 5th house of intellect (${h5.sign ? `${h5.sign}, ruled by ${h5.lord}` : "Buddhi Bhava"}), 8th house of deep investigation and occult/hidden knowledge (${h8.sign ? `${h8.sign}, ruled by ${h8.lord}` : "Randhra Bhava"}), and 9th house of higher philosophical scholarship (${h9.sign ? `${h9.sign}, ruled by ${h9.lord}` : "Dharma/Higher Studies"}). Strong disposition across these sectors supports prolonged research inquiry and thesis development.`;
+      reasoningChain = `Synthesized 5th house analytical genius, 8th house deep investigative capability, 9th house academic credentials, and Guru/Budha significations.`;
+      whatCannotBeConcluded = "Astrology reflects research aptitude and stamina; academic institutional approvals and thesis viva defense depend strictly on university evaluations.";
+    }
+
+    astroEvidenceList = [
+      `5th House (Intellect): ${h5.sign || "-"} ${h5.lord ? `(Lord: ${h5.lord})` : ""}`.trim(),
+      `8th House (Deep Research): ${h8.sign || "-"} ${h8.lord ? `(Lord: ${h8.lord})` : ""}`.trim(),
+      `9th House (Higher Academy): ${h9.sign || "-"} ${h9.lord ? `(Lord: ${h9.lord})` : ""}`.trim(),
+      `Jupiter (Jnana Karaka): House ${jup.house || "-"}${jup.sign ? ` in ${jup.sign}` : ""}`,
+      `Mercury (Analytical Karaka): House ${merc.house || "-"}${merc.sign ? ` in ${merc.sign}` : ""}`
+    ];
+    relevantSections = ["education", "studies", "blueprint"];
+    evidenceIds = ["HOUSE_FACT_H5", "HOUSE_FACT_H8", "HOUSE_FACT_H9", "PLANET_FACT_JUPITER", "PLANET_FACT_MERCURY"];
+  }
+
+  // CASE 13: BUSINESS: CONTINUE CURRENT VS START NEW
+  else if (intentResult.intents?.includes("BUSINESS_CONTINUE_VS_CHANGE") || /continue.*business|change.*business|வியாபாரம்.*தொடர|தொழில்.*மாற்ற/i.test(rawQ)) {
+    const h7 = hMap[7] || {};
+    const h10 = hMap[10] || {};
+    const h6 = hMap[6] || {};
+    const merc = pMap["Mercury"] || {};
+    const sat = pMap["Saturn"] || {};
+
+    if (isTamil) {
+      directAnswer = `தற்போதுள்ள வணிகத்தைத் தொடர்வதா அல்லது புதிய தொழில் முனைவுக்கு மாறுவதா என்ற முடிவு, உங்கள் 7-ம் பாவகமான வர்த்தக ஸ்தானம் (${h7.sign ? `${toTamilRasi(h7.sign)}, அதிபதி: ${toTamilPlanet(h7.lord)}` : "7-ம் பாவகம்"}), 10-ம் தொழில் ஸ்தானம், மற்றும் 6-ம் பாவகமான தொழில் கடன்/போட்டி ஸ்தானத்தின் அமைப்பைப் பொறுத்தது. நடப்பு கிரக அமைப்புகள் வணிக மறுசீரமைப்பிற்கு சாதகமாக உள்ளதா என்பது தசா-புக்தி பலத்தின் அடிப்படையில் கவனமாக தீர்மானிக்கப்பட வேண்டும்.`;
+      reasoningChain = `7-ம் இடத்து வணிக சந்தை தொடர்புகள், புதனின் வணிக புத்தி கூர்மை, மற்றும் சனியின் ஸ்திரத்தன்மை ஆகியவை ஆராயப்பட்டு தொழில் மாற்றம் அல்லது தொடர்ச்சி குறித்த வழிகாட்டல் பெறப்பட்டது.`;
+      whatCannotBeConcluded = "ஜோதிடம் வணிக உகந்த காலத்தை மட்டுமே காட்டும்; சந்தை சூழ்நிலை, முதலீட்டு இடர் மற்றும் செயல்பாட்டு நிர்வாக முடிவுகளுக்கு சுய வணிக ஆலோசனை அவசியம்.";
+    } else {
+      directAnswer = `Evaluating whether to persist in your current business enterprise versus pivoting or restructuring synthesizes your 7th house of commercial trade (${h7.sign ? `${h7.sign}, ruled by ${h7.lord}` : "Vyapar Bhava"}), 10th house of public standing, and 6th house of competitive liabilities. Planetary dignities of Mercury (commercial acumen) and Saturn (persistence) indicate optimal operational strategies.`;
+      reasoningChain = `Evaluated 7th house marketplace interaction against 10th house executive stability and current Vimshottari planetary cycle to discern continuation versus strategic pivot viability.`;
+      whatCannotBeConcluded = "Astrological indicators delineate structural business momentum; operational financial management and market feasibility require independent commercial diligence.";
+    }
+
+    astroEvidenceList = [
+      `7th House (Commercial Trade): ${h7.sign || "-"} ${h7.lord ? `(Lord: ${h7.lord})` : ""}`.trim(),
+      `10th House (Executive Standing): ${h10.sign || "-"} ${h10.lord ? `(Lord: ${h10.lord})` : ""}`.trim(),
+      `Mercury (Commerce Karaka): House ${merc.house || "-"}${merc.sign ? ` in ${merc.sign}` : ""}`,
+      `Saturn (Endurance Karaka): House ${sat.house || "-"}${sat.sign ? ` in ${sat.sign}` : ""}`
+    ];
+    relevantSections = ["career", "business", "timeline"];
+    evidenceIds = ["HOUSE_FACT_H7", "HOUSE_FACT_H10", "PLANET_FACT_MERCURY", "PLANET_FACT_SATURN"];
+  }
+
+  // CASE 14: POLITICS VS ADMINISTRATION
+  else if (intentResult.intents?.includes("POLITICS_VS_ADMINISTRATION") || /politics.*administration|அரசியல்.*நிர்வாக/i.test(rawQ)) {
+    const h10 = hMap[10] || {};
+    const sun = pMap["Sun"] || {};
+    const mars = pMap["Mars"] || {};
+    const rahu = pMap["Rahu"] || {};
+
+    if (isTamil) {
+      directAnswer = `அரசியல் பொதுவாழ்வு மற்றும் நேரடி அரசு நிர்வாகப் பணி ஆகியவற்றுக்கு இடையேயான ஒப்பீட்டில், அரசு நிர்வாக அதிகாரம் (Administrative Authority) சூரியன் மற்றும் செவ்வாயின் ஸ்திர பலத்தால் (10-ம் மற்றும் 6-ம் பாவகங்கள்) இயக்கப்படுகிறது; மக்கள் ஆதரவு மற்றும் தேர்தல் அரசியல் (Electoral Politics) ராகுவின் மக்கள் செல்வாக்கு மற்றும் 10-ம் பாவகத்துடனான தொடர்பால் தூண்டப்படுகிறது. (தேர்தல் வெற்றிகளையோ அல்லது அரசு பணி நியமனத்தையோ ஜோதிடத்தால் உறுதியாக உத்தரவாதம் அளிக்க முடியாது).`;
+      reasoningChain = `10-ம் அதிபதி, சூரியன் (அரசாங்க அதிகாரம்), செவ்வாய் (நிர்வாக கட்டளை) மற்றும் ராகு (மக்கள் அரசியல் யுக்தி) ஆகியவற்றின் சார்பு பலங்கள் ஒப்பீடு செய்யப்பட்டன.`;
+      whatCannotBeConcluded = "தேர்தல் முடிவுகள், மக்கள் வாக்கு எண்ணிக்கை அல்லது அரசு போட்டித் தேர்வு நியமனங்களை ஜோதிடத்தால் உறுதியாக தீர்மானிக்க முடியாது.";
+    } else {
+      directAnswer = `Differentiating public administration from electoral politics in your chart: Institutional administrative governance is ruled by the Sun (sovereign authority) and Mars (executive leadership) operating on the 10th and 6th houses. Conversely, mass electoral politics requires prominent Rahu intervention (mass mobilization and political maneuverability). Both pathways demand verified 10th house strength without fatalistic guarantees of election outcomes.`;
+      reasoningChain = `Compared Sun/Mars administrative authority signatures against Rahu mass appeal configurations relative to the 10th Bhava of governance.`;
+      whatCannotBeConcluded = "Electoral victories, vote shares, and competitive civil service selections cannot be guaranteed through astrological indications.";
+    }
+
+    astroEvidenceList = [
+      `10th House (Governance): ${h10.sign || "-"} ${h10.lord ? `(Lord: ${h10.lord})` : ""}`.trim(),
+      `Sun (Sovereign Authority): House ${sun.house || "-"}${sun.sign ? ` in ${sun.sign}` : ""}`,
+      `Mars (Executive Enforcement): House ${mars.house || "-"}${mars.sign ? ` in ${mars.sign}` : ""}`,
+      `Rahu (Mass Public Influence): House ${rahu.house || "-"}${rahu.sign ? ` in ${rahu.sign}` : ""}`
+    ];
+    relevantSections = ["career", "leadership", "blueprint"];
+    evidenceIds = ["HOUSE_FACT_H10", "PLANET_FACT_SUN", "PLANET_FACT_MARS", "PLANET_FACT_RAHU"];
+  }
+
+  // CASE 15: FOREIGN SETTLEMENT & RELOCATION
+  else if (intentResult.intents?.includes("FOREIGN_SETTLEMENT") || /foreign.*settle|abroad.*settle|வெளிநாடு.*குடியேற/i.test(rawQ)) {
+    const h9 = hMap[9] || {};
+    const h12 = hMap[12] || {};
+    const h4 = hMap[4] || {};
+    const rahu = pMap["Rahu"] || {};
+
+    if (isTamil) {
+      directAnswer = `வெளிநாட்டில் நிரந்தர குடியேற்றம் (Permanent Foreign Settlement) என்பது உங்கள் 4-ம் பாவகமான தாயகம்/பூர்வீக ஸ்தானம் (${h4.sign ? `${toTamilRasi(h4.sign)}, அதிபதி: ${toTamilPlanet(h4.lord)}` : "4-ம் பாவகம்"}), 9-ம் நீண்ட தூர பயண ஸ்தானம் (${h9.sign ? `${toTamilRasi(h9.sign)}, அதிபதி: ${toTamilPlanet(h9.lord)}` : "9-ம் பாவகம்"}) மற்றும் 12-ம் பாவகமான தொலைதூர தேச வாச ஸ்தானத்தின் அமைப்பால் கணக்கிடப்படுகிறது. 12-ம் பாவகத்துடன் ராகு மற்றும் 9-ம் அதிபதியின் சுப தொடர்பு நிரந்தர வெளிநாட்டு வாச வாய்ப்புகளை பலப்படுத்துகிறது.`;
+      reasoningChain = `பூர்வீகத்தை குறிக்கும் 4-ம் இடம் மற்றும் புலம்பெயர்வை குறிக்கும் 9, 12-ம் பாவகங்களின் தொடர்புகள் ஆராயப்பட்டு குடியேற்ற சாத்தியக்கூறுகள் பகுப்பாய்வு செய்யப்பட்டன.`;
+      whatCannotBeConcluded = "விசா அனுமதிகள், வெளிநாட்டு குடியுரிமை சட்ட ஒப்புதல்கள் போன்றவை அரசாங்க விதிகளுக்கு உட்பட்டவை; அவற்றை ஜோதிடத்தால் உறுதியாக நிர்ணயிக்க முடியாது.";
+    } else {
+      directAnswer = `Permanent foreign settlement versus temporary travel is evaluated by analyzing the interaction between your 4th house of natal roots/homeland (${h4.sign ? `${h4.sign}, ruled by ${h4.lord}` : "Matru Bhava"}), 9th house of cross-border horizons (${h9.sign ? `${h9.sign}, ruled by ${h9.lord}` : "Bhagya Bhava"}), and 12th house of foreign residence/distant lands (${h12.sign ? `${h12.sign}, ruled by ${h12.lord}` : "Vyaya/Foreign Relocation"}). Supportive connections between the 9th/12th lords and Rahu favor overseas settlement.`;
+      reasoningChain = `Synthesized 4th house displacement indicators with 9th/12th house relocation vectors and Rahu foreign karakatva under operative Dasha periods.`;
+      whatCannotBeConcluded = "Immigration visa grants, passport approvals, and permanent residency sanctions depend strictly on national sovereign immigration laws.";
+    }
+
+    astroEvidenceList = [
+      `4th House (Homeland Roots): ${h4.sign || "-"} ${h4.lord ? `(Lord: ${h4.lord})` : ""}`.trim(),
+      `9th House (Long-Distance Travel): ${h9.sign || "-"} ${h9.lord ? `(Lord: ${h9.lord})` : ""}`.trim(),
+      `12th House (Foreign Relocation): ${h12.sign || "-"} ${h12.lord ? `(Lord: ${h12.lord})` : ""}`.trim(),
+      `Rahu (Overseas Karaka): House ${rahu.house || "-"}${rahu.sign ? ` in ${rahu.sign}` : ""}`
+    ];
+    relevantSections = ["travel", "blueprint", "timeline"];
+    evidenceIds = ["HOUSE_FACT_H4", "HOUSE_FACT_H9", "HOUSE_FACT_H12", "PLANET_FACT_RAHU"];
+  }
+
+  // DEFAULT / GENERAL / INSUFFICIENT DATA FALLBACK
+  else {
+    const hasEnoughData = ascSign && Object.keys(pMap).length >= 5;
+    if (!hasEnoughData) {
+      if (isTamil) {
+        directAnswer = "இந்த குறிப்பிட்ட கேள்விக்குரிய பாவக அல்லது தசா கணித விவரங்கள் ஜாதகப் பதிவேட்டில் முழுமையாக கிடைக்கவில்லை (INSUFFICIENT_DATA).";
+        reasoningChain = "கேள்விக்குரிய முதன்மை காரக மற்றும் பாவக கணிதத் தரவுகள் விடுபட்டுள்ளதால் உறுதியான முடிவு வழங்கப்படவில்லை.";
+        whatCannotBeConcluded = "முழுமையான ஜாதகக் கணித விவரங்கள் இன்றி எந்தவொரு தனிப்பட்ட பலனையும் உறுதி செய்ய முடியாது.";
+      } else {
+        directAnswer = "Sufficient astrological factors for this specific inquiry are not available in the calculated chart context (INSUFFICIENT_DATA).";
+        reasoningChain = "Primary house dispositors and operative timing markers for this question could not be verified in the ledger.";
+        whatCannotBeConcluded = "Definitive conclusions cannot be drawn without complete planetary and divisional calculations.";
+      }
+      astroEvidenceList = ["Required Factors: INSUFFICIENT_DATA"];
+      relevantSections = ["blueprint"];
+      evidenceIds = ["EVIDENCE_STATUS_INSUFFICIENT_DATA"];
+    } else {
+      const primaryPlanet = pMap["Jupiter"] || pMap["Sun"] || Object.values(pMap)[0];
+      if (isTamil) {
+        directAnswer = `உங்கள் ஜாதகக் கணிதத்தின்படி லக்னம் ${toTamilRasi(ascSign)} ராசியாகவும், முதன்மை காரக கிரகங்கள் தொடர்புடைய பாவகங்களிலும் அமைந்து இந்த வாழ்வியல் ஆய்வுக்குரிய ஜோதிட சூழலை உருவாக்குகின்றன.`;
+        reasoningChain = `லக்னம் (${toTamilRasi(ascSign)}) மற்றும் முதன்மை கிரக நிலைகள் கணக்கிடப்பட்டு, பாரம்பரிய பராசர சாஸ்திர விதிகளின்படி இந்த மேலோட்ட ஆய்வு தொகுக்கப்பட்டது.`;
+        whatCannotBeConcluded = "ஜாதகக் குறியீடுகள் வாழ்வின் பொதுவான போக்கை காட்டுகின்றன; புறநிலை காரணிகள் மற்றும் தனிநபர் முடிவுகள் நிஜ வாழ்வு நிகழ்வுகளை வடிவமைக்கும்.";
+      } else {
+        directAnswer = `According to your calculated report, your Ascendant (Lagna) is ${ascSign}, with primary planetary dispositors establishing the astrological framework for this inquiry.`;
+        reasoningChain = `Synthesized calculated natal Ascendant (${ascSign}) and dispositor placements from the verified planetary ledger under classical Parashari principles.`;
+        whatCannotBeConcluded = "Traditional chart factors indicate predispositions; external mundane factors and individual agency influence final outcomes.";
+      }
+
+      astroEvidenceList = [
+        `Ascendant: ${ascSign}`,
+        primaryPlanet ? `Primary Dispositor: ${primaryPlanet.name} in House ${primaryPlanet.house} (${primaryPlanet.sign})` : `Ascendant Sign: ${ascSign}`
+      ];
+      relevantSections = ["blueprint", "overview"];
+      evidenceIds = [`CHART_FACT_ASC_${ascSign}`];
+    }
   }
 
   // Contradiction text
@@ -730,7 +886,7 @@ export function synthesizeAnswer({
   ];
 
   if (plan.includeTiming || timingWindow) {
-    answerParts.push(`${hTiming}\n${timingWindow || (isTamil ? "தசா-கோச்சார சுப பார்வை காலம்" : "Favorable Dasha-Transit Window")}`);
+    answerParts.push(`${hTiming}\n${timingWindow || (isTamil ? "தசா-கோச்சார சுப பார்வை காலம் (காலக்கோடு வரம்பு நிர்ணயிக்கப்படவில்லை)" : "Dasha-Transit Period (No specific narrow window isolated)")}`);
   }
 
   answerParts.push(

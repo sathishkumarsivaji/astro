@@ -629,7 +629,63 @@ export function classifyConsultationIntent(questionText = "", conversationHistor
     };
   }
 
-  // 8. Career: Business Growth & Commerce
+  // 7.5 Luxury Vehicle / Brand Conveyance
+  if (/(rolls\s*royce|bentley|ferrari|lamborghini|luxury\s*car|luxury\s*vehicle|supercar|ஆடம்பர\s*கார்|சொகுசு\s*கார்)/i.test(qLower)) {
+    return {
+      domain: "WEALTH",
+      questionType: "LUXURY_VEHICLE",
+      subdomain: "CONVEYANCES",
+      targetEntity: "native",
+      targetSubject: "vehicles",
+      rawQuestion: rawClean,
+      resolvedText: "Analysis of 4th House Vahana Bhava, extreme Dhana yogas, and luxury conveyance affluence tiers.",
+      confidence: 0.98,
+      ontologyEntry: {
+        id: "LUXURY_VEHICLE",
+        title: "Luxury Vehicle & Affluence Conveyance Analysis",
+        titleTa: "ஆடம்பர வாகன யோக ஆய்வு"
+      }
+    };
+  }
+
+  // 7.6 Politics vs Administration
+  if (/(politics|political|minister|election|governance|public\s*administration|government\s*job|civil\s*services?|ias|ips|அரசியல்|நிர்வாக|அரசாங்க\s*பணி|அரசு\s*பதவி)/i.test(qLower)) {
+    return {
+      domain: "CAREER",
+      questionType: "POLITICS_VS_ADMINISTRATION",
+      subdomain: "GOVERNANCE",
+      targetEntity: "native",
+      targetSubject: "career",
+      rawQuestion: rawClean,
+      resolvedText: "Public Administration vs Mass Electoral Politics Astrological Differentiation",
+      confidence: 0.96,
+      ontologyEntry: {
+        id: "POLITICS_VS_ADMINISTRATION",
+        title: "Public Administration vs Electoral Politics",
+        titleTa: "அரசு நிர்வாகம் vs தேர்தல் அரசியல்"
+      }
+    };
+  }
+
+  // 8. Career: Business Growth & Commerce / Continuation vs Pivot
+  if (/(continue.*business|change.*business|pivot.*business|வியாபாரம்.*தொடர|தொழில்.*மாற்ற)/i.test(qLower)) {
+    return {
+      domain: "CAREER",
+      questionType: "BUSINESS_CONTINUE_VS_CHANGE",
+      subdomain: "BUSINESS_STRATEGY",
+      targetEntity: "native",
+      targetSubject: "business",
+      rawQuestion: rawClean,
+      resolvedText: "Business Continuation vs Strategic Pivot Evaluation",
+      confidence: 0.98,
+      ontologyEntry: {
+        id: "BUSINESS_CONTINUE_VS_CHANGE",
+        title: "Business Continuation vs Change Strategy",
+        titleTa: "வணிகத் தொடர்ச்சி vs மாற்ற உத்தி"
+      }
+    };
+  }
+
   if (/(business\s*growth|trade|commercial|client|startup\s*growth|expand\s*business|growth\s*in\s*business|about\s*(?:my\s*)?business|வியாபார\s*வளர்ச்சி|தொழில்\s*வளர்ச்சி|சுயதொழில்|வியாபாரம்)/i.test(qLower)) {
     return {
       domain: "CAREER",
