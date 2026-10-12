@@ -668,7 +668,7 @@ export function classifyConsultationIntent(questionText = "", conversationHistor
   }
 
   // 8. Career: Business Growth & Commerce / Continuation vs Pivot
-  if (/(continue.*business|change.*business|pivot.*business|வியாபாரம்.*தொடர|தொழில்.*மாற்ற)/i.test(qLower)) {
+  if (/(continue.*business|change.*business|pivot.*business|expand.*business|business.*expansion|expand.*to\s+more\s+business|new\s+business|second\s+business|வியாபாரம்.*தொடர|தொழில்.*மாற்ற|தொழில்.*விரிவாக்க)/i.test(qLower)) {
     return {
       domain: "CAREER",
       questionType: "BUSINESS_CONTINUE_VS_CHANGE",
@@ -686,7 +686,7 @@ export function classifyConsultationIntent(questionText = "", conversationHistor
     };
   }
 
-  if (/(business\s*growth|trade|commercial|client|startup\s*growth|expand\s*business|growth\s*in\s*business|about\s*(?:my\s*)?business|வியாபார\s*வளர்ச்சி|தொழில்\s*வளர்ச்சி|சுயதொழில்|வியாபாரம்)/i.test(qLower)) {
+  if (/(business\s*growth|growth.*(?:of|in|for).*(?:the\s+|my\s+)?business|growth.*business|trade|commercial|client|startup\s*growth|about\s*(?:the\s+|my\s+)?business|how\s+about.*business|வியாபார\s*வளர்ச்சி|தொழில்\s*வளர்ச்சி|சுயதொழில்|வியாபாரம்)/i.test(qLower)) {
     return {
       domain: "CAREER",
       questionType: "BUSINESS_GROWTH",
@@ -1900,12 +1900,18 @@ export function generateAstrologerConsultation(chartData, questionText = "", opt
   } else if (intent.domain === "HEALTH" || intent.questionType === "HEALTH_WELLNESS" || intent.questionType === "DISEASE_RECOVERY" || intent.questionType === "LONGEVITY_AYUR") {
     directAnswerEn = `Your Lagna vitality (1st house), traditional 6th-house health symbolism (6th house), and planetary vitality karakas indicate traditional constitutional/vitality correspondence during the active ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle. Disciplined lifestyle habits and preventive care provide strong support.`;
     directAnswerTa = `உங்கள் லக்ன தேக பலம் (1-ம் பாவகம்), பாரம்பரிய 6-ம் பாவக உடல்நல மற்றும் நல்வாழ்வுக் குறியீடுகள், மற்றும் சூரியன்/சந்திரனின் நிலைகள் நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலத்தில் பாரம்பரிய உடலியல் சமநிலையை சுட்டிக்காட்டுகின்றன (இது மருத்துவ முடிவல்ல; ஆரோக்கியம் குறித்த பாரம்பரிய ஜோதிட வழிகாட்டல் மட்டுமே). முறையான உணவுப்பழக்கம் மற்றும் உடற்பயிற்சி உடலமைப்பை மேலும் வலுப்படுத்தும்.`;
-  } else if (intent.questionType === "PROMOTION_TIMING" || (intent.domain === "CAREER" && intent.questionType !== "BUSINESS_GROWTH")) {
+  } else if (intent.questionType === "BUSINESS_CONTINUE_VS_CHANGE") {
+    directAnswerEn = `Evaluating whether to persist in your current business enterprise versus expanding or pivoting synthesizes your 7th house of commercial trade, 10th house of vocation, and operating dasha cycles. Astrology identifies opportune cycles for strategic restructuring, while market feasibility and capital management dictate real-world outcomes.`;
+    directAnswerTa = `தற்போதுள்ள வணிகத்தைத் தொடர்வதா அல்லது புதிய தொழில் முனைவுக்கு விரிவாக்கம் செய்வதா என்ற முடிவு, உங்கள் 7-ம் பாவகமான வர்த்தக ஸ்தானம், 10-ம் தொழில் ஸ்தானம் மற்றும் நடப்பு தசா-புக்தி அமைப்புகளால் ஆராயப்படுகிறது. சந்தை நிலை மற்றும் இடர் மேலாண்மையைக் கொண்டு வணிக முடிவுகளை எடுக்க வேண்டும்.`;
+  } else if (intent.questionType === "BUSINESS_GROWTH") {
+    directAnswerEn = `Your 10th house of vocation, 11th house of gains, and 7th house of commerce outline traditional commercial inclinations. Expansion and revenue velocity during the active ${currentDasha} cycle depend on market reality, execution rigor, and capital preservation rather than astrological guarantees.`;
+    directAnswerTa = `உங்கள் 10-ம் கர்ம பாவகம், 11-ம் லாப பாவகம் மற்றும் 7-ம் வர்த்தக பாவக அமைப்புகள் பாரம்பரிய ஜோதிட நெறிமுறைகளின்படி தொழில் வளர்ச்சி சாத்தியங்களை சுட்டிக்காட்டுகின்றன. நடப்பு ${currentDashaTa} தசா காலத்தில் வணிக முன்னேற்றம் சந்தை சூழல் மற்றும் நடைமுறை திட்டமிடல் மூலமே சாத்தியமாகும்; ஜோதிடம் வணிக வெற்றியை உத்தரவாதம் செய்ய முடியாது.`;
+  } else if (intent.questionType === "PROMOTION_TIMING" || intent.questionType === "CAREER_TIMING") {
     directAnswerEn = `Active planetary configurations in your 10th house of career during the current ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle present strong astrological timing for professional advancement, skill recognition, and new executive responsibilities.`;
     directAnswerTa = `உங்கள் 10-ம் கர்ம பாவக அமைப்பும், நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலமும் தொழில் முன்னேற்றம், பதவி உயர்வு மற்றும் புதிய பொறுப்புகள் கிடைப்பதற்கான சாதகமான காலக்கட்டத்தை சுட்டிக்காட்டுகின்றன.`;
-  } else if (intent.questionType === "BUSINESS_GROWTH" || intent.domain === "CAREER") {
-    directAnswerEn = `Your 10th house of vocation and 11th house of gains outline commercial inclinations in traditional astrology. Real-world business outcomes depend on market reality and sound planning rather than unconditional guarantees.`;
-    directAnswerTa = `உங்கள் 10-ம் கர்ம பாவகம் மற்றும் 11-ம் லாப பாவக அமைப்புகள் பாரம்பரிய ஜோதிட நெறிமுறைகளின்படி தொழில் முயற்சி சாத்தியங்களை சுட்டிக்காட்டுகின்றன. சந்தை சூழல் மற்றும் நடைமுறை வணிகத் திட்டமிடல் மூலமே முன்னேற்றம் சாத்தியமாகும்; ஜோதிடம் வணிக வெற்றியை உத்தரவாதம் செய்ய முடியாது.`;
+  } else if (intent.domain === "CAREER") {
+    directAnswerEn = `Your 10th house of vocation and 11th house of gains outline professional inclinations in traditional astrology. Real-world vocational outcomes depend on market reality and sound planning rather than unconditional guarantees.`;
+    directAnswerTa = `உங்கள் 10-ம் கர்ம பாவகம் மற்றும் 11-ம் லாப பாவக அமைப்புகள் பாரம்பரிய ஜோதிட நெறிமுறைகளின்படி தொழில் முயற்சி சாத்தியங்களை சுட்டிக்காட்டுகின்றன. நடைமுறை திட்டமிடல் மூலமே முன்னேற்றம் சாத்தியமாகும்; ஜோதிடம் தொழில் வெற்றியை உத்தரவாதம் செய்ய முடியாது.`;
   } else if (intent.questionType === "MEGA_WEALTH_BILLIONAIRE") {
     directAnswerEn = `Your chart demonstrates potent foundational Dhana Yogas and strong financial multipliers. Classical Shastras indicate that extreme wealth accumulation is catalyzed during the operating ${currentDasha} Mahadasha — ${currentAntar} Antardasha cycle through disciplined enterprise, strategic investments, and compounding assets.`;
     directAnswerTa = `உங்கள் ஜாதகத்தில் வலுவான தன யோகங்களும் பெருஞ்செல்வ சேர்க்கைக்கான சாத்தியக்கூறுகளும் அமைந்துள்ளன. சாஸ்திர விதிகளின்படி, நடப்பு ${currentDashaTa} மகா தசை — ${currentAntarTa} புக்தி காலத்தில் புதிய முதலீடுகள், தொழில் விரிவாக்கம் மற்றும் நிலையான சொத்து பெருக்கம் மூலம் பெரும் பொருளாதார வளர்ச்சி உண்டாகும் யோகம் உள்ளது.`;

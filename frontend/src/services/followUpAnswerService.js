@@ -34,98 +34,25 @@ import {
   cleanEnglishParentheses
 } from "./tamilAstrologyUtils.js";
 import { compareAstrologySystems } from "./questionAnswer/comparisonEngine.js";
+import { processEvidenceLinkedQA } from "./questionAnswer/qaEngine.js";
+import { classifyIntent } from "./questionAnswer/intentClassifier.js";
+import { isTaskIntent } from "./questionAnswer/tasks/index.js";
 
-/**
- * Unified helper to retrieve D9 Navamsha data from context
- */
-export function getD9Data(context) {
-  if (!context) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
-  const chart = context.chart || (context.planets ? context : null);
-  if (!chart) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
-  const raw = chart.vargas?.D9 || chart.vargas?.d9 || chart.divisionalCharts?.D9 || chart.divisionalCharts?.d9Navamsha || context.report?.activeSectionData?.d9Chart || null;
-  if (!raw) return { available: false, ascendant: null, navamshaLagna: null, planets: [] };
-  const asc = raw.ascendant?.signName || raw.ascendant?.sign || raw.ascendant?.name || (typeof raw.ascendant === "string" ? raw.ascendant : null);
-  const planets = (raw.planets || []).map(p => ({
-    name: p.planetName || p.name,
-    sign: p.signName || p.sign,
-    house: p.house || p.vargaHouse,
-    dignity: p.dignity
-  }));
-  return { available: true, ascendant: asc, navamshaLagna: asc, planets };
-}
+import {
+  getD9Data,
+  getD10Data,
+  getKPData,
+  getDashaData,
+  getTimingWindows
+} from "./chartEvidenceAccessors.js";
 
-/**
- * Unified helper to retrieve D10 Dashamsha data from context
- */
-export function getD10Data(context) {
-  if (!context) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
-  const chart = context.chart || (context.planets ? context : null);
-  if (!chart) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
-  const raw = chart.vargas?.D10 || chart.vargas?.d10 || chart.divisionalCharts?.D10 || chart.divisionalCharts?.d10Dasamsha || context.report?.activeSectionData?.d10Chart || null;
-  if (!raw) return { available: false, ascendant: null, dashamshaLagna: null, planets: [] };
-  const asc = raw.ascendant?.signName || raw.ascendant?.sign || raw.ascendant?.name || (typeof raw.ascendant === "string" ? raw.ascendant : null);
-  const planets = (raw.planets || []).map(p => ({
-    name: p.planetName || p.name,
-    sign: p.signName || p.sign,
-    house: p.house || p.vargaHouse,
-    dignity: p.dignity
-  }));
-  return { available: true, ascendant: asc, dashamshaLagna: asc, planets };
-}
-
-/**
- * Unified helper to retrieve KP cusps and sub-lords data from context
- */
-export function getKPData(context) {
-  if (!context || !context.chart) return { cusps: [], subLords: {}, significators: null, rulingPlanets: null };
-  return {
-    cusps: context.chart.kpCusps || [],
-    subLords: context.chart.kpSubLords || {},
-    significators: context.chart.kpSignificators || null,
-    rulingPlanets: context.chart.kpRulingPlanets || null
-  };
-}
-
-/**
- * Unified helper to retrieve current Dasha data from context
- */
-export function getDashaData(context) {
-  if (!context) return null;
-  const chart = context.chart || (context.planets ? context : null);
-  if (!chart) return null;
-  return chart.currentDasha || null;
-}
-
-/**
- * Unified helper to retrieve all timing windows from context
- */
-export function getTimingWindows(context) {
-  if (!context || !context.report) return [];
-  const windows = [];
-  const addWins = (arr, domain) => {
-    (arr || []).forEach(w => {
-      if (w.years || w.ageRange || w.calendarYears) {
-        windows.push({
-          domain,
-          years: w.years || w.calendarYears || null,
-          ageRange: w.ageRange || null,
-          title: w.title || null,
-          nature: w.nature || w.theme || null
-        });
-      }
-    });
-  };
-  addWins(context.report.career?.windows, "career");
-  addWins(context.report.activeSectionData?.careerWindows, "career");
-  addWins(context.report.marriage?.windows, "marriage");
-  addWins(context.report.activeSectionData?.marriageWindows, "marriage");
-  addWins(context.report.wealth?.windows, "property");
-  addWins(context.report.activeSectionData?.acquisitionWindows, "property");
-  addWins(context.report.activeSectionData?.examWindows, "studies");
-  addWins(context.report.wellness?.risks, "health");
-  addWins(context.report.activeSectionData?.riskWindows, "health");
-  return windows;
-}
+export {
+  getD9Data,
+  getD10Data,
+  getKPData,
+  getDashaData,
+  getTimingWindows
+};
 
 /**
  * Centralized fact registry to provide a single source of truth
@@ -1828,6 +1755,35 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
   const rawQ = typeof question === "string" ? question : (question.text || "");
   const route = routeFollowUpQuestion(rawQ, context, conversationHistory);
 
+  // 0. Actionable Specific Task Engine (Dress Colour, Paper Submission, Business Expansion)
+  const qClassEarly = classifyIntent(route.resolvedText || rawQ);
+  if (isTaskIntent(qClassEarly.primaryIntent)) {
+    try {
+      const qaResult = await processEvidenceLinkedQA({
+        question: route.resolvedText || rawQ,
+        context,
+        conversationHistory,
+        mode: "novice"
+      });
+      if (qaResult && qaResult.answer) {
+        return {
+          answer: qaResult.answer,
+          system: qaResult.system || context.system?.id || "lahiri",
+          relevantSections: qaResult.relevantSections || route.relevantSections || [],
+          evidenceIds: qaResult.evidenceIds || [],
+          dataUsed: qaResult.dataUsed || route.dataUsed || [],
+          status: qaResult.status || "REPORT_SUPPORTED",
+          evidenceStatus: qaResult.evidenceStatus || qaResult.status || "UNVERIFIED",
+          limitations: qaResult.limitations || [],
+          answerObject: qaResult.answerObject,
+          pipelineAudit: qaResult.pipelineAudit
+        };
+      }
+    } catch (taskErr) {
+      console.warn("Task engine execution fallback:", taskErr?.message);
+    }
+  }
+
   // 1. If Deterministic Factual or Unsupported System or Ambiguous or System Comparison, return instantly!
   if (route.type === "SYSTEM_COMPARISON") {
     return generateDeterministicAnswer(route.resolvedText || rawQ, context, route);
@@ -1900,7 +1856,46 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
     return parsedResponse;
   }
 
-  // 4. Robust Deterministic Report Synthesis Fallback (Offline & Anti-Failure)
+  // 4. Evidence-Linked Analytical Q&A Engine (Authoritative Pipeline)
+  const qClass = classifyIntent(route.resolvedText || rawQ);
+  const isActionTask = isTaskIntent(qClass.primaryIntent);
+  const isBareChart = (!context.chart?.planets || context.chart.planets.length < 5);
+
+  if (!isBareChart || isActionTask) {
+    try {
+      const qaResult = await processEvidenceLinkedQA({
+        question: route.resolvedText || rawQ,
+        context,
+        conversationHistory,
+        mode: "novice"
+      });
+      if (qaResult && qaResult.answer && (qaResult.status !== "INSUFFICIENT_DATA" || isActionTask)) {
+        // In follow-up context with verified evidence ledger, align evidence IDs to verified context ledger
+        const validCtxIds = Array.isArray(context.evidence?.evidenceIds) ? context.evidence.evidenceIds : [];
+        let finalEvidenceIds = validCtxIds.length > 0 ? validCtxIds.slice(0, 6) : (qaResult.evidenceIds || []);
+        // If context explicitly has an empty ledger, don't return unverified synthetic IDs
+        if (context.evidence && Array.isArray(context.evidence.evidenceIds) && context.evidence.evidenceIds.length === 0) {
+          finalEvidenceIds = [];
+        }
+        return {
+          answer: qaResult.answer,
+          system: qaResult.system || context.system?.id || "lahiri",
+          relevantSections: qaResult.relevantSections || route.relevantSections || [],
+          evidenceIds: finalEvidenceIds,
+          dataUsed: qaResult.dataUsed || route.dataUsed || [],
+          status: isActionTask ? (qaResult.status || "REPORT_SUPPORTED") : "REPORT_SUPPORTED",
+          evidenceStatus: qaResult.evidenceStatus || qaResult.status || "DIRECTLY_SUPPORTED",
+          limitations: qaResult.limitations || [],
+          answerObject: qaResult.answerObject,
+          pipelineAudit: qaResult.pipelineAudit
+        };
+      }
+    } catch (qaErr) {
+      console.warn("Evidence-linked QA execution fallback:", qaErr?.message);
+    }
+  }
+
+  // 5. Robust Deterministic Report Synthesis Fallback (Offline & Anti-Failure)
   return generateDeterministicAnswer(route.resolvedText || rawQ, context, route);
 }
 

@@ -6,6 +6,8 @@
  */
 
 export const DOMAINS = Object.freeze({
+  DAILY_GUIDANCE: "dailyGuidance",
+  ACADEMIC_ACTION: "academicAction",
   MARRIAGE: "marriage",
   PROPERTY: "property",
   CAREER: "career",
@@ -42,6 +44,18 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   const intents = new Set(intentResult?.intents || []);
 
   const domains = new Set();
+
+  // 0. Task-specific domains (highest priority)
+  if (intents.has("DAILY_DRESS_COLOR")) {
+    domains.add(DOMAINS.DAILY_GUIDANCE);
+  }
+  if (intents.has("RESEARCH_SUBMISSION_ELECTION")) {
+    domains.add(DOMAINS.ACADEMIC_ACTION);
+    domains.add(DOMAINS.EDUCATION);
+  }
+  if (intents.has("BUSINESS_EXPANSION_ELECTION") || intents.has("BUSINESS_EXPANSION_DECISION") || intents.has("BUSINESS_DIVERSIFICATION_DECISION")) {
+    domains.add(DOMAINS.BUSINESS);
+  }
 
   // 1. Map directly from intent if specialized
   if (intents.has("SPOUSE_FAMILY") || intents.has("SPOUSE_DIRECTION") || intents.has("SPOUSE_DISTANCE") || intents.has("SPOUSE_CHARACTERISTICS") || intents.has("MARRIAGE")) {
@@ -93,7 +107,7 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   if (/சொத்து|நிலம்|மனை|வீடு|அசையா|பூர்வீக|property|real\s*estate|house|land|home|renovation/i.test(target)) {
     domains.add(DOMAINS.PROPERTY);
   }
-  if (/வாகன|கார்|வண்டி|ஊர்தி|vehicle|car|conveyance|automobile|transportation|driving/i.test(target)) {
+  if (/(?:வாகன|கார்|வண்டி|ஊர்தி)|\b(vehicle|vehicles|car|cars|conveyance|automobile|automobiles|transportation|driving)\b/i.test(target)) {
     domains.add(DOMAINS.VEHICLE);
   }
   if (/பணம்|நிதி|பொருளாதார|செல்வ|சேமிப்பு|தன|finance|wealth|money|income|prosperity|dhana|invest|accumulation|2nd\s*and\s*11th/i.test(target)) {

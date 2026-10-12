@@ -13,7 +13,7 @@ import {
   evaluateSpouseDirection,
   evaluateSpouseGeographicDistance
 } from "../consultationEngine.js";
-import { getD9Data, getD10Data, getDashaData, getTimingWindows, getKPData } from "../followUpAnswerService.js";
+import { getD9Data, getD10Data, getDashaData, getTimingWindows, getKPData } from "../chartEvidenceAccessors.js";
 import {
   EvidenceGraph,
   EVIDENCE_CATEGORIES,
@@ -27,6 +27,7 @@ import {
 } from "./evidenceGraph.js";
 import { computeTimingWindows } from "./timingEngine.js";
 import { compareAstrologySystems } from "./comparisonEngine.js";
+import { isTaskIntent, dispatchTaskEvaluation } from "./tasks/index.js";
 
 const SIGN_DIRECTIONS = {
   Aries: "EAST", Leo: "EAST", Sagittarius: "EAST",
@@ -68,10 +69,48 @@ export function retrieveEvidence(plan, context) {
   const calculatedFacts = [];
   const traditionalRules = [];
 
+  // Dedicated Actionable Task Dispatch
+  let taskResult = null;
+  if (plan?.isTask || isTaskIntent(plan?.primaryIntent)) {
+    taskResult = dispatchTaskEvaluation({
+      intent: plan.primaryIntent,
+      question: plan.rawQuestion || context?.rawQuestion || context?.question || "",
+      context,
+      isTamil: Boolean(context?.isTamil || context?.lang === "ta")
+    });
+  }
+
+  // If task result exists for an actionable task, we return sufficient task evidence
+  if (taskResult) {
+    const taskWindows = Array.isArray(taskResult.candidateWindows) && taskResult.candidateWindows.length > 0
+      ? taskResult.candidateWindows
+      : (Array.isArray(taskResult.recommendation?.candidateWindows) ? taskResult.recommendation.candidateWindows : []);
+    return {
+      status: "SUFFICIENT",
+      taskResult,
+      timingWindows: taskWindows,
+      ascendant: ascSign,
+      planets: {},
+      houses: {},
+      vargas: {},
+      dashas: null,
+      directionAnalysis: null,
+      distanceAnalysis: null,
+      comparisonAnalysis: null,
+      vargaAnalysis: null,
+      reportSections: [plan?.primaryDomain || "dailyGuidance"],
+      calculatedFacts,
+      traditionalRules,
+      evidenceGraph,
+      chart
+    };
+  }
+
   // If no planets and no ascendant, evidence is insufficient
   if (!chart || (rawPlanets.length === 0 && !ascSign)) {
     return {
       status: "INSUFFICIENT_DATA",
+      taskResult,
       planets: {},
       houses: {},
       vargas: {},
@@ -517,6 +556,7 @@ export function retrieveEvidence(plan, context) {
     calculatedFacts,
     traditionalRules,
     evidenceGraph,
+    taskResult,
     chart
   };
 }

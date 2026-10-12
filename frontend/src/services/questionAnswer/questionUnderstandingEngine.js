@@ -9,9 +9,10 @@
  */
 
 import { normalizeQuestion } from "./questionNormalizer.js";
-import { classifyIntent, QUESTION_INTENTS } from "./intentClassifier.js";
+import { classifyIntent, QUESTION_INTENTS, TASK_INTENTS } from "./intentClassifier.js";
 import { classifyDomains, DOMAINS } from "./domainClassifier.js";
 import { extractEntities } from "./entityExtractor.js";
+import { resolveTemporalTimeframe } from "./temporalResolver.js";
 
 function hashString(str) {
   const s = String(str);
@@ -319,6 +320,40 @@ export function understandQuestion({ question, conversationHistory = [], context
     requestedOutcome = "BUSINESS_PROFIT";
   }
 
+  // Action & Requested Answer Type Extraction
+  let action = null;
+  let requestedAnswerType = null;
+  let requestedGuarantee = null;
+
+  if (primaryIntent === TASK_INTENTS.DAILY_DRESS_COLOR) {
+    action = "CHOOSE_CLOTHING_COLOR";
+    requestedAnswerType = "COLOR_RECOMMENDATION";
+  } else if (primaryIntent === TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION) {
+    action = "SUBMIT_RESEARCH_PAPER";
+    requestedAnswerType = "ACTION_AND_TIMING_ASSESSMENT";
+  } else if (primaryIntent === TASK_INTENTS.BUSINESS_EXPANSION_ELECTION) {
+    action = "EXPAND_EXISTING_BUSINESS";
+    requestedAnswerType = "BOUNDED_TIMING_ASSESSMENT";
+    if (/good\s*luck|luck|அதிர்ஷ்டம்|வெற்றி/i.test(raw)) {
+      requestedGuarantee = "GOOD_LUCK";
+    }
+  } else if (primaryIntent === TASK_INTENTS.BUSINESS_EXPANSION_DECISION) {
+    action = "EXPAND_VS_DIVERSIFY";
+    requestedAnswerType = "DECISION_ASSESSMENT";
+  } else if (primaryIntent === TASK_INTENTS.BUSINESS_DIVERSIFICATION_DECISION) {
+    action = "DIVERSIFY_BUSINESS";
+    requestedAnswerType = "DECISION_ASSESSMENT";
+  }
+
+  // Resolve Timeframe using temporalResolver
+  const timeframe = resolveTemporalTimeframe({
+    question: raw,
+    referenceInstant: context?.referenceInstant || context?.currentTime || null,
+    actionTimezone: context?.actionTimezone || context?.timezone || null,
+    actionLocation: context?.actionLocation || context?.currentCity || null,
+    weekStartPreference: context?.weekStartPreference || "Monday"
+  });
+
   return {
     questionId,
     rawQuestion: raw,
@@ -328,6 +363,10 @@ export function understandQuestion({ question, conversationHistory = [], context
     subDomain: intentResult.primaryIntent,
     intent: primaryIntent,
     intents: intentResult.intents,
+    action,
+    requestedAnswerType,
+    requestedGuarantee,
+    timeframe,
     entities,
     subject,
     event,

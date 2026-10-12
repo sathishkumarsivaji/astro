@@ -12,6 +12,43 @@ import { evaluatePersonCharacteristic } from "./personCharacteristicEngine.js";
 import { calculateDomainImportanceScores } from "./domainRanker.js";
 import { generateMilestoneTimeline } from "./milestoneTimelineEngine.js";
 import { buildTimingWindowId, buildHouseFactId } from "./evidenceGraph.js";
+import { TASK_INTENTS } from "./intentClassifier.js";
+import { isTaskIntent } from "./tasks/index.js";
+
+/**
+ * Returns plain-language consumer friendly labels for internal statuses.
+ */
+export function getConsumerFriendlyStatusLabel(status, isTamil = false) {
+  switch (status) {
+    case "YEAR":
+      return isTamil ? "ஆண்டு அளவிலான காலக்கோடு" : "Annual timing window";
+    case "YEAR_RANGE":
+      return isTamil ? "பல்லாண்டு காலக்கோடு" : "Multi-year timing window";
+    case "MONTH_RANGE":
+      return isTamil ? "மாத அளவிலான காலக்கோடு" : "Multi-month timing window";
+    case "DATE_RANGE":
+      return isTamil ? "குறிப்பிட்ட தேதிகள் வரம்பு" : "Specific date range";
+    case "DATE":
+      return isTamil ? "குறிப்பிட்ட நாள்" : "Specific day";
+    case "NOT_DISCRIMINATING":
+    case "NO_DISCRIMINATING_WINDOW":
+    case null:
+    case undefined:
+      return isTamil ? "தனித்துவமான காலக்கோடு அடையாளம் காணப்படவில்லை" : "No distinct timing window identified";
+    case "INSUFFICIENT_DATA":
+      return isTamil ? "தேவையான விவரங்கள் விடுபட்டுள்ளன" : "Required information is missing";
+    case "UNSUPPORTED_TASK":
+      return isTamil ? "இந்த வசதி இன்னும் உருவாக்கப்படவில்லை" : "This feature is not available yet";
+    case "TRADITIONAL_ONLY":
+      return isTamil ? "பாரம்பரிய வழிகாட்டல் — முடிவுகளுக்கான உத்தரவாதம் அல்ல" : "Traditional guidance — not a guaranteed outcome";
+    case "DIRECTLY_SUPPORTED":
+      return isTamil ? "ஜாதகக் கணிதக் குறியீடுகளின் ஆதரவு பெற்றது" : "Supported by calculated chart factors";
+    case "PARTIALLY_SUPPORTED":
+      return isTamil ? "பகுதி ஜாதகக் குறியீடுகளின் ஆதரவு பெற்றது" : "Partially supported by chart indicators";
+    default:
+      return status;
+  }
+}
 
 /**
  * Synthesizes a structured 9-section answer based on retrieved evidence.
@@ -117,8 +154,40 @@ export function synthesizeAnswer({
   // 1. DOMAIN & INTENT SPECIFIC DIRECT ANSWERS
   // =========================================================================
 
+  // CASE 0: ACTIONABLE TASK EVALUATION
+  if (evidence.taskResult) {
+    const tr = evidence.taskResult;
+    directAnswer = tr.directAnswer;
+    reasoningChain = tr.reason || tr.directAnswer;
+    whatCannotBeConcluded = tr.limitation || (isTamil ? "ஜோதிட வழிகாட்டல் முடிவுகளுக்கான உத்தரவாதம் அல்ல." : "Traditional astrological guidance is symbolic and cultural; it does not promise or guarantee outcomes.");
+    astroEvidenceList = tr.supportingClaims && tr.supportingClaims.length > 0
+      ? tr.supportingClaims
+      : [tr.traditionalMethod || "Traditional Task Guidance"];
+    
+    if (tr.intent === "FOREIGN_TRIP_TIMING") {
+      relevantSections = ["travel", "overview"];
+    } else if (tr.intent === "HOME_CONSTRUCTION_TIMING") {
+      relevantSections = ["property", "overview"];
+    } else if (tr.intent === "VEHICLE_PURCHASE_TIMING") {
+      relevantSections = ["vehicles", "overview"];
+    } else if (tr.intent === "MONTHLY_OUTLOOK") {
+      relevantSections = ["timeline", "overview"];
+    } else {
+      relevantSections = ["dailyGuidance"];
+    }
+
+    evidenceIds = [
+      `TASK_${tr.intent}`,
+      ...(tr.candidateWindows?.flatMap(w => w.supportingEvidence || []) || [])
+    ].filter(Boolean);
+
+    timingWindow = tr.recommendation?.preferredWindow
+      || (tr.candidateWindows?.[0] && tr.candidateWindows[0].windowStart ? `${tr.candidateWindows[0].windowStart} – ${tr.candidateWindows[0].windowEnd}` : "")
+      || (tr.evaluatedRange ? `${tr.evaluatedRange.start} – ${tr.evaluatedRange.end}` : "");
+  }
+
   // CASE 1: SPOUSE FAMILY WEALTH COMPARISON
-  if (intentResult.intents?.includes("SPOUSE_FAMILY") || req.familyWealthRequested) {
+  else if (intentResult.intents?.includes("SPOUSE_FAMILY") || req.familyWealthRequested) {
     const comp = evidence.comparisonAnalysis;
     if (isTamil) {
       directAnswer = comp?.verdictTa || "துணையின் குடும்பம் உங்களின் குடும்பத்திற்கு சமமான அல்லது ஒத்த சமூக, பொருளாதார அந்தஸ்தில் அமைய வாய்ப்புள்ளது.";
@@ -630,6 +699,57 @@ export function synthesizeAnswer({
     if (h8.lord) evidenceIds.push(`LORD_FACT_L8`);
   }
 
+  // CASE 9.5: CAREER OPPORTUNITY & VOCATIONAL TIMING
+  else if (!intentResult.intents?.includes("BUSINESS_GROWTH") && !intentResult.intents?.includes("BUSINESS_CONTINUE_VS_CHANGE") && !/business|வியாபாரம்|சுயதொழில்/i.test(rawQ) && (domainResult.domains?.includes("career") || domainResult.domains?.includes("job") || intentResult.intents?.includes("CAREER_TIMING") || intentResult.intents?.includes("CAREER") || intentResult.intents?.includes("PROMOTION_TIMING") || /career.*opportunit|next.*career|job.*opportunit|promotion.*when|வேலை.*எப்போது|தொழில்.*வாய்ப்பு/i.test(rawQ))) {
+    const h10 = hMap[10] || {};
+    const h11 = hMap[11] || {};
+    const h6 = hMap[6] || {};
+    const sun = pMap["Sun"] || {};
+    const merc = pMap["Mercury"] || {};
+    const sat = pMap["Saturn"] || {};
+    const win = evidence.timingWindows?.find(w => w.domain === "career" || w.category === "CAREER") || null;
+    const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (win.yearStart && win.yearEnd)));
+    const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : null);
+    const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : null);
+    const winYearsStr = (startYear && endYear) ? `${startYear}–${endYear}` : (win?.years || null);
+    const activeD = evidence.activeDasha;
+    const dashaSummaryEn = activeD?.mahadasha ? `during the active ${activeD.mahadasha} Mahadasha${activeD.antardasha ? ` — ${activeD.antardasha} Antardasha` : ""}` : "under operative planetary periods";
+    const dashaSummaryTa = activeD?.mahadasha ? `நடப்பு ${toTamilPlanet(activeD.mahadasha)} மகா தசை${activeD.antardasha ? ` — ${toTamilPlanet(activeD.antardasha)} புக்தி` : ""} காலத்தில்` : "நடப்பு தசா சுழற்சி காலத்தில்";
+
+    if (isTamil) {
+      if (hasCalculatedWindow) {
+        directAnswer = `உங்கள் 10-ம் பாவகமான கர்ம ஸ்தானம் (${h10.sign ? `${toTamilRasi(h10.sign)}, அதிபதி: ${toTamilPlanet(h10.lord)}` : "10-ம் பாவகம்"}), 11-ம் பாவகமான லாப ஸ்தானம் மற்றும் சூரியன்/புதனின் நிலைகளின்படி, தொழில் முன்னேற்றத்திற்கான முக்கிய வாய்ப்புகள் ${winYearsStr} காலகட்டத்தில் (${dashaSummaryTa}) சாதகமாக அமைகின்றன.`;
+        timingWindow = `${winYearsStr} (தொழில் முன்னேற்ற காலம்)`;
+      } else {
+        directAnswer = `உங்கள் 10-ம் கர்ம பாவகம் (${h10.sign ? `${toTamilRasi(h10.sign)}, அதிபதி: ${toTamilPlanet(h10.lord)}` : "10-ம் பாவகம்"}) மற்றும் 11-ம் லாப பாவகம் தொழில் முன்னேற்றத்திற்கான அடிப்படை பலத்தை சுட்டிக்காட்டுகின்றன; நடப்பு ${dashaSummaryTa} தொழில் முன்னேற்ற சூழல்கள் அமைந்தாலும், தனித்த குறுகிய காலக்கோடு கோச்சார கணிதத்தில் தனித்து உறுதி செய்யப்படவில்லை.`;
+        timingWindow = "NO_DISCRIMINATING_WINDOW";
+      }
+      reasoningChain = `10-ம் பாவக அதிபதியின் அமர்வு, 11-ம் பாவக வருவாய் இணைவு மற்றும் நடப்பு தசா-அந்தர்தசா கிரகங்களின் பலம் ஒருங்கிணைக்கப்பட்டு தொழில் வாய்ப்பு ஆய்வு செய்யப்பட்டது.`;
+      whatCannotBeConcluded = "ஜோதிடம் தொழில் உகந்த வாய்ப்புக் காலங்களை மட்டுமே சுட்டிக்காட்டும்; நிறுவன தேர்வு, சம்பள ஒப்பந்தங்கள் மற்றும் நியமனங்கள் தனிநபர் திறன் மற்றும் நேர்காணல் தேர்வை சார்ந்தவை.";
+    } else {
+      if (hasCalculatedWindow) {
+        directAnswer = `Your 10th house of vocational standing (${h10.sign ? `${h10.sign}, ruled by ${h10.lord}` : "Karma Bhava"}) and 11th house of gains indicate that major professional opportunities cluster in the ${winYearsStr} window ${dashaSummaryEn}.`;
+        timingWindow = `${winYearsStr} (Prime Career Opportunity Window)`;
+      } else {
+        directAnswer = `Your 10th house of vocation (${h10.sign ? `${h10.sign}, ruled by ${h10.lord}` : "Karma Bhava"}) and 11th house of gains outline foundational professional promise ${dashaSummaryEn}, though no single narrow chronological window has been isolated without additional transit triggers.`;
+        timingWindow = "NO_DISCRIMINATING_WINDOW";
+      }
+      reasoningChain = `Synthesized 10th house executive lord, 11th house gains vector, natural karakas Sun/Mercury, and operative Vimshottari period activation.`;
+      whatCannotBeConcluded = "Astrological indicators reflect opportune vocational momentum; specific job offers, corporate appointments, and promotions depend on individual performance and organizational decisions.";
+    }
+
+    astroEvidenceList = [
+      `10th House (Karma Bhava): ${h10.sign || "-"} ${h10.lord ? `(Lord: ${h10.lord})` : ""}`.trim(),
+      `11th House (Labha Bhava): ${h11.sign || "-"} ${h11.lord ? `(Lord: ${h11.lord})` : ""}`.trim(),
+      `Executive Karaka (Sun): House ${sun.house || "-"}${sun.sign ? ` in ${sun.sign}` : ""}`,
+      hasCalculatedWindow ? `Career Timing Window: ${winYearsStr}` : "Career Timing Window: NO_DISCRIMINATING_WINDOW"
+    ];
+    relevantSections = ["career", "timeline", "blueprint"];
+    evidenceIds = ["HOUSE_FACT_H10", "HOUSE_FACT_H11", "PLANET_FACT_SUN", hasCalculatedWindow ? "TIMING_WIN_CAREER" : "TIMING_WIN_NO_WINDOW"];
+    if (h10.lord) evidenceIds.push(`LORD_FACT_L10`);
+    if (h11.lord) evidenceIds.push(`LORD_FACT_L11`);
+  }
+
   // CASE 10: MAJOR MILESTONES (NEXT 3 YEARS TIMELINE)
   else if (domainResult.domains?.includes("milestones") || entities.durationYears || intentResult.intents?.includes("MAJOR_MILESTONE")) {
     const rawChart = evidence.chart || {};
@@ -739,8 +859,8 @@ export function synthesizeAnswer({
     evidenceIds = ["HOUSE_FACT_H5", "HOUSE_FACT_H8", "HOUSE_FACT_H9", "PLANET_FACT_JUPITER", "PLANET_FACT_MERCURY"];
   }
 
-  // CASE 13: BUSINESS: CONTINUE CURRENT VS START NEW
-  else if (intentResult.intents?.includes("BUSINESS_CONTINUE_VS_CHANGE") || /continue.*business|change.*business|வியாபாரம்.*தொடர|தொழில்.*மாற்ற/i.test(rawQ)) {
+  // CASE 13: BUSINESS: CONTINUE CURRENT VS START NEW / EXPANSION
+  else if (intentResult.intents?.includes("BUSINESS_CONTINUE_VS_CHANGE") || /continue.*business|change.*business|pivot.*business|expand.*business|business.*expansion|expand.*to\s+more\s+business|வியாபாரம்.*தொடர|தொழில்.*மாற்ற|தொழில்.*விரிவாக்க/i.test(rawQ)) {
     const h7 = hMap[7] || {};
     const h10 = hMap[10] || {};
     const h6 = hMap[6] || {};
@@ -748,11 +868,11 @@ export function synthesizeAnswer({
     const sat = pMap["Saturn"] || {};
 
     if (isTamil) {
-      directAnswer = `தற்போதுள்ள வணிகத்தைத் தொடர்வதா அல்லது புதிய தொழில் முனைவுக்கு மாறுவதா என்ற முடிவு, உங்கள் 7-ம் பாவகமான வர்த்தக ஸ்தானம் (${h7.sign ? `${toTamilRasi(h7.sign)}, அதிபதி: ${toTamilPlanet(h7.lord)}` : "7-ம் பாவகம்"}), 10-ம் தொழில் ஸ்தானம், மற்றும் 6-ம் பாவகமான தொழில் கடன்/போட்டி ஸ்தானத்தின் அமைப்பைப் பொறுத்தது. நடப்பு கிரக அமைப்புகள் வணிக மறுசீரமைப்பிற்கு சாதகமாக உள்ளதா என்பது தசா-புக்தி பலத்தின் அடிப்படையில் கவனமாக தீர்மானிக்கப்பட வேண்டும்.`;
+      directAnswer = `தற்போதுள்ள வணிகத்தைத் தொடர்வதா அல்லது புதிய தொழில் முனைவுக்கு விரிவாக்கம் செய்வதா என்ற முடிவு, உங்கள் 7-ம் பாவகமான வர்த்தக ஸ்தானம் (${h7.sign ? `${toTamilRasi(h7.sign)}, அதிபதி: ${toTamilPlanet(h7.lord)}` : "7-ம் பாவகம்"}), 10-ம் தொழில் ஸ்தானம், மற்றும் 6-ம் பாவகமான தொழில் கடன்/போட்டி ஸ்தானத்தின் அமைப்பைப் பொறுத்தது. நடப்பு கிரக அமைப்புகள் வணிக மறுசீரமைப்பிற்கு சாதகமாக உள்ளதா என்பது தசா-புக்தி பலத்தின் அடிப்படையில் கவனமாக தீர்மானிக்கப்பட வேண்டும்.`;
       reasoningChain = `7-ம் இடத்து வணிக சந்தை தொடர்புகள், புதனின் வணிக புத்தி கூர்மை, மற்றும் சனியின் ஸ்திரத்தன்மை ஆகியவை ஆராயப்பட்டு தொழில் மாற்றம் அல்லது தொடர்ச்சி குறித்த வழிகாட்டல் பெறப்பட்டது.`;
       whatCannotBeConcluded = "ஜோதிடம் வணிக உகந்த காலத்தை மட்டுமே காட்டும்; சந்தை சூழ்நிலை, முதலீட்டு இடர் மற்றும் செயல்பாட்டு நிர்வாக முடிவுகளுக்கு சுய வணிக ஆலோசனை அவசியம்.";
     } else {
-      directAnswer = `Evaluating whether to persist in your current business enterprise versus pivoting or restructuring synthesizes your 7th house of commercial trade (${h7.sign ? `${h7.sign}, ruled by ${h7.lord}` : "Vyapar Bhava"}), 10th house of public standing, and 6th house of competitive liabilities. Planetary dignities of Mercury (commercial acumen) and Saturn (persistence) indicate optimal operational strategies.`;
+      directAnswer = `Evaluating whether to persist in your current business enterprise versus pivoting or expanding synthesizes your 7th house of commercial trade (${h7.sign ? `${h7.sign}, ruled by ${h7.lord}` : "Vyapar Bhava"}), 10th house of public standing, and 6th house of competitive liabilities. Planetary dignities of Mercury (commercial acumen) and Saturn (persistence) indicate optimal operational strategies.`;
       reasoningChain = `Evaluated 7th house marketplace interaction against 10th house executive stability and current Vimshottari planetary cycle to discern continuation versus strategic pivot viability.`;
       whatCannotBeConcluded = "Astrological indicators delineate structural business momentum; operational financial management and market feasibility require independent commercial diligence.";
     }
@@ -765,6 +885,34 @@ export function synthesizeAnswer({
     ];
     relevantSections = ["career", "business", "timeline"];
     evidenceIds = ["HOUSE_FACT_H7", "HOUSE_FACT_H10", "PLANET_FACT_MERCURY", "PLANET_FACT_SATURN"];
+  }
+
+  // CASE 13.5: BUSINESS: GROWTH & TRADE TRAJECTORY
+  else if (intentResult.intents?.includes("BUSINESS_GROWTH") || /business\s*growth|growth.*(?:of|in|for).*(?:the\s+|my\s+)?business|growth.*business|about.*business|வியாபார\s*வளர்ச்சி|தொழில்\s*வளர்ச்சி/i.test(rawQ)) {
+    const h7 = hMap[7] || {};
+    const h10 = hMap[10] || {};
+    const h11 = hMap[11] || {};
+    const merc = pMap["Mercury"] || {};
+    const jup = pMap["Jupiter"] || {};
+
+    if (isTamil) {
+      directAnswer = `வணிக வளர்ச்சி மற்றும் வர்த்தக விரிவாக்கம் ஆகியவை உங்கள் 7-ம் பாவகமான கூட்டு வர்த்தக ஸ்தானம் (${h7.sign ? `${toTamilRasi(h7.sign)}, அதிபதி: ${toTamilPlanet(h7.lord)}` : "7-ம் பாவகம்"}), 10-ம் தொழில் ஸ்தானம் (${h10.sign ? `${toTamilRasi(h10.sign)}, அதிபதி: ${toTamilPlanet(h10.lord)}` : "10-ம் பாவகம்"}), 11-ம் லாப ஸ்தானம் (${h11.sign ? `${toTamilRasi(h11.sign)}, அதிபதி: ${toTamilPlanet(h11.lord)}` : "11-ம் பாவகம்"}) மற்றும் புதன்/குருவின் அமைப்பால் ஆராயப்படுகின்றன.`;
+      reasoningChain = `வர்த்தக சந்தை பரிவர்த்தனைகளை குறிக்கும் 7-ம் பாவகம், பொது அந்தஸ்தை குறிக்கும் 10-ம் பாவகம், உபரி பண வரவை குறிக்கும் 11-ம் பாவகம் மற்றும் புதனின் வணிக புத்தி கூர்மை ஆகியவை ஒருங்கிணைக்கப்பட்டு வணிக வளர்ச்சி போக்கு பகுப்பாய்வு செய்யப்பட்டது.`;
+      whatCannotBeConcluded = "ஜோதிடம் வணிக உகந்த காலங்களையும் வாய்ப்புகளையும் சுட்டிக்காட்டுகிறது; நடைமுறை பணப்புழக்கம், சந்தை தேவை மற்றும் மேலாண்மை முடிவுகளே லாபத்தை நிர்ணயிக்கும்.";
+    } else {
+      directAnswer = `Commercial enterprise growth and business trajectory synthesize your 7th house of bilateral transactions (${h7.sign ? `${h7.sign}, ruled by ${h7.lord}` : "Vyapar Bhava"}), 10th house of vocational enterprise (${h10.sign ? `${h10.sign}, ruled by ${h10.lord}` : "Karma Bhava"}), and 11th house of business revenues and gains (${h11.sign ? `${h11.sign}, ruled by ${h11.lord}` : "Labha Bhava"}), with natural commerce karaka Mercury.`;
+      reasoningChain = `Synthesized commercial trading vectors (7th Bhava), executive authority (10th Bhava), and recurring monetary yields (11th Bhava) alongside natural karakas Mercury and Jupiter.`;
+      whatCannotBeConcluded = "Astrology indicates opportune commercial periods; market demand, operational risk management, and cash-flow discipline govern real-world solvency.";
+    }
+
+    astroEvidenceList = [
+      `7th House (Bilateral Trade): ${h7.sign || "-"} ${h7.lord ? `(Lord: ${h7.lord})` : ""}`.trim(),
+      `10th House (Executive Enterprise): ${h10.sign || "-"} ${h10.lord ? `(Lord: ${h10.lord})` : ""}`.trim(),
+      `11th House (Commercial Gains): ${h11.sign || "-"} ${h11.lord ? `(Lord: ${h11.lord})` : ""}`.trim(),
+      `Mercury (Commerce Karaka): House ${merc.house || "-"}${merc.sign ? ` in ${merc.sign}` : ""}`
+    ];
+    relevantSections = ["career", "business", "finance"];
+    evidenceIds = ["HOUSE_FACT_H7", "HOUSE_FACT_H10", "HOUSE_FACT_H11", "PLANET_FACT_MERCURY"];
   }
 
   // CASE 14: POLITICS VS ADMINISTRATION
@@ -837,6 +985,20 @@ export function synthesizeAnswer({
       astroEvidenceList = ["Required Factors: INSUFFICIENT_DATA"];
       relevantSections = ["blueprint"];
       evidenceIds = ["EVIDENCE_STATUS_INSUFFICIENT_DATA"];
+    } else if (isTaskIntent(plan.primaryIntent)) {
+      // Explicitly ban substituting natal ascendant/dispositor summaries for specific action tasks
+      if (isTamil) {
+        directAnswer = "இந்த குறிப்பிட்ட பணி தற்போதைய அமைப்பில் செயல்படுத்தப்படவில்லை அல்லது தேவையான காலக்கணிப்பு இன்னும் செய்யப்படவில்லை.";
+        reasoningChain = "பிறப்பு ஜாதக சுருக்கத்தை தினசரி அல்லது வாராந்திர பணிகளுக்கான முடிவாக மாற்ற முடியாது.";
+        whatCannotBeConcluded = "தேவையான காலக்கணிப்பு இன்றி குறிப்பிட்ட பணி குறித்த முடிவுகளை உறுதி செய்ய முடியாது.";
+      } else {
+        directAnswer = "This specific task is not implemented in the current engine or the required daily/weekly assessment has not been calculated.";
+        reasoningChain = "Natal chart placement summaries cannot be substituted for task-specific daily or weekly assessments.";
+        whatCannotBeConcluded = "Definitive action or timing conclusions cannot be established without task-specific evaluation.";
+      }
+      astroEvidenceList = ["Task Assessment: NOT_ESTABLISHED"];
+      relevantSections = ["dailyGuidance"];
+      evidenceIds = ["TASK_NOT_ESTABLISHED"];
     } else {
       const primaryPlanet = pMap["Jupiter"] || pMap["Sun"] || Object.values(pMap)[0];
       if (isTamil) {
@@ -868,15 +1030,18 @@ export function synthesizeAnswer({
   }
 
   // Section Headers
-  const hDirect = isTamil ? "[நேரடி பதில் / அறிக்கை முடிவு]" : "[Direct Answer / Report Finding]";
+  const hDirect = isTamil ? "[நேரடி பதில் / அறிக்கை முடிவு] [Report Finding]" : "[Direct Answer] [Report Finding]";
   const hEvidence = isTamil ? "[ஜோதிட ஆதாரங்கள்]" : "[Astrological Evidence]";
-  const hReasoning = isTamil ? "[எப்படி இந்த முடிவு வந்தது / பாரம்பரிய சூழல்]" : "[Evidence Reasoning / Traditional Context]";
+  const hReasoning = isTamil ? "[எப்படி இந்த முடிவு வந்தது / பாரம்பரிய சூழல்] [Traditional Context]" : "[Evidence Reasoning] [Traditional Context]";
   const hTiming = isTamil ? "[முக்கிய காலக்கோடு]" : "[Timing Window]";
   const hContradiction = isTamil ? "[முரண்பட்ட குறியீடுகள்]" : "[Contradictions & Counterweights]";
   const hStatus = isTamil ? "[ஆதார நிலை]" : "[Evidence Status]";
   const hResolution = isTamil ? "[துல்லிய நிலை]" : "[Timing Resolution]";
   const hLimitations = isTamil ? "[எதை உறுதியாக கூற முடியாது]" : "[What Cannot Be Concluded]";
   const hReportSections = isTamil ? "[அறிக்கைப் பிரிவுகள்]" : "[Relevant Report Sections]";
+
+  const displayStatus = getConsumerFriendlyStatusLabel(resolution.evidenceStatus, isTamil);
+  const displayResolution = getConsumerFriendlyStatusLabel(resolution.timingResolution, isTamil);
 
   // Build the 9-section Answer
   const answerParts = [
@@ -891,8 +1056,8 @@ export function synthesizeAnswer({
 
   answerParts.push(
     `${hContradiction}\n${contradictionNotes.trim()}`,
-    `${hStatus}\n${resolution.evidenceStatus}`,
-    `${hResolution}\n${resolution.timingResolution}`,
+    `${hStatus}\n${displayStatus}`,
+    `${hResolution}\n${displayResolution}`,
     `${hLimitations}\n${whatCannotBeConcluded.trim()}`,
     `${hReportSections}\n${relevantSections.join(", ")}`
   );
@@ -937,7 +1102,9 @@ export function synthesizeAnswer({
     confidenceClass: (contradictions?.confidenceClass) || "MODERATE",
     supportingEvidenceIds: evidenceIds,
     counterEvidenceIds: contradictions?.contradictions?.map(c => c.type) || [],
-    timingWindows: Array.isArray(evidence.timingWindows) ? evidence.timingWindows : [],
+    timingWindows: (Array.isArray(evidence.timingWindows) && evidence.timingWindows.length > 0)
+      ? evidence.timingWindows
+      : (Array.isArray(evidence.taskResult?.candidateWindows) ? evidence.taskResult.candidateWindows : []),
     calculatedFacts: evidence.calculatedFacts || [],
     traditionalRules: evidence.traditionalRules || [],
     contradictions: contradictions?.contradictions || [],

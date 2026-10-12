@@ -37,7 +37,9 @@ export const EVIDENCE_STATUSES = Object.freeze({
   NOT_DISCRIMINATING: "NOT_DISCRIMINATING",
   TRADITIONAL_ONLY: "TRADITIONAL_ONLY",
   EMPIRICALLY_VALIDATED: "EMPIRICALLY_VALIDATED",
-  EXPERIMENTAL: "EXPERIMENTAL"
+  EXPERIMENTAL: "EXPERIMENTAL",
+  UNVERIFIED: "UNVERIFIED",
+  UNSUPPORTED_TASK: "UNSUPPORTED_TASK"
 });
 
 /**
@@ -51,6 +53,17 @@ export const EVIDENCE_STATUSES = Object.freeze({
 export function classifyAnswerability(plan, evidence, contradictions = {}) {
   if (!evidence || evidence.status === "INSUFFICIENT_DATA") {
     return ANSWERABILITY_STATES.INSUFFICIENT_DATA;
+  }
+  if (evidence.taskResult) {
+    if (evidence.taskResult.answerState === "UNSUPPORTED_TASK") {
+      return ANSWERABILITY_STATES.NOT_DISCRIMINATING;
+    }
+    if (evidence.taskResult.answerState === "NOT_ESTABLISHED" || evidence.taskResult.answerState === "NO_DISCRIMINATING_WINDOW") {
+      return ANSWERABILITY_STATES.NOT_DISCRIMINATING;
+    }
+    if (evidence.taskResult.answerState === "CLARIFICATION_REQUIRED") {
+      return ANSWERABILITY_STATES.PARTIALLY_ANSWERABLE;
+    }
   }
   if (contradictions?.hasContradictions && contradictions?.netSignal === "CHALLENGING") {
     return ANSWERABILITY_STATES.CONTRADICTORY;
@@ -66,23 +79,90 @@ export function classifyAnswerability(plan, evidence, contradictions = {}) {
 
 /**
  * Classifies timing resolution and evidence status for a given query and evidence payload.
+ * Strict Invariant: If no discriminating timing windows exist, timingResolution is strictly null.
  *
  * @param {Object} plan - Output of evidencePlanner
  * @param {Object} evidence - Output of evidenceRetriever
- * @returns {Object} { timingResolution, evidenceStatus, rationale }
+ * @returns {Object} { timingResolution, timingContract, evidenceStatus, rationale }
  */
 export function classifyResolution(plan, evidence) {
   // If evidence status is insufficient
   if (!evidence || evidence.status === "INSUFFICIENT_DATA") {
     return {
       timingResolution: TIMING_RESOLUTIONS.INSUFFICIENT_DATA,
+      timingContract: {
+        status: "INSUFFICIENT_DATA",
+        resolution: null,
+        windows: [],
+        missingEvidence: ["Required chart factors are absent."]
+      },
       evidenceStatus: EVIDENCE_STATUSES.INSUFFICIENT_DATA,
       rationale: "Required chart factors are absent from the calculation context."
     };
   }
 
-  // Determine Evidence Status
-  let evidenceStatus = EVIDENCE_STATUSES.DIRECTLY_SUPPORTED;
+  // Handle Actionable Task results explicitly
+  if (evidence.taskResult) {
+    const tr = evidence.taskResult;
+    const state = tr.answerState;
+    if (state === "UNSUPPORTED_TASK") {
+      return {
+        timingResolution: null,
+        timingContract: {
+          status: "UNSUPPORTED_TASK",
+          resolution: null,
+          windows: []
+        },
+        evidenceStatus: EVIDENCE_STATUSES.UNSUPPORTED_TASK,
+        rationale: "Task is unhandled / unsupported in the current engine."
+      };
+    }
+    if (state === "NOT_ESTABLISHED" || state === "NO_DISCRIMINATING_WINDOW") {
+      return {
+        timingResolution: null,
+        timingContract: {
+          status: "NO_DISCRIMINATING_WINDOW",
+          resolution: null,
+          windows: [],
+          reasonCodes: ["NO_EVENT_SPECIFIC_CONVERGENCE"]
+        },
+        evidenceStatus: EVIDENCE_STATUSES.NOT_DISCRIMINATING,
+        rationale: "Requested action assessment or timing window has not been calculated."
+      };
+    }
+    if (state === "CLARIFICATION_REQUIRED") {
+      return {
+        timingResolution: null,
+        timingContract: {
+          status: "CLARIFICATION_REQUIRED",
+          resolution: null,
+          windows: []
+        },
+        evidenceStatus: EVIDENCE_STATUSES.NOT_DISCRIMINATING,
+        rationale: "Ambiguous task parameters require user clarification."
+      };
+    }
+    if (state === "ANSWERED") {
+      const taskRes = tr.timingResolution || (tr.evaluatedTimeframe?.kind === "LOCAL_DATE"
+        ? TIMING_RESOLUTIONS.DATE
+        : (tr.evaluatedTimeframe?.kind === "LOCAL_WEEK" ? TIMING_RESOLUTIONS.DATE_RANGE : TIMING_RESOLUTIONS.MONTH_RANGE));
+      return {
+        timingResolution: taskRes,
+        timingContract: {
+          status: "TRADITIONAL_WINDOW",
+          resolution: taskRes,
+          windows: tr.candidateWindows || [],
+          empiricalStatus: "NOT_VALIDATED"
+        },
+        evidenceStatus: EVIDENCE_STATUSES.TRADITIONAL_ONLY,
+        rationale: "Action answered under evaluated traditional rule without empirical outcome guarantee."
+      };
+    }
+  }
+
+  // Begin with UNEVALUATED / UNVERIFIED baseline
+  let evidenceStatus = EVIDENCE_STATUSES.UNVERIFIED;
+
   if (plan.primaryIntent === "SPOUSE_DISTANCE" || evidence.distanceAnalysis?.distanceStatus === "NOT_ESTABLISHED") {
     evidenceStatus = EVIDENCE_STATUSES.NOT_DISCRIMINATING;
   } else if (plan.primaryIntent === "WELLNESS" || plan.primaryDomain === "wellness") {
@@ -91,24 +171,42 @@ export function classifyResolution(plan, evidence) {
     evidenceStatus = EVIDENCE_STATUSES.MIXED;
   } else if (plan.primaryIntent === "FACTUAL" || (plan.requiredHouses && plan.requiredHouses.size === 1 && !plan.includeTiming)) {
     evidenceStatus = EVIDENCE_STATUSES.FACT;
+  } else if (evidence.planets || evidence.houses || evidence.activeDasha) {
+    evidenceStatus = EVIDENCE_STATUSES.DIRECTLY_SUPPORTED;
   }
 
-  // Determine Timing Resolution
-  let timingResolution = TIMING_RESOLUTIONS.NOT_DISCRIMINATING;
-  if (plan.includeTiming || (plan.targetYears && plan.targetYears.length > 0) || plan.durationYears) {
-    if (evidence.timingWindows && evidence.timingWindows.length > 0) {
-      const firstWin = evidence.timingWindows[0];
-      timingResolution = firstWin.resolution || TIMING_RESOLUTIONS.MONTH_RANGE;
-    } else if (evidence.activeDasha) {
-      timingResolution = TIMING_RESOLUTIONS.YEAR;
-    } else {
-      timingResolution = TIMING_RESOLUTIONS.YEAR;
-    }
+  // Determine Timing Resolution & Structured Timing Contract (Strict Invariant: No windows -> resolution null)
+  let timingResolution = null;
+  let timingContract = {
+    status: "NO_DISCRIMINATING_WINDOW",
+    resolution: null,
+    windows: [],
+    reasonCodes: ["NO_EVENT_SPECIFIC_CONVERGENCE"]
+  };
+
+  if (evidence.timingWindows && evidence.timingWindows.length > 0) {
+    const firstWin = evidence.timingWindows[0];
+    timingResolution = firstWin.resolution || TIMING_RESOLUTIONS.MONTH_RANGE;
+    timingContract = {
+      status: "TRADITIONAL_WINDOW",
+      resolution: timingResolution,
+      windows: evidence.timingWindows,
+      empiricalStatus: "NOT_VALIDATED"
+    };
+  } else {
+    timingResolution = null;
+    timingContract = {
+      status: "NO_DISCRIMINATING_WINDOW",
+      resolution: null,
+      windows: [],
+      reasonCodes: ["NO_EVENT_SPECIFIC_CONVERGENCE"]
+    };
   }
 
   return {
     timingResolution,
+    timingContract,
     evidenceStatus,
-    rationale: `Evidence classified as ${evidenceStatus} with timing resolution bound to ${timingResolution}.`
+    rationale: `Evidence classified as ${evidenceStatus} with timing resolution bound to ${timingResolution || "null"}.`
   };
 }

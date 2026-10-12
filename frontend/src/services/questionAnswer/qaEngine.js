@@ -81,13 +81,14 @@ async function executeSingleQuestionQA({
   // Stage 4: Required Evidence Planning
   const plan = planRequiredEvidence({ intentResult, domainResult, entities });
   plan.questionId = qUnderstanding.questionId;
+  plan.rawQuestion = normalizedQ?.raw || (typeof normalizedQ === "string" ? normalizedQ : "");
   plan.mode = mode;
 
   // Stage 5: Evidence Retrieval & Evidence Graph Population
   const evidence = retrieveEvidence(plan, context);
 
   // Stage 6: Hard Evidence Sufficiency Gate
-  const isSufficient = evidence && evidence.status !== "INSUFFICIENT_DATA";
+  const isSufficient = (evidence && evidence.status !== "INSUFFICIENT_DATA") || Boolean(evidence?.taskResult);
   if (!isSufficient) {
     const resolution = classifyResolution(plan, { ...evidence, status: "INSUFFICIENT_DATA" });
     const synthResult = synthesizeAnswer({

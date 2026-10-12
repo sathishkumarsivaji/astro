@@ -7,7 +7,7 @@
  * Implements Section 4 of the Precision Q&A Engine Mandate.
  */
 
-import { QUESTION_INTENTS } from "./intentClassifier.js";
+import { QUESTION_INTENTS, TASK_INTENTS } from "./intentClassifier.js";
 import { DOMAINS } from "./domainClassifier.js";
 
 /**
@@ -26,19 +26,23 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
   const domains = new Set(domainResult?.domains || []);
   const req = entities?.requestedQuantities || {};
 
+  const isTask = Boolean(primaryIntent && TASK_INTENTS[primaryIntent]);
+
   const plan = {
     primaryIntent,
     primaryDomain,
+    isTask,
+    taskType: isTask ? primaryIntent : null,
     requiredPlanets: new Set(entities?.planets || []),
     requiredHouses: new Set(entities?.houses || []),
     requiredLords: new Set(entities?.lords || []),
     requiredVargas: new Set(entities?.vargas || []),
     requiredDashas: Boolean(entities?.dashaPair || req.dashaRequested || req.timingRequested),
-    requiredTransits: Boolean(req.timingRequested || domains.has(DOMAINS.CAREER) || domains.has(DOMAINS.MARRIAGE)),
+    requiredTransits: Boolean(req.timingRequested || domains.has(DOMAINS.CAREER) || domains.has(DOMAINS.MARRIAGE) || primaryIntent === TASK_INTENTS.BUSINESS_EXPANSION_ELECTION || primaryIntent === TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION),
     requiredDirectionAnalysis: Boolean(req.directionRequested || intents.has(QUESTION_INTENTS.SPOUSE_DIRECTION)),
     requiredDistanceAnalysis: Boolean(req.distanceRequested || intents.has(QUESTION_INTENTS.SPOUSE_DISTANCE)),
     requiredComparison: Boolean(req.comparisonRequested || intents.has(QUESTION_INTENTS.COMPARISON) || req.familyWealthRequested),
-    includeTiming: Boolean(req.timingRequested || intents.has(QUESTION_INTENTS.TIMING)),
+    includeTiming: Boolean(req.timingRequested || intents.has(QUESTION_INTENTS.TIMING) || primaryIntent === TASK_INTENTS.BUSINESS_EXPANSION_ELECTION || primaryIntent === TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION),
     includeRemedies: Boolean(req.remedyRequested || intents.has(QUESTION_INTENTS.REMEDY)),
     dashaPair: entities?.dashaPair || null,
     userClaimedSign: entities?.signs?.[0] || null,
@@ -46,6 +50,39 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
     durationYears: entities?.durationYears || null,
     specificFactors: []
   };
+
+  // Dedicated Tasks Planning
+  if (primaryIntent === TASK_INTENTS.DAILY_DRESS_COLOR) {
+    plan.requiredHouses.clear();
+    plan.requiredPlanets.clear();
+    plan.requiredDashas = false;
+  } else if (primaryIntent === TASK_INTENTS.BUSINESS_EXPANSION_ELECTION) {
+    plan.requiredHouses.add(7);
+    plan.requiredHouses.add(10);
+    plan.requiredHouses.add(11);
+  } else if (primaryIntent === TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION) {
+    plan.requiredHouses.add(5);
+    plan.requiredHouses.add(9);
+  } else if (primaryIntent === TASK_INTENTS.FOREIGN_TRIP_TIMING) {
+    plan.requiredHouses.add(3);
+    plan.requiredHouses.add(9);
+    plan.requiredHouses.add(12);
+    plan.requiredDashas = true;
+    plan.requiredTransits = true;
+  } else if (primaryIntent === TASK_INTENTS.HOME_CONSTRUCTION_TIMING) {
+    plan.requiredHouses.add(4);
+    plan.requiredHouses.add(11);
+    plan.requiredDashas = true;
+    plan.requiredTransits = true;
+  } else if (primaryIntent === TASK_INTENTS.VEHICLE_PURCHASE_TIMING) {
+    plan.requiredHouses.add(4);
+    plan.requiredHouses.add(11);
+    plan.requiredDashas = true;
+    plan.requiredTransits = true;
+  } else if (primaryIntent === TASK_INTENTS.MONTHLY_OUTLOOK) {
+    plan.requiredDashas = true;
+    plan.requiredTransits = true;
+  }
 
   // 0. System Comparison (Lahiri vs KP)
   if (intents.has(QUESTION_INTENTS.SYSTEM_COMPARISON)) {

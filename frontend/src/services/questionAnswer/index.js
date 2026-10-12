@@ -6,8 +6,23 @@
 
 export { processEvidenceLinkedQA } from "./qaEngine.js";
 export { normalizeQuestion } from "./questionNormalizer.js";
-export { classifyIntent, QUESTION_INTENTS } from "./intentClassifier.js";
+export { classifyIntent, QUESTION_INTENTS, TASK_INTENTS } from "./intentClassifier.js";
 export { classifyDomains, DOMAINS } from "./domainClassifier.js";
+export { resolveTemporalTimeframe } from "./temporalResolver.js";
+export {
+  isTaskIntent,
+  dispatchTaskEvaluation,
+  evaluateDailyDressColor,
+  evaluateResearchSubmissionElection,
+  evaluateBusinessExpansionElection,
+  evaluateBusinessExpansionDecision,
+  evaluateForeignTripTiming,
+  evaluateHomeConstructionTiming,
+  evaluateVehicleAcquisitionTiming,
+  evaluateMonthlyOutlook
+} from "./tasks/index.js";
+export { getCapability, CAPABILITY_REGISTRY } from "./capabilityRegistry.js";
+export { createQuestionSpecification, SPEC_DOMAINS, SPEC_EVENTS, SPEC_TASKS } from "./questionSpecification.js";
 export { extractEntities } from "./entityExtractor.js";
 export { planRequiredEvidence } from "./evidencePlanner.js";
 export { retrieveEvidence } from "./evidenceRetriever.js";

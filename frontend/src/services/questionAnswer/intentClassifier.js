@@ -5,7 +5,20 @@
  * Supports all 33 mandated canonical intents.
  */
 
+export const TASK_INTENTS = Object.freeze({
+  DAILY_DRESS_COLOR: "DAILY_DRESS_COLOR",
+  RESEARCH_SUBMISSION_ELECTION: "RESEARCH_SUBMISSION_ELECTION",
+  BUSINESS_EXPANSION_ELECTION: "BUSINESS_EXPANSION_ELECTION",
+  BUSINESS_EXPANSION_DECISION: "BUSINESS_EXPANSION_DECISION",
+  BUSINESS_DIVERSIFICATION_DECISION: "BUSINESS_DIVERSIFICATION_DECISION",
+  FOREIGN_TRIP_TIMING: "FOREIGN_TRIP_TIMING",
+  HOME_CONSTRUCTION_TIMING: "HOME_CONSTRUCTION_TIMING",
+  VEHICLE_PURCHASE_TIMING: "VEHICLE_PURCHASE_TIMING",
+  MONTHLY_OUTLOOK: "MONTHLY_OUTLOOK"
+});
+
 export const QUESTION_INTENTS = Object.freeze({
+  ...TASK_INTENTS,
   GENERAL_INTERPRETATION: "GENERAL_INTERPRETATION",
   WHY_QUESTION: "WHY_QUESTION",
   TIMING: "TIMING",
@@ -76,6 +89,54 @@ export function classifyIntent(normalizedQ, history = []) {
   const cues = (typeof normalizedQ === "object" && normalizedQ) ? (normalizedQ.cues || {}) : {};
 
   const detectedIntents = new Set();
+
+  // 0. Actionable Specific Task Intents (Highest Priority ahead of general domains)
+  // A. Daily Dress Colour
+  if (/(?:colour|color|dress|clothes|clothing|wear).*(?:today|tonight|this\s+morning|wear\s+today|suitable\s+today)|(?:what|which)\s+(?:colour|color).*(?:dress|wear|suitable)|today.*(?:dress|cloth).*(?:colour|color)|இன்று.*(?:நிற|ஆடை|உடை)|(?:எந்த|என்ன)\s*நிற.*(?:ஆடை|உடை)|ஆடை.*அணிய/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.DAILY_DRESS_COLOR);
+  }
+
+  // B. Research Paper Submission Election
+  const hasAcademic = /(?:research\s*paper|journal\s*submission|paper\s*submission|manuscript|research|journal|paper|thesis|article|dissertation|ஆய்வுக்\s*கட்டுரை|கட்டுரை|ஆய்வு)/i.test(text);
+  const hasSubmissionAction = /(?:submit|submission|upload|send|publish|publishing|suitable|சமர்ப்பிக்க|அனுப்ப)/i.test(text);
+  const hasSubmissionTiming = /(?:today|tonight|now|date|suitable|time|when|day|இன்று)/i.test(text);
+  if ((hasAcademic && hasSubmissionAction && (hasSubmissionTiming || /(?:submit|submission|upload|publish)/i.test(text))) ||
+      /(?:submit|submission|upload).*(?:research|paper|manuscript|journal|article|thesis)/i.test(text) ||
+      /(?:research\s*paper|journal|manuscript).*(?:submit|submission|upload|suitable)/i.test(text) ||
+      /(?:ஆய்வுக்\s*கட்டுரை|கட்டுரை).*(?:சமர்ப்பிக்க|அனுப்ப)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION);
+  }
+
+  // C. Business Expansion Election (with time bounded: this week, etc.)
+  if (/(?:expand|expansion|branch|scale).*(?:business|trade|venture|shop).*(?:this\s+week|good\s+luck|luck|timing)|(?:should\s+i|shall\s+i|will|can\s+i).*(?:expand|expansion).*(?:this\s+week|good\s+luck)|(?:suitable|good|right)\s+week.*(?:branch|business|expand)|இந்த\s*வாரம்.*(?:வியாபார|தொழில்).*(?:விரிவு|விரிவுபடுத்த|அதிர்ஷ்டம்)|வியாபார.*விரிவுபடுத்தலாமா/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.BUSINESS_EXPANSION_ELECTION);
+  }
+
+  // D. Business Expansion vs Diversification Decision
+  if (/(?:expand.*or.*diversif|new\s+branch.*or.*different\s+business|open\s+another\s+branch.*or.*different\s+business|expand.*same\s+business.*or|branch.*different\s+business|வேறு\s*தொழில்.*அல்லது.*விரிவாக்கம்)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.BUSINESS_EXPANSION_DECISION);
+    detectedIntents.add(TASK_INTENTS.BUSINESS_DIVERSIFICATION_DECISION);
+  }
+
+  // E. Foreign Trip Timing (Temporary trip / travel abroad)
+  if (/(?:foreign|abroad|overseas|international).*(?:trip|tour|travel|journey|vacation|visit|holiday)|(?:when\s+will\s+i|when\s+can\s+i|shall\s+i|will\s+i).*(?:go\s+(?:for\s+a\s+)?foreign\s+trip|travel\s+abroad|go\s+abroad|trip\s+abroad)|foreign\s+trip|வெளிநாட்டுப்\s*பயணம்|வெளிநாடு.*(?:செல்ல|பயணம்)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.FOREIGN_TRIP_TIMING);
+  }
+
+  // F. Home Construction Timing (Building a home / house construction)
+  if (/(?:build|construct|erect).*(?:new\s+home|new\s+house|house|home)|house\s+construction|home\s+construction|(?:when\s+will\s+i|when\s+can\s+i|shall\s+i|will\s+i).*(?:build|construct).*(?:home|house)|புதிய\s*வீடு.*கட்ட|வீடு\s*கட்ட|கட்டிடப்\s*பணி/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.HOME_CONSTRUCTION_TIMING);
+  }
+
+  // G. Ordinary Vehicle Purchase Timing
+  if (/(?:buy|purchase).*(?:new\s+car|car|new\s+vehicle|vehicle|bike|scooter|motorcycle|automobile)|(?:when\s+will\s+i|when\s+can\s+i|shall\s+i|will\s+i).*(?:buy|purchase).*(?:car|vehicle)|புதிய\s*கார்.*வாங்க|கார்\s*வாங்க|வாகனம்.*வாங்க/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.VEHICLE_PURCHASE_TIMING);
+  }
+
+  // H. Monthly Outlook (Upcoming months forecast)
+  if (/(?:upcoming|coming|next\s+few|next\s+3|next\s+three)\s+months|(?:how\s+will\s+my|what\s+about\s+my)\s+(?:upcoming|coming|next)\s+months|monthly\s+(?:outlook|forecast|prediction)|அடுத்த\s*மாதங்கள்|வரவிருக்கும்\s*மாதங்கள்/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.MONTHLY_OUTLOOK);
+  }
 
   // 1. Specialized Spouse & Relationship Intents
   if (/spouse.*family|family.*wealth|wife.*family|husband.*family|துணையின்\s*குடும்பம்|மாமியார்|மாமனார்/i.test(text) ||
@@ -161,10 +222,10 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.CAREER);
   }
 
-  if (/(continue.*business.*change|change.*business|business.*pivot|expand.*business|business.*expansion|தொழில்\s*மாற்ற|தொழில்\s*விரிவாக்க)/i.test(text)) {
+  if (/(continue.*business.*change|change.*business|business.*pivot|expand.*business|business.*expansion|expand.*to\s+more\s+business|new\s+business|second\s+business|தொழில்\s*மாற்ற|தொழில்\s*விரிவாக்க)/i.test(text)) {
     detectedIntents.add(QUESTION_INTENTS.BUSINESS_CONTINUE_VS_CHANGE);
     detectedIntents.add(QUESTION_INTENTS.BUSINESS);
-  } else if (/business\s*growth|व्यापार|சுயதொழில்\s*வளர்ச்சி|வியாபார\s*வளர்ச்சி/i.test(text)) {
+  } else if (/business\s*growth|growth.*(?:of|in|for).*(?:the\s+|my\s+)?business|growth.*business|about.*business|व्यापार|சுயதொழில்\s*வளர்ச்சி|வியாபார\s*வளர்ச்சி/i.test(text)) {
     detectedIntents.add(QUESTION_INTENTS.BUSINESS_GROWTH);
     detectedIntents.add(QUESTION_INTENTS.BUSINESS);
   }
@@ -332,6 +393,15 @@ export function classifyIntent(normalizedQ, history = []) {
   // Prioritize primary intent
   let primaryIntent = QUESTION_INTENTS.GENERAL_INTERPRETATION;
   const priorityList = [
+    TASK_INTENTS.DAILY_DRESS_COLOR,
+    TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION,
+    TASK_INTENTS.BUSINESS_EXPANSION_ELECTION,
+    TASK_INTENTS.BUSINESS_EXPANSION_DECISION,
+    TASK_INTENTS.BUSINESS_DIVERSIFICATION_DECISION,
+    TASK_INTENTS.FOREIGN_TRIP_TIMING,
+    TASK_INTENTS.HOME_CONSTRUCTION_TIMING,
+    TASK_INTENTS.VEHICLE_PURCHASE_TIMING,
+    TASK_INTENTS.MONTHLY_OUTLOOK,
     QUESTION_INTENTS.SYSTEM_COMPARISON,
     QUESTION_INTENTS.TOP_HEADINGS,
     QUESTION_INTENTS.SPOUSE_FAMILY,
