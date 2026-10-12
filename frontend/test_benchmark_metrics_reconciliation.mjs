@@ -57,19 +57,39 @@ assert(adbTiming.mae > adbDemo.mae, 'Astrological MAE must be higher than demogr
 assert.equal(adbOcc.n, 313, 'ADB occurrence evaluated count must be 313');
 assert.equal(adbOcc.censoringBreakdown.rightCensoredCount, 556, 'ADB right-censored count must be 556');
 
-// Occurrence Model 2 (Astrology-Only) metrics
+// 1a. Primary Calibrated Classifier (High-Specificity Operating Point)
+assert.equal(adbOcc.mcc, 0.0109, 'Primary occurrence calibrated MCC must be 0.0109');
+assert.equal(adbOcc.primaryCalibratedClassifierMCC, 0.0109, 'primaryCalibratedClassifierMCC must be 0.0109');
+assert.equal(adbOcc.rocAuc, 0.5072, 'Primary calibrated ROC-AUC must be 0.5072');
+assert.equal(adbOcc.specificity, 0.9091, 'Primary calibrated specificity must be 0.9091');
+assert.equal(adbOcc.recall, 0.1093, 'Primary calibrated sensitivity/recall must be 0.1093');
+assert.deepEqual(adbOcc.confusionMatrix, { tp: 33, fp: 1, tn: 10, fn: 269 }, 'Primary calibrated confusion matrix must match { tp: 33, fp: 1, tn: 10, fn: 269 }');
+
+// 1b. Astrology-Only Model (Four-Model Comparison at Frozen Threshold tau = 0.91)
 const adbAstroModel = adb.baselineComparison.fourModelComparison.find(m => m.modelId === 'MODEL_2_ASTROLOGY');
 assert(adbAstroModel, 'ADB 4-model comparison must include MODEL_2_ASTROLOGY');
-assert.equal(adbAstroModel.rocAuc, 0.5072, 'ADB astrology model ROC-AUC must be 0.5072');
-assert.equal(adbAstroModel.mcc, 0.0397, 'ADB astrology model MCC must be 0.0397');
-assert.equal(adbAstroModel.sensitivity, 0.2781, 'ADB astrology model sensitivity must be 0.2781');
-assert.equal(adbAstroModel.specificity, 0.8182, 'ADB astrology model specificity must be 0.8182');
+assert.equal(adbAstroModel.mcc, 0.0397, 'ADB astrology comparison model MCC must be 0.0397');
+assert.equal(adbAstroModel.astrologyOnlyComparisonModelMCC, 0.0397, 'astrologyOnlyComparisonModelMCC must be 0.0397');
+assert.equal(adbAstroModel.rocAuc, 0.5072, 'ADB astrology comparison model ROC-AUC must be 0.5072');
+assert.equal(adbAstroModel.appliedThreshold, 0.91, 'ADB astrology comparison model applied threshold must be 0.91');
+assert.equal(adbAstroModel.specificity, 0.8182, 'ADB astrology comparison model specificity must be 0.8182');
+assert.equal(adbAstroModel.sensitivity, 0.2781, 'ADB astrology comparison model sensitivity must be 0.2781');
+assert.deepEqual(adbAstroModel.confusionMatrix, { tp: 84, fp: 2, tn: 9, fn: 218 }, 'ADB astrology comparison confusion matrix must match { tp: 84, fp: 2, tn: 9, fn: 218 }');
+
+// 1c. External Validation Report Scorecard Alignment
+const extReportEarly = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/real_world_validation/results/external_validation_report.json'), 'utf8'));
+assert.equal(extReportEarly.scorecard.primaryCalibratedClassifierMCC, 0.0109, 'Scorecard primaryCalibratedClassifierMCC must be 0.0109');
+assert.equal(extReportEarly.scorecard.astrologyOnlyComparisonModelMCC, 0.0397, 'Scorecard astrologyOnlyComparisonModelMCC must be 0.0397');
+assert.deepEqual(extReportEarly.scorecard.primaryConfusionMatrix, { tp: 33, fp: 1, tn: 10, fn: 269 });
+assert.deepEqual(extReportEarly.scorecard.comparisonConfusionMatrix, { tp: 84, fp: 2, tn: 9, fn: 218 });
 
 console.log(`✓ Astro-Databank external metrics verified:`);
 console.log(`  Timing N: ${adbTiming.n}, Astrological MAE: ${adbTiming.mae}y, Demographic MAE: ${adbDemo.mae}y`);
 console.log(`  Timing within ±1y: ${adbTiming.within1yPct}%, Demographic within ±1y: ${adbDemo.within1yPct}%`);
 console.log(`  Occurrence N: ${adbOcc.n}, Right-censored: ${adbOcc.censoringBreakdown.rightCensoredCount}`);
-console.log(`  Astrology Model ROC-AUC: ${adbAstroModel.rocAuc}, MCC: ${adbAstroModel.mcc}`);
+console.log(`  Both models share identical ranking ROC-AUC: 0.5072 on external cohort (N=313)`);
+console.log(`  Primary Calibrated Classifier: MCC=0.0109, Spec=90.91%, Sens=10.93%, CM={tp:33,fp:1,tn:10,fn:269}`);
+console.log(`  Comparison Model 2 (tau=0.91):  MCC=0.0397, Spec=81.82%, Sens=27.81%, CM={tp:84,fp:2,tn:9,fn:218}`);
 
 // 2. Internal Blind Test metrics
 const blindTiming = bench.splits.BLIND_TEST.timing;
@@ -127,6 +147,45 @@ function testLeakageDetection(tamperedDisclosure) {
 assert.equal(testLeakageDetection('External MAE 9.19 vs 6.41 on N=320'), false, 'Clean disclosure must pass');
 assert.equal(testLeakageDetection('External MAE 6.89 vs 4.28 on N=1484'), true, 'Leaked disclosure must be caught');
 console.log(`✓ Negative cross-cohort leakage test verified`);
+
+// 6. Negative Regression Test: Verifying that substituting primary vs comparison MCC fails
+function verifyMccIntegrity(targetObj, expectedMetricName, expectedMcc, expectedCm) {
+  if (targetObj[expectedMetricName] !== expectedMcc) {
+    throw new Error(`Metric mismatch: expected ${expectedMetricName}=${expectedMcc}, got ${targetObj[expectedMetricName]}`);
+  }
+  if (JSON.stringify(targetObj.confusionMatrix) !== JSON.stringify(expectedCm)) {
+    throw new Error(`Confusion matrix mismatch for ${expectedMetricName}`);
+  }
+  return true;
+}
+
+// 6a. Valid objects pass
+assert.doesNotThrow(() => {
+  verifyMccIntegrity(adbOcc, 'primaryCalibratedClassifierMCC', 0.0109, { tp: 33, fp: 1, tn: 10, fn: 269 });
+});
+assert.doesNotThrow(() => {
+  verifyMccIntegrity(adbAstroModel, 'astrologyOnlyComparisonModelMCC', 0.0397, { tp: 84, fp: 2, tn: 9, fn: 218 });
+});
+
+// 6b. Tampering primary MCC with comparison MCC (0.0397) throws error
+assert.throws(() => {
+  const tampered = { ...adbOcc, primaryCalibratedClassifierMCC: 0.0397 };
+  verifyMccIntegrity(tampered, 'primaryCalibratedClassifierMCC', 0.0109, { tp: 33, fp: 1, tn: 10, fn: 269 });
+}, /Metric mismatch/);
+
+// 6c. Tampering comparison MCC with primary MCC (0.0109) throws error
+assert.throws(() => {
+  const tampered = { ...adbAstroModel, astrologyOnlyComparisonModelMCC: 0.0109 };
+  verifyMccIntegrity(tampered, 'astrologyOnlyComparisonModelMCC', 0.0397, { tp: 84, fp: 2, tn: 9, fn: 218 });
+}, /Metric mismatch/);
+
+// 6d. Swapping confusion matrices throws error
+assert.throws(() => {
+  const tampered = { ...adbOcc, confusionMatrix: { tp: 84, fp: 2, tn: 9, fn: 218 } };
+  verifyMccIntegrity(tampered, 'primaryCalibratedClassifierMCC', 0.0109, { tp: 33, fp: 1, tn: 10, fn: 269 });
+}, /Confusion matrix mismatch/);
+
+console.log(`✓ Negative MCC substitution tests verified (anti-tamper protection active)`);
 
 console.log('\n============================================================');
 console.log(' ALL BENCHMARK METRIC RECONCILIATION TESTS PASSED (100%)');

@@ -73,7 +73,7 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = 3751$):
 | **Occurrence Accuracy** | **13.74%** | N/A |
 | **Occurrence Recall (Sensitivity)** | **10.93%** | N/A |
 | **Occurrence Specificity** | **90.91%** | N/A |
-| **Balanced Accuracy / MCC** | **50.92% / 0.0109** | N/A |
+| **Balanced Accuracy / MCC (Primary Calibrated)** | **50.92% / 0.0109** (Comparison Model 2: **0.0397** at $\tau=0.91$) | N/A |
 | **ROC-AUC / PR-AUC** | **0.5072 / 0.9688** | N/A |
 | **Brier Score / ECE** | **0.0407 / 0.0821** | N/A |
 | **Occurrence Quality Gate** | **NOT_EMPIRICALLY_VALIDATED** | N/A |
@@ -86,6 +86,17 @@ Evaluated across 100% of the independent certified A/AA cohort ($N = 3751$):
 | **Mean Winkler Score (80% Interval)**| **46.69** | N/A |
 | **Timing Quality Gate** | **NOT_EMPIRICALLY_VALIDATED** | Baseline outperforms model by 2.78y |
 | **Overall Scientific Status** | **EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED** | Fully disclosed in reports & UI |
+
+#### Reconciliation of MCC Metric Operating Points on External Astro-Databank Cohort
+Both reported Matthews Correlation Coefficients evaluate the exact same cohort ($N = 313$, 302 positive events, 11 negative lifelong controls) with identical ranking discrimination ($\text{ROC-AUC} = 0.5072$):
+1. **Primary Calibrated Classifier (`primaryCalibratedClassifierMCC` = 0.0109):**
+   - **Operating Rule:** High-specificity calibration constraint ($\text{Specificity} \ge 90\%$, observed $90.91\%$).
+   - **Confusion Matrix:** $\text{TP} = 33, \text{FP} = 1, \text{TN} = 10, \text{FN} = 269$.
+   - **Performance:** Sensitivity = $10.93\%$, Specificity = $90.91\%$, Accuracy = $13.74\%$, Balanced Accuracy = $50.92\%$, $\text{MCC} = 0.0109$.
+2. **Four-Model Comparison Model 2 (`astrologyOnlyComparisonModelMCC` = 0.0397):**
+   - **Operating Rule:** Cross-model frozen validation threshold ($\tau = 0.91$).
+   - **Confusion Matrix:** $\text{TP} = 84, \text{FP} = 2, \text{TN} = 9, \text{FN} = 218$.
+   - **Performance:** Sensitivity = $27.81\%$, Specificity = $81.82\%$, Accuracy = $29.71\%$, Balanced Accuracy = $54.82\%$, $\text{MCC} = 0.0397$.
 
 - **Sparse Negative Outcome Disclosure:** External occurrence discrimination is underpowered because verified negative outcomes are sparse (only 11 negative observations out of 313 evaluable records).
 - **Cohort Stratification:** All 3,751 subjects in the independent certified A/AA cohort receive astrological predictions (prediction cohort $N = 3,751$). Evaluated occurrence cohort comprises $N = 313$ subjects with complete follow-up (302 events + 11 verified lifelong non-events). Evaluated timing cohort comprises $N = 320$ documented first-marriage events.

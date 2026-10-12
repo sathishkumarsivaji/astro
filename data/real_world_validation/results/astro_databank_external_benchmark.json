@@ -194,6 +194,18 @@
           "fittedParameters": {
             "intercept": 2.1631,
             "slope": 0.3938
+          },
+          "astrologyOnlyComparisonModelMCC": 0.0397,
+          "primaryCalibratedClassifierMCC": 0.0109,
+          "thresholdContext": {
+            "operatingThreshold": 0.91,
+            "decisionRule": "Validation-frozen cross-model comparison threshold (tau = 0.91)",
+            "confusionMatrix": {
+              "tp": 84,
+              "fp": 2,
+              "tn": 9,
+              "fn": 218
+            }
           }
         },
         {
@@ -224,7 +236,41 @@
             "betaAstrology": 0.3627
           }
         }
-      ]
+      ],
+      "primaryCalibratedClassifierMCC": 0.0109,
+      "astrologyOnlyComparisonModelMCC": 0.0397,
+      "thresholdContext": {
+        "primaryCalibratedClassifier": {
+          "operatingThreshold": 0.89,
+          "decisionRule": "High-specificity calibration constraint (Specificity >= 90%)",
+          "confusionMatrix": {
+            "tp": 33,
+            "fp": 1,
+            "tn": 10,
+            "fn": 269
+          },
+          "specificity": 0.9091,
+          "sensitivity": 0.1093,
+          "accuracy": 0.1374,
+          "mcc": 0.0109,
+          "rocAuc": 0.5072
+        },
+        "astrologyOnlyComparisonModel": {
+          "operatingThreshold": 0.91,
+          "decisionRule": "Validation-frozen cross-model comparison threshold (tau = 0.91)",
+          "confusionMatrix": {
+            "tp": 84,
+            "fp": 2,
+            "tn": 9,
+            "fn": 218
+          },
+          "specificity": 0.8182,
+          "sensitivity": 0.2781,
+          "accuracy": 0.2971,
+          "mcc": 0.0397,
+          "rocAuc": 0.5072
+        }
+      }
     },
     "timing": {
       "n": 320,
@@ -1236,6 +1282,18 @@
         "fittedParameters": {
           "intercept": 2.1631,
           "slope": 0.3938
+        },
+        "astrologyOnlyComparisonModelMCC": 0.0397,
+        "primaryCalibratedClassifierMCC": 0.0109,
+        "thresholdContext": {
+          "operatingThreshold": 0.91,
+          "decisionRule": "Validation-frozen cross-model comparison threshold (tau = 0.91)",
+          "confusionMatrix": {
+            "tp": 84,
+            "fp": 2,
+            "tn": 9,
+            "fn": 218
+          }
         }
       },
       {
