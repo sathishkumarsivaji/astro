@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Check, Copy, Shield, Bookmark, ExternalLink, HelpCircle, AlertCircle, Sparkles } from "lucide-react";
 import { getChapterById } from "../../config/reportChapters.js";
 import { getSystemConfig } from "../../config/astrologySystems.js";
+import PredictionFeedbackCard from "./PredictionFeedbackCard.jsx";
 
 export default function FollowUpAnswer({
   answer,
@@ -11,6 +12,9 @@ export default function FollowUpAnswer({
   dataUsed = [],
   status = "REPORT_SUPPORTED",
   limitations = [],
+  predictionRecord = null,
+  onSubmitFeedback = null,
+  onReportOutcome = null,
   onSelectChapter = null,
   isTamil = false
 }) {
@@ -160,6 +164,16 @@ export default function FollowUpAnswer({
         <div className="text-[10px] text-stone-500 italic bg-stone-50 rounded-lg p-2 border border-stone-200">
           {limitations.join(" ")}
         </div>
+      )}
+
+      {/* Structured Prediction Feedback & Verification Card */}
+      {predictionRecord && (
+        <PredictionFeedbackCard
+          predictionRecord={predictionRecord}
+          onSubmitFeedback={onSubmitFeedback}
+          onReportOutcome={onReportOutcome}
+          lang={isTamil ? "ta" : "en"}
+        />
       )}
     </div>
   );

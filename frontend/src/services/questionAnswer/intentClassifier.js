@@ -5,6 +5,13 @@
  * Supports all 33 mandated canonical intents.
  */
 
+export const CHILDREN_TASKS = Object.freeze({
+  CHILDREN_COUNT: "CHILDREN_COUNT",
+  CHILDREN_OUTLOOK: "CHILDREN_OUTLOOK",
+  FAMILY_EXPANSION_TIMING: "FAMILY_EXPANSION_TIMING",
+  CHILDREN_TRADITIONAL_INTERPRETATION: "CHILDREN_TRADITIONAL_INTERPRETATION"
+});
+
 export const TASK_INTENTS = Object.freeze({
   DAILY_DRESS_COLOR: "DAILY_DRESS_COLOR",
   RESEARCH_SUBMISSION_ELECTION: "RESEARCH_SUBMISSION_ELECTION",
@@ -14,11 +21,13 @@ export const TASK_INTENTS = Object.freeze({
   FOREIGN_TRIP_TIMING: "FOREIGN_TRIP_TIMING",
   HOME_CONSTRUCTION_TIMING: "HOME_CONSTRUCTION_TIMING",
   VEHICLE_PURCHASE_TIMING: "VEHICLE_PURCHASE_TIMING",
-  MONTHLY_OUTLOOK: "MONTHLY_OUTLOOK"
+  MONTHLY_OUTLOOK: "MONTHLY_OUTLOOK",
+  ...CHILDREN_TASKS
 });
 
 export const QUESTION_INTENTS = Object.freeze({
   ...TASK_INTENTS,
+  ...CHILDREN_TASKS,
   GENERAL_INTERPRETATION: "GENERAL_INTERPRETATION",
   WHY_QUESTION: "WHY_QUESTION",
   TIMING: "TIMING",
@@ -275,11 +284,11 @@ export function classifyIntent(normalizedQ, history = []) {
     if (cues.isTiming) detectedIntents.add(QUESTION_INTENTS.CAREER_TIMING);
   }
 
-  if (/property|real\s*estate|house|land|flat|bhoomi|நிலம்|சொத்து|வீடு|மனை/i.test(text)) {
+  if (/property|real\s*estate|(?<!\b\d{1,2}(?:st|nd|rd|th)?\s+)\b(?:house|home)\b(?!.*\b(?:lord|cusp)\b)|land|flat|bhoomi|நிலம்|சொத்து|வீடு|மனை/i.test(text)) {
     detectedIntents.add(QUESTION_INTENTS.PROPERTY);
   }
 
-  if (/vehicle|car|bike|conveyance|வாகனம்|கார்/i.test(text)) {
+  if (/(?:vehicle|vehicles|conveyance|automobile|automobiles)|\b(car|cars|bike|bikes)\b|வாகனம்|கார்/i.test(text)) {
     detectedIntents.add(QUESTION_INTENTS.VEHICLE);
   }
 
@@ -291,8 +300,40 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.EDUCATION);
   }
 
-  if (/children|child|progeny|pregnancy|son|daughter|குழந்தை|புத்திர|பிள்ளை/i.test(text)) {
+  // Children domain — fine-grained sub-intent detection (MUST come before broad CHILDREN catch)
+  const hasChildrenKeyword = /children|child|progeny|pregnancy|conceive|conception|offspring|son|daughter|குழந்தை|புத்திர|பிள்ளை|மழலை|baby|babies|kid|kids|birth\s*of\s*a\s*child|give\s*birth|மகன்|மகள்|குழந்தைகள்/i.test(text);
+  if (hasChildrenKeyword) {
+    const hasQuantityLanguage = /how\s+many|number\s+of\s+(?:children|kids|babies|offspring)|count\s+of\s+children|total\s+children|எத்தனை\s*குழந்தை|எத்தனை\s*பிள்ளை|குழந்தைகளின்\s*எண்ணிக்கை/i.test(text);
+    const hasTimingLanguage = /when\s+will\s+(?:i|we|she|he)\s+(?:have|get|be\s+blessed|conceive|give\s+birth)|when\s+(?:can|shall)\s+(?:i|we)\s+(?:have|get|conceive)|timing\s+(?:of|for)\s+(?:children|child|childbirth|progeny|pregnancy|family\s+expansion)|year\s+(?:of|for)\s+(?:child|children|childbirth)|எப்போது\s*குழந்தை|குழந்தை.*எப்போது|புத்திர.*எப்போது/i.test(text) || (cues.isTiming && !hasQuantityLanguage && /\bwhen\b|எப்போது/i.test(text));
+    const hasOutlookLanguage = /will\s+(?:i|we|she|he)\s+(?:have|get|be\s+blessed\s+with|conceive|give\s+birth)|(?:shall|can)\s+(?:i|we|she|he)\s+(?:have|get|conceive|give\s+birth)|(?:i|we)\s+(?:get|have)\s+(?:a\s+)?child|chance\s+of\s+(?:having|getting)\s+(?:a\s+)?child|குழந்தை\s*(?:பிறக்குமா|பெறுவேனா|கிடைக்குமா|வருமா|பாக்கியம்\s*உண்டா|யோகம்\s*உண்டா)|எனக்கு\s*குழந்தை|எங்களுக்கு\s*குழந்தை|புத்திர\s*பாக்கியம்\s*கிடைக்குமா/i.test(text);
+
+    if (hasQuantityLanguage) {
+      detectedIntents.add(CHILDREN_TASKS.CHILDREN_COUNT);
+    } else if (hasTimingLanguage) {
+      detectedIntents.add(CHILDREN_TASKS.FAMILY_EXPANSION_TIMING);
+      detectedIntents.add(QUESTION_INTENTS.TIMING);
+    } else if (hasOutlookLanguage) {
+      detectedIntents.add(CHILDREN_TASKS.CHILDREN_OUTLOOK);
+    } else {
+      detectedIntents.add(CHILDREN_TASKS.CHILDREN_TRADITIONAL_INTERPRETATION);
+    }
+    // Always also add the broad CHILDREN intent for backward compatibility
     detectedIntents.add(QUESTION_INTENTS.CHILDREN);
+  } else if (Array.isArray(history) && history.length > 0 && /^(when|when\s*\?|when\s+will\s+(?:it|that)\s+happen\??|what\s+about\s+timing\??|எப்போது\??)$/i.test(text.trim())) {
+    const lastTurn = history[history.length - 1] || {};
+    const prevDomain = String(lastTurn.domain || lastTurn.primaryDomain || "").toLowerCase();
+    const prevIntent = String(lastTurn.intent || lastTurn.primaryIntent || "");
+    const prevQ = String(lastTurn.question || lastTurn.q || lastTurn.content || "");
+    const wasChildrenTurn =
+      prevDomain === "children" ||
+      prevIntent.startsWith("CHILDREN_") ||
+      prevIntent === "FAMILY_EXPANSION_TIMING" ||
+      /children|child|progeny|pregnancy|conceive|baby|babies|give\s*birth|குழந்தை|புத்திர|பிள்ளை/i.test(prevQ);
+    if (wasChildrenTurn) {
+      detectedIntents.add(CHILDREN_TASKS.FAMILY_EXPANSION_TIMING);
+      detectedIntents.add(QUESTION_INTENTS.CHILDREN);
+      detectedIntents.add(QUESTION_INTENTS.TIMING);
+    }
   }
 
   if (/foreign|travel|abroad|overseas|visa|relocation|settlement|வெளிநாடு|பயணம்|குடியேற்றம்/i.test(text)) {
@@ -402,6 +443,10 @@ export function classifyIntent(normalizedQ, history = []) {
     TASK_INTENTS.HOME_CONSTRUCTION_TIMING,
     TASK_INTENTS.VEHICLE_PURCHASE_TIMING,
     TASK_INTENTS.MONTHLY_OUTLOOK,
+    CHILDREN_TASKS.CHILDREN_COUNT,
+    CHILDREN_TASKS.CHILDREN_OUTLOOK,
+    CHILDREN_TASKS.FAMILY_EXPANSION_TIMING,
+    CHILDREN_TASKS.CHILDREN_TRADITIONAL_INTERPRETATION,
     QUESTION_INTENTS.SYSTEM_COMPARISON,
     QUESTION_INTENTS.TOP_HEADINGS,
     QUESTION_INTENTS.SPOUSE_FAMILY,

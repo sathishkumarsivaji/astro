@@ -47,6 +47,17 @@ class AstroDatabase {
       claim_graphs: {},
       user_sessions: {},
       credit_reservations: {},
+      prediction_records: {},
+      prediction_evidence: {},
+      customer_feedback: {},
+      observed_outcomes: {},
+      outcome_verification: {},
+      model_registry: {},
+      training_runs: {},
+      benchmark_runs: {},
+      model_deployments: {},
+      customer_ai_preferences: {},
+      training_consent: {},
       audit_ledger: []
     };
 
@@ -63,16 +74,21 @@ class AstroDatabase {
   async initPostgres() {
     try {
       const connectionString = process.env.DATABASE_URL || null;
+      if (!connectionString && !process.env.PGHOST && !process.env.PGDATABASE) {
+        // No PostgreSQL database configured in environment - use resilient write-through store
+        this.pgConnected = false;
+        return;
+      }
       const config = connectionString
         ? { connectionString, ssl: process.env.PGSSL === "true" ? { rejectUnauthorized: false } : false }
         : {
             user: process.env.PGUSER || "postgres",
             host: process.env.PGHOST || "localhost",
             database: process.env.PGDATABASE || "astroverse",
-            password: process.env.PGPASSWORD || undefined,
+            password: typeof process.env.PGPASSWORD === "string" ? process.env.PGPASSWORD : "",
             port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : 5432,
-            connectionTimeoutMillis: 3000,
-            idleTimeoutMillis: 30000
+            connectionTimeoutMillis: 1000,
+            idleTimeoutMillis: 10000
           };
 
       this.pgPool = new Pool(config);
@@ -220,6 +236,155 @@ class AstroDatabase {
       CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash);
       CREATE INDEX IF NOT EXISTS idx_credit_reservations_user ON credit_reservations(user_id);
       CREATE INDEX IF NOT EXISTS idx_credit_reservations_status ON credit_reservations(status);
+
+      CREATE TABLE IF NOT EXISTS prediction_records (
+        prediction_id VARCHAR(64) PRIMARY KEY,
+        pseudonymous_customer_id VARCHAR(128) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        birth_data_hash VARCHAR(64) NOT NULL,
+        calculation_config_json JSONB DEFAULT '{}'::jsonb,
+        chart_features_json JSONB DEFAULT '{}'::jsonb,
+        domain VARCHAR(64) NOT NULL,
+        event_definition TEXT NOT NULL,
+        predicted_outcome VARCHAR(128) NOT NULL,
+        timing_interval_start TIMESTAMPTZ,
+        timing_interval_end TIMESTAMPTZ,
+        timing_resolution VARCHAR(32) NOT NULL,
+        model_version VARCHAR(64) NOT NULL,
+        rules_version VARCHAR(64) NOT NULL,
+        raw_score NUMERIC(8, 4),
+        calibrated_probability NUMERIC(8, 4),
+        calibration_status VARCHAR(64) DEFAULT 'UNCALIBRATED',
+        observation_deadline TIMESTAMPTZ,
+        is_training_eligible BOOLEAN DEFAULT FALSE,
+        metadata JSONB DEFAULT '{}'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS prediction_evidence (
+        evidence_id VARCHAR(64) PRIMARY KEY,
+        prediction_id VARCHAR(64) NOT NULL REFERENCES prediction_records(prediction_id) ON DELETE CASCADE,
+        claim_type VARCHAR(64) NOT NULL,
+        shastric_rule_id VARCHAR(128),
+        astronomical_fact_keys JSONB DEFAULT '[]'::jsonb,
+        evidence_status VARCHAR(32) NOT NULL DEFAULT 'SUPPORTED',
+        weight NUMERIC(6, 4) DEFAULT 1.0,
+        narrative_excerpt TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS customer_feedback (
+        feedback_id VARCHAR(64) PRIMARY KEY,
+        prediction_id VARCHAR(64) NOT NULL REFERENCES prediction_records(prediction_id) ON DELETE CASCADE,
+        customer_id VARCHAR(128) NOT NULL,
+        feedback_category VARCHAR(64) NOT NULL,
+        relevance_score INTEGER,
+        user_comments_redacted TEXT,
+        submitted_at TIMESTAMPTZ DEFAULT NOW(),
+        metadata JSONB DEFAULT '{}'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS observed_outcomes (
+        outcome_id VARCHAR(64) PRIMARY KEY,
+        prediction_id VARCHAR(64) NOT NULL REFERENCES prediction_records(prediction_id) ON DELETE CASCADE,
+        customer_id VARCHAR(128) NOT NULL,
+        event_occurred BOOLEAN NOT NULL,
+        reported_date DATE,
+        date_precision VARCHAR(32) DEFAULT 'APPROX_YEAR',
+        is_censored BOOLEAN DEFAULT FALSE,
+        observation_ended_at DATE,
+        reported_at TIMESTAMPTZ DEFAULT NOW(),
+        metadata JSONB DEFAULT '{}'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS outcome_verification (
+        verification_id VARCHAR(64) PRIMARY KEY,
+        outcome_id VARCHAR(64) NOT NULL REFERENCES observed_outcomes(outcome_id) ON DELETE CASCADE,
+        verification_method VARCHAR(64) NOT NULL DEFAULT 'SELF_REPORTED_ONLY',
+        verification_status VARCHAR(64) NOT NULL DEFAULT 'UNVERIFIED',
+        verified_at TIMESTAMPTZ DEFAULT NOW(),
+        verified_by VARCHAR(64),
+        notes TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS model_registry (
+        model_id VARCHAR(128) PRIMARY KEY,
+        domain VARCHAR(64) NOT NULL,
+        model_type VARCHAR(64) NOT NULL,
+        model_artifact_path TEXT,
+        artifact_sha256 VARCHAR(64) NOT NULL,
+        training_dataset_hash VARCHAR(64),
+        status VARCHAR(32) NOT NULL DEFAULT 'CANDIDATE',
+        hyperparameters JSONB DEFAULT '{}'::jsonb,
+        registered_at TIMESTAMPTZ DEFAULT NOW(),
+        metadata JSONB DEFAULT '{}'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS training_runs (
+        run_id VARCHAR(64) PRIMARY KEY,
+        model_id VARCHAR(128) NOT NULL REFERENCES model_registry(model_id) ON DELETE CASCADE,
+        data_cut_timestamp TIMESTAMPTZ NOT NULL,
+        eligible_records_count INTEGER NOT NULL,
+        hyperparameters_json JSONB DEFAULT '{}'::jsonb,
+        train_mae NUMERIC(8, 4),
+        val_mae NUMERIC(8, 4),
+        started_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ,
+        status VARCHAR(32) DEFAULT 'completed'
+      );
+
+      CREATE TABLE IF NOT EXISTS benchmark_runs (
+        benchmark_id VARCHAR(64) PRIMARY KEY,
+        model_id VARCHAR(128) NOT NULL REFERENCES model_registry(model_id) ON DELETE CASCADE,
+        evaluated_cohort VARCHAR(64) NOT NULL,
+        sample_size INTEGER NOT NULL,
+        timing_mae NUMERIC(8, 4),
+        median_ae NUMERIC(8, 4),
+        within_1y_pct NUMERIC(6, 2),
+        demographic_baseline_mae NUMERIC(8, 4),
+        baseline_comparison_status VARCHAR(64) NOT NULL,
+        concordance_index NUMERIC(6, 4),
+        brier_score NUMERIC(6, 4),
+        ece NUMERIC(6, 4),
+        passed_release_gate BOOLEAN DEFAULT FALSE,
+        evaluated_at TIMESTAMPTZ DEFAULT NOW(),
+        evaluation_report_json JSONB DEFAULT '{}'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS model_deployments (
+        deployment_id VARCHAR(64) PRIMARY KEY,
+        model_id VARCHAR(128) NOT NULL REFERENCES model_registry(model_id) ON DELETE CASCADE,
+        domain VARCHAR(64) NOT NULL,
+        deployed_by VARCHAR(64) NOT NULL,
+        deployed_at TIMESTAMPTZ DEFAULT NOW(),
+        rollback_model_id VARCHAR(128),
+        is_active BOOLEAN DEFAULT TRUE
+      );
+
+      CREATE TABLE IF NOT EXISTS customer_ai_preferences (
+        customer_id VARCHAR(128) PRIMARY KEY,
+        preferred_lang VARCHAR(8) DEFAULT 'en',
+        explanation_depth VARCHAR(32) DEFAULT 'beginner',
+        tone VARCHAR(32) DEFAULT 'evidence_focused',
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS training_consent (
+        customer_id VARCHAR(128) PRIMARY KEY,
+        consent_granted BOOLEAN DEFAULT FALSE,
+        granted_at TIMESTAMPTZ,
+        withdrawn_at TIMESTAMPTZ,
+        consent_version VARCHAR(32) DEFAULT 'v1.0'
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_prediction_records_customer ON prediction_records(pseudonymous_customer_id);
+      CREATE INDEX IF NOT EXISTS idx_prediction_records_domain ON prediction_records(domain);
+      CREATE INDEX IF NOT EXISTS idx_prediction_records_eligible ON prediction_records(is_training_eligible);
+      CREATE INDEX IF NOT EXISTS idx_prediction_evidence_pred ON prediction_evidence(prediction_id);
+      CREATE INDEX IF NOT EXISTS idx_customer_feedback_pred ON customer_feedback(prediction_id);
+      CREATE INDEX IF NOT EXISTS idx_observed_outcomes_pred ON observed_outcomes(prediction_id);
+      CREATE INDEX IF NOT EXISTS idx_model_registry_domain ON model_registry(domain);
+      CREATE INDEX IF NOT EXISTS idx_model_registry_status ON model_registry(status);
+      CREATE INDEX IF NOT EXISTS idx_model_deployments_active ON model_deployments(domain, is_active);
     `;
 
     await client.query(ddl);
@@ -328,6 +493,17 @@ class AstroDatabase {
           claim_graphs: parsed.claim_graphs || {},
           user_sessions: parsed.user_sessions || {},
           credit_reservations: parsed.credit_reservations || {},
+          prediction_records: parsed.prediction_records || {},
+          prediction_evidence: parsed.prediction_evidence || {},
+          customer_feedback: parsed.customer_feedback || {},
+          observed_outcomes: parsed.observed_outcomes || {},
+          outcome_verification: parsed.outcome_verification || {},
+          model_registry: parsed.model_registry || {},
+          training_runs: parsed.training_runs || {},
+          benchmark_runs: parsed.benchmark_runs || {},
+          model_deployments: parsed.model_deployments || {},
+          customer_ai_preferences: parsed.customer_ai_preferences || {},
+          training_consent: parsed.training_consent || {},
           audit_ledger: parsed.audit_ledger || []
         };
       } catch (err) {
@@ -350,6 +526,17 @@ class AstroDatabase {
           claim_graphs: parsed.claim_graphs || {},
           user_sessions: parsed.user_sessions || {},
           credit_reservations: parsed.credit_reservations || {},
+          prediction_records: parsed.prediction_records || {},
+          prediction_evidence: parsed.prediction_evidence || {},
+          customer_feedback: parsed.customer_feedback || {},
+          observed_outcomes: parsed.observed_outcomes || {},
+          outcome_verification: parsed.outcome_verification || {},
+          model_registry: parsed.model_registry || {},
+          training_runs: parsed.training_runs || {},
+          benchmark_runs: parsed.benchmark_runs || {},
+          model_deployments: parsed.model_deployments || {},
+          customer_ai_preferences: parsed.customer_ai_preferences || {},
+          training_consent: parsed.training_consent || {},
           audit_ledger: parsed.audit_ledger || []
         };
       } catch (err) {
@@ -1025,6 +1212,555 @@ class AstroDatabase {
     return { success: true, txRecord, order, user };
   }
 
+  // =========================================================================
+  // Layer 5 & 6: Prediction Intelligence, Evidence & Continuous Learning Store
+  // =========================================================================
+
+  savePredictionRecord(record) {
+    if (!record || typeof record !== "object") {
+      throw new Error("INVALID_RECORD: Prediction record must be a valid object.");
+    }
+    const { predictionId } = record;
+    if (!predictionId) {
+      throw new Error("MISSING_PREDICTION_ID: Prediction record must contain a unique predictionId.");
+    }
+
+    // IMMUTABILITY ENFORCEMENT: Existing prediction records cannot be overwritten.
+    if (this.state.prediction_records && this.state.prediction_records[predictionId]) {
+      const err = new Error(`IMMUTABLE_PREDICTION_RECORD_EXISTS: Prediction record '${predictionId}' already exists and is immutable.`);
+      err.code = "IMMUTABLE_PREDICTION_RECORD_EXISTS";
+      throw err;
+    }
+
+    const VALID_RESOLUTIONS = [
+      "DATE_RANGE", "MONTH_RANGE", "SEASON", "YEAR", "AGE_RANGE", "NOT_DISCRIMINATING", "INSUFFICIENT_DATA"
+    ];
+    if (record.timingResolution && !VALID_RESOLUTIONS.includes(record.timingResolution)) {
+      const err = new Error(`INVALID_TIMING_RESOLUTION: '${record.timingResolution}' is not a permitted resolution.`);
+      err.code = "INVALID_TIMING_RESOLUTION";
+      throw err;
+    }
+
+    const canonicalRecord = {
+      predictionId,
+      pseudonymousCustomerId: record.pseudonymousCustomerId,
+      createdAt: record.createdAt || new Date().toISOString(),
+      birthDataHash: record.birthDataHash,
+      calculationConfigJson: record.calculationConfigJson || {},
+      chartFeaturesJson: record.chartFeaturesJson || {},
+      domain: (record.domain || "UNKNOWN").toUpperCase(),
+      eventDefinition: record.eventDefinition || "",
+      predictedOutcome: record.predictedOutcome || "",
+      timingIntervalStart: record.timingIntervalStart || null,
+      timingIntervalEnd: record.timingIntervalEnd || null,
+      timingResolution: record.timingResolution || "NOT_DISCRIMINATING",
+      modelVersion: record.modelVersion || "unversioned",
+      rulesVersion: record.rulesVersion || "unversioned",
+      rawScore: record.rawScore !== undefined ? record.rawScore : null,
+      calibratedProbability: record.calibratedProbability !== undefined ? record.calibratedProbability : null,
+      calibrationStatus: record.calibrationStatus || "UNCALIBRATED",
+      observationDeadline: record.observationDeadline || null,
+      isTrainingEligible: Boolean(record.isTrainingEligible),
+      metadata: record.metadata || {}
+    };
+
+    this.state.prediction_records[predictionId] = canonicalRecord;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO prediction_records (
+          prediction_id, pseudonymous_customer_id, created_at, birth_data_hash,
+          calculation_config_json, chart_features_json, domain, event_definition,
+          predicted_outcome, timing_interval_start, timing_interval_end, timing_resolution,
+          model_version, rules_version, raw_score, calibrated_probability, calibration_status,
+          observation_deadline, is_training_eligible, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+        ON CONFLICT (prediction_id) DO NOTHING`,
+        [
+          canonicalRecord.predictionId,
+          canonicalRecord.pseudonymousCustomerId,
+          canonicalRecord.createdAt,
+          canonicalRecord.birthDataHash,
+          canonicalRecord.calculationConfigJson,
+          canonicalRecord.chartFeaturesJson,
+          canonicalRecord.domain,
+          canonicalRecord.eventDefinition,
+          canonicalRecord.predictedOutcome,
+          canonicalRecord.timingIntervalStart,
+          canonicalRecord.timingIntervalEnd,
+          canonicalRecord.timingResolution,
+          canonicalRecord.modelVersion,
+          canonicalRecord.rulesVersion,
+          canonicalRecord.rawScore,
+          canonicalRecord.calibratedProbability,
+          canonicalRecord.calibrationStatus,
+          canonicalRecord.observationDeadline,
+          canonicalRecord.isTrainingEligible,
+          canonicalRecord.metadata
+        ]
+      ).catch(err => console.warn("[POSTGRESQL] savePredictionRecord notice:", err.message));
+    }
+
+    return canonicalRecord;
+  }
+
+  getPredictionRecord(predictionId) {
+    return this.state.prediction_records[predictionId] || null;
+  }
+
+  listPredictionRecords(filter = {}) {
+    let records = Object.values(this.state.prediction_records || {});
+    if (filter.domain) {
+      const d = filter.domain.toUpperCase();
+      records = records.filter(r => r.domain === d);
+    }
+    if (filter.pseudonymousCustomerId) {
+      records = records.filter(r => r.pseudonymousCustomerId === filter.pseudonymousCustomerId);
+    }
+    if (filter.trainingEligibleOnly) {
+      records = records.filter(r => r.isTrainingEligible === true);
+    }
+    records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const offset = filter.offset || 0;
+    const limit = filter.limit || 100;
+    return records.slice(offset, offset + limit);
+  }
+
+  savePredictionEvidence(evidenceList) {
+    if (!Array.isArray(evidenceList)) return [];
+    const VALID_EVIDENCE_STATUSES = [
+      "SUPPORTED", "PARTIALLY_SUPPORTED", "MIXED_EVIDENCE", "TRADITIONAL_ONLY", "INSUFFICIENT_DATA", "NOT_DISCRIMINATING", "UNASSESSED"
+    ];
+    const saved = [];
+    for (const item of evidenceList) {
+      if (!item.evidenceId || !item.predictionId) continue;
+      const status = VALID_EVIDENCE_STATUSES.includes(item.evidenceStatus) ? item.evidenceStatus : "SUPPORTED";
+      const record = {
+        evidenceId: item.evidenceId,
+        predictionId: item.predictionId,
+        claimType: item.claimType || "FACT",
+        shastricRuleId: item.shastricRuleId || null,
+        astronomicalFactKeys: Array.isArray(item.astronomicalFactKeys) ? item.astronomicalFactKeys : [],
+        evidenceStatus: status,
+        weight: item.weight !== undefined ? Number(item.weight) : 1.0,
+        narrativeExcerpt: item.narrativeExcerpt || "",
+        createdAt: item.createdAt || new Date().toISOString()
+      };
+      this.state.prediction_evidence[item.evidenceId] = record;
+      saved.push(record);
+
+      if (this.pgConnected && this.pgPool) {
+        this.pgPool.query(
+          `INSERT INTO prediction_evidence (
+            evidence_id, prediction_id, claim_type, shastric_rule_id,
+            astronomical_fact_keys, evidence_status, weight, narrative_excerpt, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          ON CONFLICT (evidence_id) DO UPDATE SET
+            evidence_status = EXCLUDED.evidence_status,
+            weight = EXCLUDED.weight`,
+          [
+            record.evidenceId,
+            record.predictionId,
+            record.claimType,
+            record.shastricRuleId,
+            JSON.stringify(record.astronomicalFactKeys),
+            record.evidenceStatus,
+            record.weight,
+            record.narrativeExcerpt,
+            record.createdAt
+          ]
+        ).catch(err => console.warn("[POSTGRESQL] savePredictionEvidence notice:", err.message));
+      }
+    }
+    this.persist();
+    return saved;
+  }
+
+  getPredictionEvidence(predictionId) {
+    return Object.values(this.state.prediction_evidence || {})
+      .filter(e => e.predictionId === predictionId);
+  }
+
+  saveCustomerFeedback(feedback) {
+    if (!feedback || !feedback.feedbackId || !feedback.predictionId) {
+      throw new Error("INVALID_FEEDBACK: feedbackId and predictionId are required.");
+    }
+    const VALID_CATEGORIES = [
+      "BIRTH_CONFIRMED", "BIRTH_DISPUTED", "RELEVANCE_RATING", "INTERPRETATION_RELEVANCE", "PRESENT_CIRCUMSTANCE", "HISTORICAL_EVENT", "FUTURE_OUTCOME", "CORRECTION"
+    ];
+    if (feedback.feedbackCategory && !VALID_CATEGORIES.includes(feedback.feedbackCategory)) {
+      throw new Error(`INVALID_FEEDBACK_CATEGORY: '${feedback.feedbackCategory}' is not permitted.`);
+    }
+    const record = {
+      feedbackId: feedback.feedbackId,
+      predictionId: feedback.predictionId,
+      customerId: feedback.customerId || "ANONYMOUS",
+      feedbackCategory: feedback.feedbackCategory || "RELEVANCE_RATING",
+      relevanceScore: feedback.relevanceScore !== undefined ? Number(feedback.relevanceScore) : null,
+      userCommentsRedacted: feedback.userCommentsRedacted || "",
+      submittedAt: feedback.submittedAt || new Date().toISOString(),
+      metadata: feedback.metadata || {}
+    };
+    this.state.customer_feedback[record.feedbackId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO customer_feedback (
+          feedback_id, prediction_id, customer_id, feedback_category,
+          relevance_score, user_comments_redacted, submitted_at, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (feedback_id) DO NOTHING`,
+        [
+          record.feedbackId,
+          record.predictionId,
+          record.customerId,
+          record.feedbackCategory,
+          record.relevanceScore,
+          record.userCommentsRedacted,
+          record.submittedAt,
+          record.metadata
+        ]
+      ).catch(err => console.warn("[POSTGRESQL] saveCustomerFeedback notice:", err.message));
+    }
+    return record;
+  }
+
+  getCustomerFeedback(predictionId) {
+    return Object.values(this.state.customer_feedback || {})
+      .filter(f => f.predictionId === predictionId);
+  }
+
+  saveObservedOutcome(outcome) {
+    if (!outcome || !outcome.outcomeId || !outcome.predictionId) {
+      throw new Error("INVALID_OUTCOME: outcomeId and predictionId are required.");
+    }
+    const record = {
+      outcomeId: outcome.outcomeId,
+      predictionId: outcome.predictionId,
+      customerId: outcome.customerId || "ANONYMOUS",
+      eventOccurred: Boolean(outcome.eventOccurred),
+      reportedDate: outcome.reportedDate || null,
+      datePrecision: outcome.datePrecision || "APPROX_YEAR",
+      isCensored: Boolean(outcome.isCensored),
+      observationEndedAt: outcome.observationEndedAt || null,
+      reportedAt: outcome.reportedAt || new Date().toISOString(),
+      metadata: outcome.metadata || {}
+    };
+    this.state.observed_outcomes[record.outcomeId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO observed_outcomes (
+          outcome_id, prediction_id, customer_id, event_occurred, reported_date,
+          date_precision, is_censored, observation_ended_at, reported_at, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (outcome_id) DO NOTHING`,
+        [
+          record.outcomeId,
+          record.predictionId,
+          record.customerId,
+          record.eventOccurred,
+          record.reportedDate,
+          record.datePrecision,
+          record.isCensored,
+          record.observationEndedAt,
+          record.reportedAt,
+          record.metadata
+        ]
+      ).catch(err => console.warn("[POSTGRESQL] saveObservedOutcome notice:", err.message));
+    }
+    return record;
+  }
+
+  getObservedOutcome(predictionId) {
+    return Object.values(this.state.observed_outcomes || {})
+      .find(o => o.predictionId === predictionId) || null;
+  }
+
+  saveOutcomeVerification(verification) {
+    if (!verification || !verification.verificationId || !verification.outcomeId) {
+      throw new Error("INVALID_VERIFICATION: verificationId and outcomeId are required.");
+    }
+    const VALID_STATUSES = ["UNVERIFIED", "CORROBORATED", "INDEPENDENTLY_VERIFIED", "REJECTED_CONTRADICTORY"];
+    const status = VALID_STATUSES.includes(verification.verificationStatus) ? verification.verificationStatus : "UNVERIFIED";
+    const record = {
+      verificationId: verification.verificationId,
+      outcomeId: verification.outcomeId,
+      verificationMethod: verification.verificationMethod || "SELF_REPORTED_ONLY",
+      verificationStatus: status,
+      verifiedAt: verification.verifiedAt || new Date().toISOString(),
+      verifiedBy: verification.verifiedBy || null,
+      notes: verification.notes || ""
+    };
+    this.state.outcome_verification[record.verificationId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO outcome_verification (
+          verification_id, outcome_id, verification_method, verification_status,
+          verified_at, verified_by, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (verification_id) DO UPDATE SET
+          verification_status = EXCLUDED.verification_status,
+          verified_at = EXCLUDED.verified_at,
+          notes = EXCLUDED.notes`,
+        [
+          record.verificationId,
+          record.outcomeId,
+          record.verificationMethod,
+          record.verificationStatus,
+          record.verifiedAt,
+          record.verifiedBy,
+          record.notes
+        ]
+      ).catch(err => console.warn("[POSTGRESQL] saveOutcomeVerification notice:", err.message));
+    }
+    return record;
+  }
+
+  getOutcomeVerification(outcomeId) {
+    return Object.values(this.state.outcome_verification || {})
+      .find(v => v.outcomeId === outcomeId) || null;
+  }
+
+  registerModel(modelEntry) {
+    if (!modelEntry || !modelEntry.modelId || !modelEntry.artifactSha256) {
+      throw new Error("INVALID_MODEL: modelId and artifactSha256 are required.");
+    }
+    const record = {
+      modelId: modelEntry.modelId,
+      domain: (modelEntry.domain || "GENERAL").toUpperCase(),
+      modelType: modelEntry.modelType || "STATISTICAL",
+      modelArtifactPath: modelEntry.modelArtifactPath || "",
+      artifactSha256: modelEntry.artifactSha256,
+      trainingDatasetHash: modelEntry.trainingDatasetHash || null,
+      status: modelEntry.status || "CANDIDATE",
+      hyperparameters: modelEntry.hyperparameters || {},
+      registeredAt: modelEntry.registeredAt || new Date().toISOString(),
+      metadata: modelEntry.metadata || {}
+    };
+    this.state.model_registry[record.modelId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO model_registry (
+          model_id, domain, model_type, model_artifact_path, artifact_sha256,
+          training_dataset_hash, status, hyperparameters, registered_at, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (model_id) DO UPDATE SET
+          status = EXCLUDED.status,
+          metadata = EXCLUDED.metadata`,
+        [
+          record.modelId,
+          record.domain,
+          record.modelType,
+          record.modelArtifactPath,
+          record.artifactSha256,
+          record.trainingDatasetHash,
+          record.status,
+          record.hyperparameters,
+          record.registeredAt,
+          record.metadata
+        ]
+      ).catch(err => console.warn("[POSTGRESQL] registerModel notice:", err.message));
+    }
+    return record;
+  }
+
+  getModel(modelId) {
+    return this.state.model_registry[modelId] || null;
+  }
+
+  listModels(filter = {}) {
+    let models = Object.values(this.state.model_registry || {});
+    if (filter.domain) {
+      const d = filter.domain.toUpperCase();
+      models = models.filter(m => m.domain === d);
+    }
+    if (filter.status) {
+      models = models.filter(m => m.status === filter.status);
+    }
+    return models;
+  }
+
+  recordBenchmarkRun(benchmark) {
+    if (!benchmark || !benchmark.benchmarkId || !benchmark.modelId) {
+      throw new Error("INVALID_BENCHMARK: benchmarkId and modelId are required.");
+    }
+    const record = {
+      benchmarkId: benchmark.benchmarkId,
+      modelId: benchmark.modelId,
+      evaluatedCohort: benchmark.evaluatedCohort || "BLIND_TEST_FROZEN",
+      sampleSize: Number(benchmark.sampleSize) || 0,
+      timingMae: benchmark.timingMae !== undefined ? Number(benchmark.timingMae) : null,
+      medianAe: benchmark.medianAe !== undefined ? Number(benchmark.medianAe) : null,
+      within1yPct: benchmark.within1yPct !== undefined ? Number(benchmark.within1yPct) : null,
+      demographicBaselineMae: benchmark.demographicBaselineMae !== undefined ? Number(benchmark.demographicBaselineMae) : null,
+      baselineComparisonStatus: benchmark.baselineComparisonStatus || "STATISTICALLY_TIED",
+      concordanceIndex: benchmark.concordanceIndex !== undefined ? Number(benchmark.concordanceIndex) : null,
+      brierScore: benchmark.brierScore !== undefined ? Number(benchmark.brierScore) : null,
+      ece: benchmark.ece !== undefined ? Number(benchmark.ece) : null,
+      passedReleaseGate: Boolean(benchmark.passedReleaseGate),
+      evaluatedAt: benchmark.evaluatedAt || new Date().toISOString(),
+      evaluationReportJson: benchmark.evaluationReportJson || {}
+    };
+    this.state.benchmark_runs[record.benchmarkId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO benchmark_runs (
+          benchmark_id, model_id, evaluated_cohort, sample_size, timing_mae,
+          median_ae, within_1y_pct, demographic_baseline_mae, baseline_comparison_status,
+          concordance_index, brier_score, ece, passed_release_gate, evaluated_at, evaluation_report_json
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        ON CONFLICT (benchmark_id) DO NOTHING`,
+        [
+          record.benchmarkId,
+          record.modelId,
+          record.evaluatedCohort,
+          record.sampleSize,
+          record.timingMae,
+          record.medianAe,
+          record.within1yPct,
+          record.demographicBaselineMae,
+          record.baselineComparisonStatus,
+          record.concordanceIndex,
+          record.brierScore,
+          record.ece,
+          record.passedReleaseGate,
+          record.evaluatedAt,
+          record.evaluationReportJson
+        ]
+      ).catch(err => console.warn("[POSTGRESQL] recordBenchmarkRun notice:", err.message));
+    }
+    return record;
+  }
+
+  deployModel(modelId, deployedBy = "admin", rollbackModelId = null) {
+    const model = this.getModel(modelId);
+    if (!model) throw new Error(`MODEL_NOT_FOUND: Model '${modelId}' is not registered.`);
+    const deploymentId = `dep_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    for (const d of Object.values(this.state.model_deployments || {})) {
+      if (d.domain === model.domain && d.isActive) {
+        d.isActive = false;
+      }
+    }
+    const deployment = {
+      deploymentId,
+      modelId,
+      domain: model.domain,
+      deployedBy,
+      deployedAt: new Date().toISOString(),
+      rollbackModelId,
+      isActive: true
+    };
+    this.state.model_deployments[deploymentId] = deployment;
+    model.status = "PRODUCTION";
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `UPDATE model_deployments SET is_active = FALSE WHERE domain = $1;
+         INSERT INTO model_deployments (
+          deployment_id, model_id, domain, deployed_by, deployed_at, rollback_model_id, is_active
+         ) VALUES ($2, $3, $4, $5, $6, $7, TRUE);
+         UPDATE model_registry SET status = 'PRODUCTION' WHERE model_id = $3;`,
+        [model.domain, deploymentId, modelId, model.domain, deployedBy, deployment.deployedAt, rollbackModelId]
+      ).catch(err => console.warn("[POSTGRESQL] deployModel notice:", err.message));
+    }
+    return deployment;
+  }
+
+  getActiveModel(domain) {
+    const d = (domain || "").toUpperCase();
+    const activeDep = Object.values(this.state.model_deployments || {})
+      .find(dep => dep.domain === d && dep.isActive);
+    if (!activeDep) return null;
+    return this.getModel(activeDep.modelId);
+  }
+
+  saveCustomerAIPreferences(customerId, prefs = {}) {
+    if (!customerId) throw new Error("MISSING_CUSTOMER_ID: customerId is required.");
+    const record = {
+      customerId,
+      preferredLang: ["ta", "en"].includes(prefs.preferredLang) ? prefs.preferredLang : "en",
+      explanationDepth: ["beginner", "astrologer_expert"].includes(prefs.explanationDepth) ? prefs.explanationDepth : "beginner",
+      tone: ["traditional", "evidence_focused"].includes(prefs.tone) ? prefs.tone : "evidence_focused",
+      updatedAt: new Date().toISOString()
+    };
+    this.state.customer_ai_preferences[customerId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO customer_ai_preferences (customer_id, preferred_lang, explanation_depth, tone, updated_at)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (customer_id) DO UPDATE SET
+          preferred_lang = EXCLUDED.preferred_lang,
+          explanation_depth = EXCLUDED.explanation_depth,
+          tone = EXCLUDED.tone,
+          updated_at = EXCLUDED.updated_at`,
+        [record.customerId, record.preferredLang, record.explanationDepth, record.tone, record.updatedAt]
+      ).catch(err => console.warn("[POSTGRESQL] saveCustomerAIPreferences notice:", err.message));
+    }
+    return record;
+  }
+
+  getCustomerAIPreferences(customerId) {
+    return this.state.customer_ai_preferences[customerId] || {
+      customerId,
+      preferredLang: "en",
+      explanationDepth: "beginner",
+      tone: "evidence_focused",
+      updatedAt: null
+    };
+  }
+
+  setTrainingConsent(customerId, consentGranted, consentVersion = "v1.0") {
+    if (!customerId) throw new Error("MISSING_CUSTOMER_ID: customerId is required.");
+    const now = new Date().toISOString();
+    const existing = this.state.training_consent[customerId];
+    const record = {
+      customerId,
+      consentGranted: Boolean(consentGranted),
+      grantedAt: consentGranted ? (existing?.grantedAt || now) : existing?.grantedAt || null,
+      withdrawnAt: !consentGranted ? now : null,
+      consentVersion: consentVersion || "v1.0"
+    };
+    this.state.training_consent[customerId] = record;
+    this.persist();
+
+    if (this.pgConnected && this.pgPool) {
+      this.pgPool.query(
+        `INSERT INTO training_consent (customer_id, consent_granted, granted_at, withdrawn_at, consent_version)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (customer_id) DO UPDATE SET
+          consent_granted = EXCLUDED.consent_granted,
+          granted_at = EXCLUDED.granted_at,
+          withdrawn_at = EXCLUDED.withdrawn_at,
+          consent_version = EXCLUDED.consent_version`,
+        [record.customerId, record.consentGranted, record.grantedAt, record.withdrawnAt, record.consentVersion]
+      ).catch(err => console.warn("[POSTGRESQL] setTrainingConsent notice:", err.message));
+    }
+    return record;
+  }
+
+  getTrainingConsent(customerId) {
+    return this.state.training_consent[customerId] || {
+      customerId,
+      consentGranted: false,
+      grantedAt: null,
+      withdrawnAt: null,
+      consentVersion: "v1.0"
+    };
+  }
+
   // --- Privacy Erasure with Awaited DB Purge ---
   async purgeUser(userId) {
     // 1. Revoke all user sessions
@@ -1063,6 +1799,30 @@ class AstroDatabase {
       }
     }
 
+    // 7. Privacy & Continuous Learning Purge
+    delete this.state.customer_ai_preferences[userId];
+    if (this.state.training_consent[userId]) {
+      this.state.training_consent[userId].consentGranted = false;
+      this.state.training_consent[userId].withdrawnAt = new Date().toISOString();
+    }
+    for (const pred of Object.values(this.state.prediction_records || {})) {
+      if (pred.pseudonymousCustomerId === userId || pred.metadata?.rawUserId === userId) {
+        pred.pseudonymousCustomerId = "ANONYMIZED_CUSTOMER";
+        pred.isTrainingEligible = false;
+      }
+    }
+    for (const fb of Object.values(this.state.customer_feedback || {})) {
+      if (fb.customerId === userId) {
+        fb.customerId = "ANONYMIZED_CUSTOMER";
+        fb.userCommentsRedacted = "[PURGED_UPON_USER_ERASURE_REQUEST]";
+      }
+    }
+    for (const oc of Object.values(this.state.observed_outcomes || {})) {
+      if (oc.customerId === userId) {
+        oc.customerId = "ANONYMIZED_CUSTOMER";
+      }
+    }
+
     this.state.audit_ledger.push({
       eventId: `aud_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
       type: "USER_DATA_PURGED",
@@ -1072,7 +1832,7 @@ class AstroDatabase {
 
     this.persist();
 
-    // 7. Awaited PostgreSQL Deletion Transaction
+    // 8. Awaited PostgreSQL Deletion Transaction
     if (this.pgConnected && this.pgPool) {
       const client = await this.pgPool.connect();
       try {
@@ -1081,6 +1841,11 @@ class AstroDatabase {
         await client.query("DELETE FROM saved_charts WHERE user_id = $1", [userId]);
         await client.query("DELETE FROM push_subscriptions WHERE user_id = $1", [userId]);
         await client.query("DELETE FROM credit_reservations WHERE user_id = $1", [userId]);
+        await client.query("DELETE FROM customer_ai_preferences WHERE customer_id = $1", [userId]);
+        await client.query("UPDATE training_consent SET consent_granted = FALSE, withdrawn_at = NOW() WHERE customer_id = $1", [userId]);
+        await client.query("UPDATE prediction_records SET pseudonymous_customer_id = 'ANONYMIZED_CUSTOMER', is_training_eligible = FALSE WHERE pseudonymous_customer_id = $1", [userId]);
+        await client.query("UPDATE customer_feedback SET customer_id = 'ANONYMIZED_CUSTOMER', user_comments_redacted = '[PURGED_UPON_USER_ERASURE_REQUEST]' WHERE customer_id = $1", [userId]);
+        await client.query("UPDATE observed_outcomes SET customer_id = 'ANONYMIZED_CUSTOMER' WHERE customer_id = $1", [userId]);
         await client.query("UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = $1", [userId]);
         await client.query("UPDATE payment_transactions SET user_id = 'ANONYMIZED_USER' WHERE user_id = $1", [userId]);
         await client.query("DELETE FROM users WHERE user_id = $1", [userId]);

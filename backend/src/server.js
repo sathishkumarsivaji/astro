@@ -32,6 +32,11 @@ import {
 } from './services/privacyService.js';
 import { db } from './db/database.js';
 import { validateAndSanitizeAIResponse } from './middleware/aiEvidenceGate.js';
+import {
+  recordPrediction,
+  getPredictionById,
+  listPredictionsForCustomer
+} from './services/predictionRecordService.js';
 
 dotenv.config();
 
@@ -578,9 +583,11 @@ app.get('/api/user/credits', authenticateSession, (req, res) => {
 // ---------------------------------------------------------------------------
 // 3. Pricing Catalog & Available Currencies (Audit Point 21)
 // ---------------------------------------------------------------------------
-// Attempt non-blocking exchange rate refresh on boot & schedule every 12h
-refreshExchangeRates().catch(() => {});
-setInterval(() => { refreshExchangeRates().catch(() => {}); }, 12 * 60 * 60 * 1000).unref();
+// Attempt non-blocking exchange rate refresh on boot & schedule every 12h (skip in test mode)
+if (process.env.NODE_ENV !== 'test' && !process.argv[1]?.includes('test')) {
+  refreshExchangeRates().catch(() => {});
+  setInterval(() => { refreshExchangeRates().catch(() => {}); }, 12 * 60 * 60 * 1000).unref();
+}
 
 app.get('/api/pricing', (_req, res) => {
   res.json({
@@ -1007,8 +1014,203 @@ app.post('/api/notifications/send-test', authenticateSession, async (req, res) =
   }
 });
 
+// ---------------------------------------------------------------------------
+// Layer 5 & 6: Prediction Intelligence, Consent & AI Preferences Endpoints
+// ---------------------------------------------------------------------------
+
+// Record an immutable prediction with evidence linkage
+app.post('/api/predictions/record', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { chartData, questionMeta, predictionResult, evidenceList, observationDeadline } = req.body || {};
+
+    const result = recordPrediction({
+      userId,
+      chartData,
+      questionMeta,
+      predictionResult,
+      evidenceList,
+      observationDeadline
+    });
+
+    return res.status(201).json(result);
+  } catch (err) {
+    if (err.code === 'IMMUTABLE_PREDICTION_RECORD_EXISTS') {
+      return res.status(409).json({ error: err.message, code: err.code });
+    }
+    if (err.code === 'INVALID_TIMING_RESOLUTION') {
+      return res.status(400).json({ error: err.message, code: err.code });
+    }
+    console.error('[PREDICTION_RECORD_ERROR]', err);
+    return res.status(500).json({ error: 'Failed to record prediction record.', details: err.message });
+  }
+});
+
+// Retrieve an immutable prediction by ID
+app.get('/api/predictions/:id', authenticateSession, (req, res) => {
+  try {
+    const record = getPredictionById(req.params.id);
+    if (!record) {
+      return res.status(404).json({ error: 'Prediction record not found.', code: 'PREDICTION_NOT_FOUND' });
+    }
+    return res.json({ success: true, ...record });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to retrieve prediction.', details: err.message });
+  }
+});
+
+// List predictions for the authenticated user
+app.get('/api/predictions', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const predictions = listPredictionsForCustomer(userId, req.query);
+    return res.json({ success: true, predictions, count: predictions.length });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to list predictions.', details: err.message });
+  }
+});
+
+// Update customer training consent
+app.post('/api/consent/update', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { consentGranted, consentVersion } = req.body || {};
+    const consent = db.setTrainingConsent(userId, consentGranted, consentVersion);
+    return res.json({ success: true, consent });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update training consent.', details: err.message });
+  }
+});
+
+// Get customer training consent status
+app.get('/api/consent/status', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const consent = db.getTrainingConsent(userId);
+    return res.json({ success: true, consent });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to retrieve consent status.', details: err.message });
+  }
+});
+
+// Update customer AI preferences
+app.post('/api/preferences/ai', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const prefs = db.saveCustomerAIPreferences(userId, req.body || {});
+    return res.json({ success: true, preferences: prefs });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to save customer AI preferences.', details: err.message });
+  }
+});
+
+// Get customer AI preferences
+app.get('/api/preferences/ai', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const prefs = db.getCustomerAIPreferences(userId);
+    return res.json({ success: true, preferences: prefs });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to retrieve customer AI preferences.', details: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Prediction Feedback & Observed Outcomes Engine (Stage 3)
+// ---------------------------------------------------------------------------
+
+// Submit structured feedback on a prediction (Questions 1, 2, 3)
+app.post('/api/feedback/submit', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { predictionId, feedbackCategory, relevanceScore, comments, metadata } = req.body || {};
+
+    if (!predictionId) {
+      return res.status(400).json({ error: 'predictionId is required', code: 'MISSING_PREDICTION_ID' });
+    }
+
+    const feedbackId = `fb_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const feedbackRecord = db.saveCustomerFeedback({
+      feedbackId,
+      predictionId,
+      customerId: userId,
+      feedbackCategory: feedbackCategory || "INTERPRETATION_RELEVANCE",
+      relevanceScore: typeof relevanceScore === 'number' ? relevanceScore : null,
+      userCommentsRedacted: comments ? String(comments).trim().substring(0, 500) : "",
+      metadata: metadata || {}
+    });
+
+    return res.status(201).json({ success: true, feedback: feedbackRecord });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to submit feedback.', details: err.message });
+  }
+});
+
+// Report actual observed outcome subsequently (Question 4)
+app.post('/api/outcomes/report', authenticateSession, (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const {
+      predictionId,
+      eventOccurred,
+      reportedDate,
+      datePrecision,
+      isCensored,
+      observationEndedAt,
+      metadata
+    } = req.body || {};
+
+    if (!predictionId || eventOccurred === undefined) {
+      return res.status(400).json({ error: 'predictionId and eventOccurred boolean are required', code: 'MISSING_REQUIRED_FIELDS' });
+    }
+
+    const outcomeId = `out_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const outcomeRecord = db.saveObservedOutcome({
+      outcomeId,
+      predictionId,
+      customerId: userId,
+      eventOccurred: Boolean(eventOccurred),
+      reportedDate: reportedDate || null,
+      datePrecision: datePrecision || "APPROX_YEAR",
+      isCensored: Boolean(isCensored),
+      observationEndedAt: observationEndedAt || null,
+      metadata: metadata || {}
+    });
+
+    return res.status(201).json({ success: true, outcome: outcomeRecord });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to report outcome.', details: err.message });
+  }
+});
+
+// Verify observed outcome (Quality gate / Admin or verification system)
+app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
+  try {
+    const { outcomeId, verificationMethod, verificationStatus, notes } = req.body || {};
+    if (!outcomeId) {
+      return res.status(400).json({ error: 'outcomeId is required', code: 'MISSING_OUTCOME_ID' });
+    }
+
+    const verificationId = `ver_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const verificationRecord = db.saveOutcomeVerification({
+      verificationId,
+      outcomeId,
+      verificationMethod: verificationMethod || "SELF_REPORTED_ONLY",
+      verificationStatus: verificationStatus || "UNVERIFIED",
+      verifiedBy: req.user.userId,
+      notes: notes || ""
+    });
+
+    return res.status(201).json({ success: true, verification: verificationRecord });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to verify outcome.', details: err.message });
+  }
+});
+
 export let server = null;
-if (process.env.NODE_ENV !== 'test' && !process.argv[1]?.endsWith('test_backend.mjs')) {
+import { fileURLToPath } from 'url';
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (process.env.NODE_ENV !== 'test' && !process.argv[1]?.includes('test') && isDirectRun) {
   Promise.resolve(db.readyPromise).catch(() => {}).then(() => {
     server = app.listen(PORT, () => {
       console.log(`[SKR ASTRO Production Backend] Running on http://localhost:${PORT}`);

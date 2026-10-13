@@ -193,6 +193,25 @@ async function executeSingleQuestionQA({
     answerText: finalAnswerText
   });
 
+  const predictionId = `pred_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const predictionRecord = {
+    predictionId,
+    domain: String(domainResult.primaryDomain || plan.primaryDomain || "GENERAL").toUpperCase(),
+    eventDefinition: normalizedQ.raw || (typeof normalizedQ === "string" ? normalizedQ : "UNSPECIFIED_EVENT"),
+    predictedOutcome: synthResult.answerObject?.predictedOutcome || resolution?.timingContract?.status || "ANALYSIS_GENERATED",
+    timingIntervalStart: synthResult.answerObject?.timingWindows?.[0]?.startDate || null,
+    timingIntervalEnd: synthResult.answerObject?.timingWindows?.[0]?.endDate || null,
+    timingResolution: resolution.timingResolution || "NOT_DISCRIMINATING",
+    evidenceStatus: resolution.evidenceStatus || "TRADITIONAL_ONLY",
+    evidenceIds: synthResult.evidenceIds || [],
+    rulesVersion: "Parashari-v3.0",
+    modelVersion: "v3.0.0-discrete-hazard",
+    calibratedProbability: null,
+    calibrationStatus: "UNCALIBRATED",
+    isTrainingEligible: false,
+    observationDeadline: synthResult.answerObject?.timingWindows?.[0]?.endDate || null
+  };
+
   return {
     answer: finalAnswerText,
     directAnswer: synthResult.directAnswer,
@@ -206,6 +225,7 @@ async function executeSingleQuestionQA({
     answerObject: synthResult.answerObject,
     atomicMeta,
     qaScore,
+    predictionRecord,
     pipelineAudit: {
       questionId: qUnderstanding.questionId,
       intent: intentResult.primaryIntent,

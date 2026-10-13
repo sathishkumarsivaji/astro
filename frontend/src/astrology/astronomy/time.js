@@ -39,8 +39,13 @@ export function normalizeBirthData(data) {
     throw new Error("Birth date is required in YYYY-MM-DD format");
   }
 
-  const dateParts = birthDate.trim().split("-").map(Number);
-  if (dateParts.length < 3 || isNaN(dateParts[0]) || isNaN(dateParts[1]) || isNaN(dateParts[2])) {
+  const trimmedDate = birthDate.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+    throw new Error(`Invalid birth date format: "${birthDate}". Expected YYYY-MM-DD.`);
+  }
+
+  const dateParts = trimmedDate.split("-").map(Number);
+  if (dateParts.length !== 3 || isNaN(dateParts[0]) || isNaN(dateParts[1]) || isNaN(dateParts[2])) {
     throw new Error(`Invalid birth date format: "${birthDate}". Expected YYYY-MM-DD.`);
   }
 
@@ -83,23 +88,32 @@ export function normalizeBirthData(data) {
     throw new Error("Birth time is required for astrological calculation");
   }
 
-  const timeParts = birthTime.trim().split(":").map(Number);
-  if (timeParts.length < 2 || isNaN(timeParts[0]) || isNaN(timeParts[1])) {
+  const trimmedTime = birthTime.trim();
+  const timeMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!timeMatch) {
     throw new Error(`Invalid birth time format: "${birthTime}". Expected HH:MM or HH:MM:SS.`);
   }
-  const hour = timeParts[0];
-  const minute = timeParts[1];
-  const second = (timeParts.length > 2 && !isNaN(timeParts[2])) ? timeParts[2] : 0;
+  const hour = parseInt(timeMatch[1], 10);
+  const minute = parseInt(timeMatch[2], 10);
+  const second = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
 
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
     throw new Error(`Birth time values out of clock bounds: ${birthTime}`);
   }
 
+  // Strict coordinate validation: reject null, undefined, boolean, empty string, non-finite
+  if (latitude === null || latitude === undefined || typeof latitude === "boolean" || (typeof latitude === "string" && latitude.trim() === "")) {
+    throw new Error(`Invalid latitude: ${latitude}. Latitude is required and cannot be null, empty, or boolean.`);
+  }
   const lat = Number(latitude);
-  const lng = Number(longitude);
   if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
     throw new Error(`Invalid latitude: ${latitude}. Must be between -90 and +90 degrees.`);
   }
+
+  if (longitude === null || longitude === undefined || typeof longitude === "boolean" || (typeof longitude === "string" && longitude.trim() === "")) {
+    throw new Error(`Invalid longitude: ${longitude}. Longitude is required and cannot be null, empty, or boolean.`);
+  }
+  const lng = Number(longitude);
   if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
     throw new Error(`Invalid longitude: ${longitude}. Must be between -180 and +180 degrees.`);
   }
@@ -107,12 +121,26 @@ export function normalizeBirthData(data) {
   // STRICT: Timezone or UTC offset required (no silent 5.5 IST default)
   const hasTimezoneId = Boolean(timezoneId && typeof timezoneId === "string" && timezoneId.trim());
   const tzId = hasTimezoneId ? timezoneId.trim() : null;
-  const hasUtcOffset = (utcOffset !== undefined && utcOffset !== null && !isNaN(Number(utcOffset)));
-  let tzOffset = hasUtcOffset ? Number(utcOffset) : null;
 
-  if (tzOffset !== null && (!Number.isFinite(tzOffset) || tzOffset < -14 || tzOffset > 14)) {
-    throw new Error(`Invalid UTC offset: ${utcOffset}. Must be a finite number between -14 and +14 hours.`);
+  // Strict check: if utcOffset is provided, it cannot be empty string, boolean, or NaN
+  if (utcOffset !== undefined && utcOffset !== null) {
+    if (typeof utcOffset === "boolean" || (typeof utcOffset === "string" && utcOffset.trim() === "")) {
+      throw new Error(`Invalid UTC offset: "${utcOffset}". Must be a finite number between -14 and +14 hours.`);
+    }
+    const numOffset = Number(utcOffset);
+    if (!Number.isFinite(numOffset) || numOffset < -14 || numOffset > 14) {
+      throw new Error(`Invalid UTC offset: ${utcOffset}. Must be a finite number between -14 and +14 hours.`);
+    }
   }
+
+  const hasUtcOffset = (
+    utcOffset !== undefined &&
+    utcOffset !== null &&
+    typeof utcOffset !== "boolean" &&
+    !(typeof utcOffset === "string" && utcOffset.trim() === "") &&
+    Number.isFinite(Number(utcOffset))
+  );
+  let tzOffset = hasUtcOffset ? Number(utcOffset) : null;
 
   if (!tzId && tzOffset === null) {
     throw new Error("Timezone or UTC offset required for astrological calculation");

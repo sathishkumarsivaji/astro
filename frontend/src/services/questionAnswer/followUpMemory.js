@@ -29,9 +29,11 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   const explicitFinance = /\b(?:wealth|money|finance|பணம்|செல்வம்)\b/i.test(raw);
   const explicitSpouse = /\b(?:spouse|wife|husband|partner|துணை|மனைவி|கணவர்)\b/i.test(raw);
   const explicitMarriage = /\b(?:marry|marriage|wedding|திருமண)\b/i.test(raw) || explicitSpouse;
+  const explicitChildren = /\b(?:children|child|progeny|pregnancy|conceive|baby|babies|kid|kids|give\s*birth|குழந்தை|புத்திர|பிள்ளை|மழலை)\b/i.test(raw);
 
   let initialDomain = DOMAINS.GENERAL;
-  if (explicitProperty) initialDomain = DOMAINS.PROPERTY;
+  if (explicitChildren) initialDomain = DOMAINS.CHILDREN;
+  else if (explicitProperty) initialDomain = DOMAINS.PROPERTY;
   else if (explicitCareer) initialDomain = DOMAINS.CAREER;
   else if (explicitFinance) initialDomain = DOMAINS.FINANCE;
   else if (explicitMarriage) initialDomain = DOMAINS.MARRIAGE;
@@ -39,7 +41,7 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   if (!conversationHistory || conversationHistory.length === 0) {
     return {
       resolvedQuestion: raw,
-      activeSubject: "native",
+      activeSubject: explicitChildren ? "child" : "native",
       activeDomain: initialDomain,
       inheritedEvidenceIds: [],
       isFollowUp: false
@@ -57,8 +59,11 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   let lastEvidenceIds = lastTurn.evidenceIds || [];
 
   if (!lastDomain) {
-    const prevQ = (lastTurn.question || lastTurn.q || "").toLowerCase();
-    if (/marry|marriage|spouse|wife|husband|திருமண|துணை/i.test(prevQ)) {
+    const prevQ = (lastTurn.question || lastTurn.q || lastTurn.content || "").toLowerCase();
+    if (/children|child|progeny|pregnancy|conceive|baby|babies|give\s*birth|குழந்தை|புத்திர|பிள்ளை/i.test(prevQ)) {
+      lastDomain = DOMAINS.CHILDREN;
+      lastSubject = "child";
+    } else if (/marry|marriage|spouse|wife|husband|திருமண|துணை/i.test(prevQ)) {
       lastDomain = DOMAINS.MARRIAGE;
       lastSubject = "spouse";
     } else if (/job|career|promotion|வேலை|தொழில்/i.test(prevQ)) {
@@ -79,7 +84,10 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   let activeSubject = lastSubject || "native";
 
   // Check 0: Explicit Topic Shift / New Domain Declaration
-  if (explicitProperty) {
+  if (explicitChildren) {
+    activeDomain = DOMAINS.CHILDREN;
+    activeSubject = "child";
+  } else if (explicitProperty) {
     activeDomain = DOMAINS.PROPERTY;
     activeSubject = "native";
   } else if (explicitCareer) {
@@ -94,9 +102,13 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   }
 
   // Check 1: Elliptical "When?" / "எப்போது?"
-  if (/^(when|when\s*\?|எப்போது\??)$/i.test(raw)) {
+  if (/^(when|when\s*\?|when\s+will\s+(?:it|that)\s+happen\??|what\s+about\s+timing\??|எப்போது\??)$/i.test(raw)) {
     isFollowUp = true;
-    if (lastDomain === DOMAINS.MARRIAGE || lastSubject === "spouse") {
+    if (lastDomain === DOMAINS.CHILDREN || lastSubject === "child") {
+      resolvedQuestion = "When will I have children?";
+      activeDomain = DOMAINS.CHILDREN;
+      activeSubject = "child";
+    } else if (lastDomain === DOMAINS.MARRIAGE || lastSubject === "spouse") {
       resolvedQuestion = "When will I get married?";
       activeDomain = DOMAINS.MARRIAGE;
       activeSubject = "spouse";
@@ -114,7 +126,10 @@ export function resolveFollowUpContext({ question, conversationHistory = [] }) {
   if (yearMatch && (raw.length < 25 || /what\s+about\s+20\d\d/i.test(raw))) {
     isFollowUp = true;
     const year = yearMatch[1];
-    if (lastDomain === DOMAINS.CAREER) {
+    if (lastDomain === DOMAINS.CHILDREN) {
+      resolvedQuestion = `When will I have children in ${year}?`;
+      activeDomain = DOMAINS.CHILDREN;
+    } else if (lastDomain === DOMAINS.CAREER) {
       resolvedQuestion = `How will the year ${year} affect my career?`;
       activeDomain = DOMAINS.CAREER;
     } else if (lastDomain === DOMAINS.MARRIAGE) {

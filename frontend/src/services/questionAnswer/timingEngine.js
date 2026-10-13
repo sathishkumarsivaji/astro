@@ -37,6 +37,7 @@ export const DOMAIN_ACTIVATION_FACTORS = {
   FOREIGN_TRAVEL: { houses: [3, 9, 12], karakas: ["Moon", "Rahu", "Saturn", "Jupiter"], varga: "d9", vargaFactor: "VARGA_FACT_D9_TRAVEL_CONFIRMED" },
   WORK_ABROAD: { houses: [9, 10, 12], karakas: ["Rahu", "Saturn", "Moon"], varga: "d10", vargaFactor: "VARGA_FACT_D10_FOREIGN_WORK_CONFIRMED" },
   FOREIGN_SETTLEMENT: { houses: [4, 9, 12], karakas: ["Rahu", "Saturn", "Moon"], varga: "d4", vargaFactor: "VARGA_FACT_D4_SETTLEMENT_CONFIRMED" },
+  CHILDREN: { houses: [2, 5, 11], karakas: ["Jupiter"], varga: "d7", vargaFactor: "VARGA_FACT_D7_PROGENY_CONFIRMED" },
   WELLNESS: { houses: [1, 6, 8], karakas: ["Sun", "Mars"], varga: null, vargaFactor: null },
   LEGAL: { houses: [6, 8], karakas: ["Mars", "Saturn", "Rahu"], varga: null, vargaFactor: null }
 };
@@ -71,6 +72,9 @@ export const CANONICAL_DOMAIN_MAP = {
   TRAVEL: "FOREIGN_TRAVEL",
   WORK_ABROAD: "WORK_ABROAD",
   FOREIGN_SETTLEMENT: "FOREIGN_SETTLEMENT",
+  CHILDREN: "CHILDREN",
+  PROGENY: "CHILDREN",
+  FAMILY_EXPANSION: "CHILDREN",
   WELLNESS: "WELLNESS",
   HEALTH: "WELLNESS",
   LEGAL: "LEGAL",
@@ -203,7 +207,24 @@ export function computeTimingWindows({
   }
 
   const factors = DOMAIN_ACTIVATION_FACTORS[canonicalDomain];
-  const ascendantSign = chart?.ascendant?.signName || chart?.ascendant?.sign || chart?.lagna?.sign || null;
+  const ascendantSign = chart?.ascendant?.signName || chart?.ascendant?.sign || chart?.lagna?.sign || (typeof chart?.ascendant === "string" ? chart.ascendant : null);
+  const ascIdx = (ascendantSign && SIGN_ORDER.indexOf(ascendantSign) >= 0) ? SIGN_ORDER.indexOf(ascendantSign) : -1;
+  const chartPlanets = Array.isArray(chart?.planets) ? chart.planets : [];
+
+  const getPlanetActivatedHouses = (planetName) => {
+    if (!planetName) return [];
+    const houses = new Set();
+    if (ascIdx >= 0) {
+      for (let h = 1; h <= 12; h++) {
+        const sign = SIGN_ORDER[(ascIdx + h - 1) % 12];
+        if (SIGN_LORDS[sign] === planetName) houses.add(h);
+      }
+    }
+    const pObj = chartPlanets.find(p => (p.name || p.planetName) === planetName);
+    const pHouse = pObj?.house ?? pObj?.bhava ?? null;
+    if (typeof pHouse === "number") houses.add(pHouse);
+    return Array.from(houses);
+  };
 
   // Evaluate transit relationship against domain houses
   const transitEval = evaluateTransitAspects(transits, ascendantSign, factors.houses);
@@ -220,7 +241,7 @@ export function computeTimingWindows({
   // Scan dasha periods to evaluate activations
   for (const dasha of dashaTimeline) {
     const md = dasha.mahadasha || dasha.lord || "";
-    const ad = dasha.antardasha || "";
+    const ad = dasha.antardasha || dasha.subLord || "";
     const startYear = dasha.startYear || (dasha.startDate ? parseInt(String(dasha.startDate).slice(0, 4), 10) : null);
     const endYear = dasha.endYear || (dasha.endDate ? parseInt(String(dasha.endDate).slice(0, 4), 10) : null);
 
@@ -233,7 +254,9 @@ export function computeTimingWindows({
 
     const isMdKaraka = factors.karakas.includes(md);
     const isAdKaraka = factors.karakas.includes(ad);
-    const dashaHouses = Array.isArray(dasha.activatedHouses) ? dasha.activatedHouses : [];
+    const explicitHouses = Array.isArray(dasha.activatedHouses) ? dasha.activatedHouses : [];
+    const derivedHouses = [...getPlanetActivatedHouses(md), ...getPlanetActivatedHouses(ad)];
+    const dashaHouses = Array.from(new Set([...explicitHouses, ...derivedHouses]));
     const houseActivated = dashaHouses.some(h => factors.houses.includes(h));
 
     const isActivated = isMdKaraka || isAdKaraka || houseActivated;

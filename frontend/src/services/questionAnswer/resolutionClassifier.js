@@ -55,7 +55,10 @@ export function classifyAnswerability(plan, evidence, contradictions = {}) {
     return ANSWERABILITY_STATES.INSUFFICIENT_DATA;
   }
   if (evidence.taskResult) {
-    if (evidence.taskResult.answerState === "UNSUPPORTED_TASK") {
+    if (evidence.taskResult.answerState === "INSUFFICIENT_DATA") {
+      return ANSWERABILITY_STATES.INSUFFICIENT_DATA;
+    }
+    if (evidence.taskResult.answerState === "UNSUPPORTED_TASK" || evidence.taskResult.answerState === "TASK_FAILURE") {
       return ANSWERABILITY_STATES.NOT_DISCRIMINATING;
     }
     if (evidence.taskResult.answerState === "NOT_ESTABLISHED" || evidence.taskResult.answerState === "NO_DISCRIMINATING_WINDOW") {
@@ -87,14 +90,15 @@ export function classifyAnswerability(plan, evidence, contradictions = {}) {
  */
 export function classifyResolution(plan, evidence) {
   // If evidence status is insufficient
-  if (!evidence || evidence.status === "INSUFFICIENT_DATA") {
+  if (!evidence || evidence.status === "INSUFFICIENT_DATA" || evidence.taskResult?.answerState === "INSUFFICIENT_DATA") {
+    const missing = evidence?.taskResult?.missingEvidence || evidence?.missingEvidence || ["Required chart factors are absent."];
     return {
       timingResolution: TIMING_RESOLUTIONS.INSUFFICIENT_DATA,
       timingContract: {
         status: "INSUFFICIENT_DATA",
         resolution: null,
         windows: [],
-        missingEvidence: ["Required chart factors are absent."]
+        missingEvidence: missing
       },
       evidenceStatus: EVIDENCE_STATUSES.INSUFFICIENT_DATA,
       rationale: "Required chart factors are absent from the calculation context."
@@ -105,16 +109,18 @@ export function classifyResolution(plan, evidence) {
   if (evidence.taskResult) {
     const tr = evidence.taskResult;
     const state = tr.answerState;
-    if (state === "UNSUPPORTED_TASK") {
+    if (state === "UNSUPPORTED_TASK" || state === "TASK_FAILURE") {
       return {
         timingResolution: null,
         timingContract: {
-          status: "UNSUPPORTED_TASK",
+          status: state,
           resolution: null,
           windows: []
         },
         evidenceStatus: EVIDENCE_STATUSES.UNSUPPORTED_TASK,
-        rationale: "Task is unhandled / unsupported in the current engine."
+        rationale: state === "TASK_FAILURE"
+          ? "Task handler encountered an execution failure."
+          : "Task is unhandled / unsupported in the current engine."
       };
     }
     if (state === "NOT_ESTABLISHED" || state === "NO_DISCRIMINATING_WINDOW") {
@@ -143,13 +149,18 @@ export function classifyResolution(plan, evidence) {
       };
     }
     if (state === "ANSWERED") {
-      const taskRes = tr.timingResolution || (tr.evaluatedTimeframe?.kind === "LOCAL_DATE"
-        ? TIMING_RESOLUTIONS.DATE
-        : (tr.evaluatedTimeframe?.kind === "LOCAL_WEEK" ? TIMING_RESOLUTIONS.DATE_RANGE : TIMING_RESOLUTIONS.MONTH_RANGE));
+      const hasWindows = Array.isArray(tr.candidateWindows) && tr.candidateWindows.length > 0;
+      const taskRes = tr.timingResolution !== undefined
+        ? tr.timingResolution
+        : (tr.evaluatedTimeframe?.kind === "LOCAL_DATE"
+          ? TIMING_RESOLUTIONS.DATE
+          : (tr.evaluatedTimeframe?.kind === "LOCAL_WEEK"
+            ? TIMING_RESOLUTIONS.DATE_RANGE
+            : (hasWindows ? TIMING_RESOLUTIONS.MONTH_RANGE : null)));
       return {
         timingResolution: taskRes,
         timingContract: {
-          status: "TRADITIONAL_WINDOW",
+          status: taskRes ? "TRADITIONAL_WINDOW" : "NO_DISCRIMINATING_WINDOW",
           resolution: taskRes,
           windows: tr.candidateWindows || [],
           empiricalStatus: "NOT_VALIDATED"

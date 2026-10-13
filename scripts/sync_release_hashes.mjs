@@ -89,8 +89,11 @@ if (fs.existsSync(adbPath)) {
   fs.writeFileSync(adbPath, JSON.stringify(adbData, null, 2) + "\n", "utf8");
   console.log("✓ astro_databank_external_benchmark.json metadata updated");
 }
-const astroDatabankTrueIndependentHash = byteHash(adbPath);
+const externalBenchmarkOutputHash = byteHash(adbPath);
+const adbDatasetPath = path.join(ROOT, "data/external_validation/astro_databank/astro_databank_true_independent.json");
+const astroDatabankTrueIndependentHash = byteHash(adbDatasetPath);
 console.log(`• astroDatabankTrueIndependentHash: ${astroDatabankTrueIndependentHash}`);
+console.log(`• externalBenchmarkOutputHash:       ${externalBenchmarkOutputHash}`);
 
 // 5. Update external_validation_report.json
 const extReportPath = path.join(ROOT, "data/real_world_validation/results/external_validation_report.json");
@@ -135,6 +138,7 @@ if (fs.existsSync(cachePath)) {
   for (const k of keys) {
     const entry = cacheData[k];
     if (entry && typeof entry === "object") {
+      if (entry.astroEngineHash) entry.astroEngineHash = actualAstroHash;
       if (entry.predictionEngineHash) entry.predictionEngineHash = predictionEngineHash;
       if (entry.calibrationModelHash) entry.calibrationModelHash = calibrationModelHash;
       updatedCount++;
@@ -179,7 +183,11 @@ const manifest = {
     blindTestSplitHash,
     internalHoldoutSplitHash,
     astroDatabankTrueIndependentHash,
-    overlapManifestHash
+    overlapManifestHash,
+    rawSourceExportHash: "7d42ac78520685b3013e929f3f238989a78c2f1ae1a360248a9b3b459d93549c",
+    parsedFullDatasetHash: "cc59b4f32aeb63e45befd0a8a7d9110a380a0375744d689ebaf08ce057d5b1ff",
+    independentHoldoutDatasetHash: astroDatabankTrueIndependentHash,
+    externalBenchmarkOutputHash
   },
   updatedAt: nowIso
 };

@@ -25,6 +25,7 @@ export const DOMAINS = Object.freeze({
   SPIRITUAL: "spiritual",
   CAUTION: "caution",
   MILESTONES: "milestones",
+  REMEDIES: "remedies",
   DASHA: "dasha",
   VARGA: "varga",
   GENERAL: "general"
@@ -76,7 +77,15 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   if (intents.has("VEHICLE")) domains.add(DOMAINS.VEHICLE);
   if (intents.has("FINANCE")) domains.add(DOMAINS.FINANCE);
   if (intents.has("EDUCATION")) domains.add(DOMAINS.EDUCATION);
-  if (intents.has("CHILDREN")) domains.add(DOMAINS.CHILDREN);
+  if (
+    intents.has("CHILDREN") ||
+    intents.has("CHILDREN_COUNT") ||
+    intents.has("CHILDREN_OUTLOOK") ||
+    intents.has("FAMILY_EXPANSION_TIMING") ||
+    intents.has("CHILDREN_TRADITIONAL_INTERPRETATION")
+  ) {
+    domains.add(DOMAINS.CHILDREN);
+  }
   if (intents.has("FOREIGN_TRAVEL")) domains.add(DOMAINS.FOREIGN_TRAVEL);
   if (intents.has("FAMILY")) domains.add(DOMAINS.FAMILY);
   if (intents.has("LEADERSHIP")) domains.add(DOMAINS.LEADERSHIP);
@@ -87,11 +96,14 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   if (intents.has("MAJOR_MILESTONE") || /milestone|next\s*\d+\s*years|அடுத்த\s*\d+\s*(?:வருட|ஆண்டு)|முக்கியமான\s*மாற்றங்கள்/i.test(text)) {
     domains.add(DOMAINS.MILESTONES);
   }
+  // 2. Comprehensive Keyword & Semantic Detection across all Domains
+  const target = `${text} ${norm}`;
+
+  if (intents.has("REMEDY") || /ரத்தின|பரிகார|gemstone|ruby|pearl|coral|emerald|sapphire|diamond|rudraksha|mantra/i.test(target)) {
+    domains.add(DOMAINS.REMEDIES);
+  }
   if (intents.has("CURRENT_DASHA") || intents.has("DASHA_EFFECT")) domains.add(DOMAINS.DASHA);
   if (intents.has("VARGA_INTERPRETATION")) domains.add(DOMAINS.VARGA);
-
-  // 2. Comprehensive Keyword & Semantic Detection across all 20 Domains
-  const target = `${text} ${norm}`;
   if (/திருமண|கல்யாணம்|களத்திர|துணை|மனைவி|கணவர்|spouse|marriage|wife|husband|wedding|partner|marital/i.test(target)) {
     domains.add(DOMAINS.MARRIAGE);
   }
@@ -104,13 +116,13 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   if (/வியாபாரம்|சுயதொழில்|வணிக|கூட்டு|தொழில்\s*தொடங்க|லாபம்|business|startup|trade|entrepreneur|commerce|venture|partnership/i.test(target)) {
     domains.add(DOMAINS.BUSINESS);
   }
-  if (/சொத்து|நிலம்|மனை|வீடு|அசையா|பூர்வீக|property|real\s*estate|house|land|home|renovation/i.test(target)) {
+  if (/சொத்து|நிலம்|மனை|வீடு|அசையா|பூர்வீக|property|real\s*estate|(?<!\b\d{1,2}(?:st|nd|rd|th)?\s+)\b(?:house|home)\b(?!.*\b(?:lord|cusp)\b)|land|renovation/i.test(target)) {
     domains.add(DOMAINS.PROPERTY);
   }
   if (/(?:வாகன|கார்|வண்டி|ஊர்தி)|\b(vehicle|vehicles|car|cars|conveyance|automobile|automobiles|transportation|driving)\b/i.test(target)) {
     domains.add(DOMAINS.VEHICLE);
   }
-  if (/பணம்|நிதி|பொருளாதார|செல்வ|சேமிப்பு|தன|finance|wealth|money|income|prosperity|dhana|invest|accumulation|2nd\s*and\s*11th/i.test(target)) {
+  if (/(?:பணம்|நிதி|பொருளாதார|செல்வ|சேமிப்பு|(?:^|[\s,])தன(?:[\s,]|$))|finance|wealth|money|income|prosperity|dhana|invest|accumulation|2nd\s*and\s*11th/i.test(target)) {
     domains.add(DOMAINS.FINANCE);
   }
   if (/கல்வி|படி|தேர்வு|ஆராய்ச்சி|பல்கலைக்கழக|education|study|exam|academic|degree|intellectual|competitive|higher\s*study/i.test(target)) {
@@ -134,7 +146,7 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   if (/ஆன்மீக|இஷ்ட\s*தெய்வ|ஞான|மோட்ச|தியான|யாத்திரை|spiritual|pilgrimage|deity|sadhana|moksha|philosophical/i.test(target)) {
     domains.add(DOMAINS.SPIRITUAL);
   }
-  if (/எச்சரிக்கை|ஆபத்து|இடர்|சனி|சாதகமற்ற|ஏழரை|அஷ்டம|சவாலான|விவேகமாக|தவிர்க்க|பிரச்சினை|பாதுகாப்பு\s*கிரக|caution|risk|danger|obstacle|adverse|sade\s*sati|difficult|prudently/i.test(target)) {
+  if (!domains.has(DOMAINS.REMEDIES) && /எச்சரிக்கை|ஆபத்து|இடர்|சனி|சாதகமற்ற|ஏழரை|அஷ்டம|சவாலான|விவேகமாக|பிரச்சினை|பாதுகாப்பு\s*கிரக|caution|risk|danger|obstacle|adverse|sade\s*sati|difficult|prudently/i.test(target)) {
     domains.add(DOMAINS.CAUTION);
   }
   if (/மைல்கல்|திருப்பு|திருப்ப|முக்கிய\s*கால|வயது\s*கால|அடுத்த\s*\d+\s*(?:வருட|ஆண்டு|முதல்)|ஆசைகள்|கர்ம\s*திருப்புமுனை|milestone|turning\s*point|life\s*stages|next\s*\d+\s*years|aspirations|long-term/i.test(target)) {

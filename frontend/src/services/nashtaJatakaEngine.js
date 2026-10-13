@@ -619,6 +619,8 @@ export function reverseCalculateBirthTimeAndDOB({
       reconstructionMode: "experimental_heuristic_reconstruction",
       palmScoringApplied: false,
       palmStatus: "EXCLUDED_UNVALIDATED",
+      methodologyNotice: "Traditional experimental reconstruction. Results are hypothesis-based and not empirically validated. Nashta Jataka uses iterative reverse-ephemeris fitting against subjective milestone recollections.",
+      methodologyNoticeTa: "பாரம்பரிய உத்தேச நஷ்ட ஜாதக மறுகட்டமைப்பு. இவை கருதுகோள் அடிப்படையிலானவை மட்டுமே; அறிவியல் ரீதியான துல்லிய உத்தரவாதம் இல்லை.",
       heuristicEvidenceScore: 0,
       confidenceScore: 0,
       empiricalConfidence: null,
@@ -715,6 +717,26 @@ export function reverseCalculateBirthTimeAndDOB({
   const monthObj = MONTHS[candidateBirthMonthNum - 1] || MONTHS[7];
   const monthName = isTamil ? monthObj.ta : monthObj.en;
   const isoFormattedDate = `${candidateBirthYear}-${String(candidateBirthMonthNum).padStart(2, '0')}-${String(candidateBirthDayNum).padStart(2, '0')}`;
+
+  // Build Dasha-Gochar Corroboration Proofs based on user's actual entered events
+  const verificationProofs = [];
+  answeredEvents.slice(0, 8).forEach((ev) => {
+    const monthLabel = ev.month && MONTHS[ev.month - 1] ? (isTamil ? MONTHS[ev.month - 1].ta : MONTHS[ev.month - 1].en) : (isTamil ? "ஆண்டு" : "Year");
+    const eventAge = (ev.fractionalDate - estimatedBirthFraction).toFixed(1);
+
+    verificationProofs.push({
+      milestone: `${ev.category} (${monthLabel} ${ev.year})`,
+      palmEvidence: isTamil ? `${ev.lineCorrelated}` : `${ev.lineCorrelated}`,
+      dashaCorrelation: isTamil
+        ? `${ev.bhava} தூண்டப்பட்டு, தசா சுழற்சி மற்றும் கோச்சார பலன் (வயது ~${eventAge})`
+        : `${ev.bhava} activated via dasha progression & Gochar transit (approx. Age ${eventAge})`,
+      verified: false,
+      userConfirmed: true,
+      verificationStatus: "user_confirmed",
+      source: "user_confirmed",
+      isAnchor: ev.isAnchor
+    });
+  });
 
   // Solar Season / Tamil Month Mapping
   const tamilSolarMonths = [
@@ -922,6 +944,8 @@ export function reverseCalculateBirthTimeAndDOB({
       reconstructionMode: "experimental_heuristic_reconstruction",
       palmScoringApplied: false,
       palmStatus: "EXCLUDED_UNVALIDATED",
+      methodologyNotice: "Traditional experimental reconstruction. Results are hypothesis-based and not empirically validated. Nashta Jataka uses iterative reverse-ephemeris fitting against subjective milestone recollections.",
+      methodologyNoticeTa: "பாரம்பரிய உத்தேச நஷ்ட ஜாதக மறுகட்டமைப்பு. இவை கருதுகோள் அடிப்படையிலானவை மட்டுமே; அறிவியல் ரீதியான துல்லிய உத்தரவாதம் இல்லை.",
       heuristicEvidenceScore: sampleCountNum > 0 ? Math.min(88, Math.round(50.0 + sampleCountNum * 6.0)) : 0,
       confidenceScore: 0,
       empiricalConfidence: null,
@@ -946,7 +970,7 @@ export function reverseCalculateBirthTimeAndDOB({
       errorMarginMonths: null,
       errorMarginStatus: "UNCALIBRATED",
       estimatedToleranceBand: "UNCALIBRATED_INSUFFICIENT_DISCRIMINATION",
-      verificationProofs: [],
+      verificationProofs,
       astronomicalNotes: isTamil
         ? "தேர்வு செய்ய போதுமான தனித்துவ லக்ன பொருத்தம் அமையவில்லை (NOT_DISCRIMINATING)."
         : "Candidate search did not isolate a sufficiently discriminating astrological match (NOT_DISCRIMINATING)."
@@ -984,27 +1008,6 @@ export function reverseCalculateBirthTimeAndDOB({
       ? `எபிமெரிஸ் கணிதப்படி இந்த நாளில் சந்திரன் ${selMoon.tamil} ராசியில் ${selNak.tamil} நட்சத்திரத்தில் சஞ்சரிக்கிறார்.`
       : `Astronomical ephemeris positions the Moon in ${selMoon.name} sign (${selNak.name} Nakshatra).`
   };
-
-  // 5. Build Dasha-Gochar Corroboration Proofs based on user's actual entered events
-  const verificationProofs = [];
-
-  answeredEvents.slice(0, 8).forEach((ev) => {
-    const monthLabel = ev.month && MONTHS[ev.month - 1] ? (isTamil ? MONTHS[ev.month - 1].ta : MONTHS[ev.month - 1].en) : (isTamil ? "ஆண்டு" : "Year");
-    const eventAge = (ev.fractionalDate - estimatedBirthFraction).toFixed(1);
-
-    verificationProofs.push({
-      milestone: `${ev.category} (${monthLabel} ${ev.year})`,
-      palmEvidence: isTamil ? `${ev.lineCorrelated}` : `${ev.lineCorrelated}`,
-      dashaCorrelation: isTamil
-        ? `${ev.bhava} தூண்டப்பட்டு, தசா சுழற்சி மற்றும் கோச்சார பலன் (வயது ~${eventAge})`
-        : `${ev.bhava} activated via dasha progression & Gochar transit (approx. Age ${eventAge})`,
-      verified: false,
-      userConfirmed: true,
-      verificationStatus: "user_confirmed",
-      source: "user_confirmed",
-      isAnchor: ev.isAnchor
-    });
-  });
 
   // Heuristic interview consistency index (non-empirical scoring based on confirmed milestone anchors)
   const heuristicEvidenceScore = sampleCountNum > 0

@@ -7,7 +7,7 @@
  * Implements Section 4 of the Precision Q&A Engine Mandate.
  */
 
-import { QUESTION_INTENTS, TASK_INTENTS } from "./intentClassifier.js";
+import { QUESTION_INTENTS, TASK_INTENTS, CHILDREN_TASKS } from "./intentClassifier.js";
 import { DOMAINS } from "./domainClassifier.js";
 
 /**
@@ -82,6 +82,87 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
   } else if (primaryIntent === TASK_INTENTS.MONTHLY_OUTLOOK) {
     plan.requiredDashas = true;
     plan.requiredTransits = true;
+  }
+
+  // Children domain — sub-intent specific evidence plans
+  // These MUST be set before the generic domain loops below to prevent empty-plan fallthrough.
+  if (intents.has(CHILDREN_TASKS.CHILDREN_COUNT)) {
+    // COUNT: Explicit policy — no integer count derivable from chart factors.
+    plan.childrenEvidencePlan = {
+      task: "CHILDREN_COUNT",
+      answerState: "NOT_ESTABLISHED",
+      requestedQuantity: "NUMBER_OF_CHILDREN",
+      exactCount: null,
+      estimatedCount: null,
+      empiricalModelAvailable: false,
+      countPolicyNote: "Exact child count is not derivable from chart symbolism. This task returns a clear limitation, not an invented number."
+    };
+    plan.requiredHouses.add(5);
+    plan.requiredLords.add("5thLord");
+    plan.requiredPlanets.add("Jupiter");
+    plan.requiredVargas.add("D7");
+    plan.specificFactors.push("CHILDREN_COUNT_POLICY_NOT_ESTABLISHED");
+  } else if (intents.has(CHILDREN_TASKS.FAMILY_EXPANSION_TIMING)) {
+    // TIMING: run event-specific dasha/transit window analysis.
+    plan.childrenEvidencePlan = {
+      task: "FAMILY_EXPANSION_TIMING",
+      interpretationType: "TRADITIONAL",
+      interpretationPolicy: "TRADITIONAL_ONLY",
+      medicalFertilityAssessment: false,
+      outcomeGuarantee: false
+    };
+    plan.requiredHouses.add(5);
+    plan.requiredHouses.add(2);
+    plan.requiredHouses.add(11);
+    plan.requiredLords.add("5thLord");
+    plan.requiredPlanets.add("Jupiter");
+    plan.requiredVargas.add("D7");
+    plan.requiredDashas = true;
+    plan.requiredTransits = true;
+    plan.includeTiming = true;
+    plan.specificFactors.push("CHILDREN_TIMING_5TH_HOUSE", "FAMILY_EXPANSION_DASHA_TRANSIT");
+  } else if (intents.has(CHILDREN_TASKS.CHILDREN_OUTLOOK)) {
+    // OUTLOOK: traditional 5th house / Jupiter / D7 analysis.
+    plan.childrenEvidencePlan = {
+      task: "CHILDREN_OUTLOOK",
+      interpretationType: "TRADITIONAL",
+      interpretationPolicy: "TRADITIONAL_ONLY",
+      medicalFertilityAssessment: false,
+      outcomeGuarantee: false
+    };
+    plan.requiredHouses.add(5);
+    plan.requiredHouses.add(2);
+    plan.requiredHouses.add(11);
+    plan.requiredLords.add("5thLord");
+    plan.requiredPlanets.add("Jupiter");
+    plan.requiredVargas.add("D7");
+    plan.specificFactors.push("CHILDREN_OUTLOOK_5TH_HOUSE", "JUPITER_PROGENY_KARAKA", "D7_SAPTAMSHA");
+  } else if (intents.has(CHILDREN_TASKS.CHILDREN_TRADITIONAL_INTERPRETATION)) {
+    // TRADITIONAL: general chart-discussion about children domain.
+    plan.childrenEvidencePlan = {
+      task: "CHILDREN_TRADITIONAL_INTERPRETATION",
+      interpretationType: "TRADITIONAL",
+      interpretationPolicy: "TRADITIONAL_ONLY",
+      medicalFertilityAssessment: false,
+      outcomeGuarantee: false
+    };
+    plan.requiredHouses.add(5);
+    plan.requiredLords.add("5thLord");
+    plan.requiredPlanets.add("Jupiter");
+    plan.specificFactors.push("CHILDREN_TRADITIONAL_5TH_HOUSE");
+  } else if (intents.has(QUESTION_INTENTS.CHILDREN)) {
+    // Broad CHILDREN intent (fallback) — still give a minimum evidence plan.
+    plan.childrenEvidencePlan = {
+      task: "CHILDREN_BROAD",
+      interpretationType: "TRADITIONAL",
+      interpretationPolicy: "TRADITIONAL_ONLY",
+      medicalFertilityAssessment: false,
+      outcomeGuarantee: false
+    };
+    plan.requiredHouses.add(5);
+    plan.requiredLords.add("5thLord");
+    plan.requiredPlanets.add("Jupiter");
+    plan.specificFactors.push("CHILDREN_BROAD_5TH_HOUSE");
   }
 
   // 0. System Comparison (Lahiri vs KP)

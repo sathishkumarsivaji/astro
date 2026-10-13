@@ -22,6 +22,47 @@ const SIGN_NAMES = [
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
+export const TAMIL_PLANETS = {
+  'சூரியன்': 'Sun',
+  'சந்திரன்': 'Moon',
+  'செவ்வாய்': 'Mars',
+  'புதன்': 'Mercury',
+  'குரு': 'Jupiter',
+  'வியாழன்': 'Jupiter',
+  'சுக்கிரன்': 'Venus',
+  'சனி': 'Saturn',
+  'ராகு': 'Rahu',
+  'கேது': 'Ketu'
+};
+
+export const TAMIL_SIGNS = {
+  'மேஷம்': 'Aries',
+  'மேஷ': 'Aries',
+  'ரிஷபம்': 'Taurus',
+  'ரிஷப': 'Taurus',
+  'மிதுனம்': 'Gemini',
+  'மிதுன': 'Gemini',
+  'கடகம்': 'Cancer',
+  'கடக': 'Cancer',
+  'சிம்மம்': 'Leo',
+  'சிம்ம': 'Leo',
+  'கன்னி': 'Virgo',
+  'துலாம்': 'Libra',
+  'துலா': 'Libra',
+  'விருச்சிகம்': 'Scorpio',
+  'விருச்சிக': 'Scorpio',
+  'தனுசு': 'Sagittarius',
+  'மகரம்': 'Capricorn',
+  'மகர': 'Capricorn',
+  'கும்பம்': 'Aquarius',
+  'கும்ப': 'Aquarius',
+  'மீனம்': 'Pisces',
+  'மீன': 'Pisces'
+};
+
+const tamilPlanetsPattern = Object.keys(TAMIL_PLANETS).join("|");
+const tamilSignsPattern = Object.keys(TAMIL_SIGNS).join("|");
+
 export const CLAIM_TYPES = Object.freeze({
   FACT: "FACT",
   INTERPRETATION: "INTERPRETATION",
@@ -31,6 +72,26 @@ export const CLAIM_TYPES = Object.freeze({
   FINANCIAL: "FINANCIAL",
   LEGAL: "LEGAL",
   GENERAL: "GENERAL"
+});
+
+export const EVIDENCE_STATUSES = Object.freeze({
+  SUPPORTED: "SUPPORTED",
+  PARTIALLY_SUPPORTED: "PARTIALLY_SUPPORTED",
+  MIXED_EVIDENCE: "MIXED_EVIDENCE",
+  TRADITIONAL_ONLY: "TRADITIONAL_ONLY",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA",
+  NOT_DISCRIMINATING: "NOT_DISCRIMINATING",
+  UNASSESSED: "UNASSESSED"
+});
+
+export const OUTPUT_RESOLUTIONS = Object.freeze({
+  DATE_RANGE: "DATE_RANGE",
+  MONTH_RANGE: "MONTH_RANGE",
+  SEASON: "SEASON",
+  YEAR: "YEAR",
+  AGE_RANGE: "AGE_RANGE",
+  NOT_DISCRIMINATING: "NOT_DISCRIMINATING",
+  INSUFFICIENT_DATA: "INSUFFICIENT_DATA"
 });
 
 // Forbidden categorical prediction language
@@ -93,9 +154,24 @@ const FABRICATED_VALUE_PATTERNS = [
 
 export function normalizePlanetName(name) {
   if (!name) return '';
-  const lower = name.toLowerCase();
+  const trimmed = name.trim();
+  if (TAMIL_PLANETS[trimmed]) {
+    return TAMIL_PLANETS[trimmed];
+  }
+  const lower = trimmed.toLowerCase();
   const match = PLANET_NAMES.find(p => p.toLowerCase() === lower);
-  return match || name;
+  return match || trimmed;
+}
+
+export function normalizeSignName(sign) {
+  if (!sign) return '';
+  const trimmed = sign.trim();
+  if (TAMIL_SIGNS[trimmed]) {
+    return TAMIL_SIGNS[trimmed];
+  }
+  const lower = trimmed.toLowerCase();
+  const match = SIGN_NAMES.find(s => s.toLowerCase() === lower);
+  return match || trimmed;
 }
 
 /**
@@ -197,13 +273,19 @@ export function classifySentence(sentence) {
   }
 
   // 6. FACT checks
+  const tamilPlanetsPattern = Object.keys(TAMIL_PLANETS).join("|");
+  const tamilSignsPattern = Object.keys(TAMIL_SIGNS).join("|");
+  const tamilFactSignRegex = new RegExp(`(${tamilPlanetsPattern})\\s+(${tamilSignsPattern})\\s*(?:ராசியில்)?`, "i");
+  const tamilFactHouseRegex = new RegExp(`(${tamilPlanetsPattern})[\\s\\S]*?([1-9]|1[0-2])\\s*-(?:ம்|ஆம்)\\s*(?:வீட்டில்|இடத்தில்)`, "i");
+
   const factHouseRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(?:is\s+)?(?:placed\s+in|in|occupies)\s+(?:the\s+)?(?:house\s+)?(1[0-2]|[1-9])(?:st|nd|rd|th)?(?:\s+house)?/i;
   const signsPattern = SIGN_NAMES.join("|");
   const factSignRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, "i");
   const factDashaRegex = /(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\s+(Mahadasha|Antardasha|Dasha|Bhukti)/i;
-  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers|leads\s+to|brings|produces|will\s+rise\s+dramatically)\b/i.test(s);
+  const tamilInterpretiveRegex = /(?:குறிக்கிறது|வழங்குகிறது|உணர்த்துகிறது|காட்டுகிறது|தலைமைத்துவ)/u;
+  const hasInterpretiveVerb = /\b(?:supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|indicates|signifies|delays|obstructs|hinders|development|success|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers|leads\s+to|brings|produces|will\s+rise\s+dramatically)\b/i.test(s) || tamilInterpretiveRegex.test(s);
 
-  if ((factHouseRegex.test(s) || factSignRegex.test(s) || factDashaRegex.test(s)) && !hasInterpretiveVerb) {
+  if ((factHouseRegex.test(s) || factSignRegex.test(s) || factDashaRegex.test(s) || tamilFactSignRegex.test(s) || tamilFactHouseRegex.test(s)) && !hasInterpretiveVerb) {
     return {
       sentence: s,
       sentenceType: CLAIM_TYPES.FACT,
@@ -215,10 +297,10 @@ export function classifySentence(sentence) {
 
   // 7. INTERPRETATION checks
   const interpretiveRegex = /\b(?:indicates|indicates\s+strong|supports|enhances|promotes|strengthens|favors|benefits|activates|triggers|causes|signifies|delays|obstructs|hinders|will\s+rise|destined\s+to|will\s+achieve|will\s+experience|promises|confers|will\s+rise\s+dramatically)\b/i;
-  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development", "life", "future"];
+  const domainKeywords = ["career", "profession", "marriage", "matrimony", "relationship", "wealth", "finance", "property", "education", "health", "progeny", "children", "success", "development", "life", "future", "தலைமைத்துவ", "திருமணம்", "தொழில்", "கல்வி", "சொத்து"];
   const matchedDomain = domainKeywords.find(d => s.toLowerCase().includes(d)) || "GENERAL_INTERPRETATION";
 
-  if (interpretiveRegex.test(s) || hasInterpretiveVerb) {
+  if (interpretiveRegex.test(s) || hasInterpretiveVerb || tamilInterpretiveRegex.test(s)) {
     return {
       sentence: s,
       sentenceType: CLAIM_TYPES.INTERPRETATION,
@@ -338,6 +420,96 @@ function scanFabricatedValues(text, chartContext) {
 }
 
 /**
+ * Scans for unauthorized exact calendar date assertions when the timing resolution is coarse.
+ */
+const EXACT_CALENDAR_DATE_PATTERNS = [
+  /\b(?:on\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}\b/gi,
+  /\b(?:on\s+)?\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December),?\s+\d{4}\b/gi,
+  /\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b/g
+];
+
+export function scanTimingPrecision(text, contextOrResolution) {
+  const violations = [];
+  let sanitized = text;
+
+  const permittedPrecision = typeof contextOrResolution === "string"
+    ? contextOrResolution
+    : (contextOrResolution?.timingResolution || contextOrResolution?.resolution || null);
+  const authorizedDates = new Set(
+    Array.isArray(contextOrResolution?.authorizedDates) ? contextOrResolution.authorizedDates : []
+  );
+
+  if (permittedPrecision && permittedPrecision !== "DATE" && permittedPrecision !== "DATE_RANGE") {
+    for (const pattern of EXACT_CALENDAR_DATE_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(sanitized)) !== null) {
+        const dateStr = match[0];
+        if (!authorizedDates.has(dateStr)) {
+          violations.push({
+            type: "UNSUPPORTED_TIMING_PRECISION",
+            value: dateStr,
+            reason: `Exact calendar date assertion '${dateStr}' is not supported by timing resolution '${permittedPrecision}'.`
+          });
+          sanitized = sanitized.replace(dateStr, "[UNSUPPORTED_TIMING_PRECISION_REDACTED]");
+        }
+      }
+    }
+  }
+
+  return {
+    sanitizedText: sanitized,
+    sanitized,
+    hasUnsupportedPrecision: violations.length > 0,
+    violations
+  };
+}
+
+/**
+ * Scans for uncalibrated numerical probability or certainty claims in AI narrative.
+ */
+const UNCALIBRATED_PROBABILITY_PATTERNS = [
+  /\b(?:probability|chance|likelihood)\s+(?:of\s+)?(\d{1,3}(?:\.\d+)?%)\b/gi,
+  /\b(\d{1,3}(?:\.\d+)?%)\s+(?:probability|chance|certainty|guarantee)\b/gi
+];
+
+export function scanUncalibratedProbabilities(text, contextOrCalibrated) {
+  const violations = [];
+  let sanitized = text;
+
+  const isCalibrated = typeof contextOrCalibrated === "boolean"
+    ? contextOrCalibrated
+    : Boolean(
+        contextOrCalibrated?.calibrationStatus &&
+        contextOrCalibrated.calibrationStatus !== "UNCALIBRATED" &&
+        contextOrCalibrated?.calibratedProbability != null
+      );
+
+  if (!isCalibrated) {
+    for (const pattern of UNCALIBRATED_PROBABILITY_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(sanitized)) !== null) {
+        const probStr = match[0];
+        violations.push({
+          type: "UNCALIBRATED_PROBABILITY_CLAIM",
+          value: probStr,
+          reason: `Numerical probability '${probStr}' asserted without empirical calibration model.`
+        });
+        sanitized = sanitized.replace(probStr, "[UNCALIBRATED_PROBABILITY_REDACTED]");
+      }
+    }
+  }
+
+  return {
+    sanitizedText: sanitized,
+    sanitized,
+    hasUncalibratedProbability: violations.length > 0,
+    violations
+  };
+}
+
+/**
  * Builds a fast lookup map for planets from chartContext.
  */
 function buildPlanetFactMap(chartContext) {
@@ -366,10 +538,18 @@ function buildPlanetFactMap(chartContext) {
  * Main AI evidence gate function.
  * Call this on any AI-generated text BEFORE returning to the client.
  */
-export function validateAndSanitizeAIResponse(rawText, chartContext = null, options = {}) {
+export function validateAndSanitizeAIResponse(rawInput, chartContext = null, options = {}) {
+  let rawText = typeof rawInput === "string" ? rawInput : (rawInput?.answer || rawInput?.text || "");
+  const mergedContext = {
+    ...(chartContext || {}),
+    timingResolution: rawInput?.timingResolution || chartContext?.timingResolution || options?.timingResolution || null,
+    calibrationStatus: rawInput?.isCalibrated === false ? "UNCALIBRATED" : (chartContext?.calibrationStatus || options?.calibrationStatus || null)
+  };
+
   if (!rawText || typeof rawText !== 'string' || rawText.trim().length === 0) {
     return { 
       text: '', 
+      sanitizedAnswer: '',
       isValid: false, 
       violations: ['Empty or non-string AI response'],
       sanitized: false,
@@ -391,8 +571,16 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   const safetyViolations = scanSafety(workingText);
 
   // 3. Fabricated coordinate scan
-  const { sanitized: textAfterFabricationScan, fabricated: fabricatedViolations } = scanFabricatedValues(workingText, chartContext);
+  const { sanitized: textAfterFabricationScan, fabricated: fabricatedViolations } = scanFabricatedValues(workingText, mergedContext);
   workingText = textAfterFabricationScan;
+
+  // 3B. Unsupported timing precision scan (exact calendar date asserted when resolution does not authorize it)
+  const { sanitized: textAfterTimingScan, violations: timingViolations } = scanTimingPrecision(workingText, mergedContext);
+  workingText = textAfterTimingScan;
+
+  // 3C. Uncalibrated probability scan
+  const { sanitized: textAfterProbScan, violations: probViolations } = scanUncalibratedProbabilities(workingText, mergedContext);
+  workingText = textAfterProbScan;
 
   // 4. Universal Sentence Segmentation and Classification
   const rawSentences = splitIntoSentences(rawText);
@@ -627,6 +815,31 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
     }
   }
 
+  // 5A-Tamil: Tamil planet-to-house assertions
+  const tamilHousePattern = new RegExp(`(${tamilPlanetsPattern})[\\s\\S]*?([1-9]|1[0-2])\\s*-(?:ம்|ஆம்)\\s*(?:வீட்டில்|இடத்தில்)`, "gi");
+  let thm;
+  while ((thm = tamilHousePattern.exec(workingText)) !== null) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(thm[0]) || thm[0].includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
+    const pName = normalizePlanetName(thm[1]);
+    const assertedHouse = parseInt(thm[2], 10);
+    const fact = planetFacts.get(pName);
+
+    if (fact && fact.house === assertedHouse) {
+      const matchingEvId = Array.from(evidenceNodeIds).find(id => id.toLowerCase().includes(pName.toLowerCase()));
+      verifiedClaims.push({
+        claimText: thm[0],
+        claimType: CLAIM_TYPES.FACT,
+        matchedFactor: `${pName} in House ${fact.house}`,
+        evidenceIds: matchingEvId ? [matchingEvId] : [],
+        status: 'VERIFIED'
+      });
+    }
+  }
+
   // 5B. Planet-to-sign assertions (FACT)
   const signsPattern = SIGN_NAMES.join('|');
   const signRegex = new RegExp(`(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)\\s+(?:is\\s+)?(?:placed\\s+in\\s+|in\\s+)(${signsPattern})`, 'gi');
@@ -677,6 +890,33 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
         reason: `Calculated ${pName} is in ${fact.sign}, not ${assertedSign}`,
         failure: "CONTRADICTS_CALCULATED_CHART",
         status: 'CONTRADICTS_CALCULATED_CHART'
+      });
+    }
+  }
+
+  // 5B-Tamil: Tamil planet-to-sign assertions
+  const tamilSignPattern = new RegExp(`(${tamilPlanetsPattern})\\s+(${tamilSignsPattern})\\s*(?:ராசியில்)?`, "gi");
+  let tsm;
+  while ((tsm = tamilSignPattern.exec(workingText)) !== null) {
+    for (let i = 0; i < classifiedSentences.length; i++) {
+      if (classifiedSentences[i].sentence.includes(tsm[0]) || tsm[0].includes(classifiedSentences[i].sentence)) {
+        coveredSentenceIndices.add(i);
+      }
+    }
+    const pName = normalizePlanetName(tsm[1]);
+    const assertedSign = normalizeSignName(tsm[2]);
+    const fact = planetFacts.get(pName);
+
+    if (fact && fact.sign && fact.sign.toLowerCase() === assertedSign.toLowerCase()) {
+      const matchingEvId = Array.from(evidenceNodeIds).find(id =>
+        id.toLowerCase().includes(pName.toLowerCase()) || id.toLowerCase().includes(fact.sign.toLowerCase())
+      );
+      verifiedClaims.push({
+        claimText: tsm[0],
+        claimType: CLAIM_TYPES.FACT,
+        matchedFactor: `${pName} in ${fact.sign}`,
+        evidenceIds: matchingEvId ? [matchingEvId] : [],
+        status: 'VERIFIED'
       });
     }
   }
@@ -806,6 +1046,8 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
   let failureReason = null;
   let isValid = safetyViolations.length === 0 &&
                 fabricatedViolations.length === 0 &&
+                timingViolations.length === 0 &&
+                probViolations.length === 0 &&
                 contradictoryClaims.length === 0 &&
                 unsupportedClaims.length === 0;
 
@@ -816,6 +1058,12 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
     claimExtractionStatus = "INCOMPLETE";
     isValid = false;
     failureReason = "SUBSTANTIVE_CLAIM_EXTRACTION_FAILED";
+  } else if (timingViolations.length > 0) {
+    isValid = false;
+    failureReason = "UNSUPPORTED_TIMING_PRECISION";
+  } else if (probViolations.length > 0) {
+    isValid = false;
+    failureReason = "UNCALIBRATED_PROBABILITY_CLAIM";
   } else if (!isValid) {
     const firstFailure = unsupportedClaims.find(c => c.failure)?.failure ||
                          contradictoryClaims[0]?.failure ||
@@ -826,16 +1074,27 @@ export function validateAndSanitizeAIResponse(rawText, chartContext = null, opti
 
   return {
     text: finalText,
+    sanitizedAnswer: finalText,
     isValid,
     violations: [
       ...sanitizationViolations,
       ...safetyViolations.map(v => `${v.type}: ${v.pattern}`),
       ...fabricatedViolations.map(v => `${v.type}: ${v.value}`),
+      ...timingViolations.map(v => `${v.type}: ${v.value} — ${v.reason}`),
+      ...probViolations.map(v => `${v.type}: ${v.value} — ${v.reason}`),
       ...contradictoryClaims.map(c => `${c.status}: ${c.claimText} — ${c.reason}`),
       ...unsupportedClaims.map(u => `${u.status}: ${u.claimText} — ${u.reason}`)
     ],
+    structuredViolations: [
+      ...safetyViolations,
+      ...fabricatedViolations,
+      ...timingViolations,
+      ...probViolations
+    ],
     sanitized: sanitizationViolations.length > 0 ||
                fabricatedViolations.length > 0 ||
+               timingViolations.length > 0 ||
+               probViolations.length > 0 ||
                contradictoryClaims.length > 0 ||
                unsupportedClaims.length > 0,
     verifiedClaims,

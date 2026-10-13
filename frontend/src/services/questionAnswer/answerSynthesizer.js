@@ -5,7 +5,7 @@
  * structured chart evidence, resolution gates, and anti-template rules.
  */
 
-import { toTamilRasi, toTamilPlanet, toTamilDignity, toTamilBhava } from "../tamilAstrologyUtils.js";
+import { toTamilRasi, toTamilPlanet, toTamilDignity, toTamilBhava, cleanEnglishParentheses } from "../tamilAstrologyUtils.js";
 import { buildAnswerObject } from "./structuredAnswerObject.js";
 import { evaluateComparison } from "./comparisonEngine.js";
 import { evaluatePersonCharacteristic } from "./personCharacteristicEngine.js";
@@ -14,6 +14,7 @@ import { generateMilestoneTimeline } from "./milestoneTimelineEngine.js";
 import { buildTimingWindowId, buildHouseFactId } from "./evidenceGraph.js";
 import { TASK_INTENTS } from "./intentClassifier.js";
 import { isTaskIntent } from "./tasks/index.js";
+import { evaluateGemstoneRemedies } from "../consultationEngine.js";
 
 /**
  * Returns plain-language consumer friendly labels for internal statuses.
@@ -381,10 +382,58 @@ export function synthesizeAnswer({
     }
   }
 
-  // CASE 3: VARGA INTERPRETATION (e.g. D10 CANCER LAGNA CAREER)
+  // CASE 3: VARGA INTERPRETATION (D9 NAVAMSHA OR D10 DASHAMSHA)
   else if (intentResult.intents?.includes("VARGA_INTERPRETATION") || req.vargaRequested) {
     const varga = evidence.vargaAnalysis || {};
-    if (!varga.lagna) {
+    const isD9 = varga.varga === "D9" || (domainResult.domains?.includes("marriage") || domainResult.domains?.includes("relationships") || /d9|navamsha|நவாம்ச/i.test(rawQ));
+
+    if (isD9) {
+      if (!varga.lagna) {
+        if (isTamil) {
+          directAnswer = `நவாம்ச (D9) சக்கரத் தரவு உங்கள் ஜாதகக் கணிதத்தில் கிடைக்கவில்லை. D9 லக்னம் கணக்கிடப்படாத நிலையில் திருமண பந்தம் மற்றும் களத்திர பலனை நவாம்ச ரீதியாக கணிக்க போதிய தரவு இல்லை.`;
+          reasoningChain = `நவாம்சம் திருமண உறவையும் தர்ம பலனையும் ஆராயும் முதன்மை வர்க்கமாகும். தேவையான D9 கணிதத் தரவு விடுபட்டுள்ளதால் ஊகங்கள் தவிர்க்கப்படுகின்றன.`;
+          whatCannotBeConcluded = "D9 லக்னம் இன்றி திருமண பொருத்த அமைப்பையோ அல்லது வாழ்க்கை துணையின் நுட்பமான காரகத்துவங்களையோ அறுதியிட முடியாது.";
+        } else {
+          directAnswer = `Navamsha (D9) divisional chart data is not calculated or available in this context. Consequently, relationship commitments and matrimonial fruitfulness cannot be concluded from D9 without verified divisional data.`;
+          reasoningChain = `D9 specifically refines relationship fruition and dharmic partnership. Speculative interpretation is withheld in the absence of verified D9 lagna calculations.`;
+          whatCannotBeConcluded = "Definitive marriage indicators and partner fruition cannot be concluded without calculated D9 divisional positions.";
+        }
+        astroEvidenceList = ["D9 Divisional Chart: INSUFFICIENT_DATA"];
+        relevantSections = ["relationships", "marriage", "technicalAppendix"];
+        evidenceIds = ["D9_FACT_INSUFFICIENT_DATA"];
+      } else {
+        const d9Lagna = varga.lagna;
+        const d9Lord = varga.lagnaLord;
+        const d97thSign = varga.seventhHouseSign;
+        const d97thLord = varga.seventhLord;
+        const win = evidence.timingWindows?.find(w => w.domain === "marriage" || w.category === "RELATIONSHIPS") || null;
+        const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (win.yearStart && win.yearEnd)));
+        const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : null);
+        const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : null);
+        const winYearsStr = (startYear && endYear) ? `${startYear}–${endYear}` : (win?.years || null);
+
+        if (isTamil) {
+          directAnswer = `உங்கள் நவாம்சம் (D9) ${toTamilRasi(d9Lagna)} லக்னமாக அமைந்து, அதன் லக்னாதிபதி ${toTamilPlanet(d9Lord)} ஆவார். நவாம்ச 7-ம் பாவகம் ${toTamilRasi(d97thSign)} ஆக அமைந்து அதன் அதிபதியாக ${toTamilPlanet(d97thLord)} விளங்குகிறார்.${hasCalculatedWindow ? ` தசா மற்றும் கோச்சார கணிதத்தின்படி சாதகமான திருமண காலக்கோடு ${winYearsStr} காலகட்டத்தில் சுட்டிக்காட்டப்படுகிறது.` : " தசா மற்றும் கோச்சார இணைவு அடிப்படையில் திருமண வாய்ப்பு காலங்கள் பகுப்பாய்வு செய்யப்படுகின்றன."} களத்திரகாரகன் சுக்கிரன் மற்றும் நவாம்ச அமைப்புகள் திருமண பந்தத்திற்கான பாரம்பரிய சாதக நிலையை வெளிப்படுத்துகின்றன.`;
+          reasoningChain = `நவாம்ச லக்னம் (${toTamilRasi(d9Lagna)}), 7-ம் பாவக அதிபதி (${toTamilPlanet(d97thLord)}), மற்றும் களத்திரகாரகன் சுக்கிரனின் பலம் ஒருங்கிணைக்கப்பட்டு பாரம்பரிய திருமண ஆய்வு தொகுக்கப்பட்டது.`;
+          timingWindow = hasCalculatedWindow ? `${winYearsStr} (திருமண வாய்ப்பு காலம்)` : "தசா-கோச்சார சுழற்சி காலம்";
+          whatCannotBeConcluded = "ஜோதிட குறியீடுகள் பொருத்தமான திருமண காலக்கட்டங்களை மட்டுமே சுட்டிக்காட்டும்; வரன் தேர்வு, குடும்ப முடிவுகள் மற்றும் தனிநபர் சம்மதமே திருமணத்தை உறுதி செய்யும்.";
+        } else {
+          directAnswer = `Your Navamsha (D9) features ${d9Lagna} Ascendant ruled by ${d9Lord}, with the 7th house in ${d97thSign} ruled by ${d97thLord}.${hasCalculatedWindow ? ` In operative timing analysis, supportive marriage windows cluster in ${winYearsStr}.` : " Favorable matrimonial horizons are delineated through operative dasha and transit alignments."} In classical Jyotish, these placements outline fruitful marital compatibility and enduring relational stability.`;
+          reasoningChain = `Synthesized D9 Ascendant (${d9Lagna}), D9 7th house dispositor (${d97thLord}), Kalatrakaraka Venus, and supportive dasha-transit markers.`;
+          timingWindow = hasCalculatedWindow ? `${winYearsStr} (Prime Marriage Timing Window)` : "Operative Dasha-Transit Window";
+          whatCannotBeConcluded = "Divisional alignments reflect relational harmony and opportune windows; personal partner choice and mutual consent remain decisive.";
+        }
+
+        astroEvidenceList = [
+          `D9 Ascendant: ${d9Lagna} (Lord: ${d9Lord})`,
+          `D9 7th House: ${d97thSign} (Lord: ${d97thLord})`,
+          varga.d9VenusPlacement ? `D9 Venus Placement: House ${varga.d9VenusPlacement.house} in ${varga.d9VenusPlacement.sign}` : `D1 Venus: House ${pMap["Venus"]?.house || "-"} in ${pMap["Venus"]?.sign || "-"}`,
+          hasCalculatedWindow ? `Marriage Timing Window: ${winYearsStr}` : "Marriage Timing Window: Operative Cycle"
+        ];
+        relevantSections = ["relationships", "marriage", "timeline"];
+        evidenceIds = [`D9_FACT_ASC_${d9Lagna}`, `D9_FACT_H7_${d97thSign}`, `D9_FACT_LORD_${d9Lord}`, "CHART_FACT_D1_H7"];
+      }
+    } else if (!varga.lagna) {
       if (isTamil) {
         directAnswer = `தசாம்ச (D10) சக்கரத் தரவு உங்கள் ஜாதகக் கணிதத்தில் கிடைக்கவில்லை. D10 லக்னம் கணக்கிடப்படாத நிலையில் தொழில் நிர்வாக அதிகாரம் மற்றும் உத்தியோக அந்தஸ்தை தசாம்ச ரீதியாக கணிக்க போதிய தரவு இல்லை.`;
         reasoningChain = `தசாம்சம் தொழில் உழைப்பையும் அதிகார நிலையையும் ஆராயும் நுட்பமான வர்க்கமாகும். தேவையான D10 கணிதத் தரவு விடுபட்டுள்ளதால் ஊகங்கள் தவிர்க்கப்படுகின்றன.`;
@@ -646,7 +695,11 @@ export function synthesizeAnswer({
       whatCannotBeConcluded = "Astrology never diagnoses medical diseases, predicts surgeries, or guarantees pathological outcomes. All health concerns require licensed medical consultation.";
     }
 
-    astroEvidenceList = [
+    astroEvidenceList = isTamil ? [
+      `1-ம் பாவகம் (தேக ஸ்தானம்): ${h1.sign ? toTamilRasi(h1.sign) : "-"} ${h1.lord ? `(அதிபதி: ${toTamilPlanet(h1.lord)})` : ""}`.trim(),
+      `6-ம் பாவகம் (ரோக ஸ்தானம்): ${h6.sign ? toTamilRasi(h6.sign) : "-"} ${h6.lord ? `(அதிபதி: ${toTamilPlanet(h6.lord)})` : ""}`.trim(),
+      `சூரியன் (தேக காரகன்): பாவகம் ${sun.house || "-"}${sun.sign ? ` (${toTamilRasi(sun.sign)})` : ""}`
+    ] : [
       `1st House (Tanu Bhava): ${h1.sign || "-"} ${h1.lord ? `(Lord: ${h1.lord})` : ""}`.trim(),
       `6th House (Roga Bhava): ${h6.sign || "-"} ${h6.lord ? `(Lord: ${h6.lord})` : ""}`.trim(),
       `Sun (Vitality Karaka): House ${sun.house || "-"}${sun.sign ? ` in ${sun.sign}` : ""}${sun.dignity ? ` (${sun.dignity})` : ""}`
@@ -738,7 +791,12 @@ export function synthesizeAnswer({
       whatCannotBeConcluded = "Astrological indicators reflect opportune vocational momentum; specific job offers, corporate appointments, and promotions depend on individual performance and organizational decisions.";
     }
 
-    astroEvidenceList = [
+    astroEvidenceList = isTamil ? [
+      `10-ம் பாவகம் (கர்ம ஸ்தானம்): ${toTamilRasi(h10.sign) || "-"} ${h10.lord ? `(அதிபதி: ${toTamilPlanet(h10.lord)})` : ""}`.trim(),
+      `11-ம் பாவகம் (லாப ஸ்தானம்): ${toTamilRasi(h11.sign) || "-"} ${h11.lord ? `(அதிபதி: ${toTamilPlanet(h11.lord)})` : ""}`.trim(),
+      `அதிகார காரகர் (${toTamilPlanet("Sun")}): ${sun.house ? `${sun.house}-ம் பாவகத்தில்` : ""}${sun.sign ? ` ${toTamilRasi(sun.sign)} ராசி` : ""}`,
+      hasCalculatedWindow ? `தொழில் முன்னேற்ற காலக்கோடு: ${winYearsStr}` : "தொழில் முன்னேற்ற காலக்கோடு: தனித்துவமான காலக்கோடு அடையாளம் காணப்படவில்லை"
+    ] : [
       `10th House (Karma Bhava): ${h10.sign || "-"} ${h10.lord ? `(Lord: ${h10.lord})` : ""}`.trim(),
       `11th House (Labha Bhava): ${h11.sign || "-"} ${h11.lord ? `(Lord: ${h11.lord})` : ""}`.trim(),
       `Executive Karaka (Sun): House ${sun.house || "-"}${sun.sign ? ` in ${sun.sign}` : ""}`,
@@ -969,6 +1027,44 @@ export function synthesizeAnswer({
     evidenceIds = ["HOUSE_FACT_H4", "HOUSE_FACT_H9", "HOUSE_FACT_H12", "PLANET_FACT_RAHU"];
   }
 
+  // CASE 16: REMEDY / GEMSTONE PRESCRIPTION & CONTRAINDICATIONS
+  else if (intentResult.intents?.includes("REMEDY") || /gemstone|stone|ruby|pearl|coral|emerald|sapphire|diamond|gomed|cat'?s\s*eye|ரத்தினம்|பரிகாரம்|பவளம்|முத்து|மரகதம்|மாணிக்கம்|புஷ்பராகம்|வைரம்|நீலம்/i.test(rawQ)) {
+    const rawChart = evidence.chart || {};
+    const gemEval = evaluateGemstoneRemedies(rawChart);
+    if (gemEval && gemEval.status !== "INSUFFICIENT_DATA") {
+      if (isTamil) {
+        directAnswer = `${gemEval.directAnswerTa} பரிந்துரைக்கப்படும் முதன்மை ரத்தினம்: ${cleanEnglishParentheses(gemEval.primaryGemstone)} (${gemEval.finger} விரலில் ${gemEval.metal} உலோகத்தில் அணியவும்). தவிர்க்க வேண்டிய ரத்தினங்கள்: ${gemEval.contraindicatedSummaryTa}.`;
+        reasoningChain = `லக்னாதிபதியின் ஸ்தான பலம், திரிக பாவக (6, 8, 12) ஆதிபத்தியங்கள் மற்றும் ரத்தினவியலின் சாஸ்திர விதிகளின்படி லக்னத்திற்கு உகந்த ரத்தினம் மற்றும் பாதகாதிபதிகளின் தவிர்க்க வேண்டிய ரத்தினங்கள் பகுப்பாய்வு செய்யப்பட்டன.`;
+        whatCannotBeConcluded = "ரத்தினங்கள் மற்றும் பரிகாரங்கள் உளவியல் மற்றும் ஆன்மீக சமநிலையை வலுப்படுத்த மட்டுமே உதவுகின்றன; அவை கர்ம வினைகளையோ அல்லது மருத்துவ/சட்டப் பிரச்னைகளையோ மாற்றும் உத்தரவாதம் அல்ல.";
+      } else {
+        directAnswer = `${gemEval.directAnswerEn} Primary prescribed gemstone: ${gemEval.primaryGemstone} (worn on the ${gemEval.finger} set in ${gemEval.metal}). Contraindicated gemstones to avoid: ${gemEval.contraindicatedSummaryEn}.`;
+        reasoningChain = `Synthesized Lagna lord functional dignity against trika house (6th, 8th, 12th) afflictions under classical Shastric gemology to determine auspicious vs contraindicated stones.`;
+        whatCannotBeConcluded = "Gemstones provide subtle psychological alignment and traditional remedial harmonization; they do not alter immutable karmic events or replace professional medical/legal measures.";
+      }
+      astroEvidenceList = [
+        `Ascendant: ${ascSign || "Natal Lagna"}`,
+        `Prescribed Gemstone: ${gemEval.primaryGemstone}`,
+        `Contraindicated Stones: ${gemEval.contraindicatedSummaryEn}`,
+        `Supportive Mantra: ${gemEval.mantra || "Shastric Kavacham"}`
+      ];
+      relevantSections = ["remedies", "blueprint"];
+      evidenceIds = ["REMEDY_PRIMARY_GEM", "REMEDY_CONTRAINDICATED_GEMS"];
+    } else {
+      if (isTamil) {
+        directAnswer = "லக்னம் அல்லது கிரக அமைப்புகள் போதிய அளவில் கிடைக்காததால் ரத்தினப் பரிந்துரையை உறுதியாக வழங்க இயலவில்லை.";
+        reasoningChain = "ரத்தின பரிந்துரைக்கு லக்னம் மற்றும் கிரக அமைப்புகள் அவசியமானவை.";
+        whatCannotBeConcluded = "போதிய தரவு இன்றி ரத்தினங்களை அணியக்கூடாது.";
+      } else {
+        directAnswer = "Gemstone recommendations unavailable due to missing or insufficient natal chart data.";
+        reasoningChain = "Ascendant and planetary dignities are required to calculate safe gemstone prescriptions.";
+        whatCannotBeConcluded = "Gemstones should never be prescribed without verified Ascendant data.";
+      }
+      astroEvidenceList = ["Gemstone Factors: INSUFFICIENT_DATA"];
+      relevantSections = ["remedies"];
+      evidenceIds = ["EVIDENCE_STATUS_INSUFFICIENT_DATA"];
+    }
+  }
+
   // DEFAULT / GENERAL / INSUFFICIENT DATA FALLBACK
   else {
     const hasEnoughData = ascSign && Object.keys(pMap).length >= 5;
@@ -1011,7 +1107,10 @@ export function synthesizeAnswer({
         whatCannotBeConcluded = "Traditional chart factors indicate predispositions; external mundane factors and individual agency influence final outcomes.";
       }
 
-      astroEvidenceList = [
+      astroEvidenceList = isTamil ? [
+        `லக்னம்: ${toTamilRasi(ascSign)}`,
+        primaryPlanet ? `முதன்மை காரகர்: ${toTamilPlanet(primaryPlanet.name)} (${primaryPlanet.house}-ம் பாவகத்தில் ${toTamilRasi(primaryPlanet.sign)} ராசி)` : `லக்ன ராசி: ${toTamilRasi(ascSign)}`
+      ] : [
         `Ascendant: ${ascSign}`,
         primaryPlanet ? `Primary Dispositor: ${primaryPlanet.name} in House ${primaryPlanet.house} (${primaryPlanet.sign})` : `Ascendant Sign: ${ascSign}`
       ];
@@ -1022,7 +1121,20 @@ export function synthesizeAnswer({
 
   // Contradiction text
   if (contradictions && contradictions.hasContradictions) {
-    contradictionNotes = isTamil ? contradictions.summaryTa : contradictions.summaryEn;
+    let contraSummary = isTamil ? contradictions.summaryTa : contradictions.summaryEn;
+    if (isTamil && contraSummary) {
+      contraSummary = contraSummary
+        .replace(/\bSun\b/g, "சூரியன்")
+        .replace(/\bMoon\b/g, "சந்திரன்")
+        .replace(/\bMars\b/g, "செவ்வாய்")
+        .replace(/\bMercury\b/g, "புதன்")
+        .replace(/\bJupiter\b/g, "குரு")
+        .replace(/\bVenus\b/g, "சுக்கிரன்")
+        .replace(/\bSaturn\b/g, "சனி")
+        .replace(/\bRahu\b/g, "ராகு")
+        .replace(/\bKetu\b/g, "கேது");
+    }
+    contradictionNotes = contraSummary;
   } else {
     contradictionNotes = isTamil
       ? "முரண்பட்ட அல்லது எதிர்மறை கிரக அழுத்தங்கள் எதுவும் கணிசமாக இல்லை."
@@ -1030,9 +1142,9 @@ export function synthesizeAnswer({
   }
 
   // Section Headers
-  const hDirect = isTamil ? "[நேரடி பதில் / அறிக்கை முடிவு] [Report Finding]" : "[Direct Answer] [Report Finding]";
+  const hDirect = isTamil ? "[நேரடி பதில் / அறிக்கை முடிவு]" : "[Direct Answer / Report Finding]";
   const hEvidence = isTamil ? "[ஜோதிட ஆதாரங்கள்]" : "[Astrological Evidence]";
-  const hReasoning = isTamil ? "[எப்படி இந்த முடிவு வந்தது / பாரம்பரிய சூழல்] [Traditional Context]" : "[Evidence Reasoning] [Traditional Context]";
+  const hReasoning = isTamil ? "[எப்படி இந்த முடிவு வந்தது / பாரம்பரிய சூழல்]" : "[Evidence Reasoning / Traditional Context]";
   const hTiming = isTamil ? "[முக்கிய காலக்கோடு]" : "[Timing Window]";
   const hContradiction = isTamil ? "[முரண்பட்ட குறியீடுகள்]" : "[Contradictions & Counterweights]";
   const hStatus = isTamil ? "[ஆதார நிலை]" : "[Evidence Status]";

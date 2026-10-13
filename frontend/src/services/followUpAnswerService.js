@@ -1638,6 +1638,23 @@ function generateDeterministicAnswer(questionText, context, route) {
     }
   }
 
+  const predictionRecord = {
+    predictionId: `pred_det_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    domain: relevantSections[0] || "general",
+    eventDefinition: questionText || "Astrological Consultation Inquiry",
+    predictedWindow: {
+      resolution: status === "INSUFFICIENT_DATA" ? "INSUFFICIENT_DATA" : "NOT_DISCRIMINATING",
+      startAge: null,
+      endAge: null,
+      startDate: null,
+      endDate: null,
+      description: status === "INSUFFICIENT_DATA" ? "Insufficient astrological evidence" : "Static natal chart analysis / deterministic report finding"
+    },
+    calibrationStatus: "UNCALIBRATED",
+    isTrainingEligible: false,
+    observationDeadline: null
+  };
+
   return {
     answer: formatWithDisclaimers(body, relevantSections),
     system: sysId,
@@ -1645,7 +1662,8 @@ function generateDeterministicAnswer(questionText, context, route) {
     evidenceIds,
     dataUsed: [`Calculated ${sysName} Chart Data`, ...relevantSections.map(s => `Chapter: ${s}`)],
     status,
-    limitations: status === "INSUFFICIENT_DATA" ? ["Chart factors absent"] : []
+    limitations: status === "INSUFFICIENT_DATA" ? ["Chart factors absent"] : [],
+    predictionRecord
   };
 }
 
@@ -1776,7 +1794,8 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
           evidenceStatus: qaResult.evidenceStatus || qaResult.status || "UNVERIFIED",
           limitations: qaResult.limitations || [],
           answerObject: qaResult.answerObject,
-          pipelineAudit: qaResult.pipelineAudit
+          pipelineAudit: qaResult.pipelineAudit,
+          predictionRecord: qaResult.predictionRecord || null
         };
       }
     } catch (taskErr) {
@@ -1784,12 +1803,29 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
     }
   }
 
-  // 1. If Deterministic Factual or Unsupported System or Ambiguous or System Comparison, return instantly!
-  if (route.type === "SYSTEM_COMPARISON") {
+  // 1. If Deterministic Factual, Saturn Delay, Target Year, Unsupported System or Ambiguous or System Comparison, return instantly!
+  if (route.type === "SYSTEM_COMPARISON" || route.isSaturnDelay || route.targetYear || (typeof rawQ === "string" && /\b20\d\d\b/.test(rawQ))) {
     return generateDeterministicAnswer(route.resolvedText || rawQ, context, route);
   }
 
   if (route.type === "FACTUAL" || route.type === "UNSUPPORTED_SYSTEM" || route.type === "AMBIGUOUS" || route.type === "INSUFFICIENT_CONTEXT") {
+    const factualPredRecord = {
+      predictionId: `pred_fact_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      domain: route.relevantSections?.[0] || "general",
+      eventDefinition: rawQ,
+      predictedWindow: {
+        resolution: "NOT_DISCRIMINATING",
+        startAge: null,
+        endAge: null,
+        startDate: null,
+        endDate: null,
+        description: "Factual chart observation"
+      },
+      calibrationStatus: "UNCALIBRATED",
+      isTrainingEligible: false,
+      observationDeadline: null
+    };
+
     return {
       answer: route.answer || route.clarification || "Insufficient report data.",
       system: route.system || context.system.id,
@@ -1797,7 +1833,8 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
       evidenceIds: route.evidenceIds || [],
       dataUsed: route.dataUsed || [],
       status: route.status || "DETERMINISTIC_FACT",
-      limitations: route.limitations || []
+      limitations: route.limitations || [],
+      predictionRecord: factualPredRecord
     };
   }
 
@@ -1839,6 +1876,22 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
             const rawParsed = JSON.parse(jsonStr);
             parsedResponse = validateAIResponse(rawParsed, context, route);
             if (parsedResponse) {
+              parsedResponse.predictionRecord = {
+                predictionId: `pred_ai_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                domain: parsedResponse.relevantSections?.[0] || "general",
+                eventDefinition: rawQ,
+                predictedWindow: {
+                  resolution: "NOT_DISCRIMINATING",
+                  startAge: null,
+                  endAge: null,
+                  startDate: null,
+                  endDate: null,
+                  description: "AI conversational interpretation"
+                },
+                calibrationStatus: "UNCALIBRATED",
+                isTrainingEligible: false,
+                observationDeadline: null
+              };
               aiSuccess = true;
             }
           } catch {
@@ -1860,8 +1913,10 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
   const qClass = classifyIntent(route.resolvedText || rawQ);
   const isActionTask = isTaskIntent(qClass.primaryIntent);
   const isBareChart = (!context.chart?.planets || context.chart.planets.length < 5);
+  const textToEvaluate = route.resolvedText || rawQ;
+  const isReportQuery = /in\s+my\s+report|my\s+report\s+indicate|from\s+my\s+report|show\s+my\s+report|அறிக்கையில்/i.test(textToEvaluate);
 
-  if (!isBareChart || isActionTask) {
+  if ((!isBareChart && !isReportQuery) || isActionTask) {
     try {
       const qaResult = await processEvidenceLinkedQA({
         question: route.resolvedText || rawQ,
@@ -1887,7 +1942,8 @@ export async function answerFollowUpQuestion(params, contextArg = null) {
           evidenceStatus: qaResult.evidenceStatus || qaResult.status || "DIRECTLY_SUPPORTED",
           limitations: qaResult.limitations || [],
           answerObject: qaResult.answerObject,
-          pipelineAudit: qaResult.pipelineAudit
+          pipelineAudit: qaResult.pipelineAudit,
+          predictionRecord: qaResult.predictionRecord || null
         };
       }
     } catch (qaErr) {

@@ -9,10 +9,11 @@
  */
 
 import { normalizeQuestion } from "./questionNormalizer.js";
-import { classifyIntent, QUESTION_INTENTS, TASK_INTENTS } from "./intentClassifier.js";
+import { classifyIntent, QUESTION_INTENTS, TASK_INTENTS, CHILDREN_TASKS } from "./intentClassifier.js";
 import { classifyDomains, DOMAINS } from "./domainClassifier.js";
 import { extractEntities } from "./entityExtractor.js";
 import { resolveTemporalTimeframe } from "./temporalResolver.js";
+import { resolveChildrenSubject } from "./tasks/childrenCount.js";
 
 function hashString(str) {
   const s = String(str);
@@ -286,7 +287,14 @@ export function understandQuestion({ question, conversationHistory = [], context
 
   // Compute required evidence factor tags
   const requiredEvidence = [];
-  if (primaryDomain === DOMAINS.MARRIAGE) {
+  if (primaryDomain === DOMAINS.CHILDREN) {
+    if (primaryIntent !== CHILDREN_TASKS.CHILDREN_COUNT) {
+      requiredEvidence.push("5th_house", "5th_lord", "jupiter");
+      if (primaryIntent === CHILDREN_TASKS.FAMILY_EXPANSION_TIMING || cues.isTiming) {
+        requiredEvidence.push("vimshottari_dasha", "transit_jupiter");
+      }
+    }
+  } else if (primaryDomain === DOMAINS.MARRIAGE) {
     requiredEvidence.push("7th_house", "7th_lord", "venus", "d9_navamsha");
     if (cues.isTiming) requiredEvidence.push("vimshottari_dasha", "transit_jupiter", "transit_saturn");
   } else if (primaryDomain === DOMAINS.PROPERTY) {
@@ -305,7 +313,9 @@ export function understandQuestion({ question, conversationHistory = [], context
 
   // Answerability initial estimate
   let answerability = "ANSWERABLE";
-  if (malformed.isMalformed && malformed.detectedIssue.includes("lottery")) {
+  if (primaryIntent === CHILDREN_TASKS.CHILDREN_COUNT) {
+    answerability = "NOT_DISCRIMINATING";
+  } else if (malformed.isMalformed && malformed.detectedIssue.includes("lottery")) {
     answerability = "NOT_DISCRIMINATING";
   } else if (requestedPrecision === "EXACT_DATE") {
     answerability = "PARTIALLY_ANSWERABLE"; // Can answer window, but not exact day
@@ -343,7 +353,18 @@ export function understandQuestion({ question, conversationHistory = [], context
   } else if (primaryIntent === TASK_INTENTS.BUSINESS_DIVERSIFICATION_DECISION) {
     action = "DIVERSIFY_BUSINESS";
     requestedAnswerType = "DECISION_ASSESSMENT";
+  } else if (primaryIntent === CHILDREN_TASKS.CHILDREN_COUNT) {
+    action = "ESTIMATE_CHILDREN_COUNT";
+    requestedAnswerType = "NUMBER_OF_CHILDREN";
+  } else if (primaryIntent === CHILDREN_TASKS.CHILDREN_OUTLOOK || primaryIntent === CHILDREN_TASKS.CHILDREN_TRADITIONAL_INTERPRETATION) {
+    action = "EVALUATE_TRADITIONAL_CHILDREN_OUTLOOK";
+    requestedAnswerType = "TRADITIONAL_OUTLOOK";
+  } else if (primaryIntent === CHILDREN_TASKS.FAMILY_EXPANSION_TIMING) {
+    action = "EVALUATE_FAMILY_EXPANSION_TIMING";
+    requestedAnswerType = "TIMING_ASSESSMENT";
   }
+
+  const subjectResolution = primaryDomain === DOMAINS.CHILDREN ? resolveChildrenSubject(raw, context) : null;
 
   // Resolve Timeframe using temporalResolver
   const timeframe = resolveTemporalTimeframe({
@@ -369,6 +390,7 @@ export function understandQuestion({ question, conversationHistory = [], context
     timeframe,
     entities,
     subject,
+    subjectResolution,
     event,
     timeHorizon: entities.years?.length ? entities.years.join("-") : (entities.durationYears ? `Next ${entities.durationYears} years` : null),
     requestedPrecision,

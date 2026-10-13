@@ -1542,18 +1542,20 @@ export function calculateDivisionalCharts(planets = [], ascendantLong, ascendant
       const v = fn(pLong);
       const house = (hasAsc && ascSignIdx !== null) ? (((v.index - ascSignIdx + 12) % 12) + 1) : null;
       return {
+        ...v,
         name: p.name,
+        planetName: p.name,
         tamil: p.tamil || p.name,
-        longitude: pLong,
+        planetTamil: p.tamil || p.name,
         signIdx: v.index,
         signName: v.name,
         signTamil: v.tamil,
+        longitude: pLong,
         house,
         status: "CALCULATED",
         dignity: p.dignity || "Neutral",
         isRetrograde: Boolean(p.isRetrograde),
-        isCombust: Boolean(p.isCombust),
-        ...v
+        isCombust: Boolean(p.isCombust)
       };
     });
 
@@ -2005,19 +2007,54 @@ export function getOperatingDashaHierarchy(targetAge, dashaTable, lang = "en") {
 
 // Complete Ephemeris & Birth Horoscope Calculation
 export function calculatePlanetaryPositions(date, timeString, lat, lng, system = "vedic", tz, options = {}) {
-  if (tz === undefined || tz === null) {
+  if (tz === undefined || tz === null || typeof tz === "boolean" || (typeof tz === "string" && tz.trim() === "")) {
     throw new Error("Timezone (IANA string or numeric offset in hours) is required for planetary ephemeris calculation.");
   }
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+  if (lat === null || lat === undefined || typeof lat === "boolean" || (typeof lat === "string" && lat.trim() === "")) {
     throw new Error("Valid geographic latitude and longitude are required for planetary ephemeris calculation.");
   }
+  if (lng === null || lng === undefined || typeof lng === "boolean" || (typeof lng === "string" && lng.trim() === "")) {
+    throw new Error("Valid geographic latitude and longitude are required for planetary ephemeris calculation.");
+  }
+  const numLat = Number(lat);
+  const numLng = Number(lng);
+  if (!Number.isFinite(numLat) || numLat < -90 || numLat > 90 || !Number.isFinite(numLng) || numLng < -180 || numLng > 180) {
+    throw new Error("Valid geographic latitude and longitude are required for planetary ephemeris calculation.");
+  }
+  lat = numLat;
+  lng = numLng;
+
   let year, month, day;
   if (typeof date === "string") {
-    const parts = date.split("-").map(Number);
+    const trimmedDate = date.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+      throw new Error(`Invalid date format: "${date}". Expected YYYY-MM-DD.`);
+    }
+    const parts = trimmedDate.split("-").map(Number);
+    if (parts.length !== 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+      throw new Error(`Invalid date format: "${date}". Expected YYYY-MM-DD.`);
+    }
     year = parts[0];
     month = parts[1];
     day = parts[2];
-  } else if (date instanceof Date) {
+    if (year < 100 || year > 3000) {
+      throw new Error(`Year out of supported range (100-3000): ${year}`);
+    }
+    if (month < 1 || month > 12) {
+      throw new Error(`Month out of bounds (1-12): ${month}`);
+    }
+    // Month length validation
+    let maxDays = 31;
+    if (month === 2) {
+      const isLeap = (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0));
+      maxDays = isLeap ? 29 : 28;
+    } else if ([4, 6, 9, 11].includes(month)) {
+      maxDays = 30;
+    }
+    if (day < 1 || day > maxDays) {
+      throw new Error(`Invalid calendar date: "${date}". Month ${month} in year ${year} has ${maxDays} days.`);
+    }
+  } else if (date instanceof Date && !isNaN(date.getTime())) {
     // Pure UTC accessor extraction to prevent machine-local timezone shifts
     year = date.getUTCFullYear();
     month = date.getUTCMonth() + 1;
@@ -2025,10 +2062,21 @@ export function calculatePlanetaryPositions(date, timeString, lat, lng, system =
   } else {
     throw new Error("Valid date (string YYYY-MM-DD or UTC Date object) is required for planetary ephemeris calculation.");
   }
-  const timeMatch = String(timeString || "00:00:00").match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  const hour = timeMatch ? parseInt(timeMatch[1], 10) : 0;
-  const min = timeMatch ? parseInt(timeMatch[2], 10) : 0;
-  const sec = timeMatch && timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+
+  if (!timeString || typeof timeString !== "string" || !timeString.trim()) {
+    throw new Error("Time string is required for planetary ephemeris calculation (e.g. HH:MM or HH:MM:SS).");
+  }
+  const trimmedTime = timeString.trim();
+  const timeMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!timeMatch) {
+    throw new Error(`Invalid time format: "${timeString}". Expected HH:MM or HH:MM:SS.`);
+  }
+  const hour = parseInt(timeMatch[1], 10);
+  const min = parseInt(timeMatch[2], 10);
+  const sec = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+  if (hour < 0 || hour > 23 || min < 0 || min > 59 || sec < 0 || sec > 59) {
+    throw new Error(`Time values out of clock bounds (00:00:00 to 23:59:59): "${timeString}"`);
+  }
   const cleanTimeString = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 
   let tzOffsetHours;
@@ -6180,11 +6228,11 @@ export function calculateBhavaChalit(ascendantLong = 0, planets = [], lat = 0, l
       bhavaNum: h,
       bhavaNameEn: `Bhava ${h}`,
       bhavaNameTa: `பாவகம் ${h}`,
-      madhyaDegree: parseFloat(madhya.toFixed(2)),
+      madhyaDegree: parseFloat(madhya.toFixed(4)),
       madhyaFormatted: `${Math.floor(mDeg)}° ${Math.round((mDeg % 1) * 60)}' ${mSign.name}`,
       madhyaFormattedTa: `${Math.floor(mDeg)}° ${Math.round((mDeg % 1) * 60)}' ${mSign.tamil}`,
-      arambhaDegree: parseFloat(arambha.toFixed(2)),
-      antyaDegree: parseFloat(antya.toFixed(2)),
+      arambhaDegree: parseFloat(arambha.toFixed(4)),
+      antyaDegree: parseFloat(antya.toFixed(4)),
       sign: mSign.name,
       signTamil: mSign.tamil,
       lord: mSign.ruler,
@@ -6192,20 +6240,27 @@ export function calculateBhavaChalit(ascendantLong = 0, planets = [], lat = 0, l
     });
   }
 
+  // Exact House 1 Arambha using unrounded floating-point degrees
+  const h1ArambhaExact = norm360(ascNorm - 15);
+
   // Map each planet into its Bhava Chalit house
   const chalitPlanets = (planets || []).map(p => {
-    let pLong = 0;
-    if (typeof p.longitude === "number") pLong = p.longitude;
-    else if (typeof p.long === "number") pLong = p.long;
+    let pLong = null;
+    if (typeof p.longitude === "number" && Number.isFinite(p.longitude)) pLong = p.longitude;
+    else if (typeof p.long === "number" && Number.isFinite(p.long)) pLong = p.long;
     else if (p.sign) {
       const sIdx = ZODIAC_SIGNS.findIndex(s => s.name.toLowerCase() === p.sign.toLowerCase());
-      pLong = (sIdx >= 0 ? sIdx * 30 : 0) + (p.degreeInSign || 0);
+      if (sIdx >= 0) {
+        pLong = sIdx * 30 + (Number.isFinite(p.degreeInSign) ? p.degreeInSign : 0);
+      }
+    }
+    if (pLong === null || !Number.isFinite(pLong)) {
+      throw new Error(`Missing or invalid planet longitude for ${p?.name || "unknown planet"}`);
     }
     const pNorm = norm360(pLong);
 
-    // Angular distance from House 1 Arambha
-    const h1Arambha = bhavas[0].arambhaDegree;
-    const diffFromH1Arambha = norm360(pNorm - h1Arambha);
+    // Angular distance from House 1 Arambha using exact floating point
+    const diffFromH1Arambha = norm360(pNorm - h1ArambhaExact);
     const chalitBhavaNum = Math.floor(diffFromH1Arambha / 30) + 1;
     const validChalitBhava = Math.min(12, Math.max(1, chalitBhavaNum));
 

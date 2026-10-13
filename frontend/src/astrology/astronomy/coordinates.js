@@ -199,26 +199,27 @@ export function calculateSripatiCusps(ascendant, mc) {
   const desc = norm360(asc + 180);
   const ic = norm360(m + 180);
 
-  // Quadrant 1: MC (House 10) to Desc (House 7)
-  let q1Dist = norm360(desc - m);
+  // Quadrant 1: MC (House 10) to Ascendant (House 1)
+  let q1Dist = norm360(asc - m);
   let q1Third = q1Dist / 3.0;
   const h10Mid = m;
   const h11Mid = norm360(m + q1Third);
-  const h12Mid = norm360(m + 2 * q1Third);
+  const h12Mid = norm360(m + 2.0 * q1Third);
   const h1Mid = asc;
 
-  // Quadrant 2: Desc (House 7) to IC (House 4)
-  let q2Dist = norm360(ic - desc);
+  // Quadrant 2: Ascendant (House 1) to IC (House 4)
+  let q2Dist = norm360(ic - asc);
   let q2Third = q2Dist / 3.0;
-  const h7Mid = desc;
-  const h8Mid = norm360(desc + q2Third);
-  const h9Mid = norm360(desc + 2 * q2Third);
+  const h2Mid = norm360(asc + q2Third);
+  const h3Mid = norm360(asc + 2.0 * q2Third);
   const h4Mid = ic;
 
-  const h2Mid = norm360(h8Mid + 180);
-  const h3Mid = norm360(h9Mid + 180);
+  // Opposite Quadrants (Houses 5, 6, 7, 8, 9) by exact 180° symmetry
   const h5Mid = norm360(h11Mid + 180);
   const h6Mid = norm360(h12Mid + 180);
+  const h7Mid = desc;
+  const h8Mid = norm360(h2Mid + 180);
+  const h9Mid = norm360(h3Mid + 180);
 
   const midpoints = {
     1: h1Mid, 2: h2Mid, 3: h3Mid, 4: h4Mid,

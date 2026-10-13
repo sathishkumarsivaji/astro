@@ -55,7 +55,7 @@ export function resolveConversationalReferences(questionText, conversationHistor
     /career|job|profession|work|business|vocation|promotion|employment|salary|office|interview|startup|venture|trade|commerce|industry|தொழில்|வேலை|உத்தியோகம்|வியாபாரம்|சுயதொழில்|பதவி|ஊதியம்|d10|dashamsha|dasamsha/i.test(qLower) ||
     /marri|spouse|relationship|partner|wedding|wife|husband|match|progeny|family|love|divorce|remarri|compatibility|bride|groom|in-laws|parents|joint\s*family|separate\s*(?:house|household|home)|live\s+with\s+(?:my\s+)?parents|allow\s+to\s+live|திருமண|களத்திர|மனைவி|கணவர்|கல்யாணம்|குடும்பம்|தாம்பத்|பெற்றோர்|தனிக்குடித்தனம்|கூட்டுக்\s*குடும்பம்|d9|navamsha|navamsa/i.test(qLower) ||
     /health|wellness|vitality|body|diet|constitution|illness|disease|fitness|mental\s*health|stress|cure|hospital|energy|stamina|ஆரோக்கியம்|உடல்நலம்|நோய்|சுகாதாரம்|மருத்துவம்|உடற்பயிற்சி|dosha|vata|pitta|kapha|ayurved/i.test(qLower) ||
-    /wealth|money|financ|property|vehicle|car|bike|real\s*estate|house|home|land|flat|apartment|bhoomi|vahana|asset|loan|debt|bank|dhana|சொத்து|வீடு|மனை|வாகனம்|பணம்|நிதி|வங்கி|கடன்/i.test(qLower) ||
+    /wealth|money|financ|property|(?<!\b\d{1,2}(?:st|nd|rd|th)?\s+)\b(?:house|home)\b(?!.*\b(?:lord|cusp)\b)|\b(?:vehicle|vehicles|conveyance|automobile)\b|\b(?:car|cars|bike|bikes)\b|real\s*estate|land|flat|apartment|bhoomi|vahana|asset|loan|debt|bank|dhana|சொத்து|வீடு|மனை|வாகனம்|பணம்|நிதி|வங்கி|கடன்/i.test(qLower) ||
     /education|study|studies|studying|exam|degree|college|school|university|academic|upsc|neet|competitive|higher\s+ed|course|marks|grade|கல்வி|படிப்பு|தேர்வு|கல்லூரி|பள்ளி/i.test(qLower) ||
     /politics|political|minister|government|leadership|power|authority|status|governance|public\s+service|அரசியல்|தலைமை|அரசு|அதிகாரம்|ஆட்சி/i.test(qLower) ||
     /foreign|overseas|travel|relocation|abroad|moksha|visa|settlement|pr\b|immigrat|passport|வெளிநாடு|பயணம்|குடியேற|விசா/i.test(qLower) ||
@@ -74,11 +74,12 @@ export function resolveConversationalReferences(questionText, conversationHistor
   // Check for short follow-ups (elliptical questions without explicit domain)
   const isStandaloneYear = /^(what\s+about\s+|in\s+|how\s+about\s+|and\s+)?(20\d\d)\??$/i.test(text);
   const yearMatch = text.match(/\b(20\d\d)\b/);
+  const isWhenFollowUp = /^(when|when\s*\?|when\s+will\s+(?:it|that)\s+happen\??|what\s+about\s+timing\??|எப்போது\??)$/i.test(text);
   const isWhyFollowUp = /^(why|why\s+is\s+that|why\s+so|how\s+come|explain|tell\s+me\s+more)\b/i.test(text);
   const isPlanetFollowUp = /^(why|is\s+that\s+because\s+of|what\s+about|how\s+about)\s+(saturn|jupiter|mars|venus|mercury|sun|moon|rahu|ketu|shani|guru|mangal|shukra|budha|surya|chandra)\b/i.test(text);
   const isContinuation = /^(does\s+this\s+continue|will\s+this\s+continue|what\s+happens\s+next|and\s+then|what\s+else)\b/i.test(text);
 
-  if (!isStandaloneYear && !isWhyFollowUp && !isPlanetFollowUp && !isContinuation && !yearMatch) {
+  if (!isStandaloneYear && !isWhenFollowUp && !isWhyFollowUp && !isPlanetFollowUp && !isContinuation && !yearMatch) {
     return { resolvedText: text, resolvedDomain: activeSectionId, isFollowUp: false };
   }
 
@@ -87,8 +88,10 @@ export function resolveConversationalReferences(questionText, conversationHistor
   let isFollowUp = true;
 
   // Determine domain from recent dialogue only for true follow-ups when active section is general
-  if (activeSectionId === "fullReport" || activeSectionId === "all" || activeSectionId === "execSummary") {
-    if (/career|job|profession|work|promotion|business/i.test(lastUserQ) || /career|profession|10th\s+house/i.test(lastAssistantA)) {
+  if (activeSectionId === "fullReport" || activeSectionId === "all" || activeSectionId === "execSummary" || !activeSectionId) {
+    if (/children|child|progeny|pregnancy|conceive|baby|babies|give\s*birth|குழந்தை|புத்திர|பிள்ளை/i.test(lastUserQ) || /children|progeny|5th\s+house|saptamsha/i.test(lastAssistantA)) {
+      resolvedDomain = "children";
+    } else if (/career|job|profession|work|promotion|business/i.test(lastUserQ) || /career|profession|10th\s+house/i.test(lastAssistantA)) {
       resolvedDomain = "career";
     } else if (/marriage|spouse|relationship|partner|wedding/i.test(lastUserQ) || /marriage|partnership|7th\s+house/i.test(lastAssistantA)) {
       resolvedDomain = "relationships";
@@ -105,7 +108,19 @@ export function resolveConversationalReferences(questionText, conversationHistor
     }
   }
 
-  if (yearMatch) {
+  if (isWhenFollowUp) {
+    if (resolvedDomain === "children") {
+      resolvedText = isTamil ? "எப்போது குழந்தை பாக்கியம் கிடைக்கும்?" : "When will I have children?";
+    } else if (resolvedDomain === "relationships") {
+      resolvedText = "When will I get married?";
+    } else if (resolvedDomain === "career") {
+      resolvedText = "When will my career transition occur?";
+    } else if (resolvedDomain === "property") {
+      resolvedText = "When will I purchase property?";
+    } else {
+      resolvedText = `${text} (Context: Follow-up timing question regarding ${resolvedDomain} from previous discussion: "${lastUserQ.slice(0, 60)}...")`;
+    }
+  } else if (yearMatch) {
     const yr = yearMatch[1];
     resolvedText = `${text} (Context: User is asking about the year ${yr} regarding ${resolvedDomain} from previous discussion: "${lastUserQ.slice(0, 60)}...")`;
   } else if (isWhyFollowUp || isPlanetFollowUp || isContinuation) {
@@ -471,7 +486,7 @@ export function routeFollowUpQuestion(question, context, conversationHistory = [
   if (/dosha|vata|pitta|kapha|ayurved/i.test(qLower) && sysId !== "tropical") {
     relevantSections.push("dosha");
   }
-  if (/wealth|money|financ|property|vehicle|car|bike|real\s*estate|house|home|land|flat|apartment|bhoomi|vahana|asset|loan|debt|bank|dhana|சொத்து|வீடு|மனை|வாகனம்|பணம்|நிதி|வங்கி|கடன்/i.test(qLower)) {
+  if (/wealth|money|financ|property|(?<!\b\d{1,2}(?:st|nd|rd|th)?\s+)\b(?:house|home)\b(?!.*\b(?:lord|cusp)\b)|\b(?:vehicle|vehicles|conveyance|automobile)\b|\b(?:car|cars|bike|bikes)\b|real\s*estate|land|flat|apartment|bhoomi|vahana|asset|loan|debt|bank|dhana|சொத்து|வீடு|மனை|வாகனம்|பணம்|நிதி|வங்கி|கடன்/i.test(qLower)) {
     relevantSections.push("property");
   }
   if (/education|study|studies|studying|exam|degree|college|school|university|academic|upsc|neet|competitive|higher\s+ed|course|marks|grade|கல்வி|படிப்பு|தேர்வு|கல்லூரி|பள்ளி/i.test(qLower)) {

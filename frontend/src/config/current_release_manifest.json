@@ -4,7 +4,7 @@
   "schemaVersion": "3.0",
   "astronomyEngineVersion": "4.2.0",
   "historicalTimeEngineVersion": "2.1.0",
-  "generatedAt": "2026-10-11T11:28:54.485Z",
+  "generatedAt": "2026-10-13T13:05:21.920Z",
   "status": {
     "astronomicalEngine": "CALCULATION_VALIDATED",
     "softwareInfrastructure": "SOFTWARE_VALIDATED",
@@ -12,11 +12,11 @@
     "empiricalPrediction": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
   },
   "authoritativeHashes": {
-    "astroEngineHash": "f20db0ff723abf0303ddde815f7d0e786bf6412d7df4751ebfb97e7ed0f06c15",
+    "astroEngineHash": "82cd6150cb1f737aa3d1390fbacdadb64af18fad7b5e05e8e7910d2937d0f5d0",
     "empiricalEvaluationEngineHash": "88307ad60eedf6bcfd5a9172ab59ef32c327c6008fb3d3b3e3c0259a7d9c7d31",
     "discreteHazardSurvivalEngineHash": "e6e6549c3405d663cfcd88dc95c1c17db971960f17301759225ea9e986633481",
-    "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-    "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
+    "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
+    "calibrationModelHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
   },
   "datasetHashes": {
     "trainSplitHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
@@ -28,7 +28,7 @@
     "rawSourceExportHash": "7d42ac78520685b3013e929f3f238989a78c2f1ae1a360248a9b3b459d93549c",
     "parsedFullDatasetHash": "cc59b4f32aeb63e45befd0a8a7d9110a380a0375744d689ebaf08ce057d5b1ff",
     "independentHoldoutDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "externalBenchmarkOutputHash": "2ce9d8b7be8aad0adca64da2461094f015dea0ea75d6784aaea8520921898f9c"
+    "externalBenchmarkOutputHash": "7990f6cf542da1d7778788e29531b50528c68db13b1decc40f7fcd7817a83c71"
   },
-  "updatedAt": "2026-10-12T06:50:39.224Z"
+  "updatedAt": "2026-10-13T13:05:21.920Z"
 }

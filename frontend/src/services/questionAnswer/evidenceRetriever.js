@@ -80,14 +80,34 @@ export function retrieveEvidence(plan, context) {
     });
   }
 
-  // If task result exists for an actionable task, we return sufficient task evidence
+  // If task result exists for an actionable task, we return task evidence
   if (taskResult) {
     const taskWindows = Array.isArray(taskResult.candidateWindows) && taskResult.candidateWindows.length > 0
       ? taskResult.candidateWindows
       : (Array.isArray(taskResult.recommendation?.candidateWindows) ? taskResult.recommendation.candidateWindows : []);
+    if (Array.isArray(taskResult.calculatedFacts)) {
+      for (const cf of taskResult.calculatedFacts) {
+        calculatedFacts.push(cf);
+        if (cf?.id) {
+          evidenceGraph.addNode({
+            id: cf.id,
+            category: EVIDENCE_CATEGORIES.CHART_FACT,
+            label: `${cf.factor || cf.id}: ${cf.sign || cf.lord || ""}`.trim(),
+            value: cf
+          });
+        }
+      }
+    }
+    if (Array.isArray(taskResult.traditionalRules)) {
+      for (const tr of taskResult.traditionalRules) {
+        traditionalRules.push(tr);
+      }
+    }
+    const isTaskInsufficient = taskResult.answerState === "INSUFFICIENT_DATA";
     return {
-      status: "SUFFICIENT",
+      status: isTaskInsufficient ? "INSUFFICIENT_DATA" : "SUFFICIENT",
       taskResult,
+      missingEvidence: Array.isArray(taskResult.missingEvidence) ? taskResult.missingEvidence : [],
       timingWindows: taskWindows,
       ascendant: ascSign,
       planets: {},
@@ -98,7 +118,7 @@ export function retrieveEvidence(plan, context) {
       distanceAnalysis: null,
       comparisonAnalysis: null,
       vargaAnalysis: null,
-      reportSections: [plan?.primaryDomain || "dailyGuidance"],
+      reportSections: plan?.primaryDomain === "children" ? ["relationships", "progeny", "children"] : [plan?.primaryDomain || "dailyGuidance"],
       calculatedFacts,
       traditionalRules,
       evidenceGraph,
@@ -220,11 +240,43 @@ export function retrieveEvidence(plan, context) {
   let timingWindows = getTimingWindows(context);
 
   // If report timing windows are empty, evaluate dynamically via timingEngine
-  if ((!timingWindows || timingWindows.length === 0) && (chart.dashas || chart.dashaTimeline)) {
+  let dashaTimeline = chart.dashaTimeline || chart.dashas || null;
+  if (!dashaTimeline && Array.isArray(chart.dashaTable)) {
+    dashaTimeline = [];
+    for (const md of chart.dashaTable) {
+      if (Array.isArray(md.bukthis) && md.bukthis.length > 0) {
+        for (const ad of md.bukthis) {
+          const sy = ad.startDate ? parseInt(String(ad.startDate).slice(0, 4), 10) : null;
+          const ey = ad.endDate ? parseInt(String(ad.endDate).slice(0, 4), 10) : null;
+          dashaTimeline.push({
+            mahadasha: md.lord,
+            antardasha: ad.lord || ad.subLord,
+            startDate: ad.startDate || ad.startDateIso,
+            endDate: ad.endDate || ad.endDateIso,
+            startYear: sy,
+            endYear: ey
+          });
+        }
+      } else {
+        const sy = md.startDate ? parseInt(String(md.startDate).slice(0, 4), 10) : null;
+        const ey = md.endDate ? parseInt(String(md.endDate).slice(0, 4), 10) : null;
+        dashaTimeline.push({
+          mahadasha: md.lord,
+          antardasha: null,
+          startDate: md.startDate || md.startDateIso,
+          endDate: md.endDate || md.endDateIso,
+          startYear: sy,
+          endYear: ey
+        });
+      }
+    }
+  }
+
+  if ((!timingWindows || timingWindows.length === 0) && dashaTimeline) {
     const dynTiming = computeTimingWindows({
       domain: plan.primaryDomain,
       chart,
-      dashaTimeline: chart.dashaTimeline || chart.dashas || [],
+      dashaTimeline,
       vargas
     });
     if (dynTiming.timingWindows && dynTiming.timingWindows.length > 0) {
@@ -359,7 +411,61 @@ export function retrieveEvidence(plan, context) {
   // 8. D10 Analysis
   let vargaAnalysis = null;
   let vargaMissing = false;
-  if (plan.requiredVargas.includes("D10") || plan.primaryIntent === "VARGA_INTERPRETATION") {
+  const isD9Target = plan.requiredVargas.includes("D9") && !plan.requiredVargas.includes("D10") && (plan.primaryDomain === "marriage" || plan.primaryDomain === "relationships" || plan.rawQuestion?.toLowerCase().includes("d9") || plan.rawQuestion?.includes("நவாம்ச"));
+  if (isD9Target) {
+    const calculatedD9Asc = d9Info.ascendant || null;
+    const userClaimedSign = plan.userClaimedSign || null;
+
+    if (!calculatedD9Asc) {
+      vargaMissing = true;
+      vargaAnalysis = {
+        varga: "D9",
+        lagna: null,
+        userClaimedSign,
+        userClaimMismatch: false,
+        status: "INSUFFICIENT_DATA"
+      };
+    } else {
+      let d97thSign = null;
+      let d9LagnaLord = null;
+      let d97thLord = null;
+      const d9AscIdx = SIGN_ORDER.indexOf(calculatedD9Asc);
+      if (d9AscIdx !== -1) {
+        d9LagnaLord = SIGN_LORDS[calculatedD9Asc];
+        const seventhIdx = (d9AscIdx + 6) % 12;
+        d97thSign = SIGN_ORDER[seventhIdx];
+        d97thLord = SIGN_LORDS[d97thSign];
+      }
+      const d9Planets = d9Info.planets || [];
+      const d9Venus = d9Planets.find(p => (p.name || p.planetName) === "Venus") || null;
+      const d9Jupiter = d9Planets.find(p => (p.name || p.planetName) === "Jupiter") || null;
+      const d9Mars = d9Planets.find(p => (p.name || p.planetName) === "Mars") || null;
+
+      const userClaimMismatch = Boolean(userClaimedSign && userClaimedSign.toLowerCase() !== calculatedD9Asc.toLowerCase());
+
+      vargaAnalysis = {
+        varga: "D9",
+        lagna: calculatedD9Asc,
+        lagnaLord: d9LagnaLord,
+        seventhHouseSign: d97thSign,
+        seventhLord: d97thLord,
+        planetsInD9: d9Planets,
+        userClaimedSign,
+        userClaimMismatch,
+        d9VenusPlacement: d9Venus,
+        d9JupiterPlacement: d9Jupiter,
+        d9MarsPlacement: d9Mars,
+        d1VenusPlacement: planetMap["Venus"] || null,
+        d1JupiterPlacement: planetMap["Jupiter"] || null,
+        venusPlacement: d9Venus,
+        jupiterPlacement: d9Jupiter
+      };
+
+      const d9Id = buildVargaFactId("D9", "ASC");
+      calculatedFacts.push({ id: d9Id, factor: "D9_Ascendant", sign: calculatedD9Asc, lord: d9LagnaLord });
+      evidenceGraph.addNode({ id: d9Id, category: EVIDENCE_CATEGORIES.VARGA_FACT, label: `D9 Navamsha Lagna ${calculatedD9Asc}`, value: calculatedD9Asc });
+    }
+  } else if (plan.requiredVargas.includes("D10") || plan.primaryIntent === "VARGA_INTERPRETATION") {
     const calculatedD10Asc = d10Info.ascendant || null;
     const userClaimedSign = plan.userClaimedSign || null;
 
@@ -499,13 +605,46 @@ export function retrieveEvidence(plan, context) {
       condition: "7th house lord dasha activates alliance potential",
       traditionalInterpretation: "Dasha of 7th lord or planets associated with 7th house brings relational opportunities."
     });
-  } else if (plan.primaryDomain === "career") {
+  } else if (plan.primaryDomain === "career" || plan.primaryDomain === "job" || plan.primaryDomain === "business") {
     traditionalRules.push({
       id: buildRuleId("CAREER", "10TH_LORD_D10_ALIGNMENT"),
       ruleName: "Dashamsha Karma Varga Rule",
       shastra: "Phaladeepika Chapter 15",
       condition: "D10 Lagna and 10th lord signify professional execution",
       traditionalInterpretation: "D10 divisional strength indicates vocational leadership and workplace execution."
+    });
+  } else if (plan.primaryDomain === "property" || plan.primaryDomain === "vehicle") {
+    traditionalRules.push({
+      id: buildRuleId("PROPERTY", "4TH_HOUSE_SUKHA_BHAVA"),
+      ruleName: "Sukha Bhava & Bhoomi Karaka Rule",
+      shastra: "Brihat Parashara Hora Shastra Ch. 15",
+      condition: "4th house, 4th lord, Mars, and Venus govern immovable property and conveyances",
+      traditionalInterpretation: "Strength of the 4th house and its lord supports acquisition of home, land, and vehicles."
+    });
+  } else if (plan.primaryDomain === "finance") {
+    traditionalRules.push({
+      id: buildRuleId("FINANCE", "DHANA_LABHA_AXIS"),
+      ruleName: "Dhana and Labha Bhava Rule",
+      shastra: "Brihat Parashara Hora Shastra Ch. 13 & 22",
+      condition: "2nd house, 11th house, and Jupiter govern wealth accumulation and gains",
+      traditionalInterpretation: "Association between the 2nd and 11th lords or benefic Jupiter supports financial stability."
+    });
+  } else if (plan.primaryDomain === "children") {
+    traditionalRules.push({
+      id: buildRuleId("CHILDREN", "PUTRA_BHAVA_JUPITER"),
+      ruleName: "Putra Bhava & Putrakaraka Rule",
+      shastra: "Brihat Parashara Hora Shastra Ch. 16",
+      condition: "5th house, 5th lord, and Jupiter govern traditional progeny indicators",
+      traditionalInterpretation: "Traditional Jyotisha evaluates the 5th house, its lord, and Jupiter for progeny themes."
+    });
+  } else {
+    const domUpper = String(plan.primaryDomain || "GENERAL").toUpperCase();
+    traditionalRules.push({
+      id: buildRuleId(domUpper, "BHAVA_KARAKA_ALIGNMENT"),
+      ruleName: `${domUpper} Bhava & Karaka Evaluation`,
+      shastra: "Brihat Parashara Hora Shastra",
+      condition: `Primary house, house lord, and significator alignment for ${plan.primaryDomain || "chart"}`,
+      traditionalInterpretation: "Classical Parashari principles evaluate house lordship, occupancy, and operating dasha activation."
     });
   }
 
@@ -515,6 +654,7 @@ export function retrieveEvidence(plan, context) {
   if (plan.primaryIntent === "SYSTEM_COMPARISON") reportSections.push("multiSystemComparison", "technicalAppendix", "blueprint");
   else if (domain === "career" || domain === "job" || domain === "business") reportSections.push("career", "vocation");
   else if (domain === "marriage") reportSections.push("relationships", "marriage");
+  else if (domain === "children") reportSections.push("relationships", "progeny", "children");
   else if (domain === "property" || domain === "vehicle") reportSections.push("property", "assets");
   else if (domain === "finance") reportSections.push("finance", "wealth");
   else if (domain === "wellness") reportSections.push("health", "wellness");

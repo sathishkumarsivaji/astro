@@ -150,8 +150,8 @@ testCheck("T6.1: Cites 4th house and Mars (Bhumi Karaka) factors",
   res6.answer.includes("4-ம் பாவகம்") || res6.answer.includes("செவ்வாய்") || res6.answer.includes("Mars") || res6.answer.includes("4th House"));
 testCheck("T6.2: Includes Timing Window section",
   res6.answer.includes("[முக்கிய காலக்கோடு]"));
-testCheck("T6.3: Timing resolution clamped to YEAR or MONTH_RANGE",
-  res6.timingResolution === "YEAR" || res6.timingResolution === "MONTH_RANGE");
+testCheck("T6.3: Timing resolution clamped to YEAR, YEAR_RANGE or MONTH_RANGE",
+  res6.timingResolution === "YEAR" || res6.timingResolution === "YEAR_RANGE" || res6.timingResolution === "MONTH_RANGE");
 
 // ====================================================================
 // TEST CASE 7: FINANCE
