@@ -105,12 +105,19 @@ export function resolveTemporalTimeframe({
   // Validate reference Date
   const validRefDate = isNaN(refDate.getTime()) ? new Date() : refDate;
 
-  // Resolve target timezone: prioritize explicit action timezone, fallback to system timezone or UTC
-  const tz = actionTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  // Validate action timezone
+  let tz = actionTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const unresolvedFields = [];
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz });
+  } catch {
+    unresolvedFields.push("invalid_timezone");
+    tz = "UTC";
+  }
+
   const loc = actionLocation || (actionTimezone ? actionTimezone.split("/").pop().replace(/_/g, " ") : "Current Location");
 
   const zoned = getZonedParts(validRefDate, tz);
-  const unresolvedFields = [];
 
   // Detect timeframe kind
   const isToday = /\b(today|tonight|this\s+evening|this\s+morning)\b/i.test(raw) || /இன்று|இன்றைக்கு|இன்றைய|இரவு/i.test(raw);
@@ -172,29 +179,40 @@ export function resolveTemporalTimeframe({
     }
   }
 
-  // Calculate startInstantUTC and endInstantUTC
-  // For start of localStartDate (00:00:00 local time) and end of localEndDate (23:59:59 local time)
-  const startLocalStr = `${localStartDate}T00:00:00`;
-  const endLocalStr = `${localEndDate}T23:59:59`;
-
-  let startInstantUTC = validRefDate.toISOString();
-  let endInstantUTC = validRefDate.toISOString();
-
-  try {
-    const sDate = new Date(`${startLocalStr}Z`);
-    const eDate = new Date(`${endLocalStr}Z`);
-    if (!isNaN(sDate.getTime())) startInstantUTC = sDate.toISOString();
-    if (!isNaN(eDate.getTime())) endInstantUTC = eDate.toISOString();
-  } catch {
-    // Keep ISO of validRefDate
+  // Calculate true startInstantUTC and endInstantUTC in target timezone
+  function localBoundaryToUTC(ymdStr, isEnd, timeZone) {
+    try {
+      const [y, m, d] = ymdStr.split('-').map(Number);
+      const targetHour = isEnd ? 23 : 0;
+      const targetMinute = isEnd ? 59 : 0;
+      const targetSecond = isEnd ? 59 : 0;
+      const guess = new Date(Date.UTC(y, m - 1, d, targetHour, targetMinute, targetSecond));
+      const fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false
+      });
+      const parts = fmt.formatToParts(guess);
+      const p = {};
+      for (const part of parts) p[part.type] = part.value;
+      const localUtc = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute), Number(p.second));
+      const diff = localUtc - guess.getTime();
+      return new Date(guess.getTime() - diff).toISOString();
+    } catch {
+      return validRefDate.toISOString();
+    }
   }
+
+  const startInstantUTC = localBoundaryToUTC(localStartDate, false, tz);
+  const endInstantUTC = localBoundaryToUTC(localEndDate, true, tz);
 
   return {
     localStartDate,
     localEndDate,
     startInstantUTC,
     endInstantUTC,
-    timezoneId: tz,
+    timezoneId: actionTimezone || tz,
     location: loc,
     source: actionLocation ? "CONFIGURED_LOCATION" : (actionTimezone ? "FALLBACK_ACTION_TIMEZONE" : "USER_CURRENT_LOCATION"),
     kind,

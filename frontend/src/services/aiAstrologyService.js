@@ -1177,4 +1177,10 @@ export async function generateAIDeepAstrologyReport(chartData, lang = "en", onCr
   return generateLocalDeterministicMasterReport(chartData, lang);
 }
 
+export {
+  getLocalModelStatus,
+  parseQuestionWithLocalModel,
+  rephraseAnswerWithLocalModel
+} from "./localAiClient.js";
+
 

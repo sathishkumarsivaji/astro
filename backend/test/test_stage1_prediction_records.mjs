@@ -187,14 +187,26 @@ async function runStage1Tests() {
     assert.equal(granted.consentGranted, true, "Consent must be recorded as granted");
     assert(granted.grantedAt, "grantedAt timestamp must be recorded");
 
-    // Check prediction record eligibility when consent is present
+    // Check prediction record eligibility when consent is present and event/outcome are fully resolved
     const pred = recordPrediction({
+      userId,
+      chartData: { birthData: { year: 1988, month: 2, date: 10 } },
+      questionMeta: { domain: "PROPERTY", rawQuestion: "When will I acquire property?" },
+      predictionResult: { timingResolution: "YEAR", predictedOutcome: "ACQUISITION_WINDOW", timingIntervalEnd: "2028-12-31" }
+    });
+    assert.equal(pred.predictionRecord.isTrainingEligible, true, "Record must be training eligible when consent and resolved event/outcome are present");
+
+    // Check that missing event definition or missing outcome marks record unresolved and excludes from training
+    const unresolvedPred = recordPrediction({
       userId,
       chartData: { birthData: { year: 1988, month: 2, date: 10 } },
       questionMeta: { domain: "PROPERTY" },
       predictionResult: { timingResolution: "YEAR" }
     });
-    assert.equal(pred.predictionRecord.isTrainingEligible, true, "Record must be training eligible when consent is active");
+    assert.equal(unresolvedPred.predictionRecord.eventDefinition, "UNRESOLVED_EVENT_DEFINITION");
+    assert.equal(unresolvedPred.predictionRecord.predictedOutcome, "UNRESOLVED_OUTCOME");
+    assert.equal(unresolvedPred.predictionRecord.observationDeadline, null, "Must not invent synthetic 5-year deadline");
+    assert.equal(unresolvedPred.predictionRecord.isTrainingEligible, false, "Must exclude unresolved predictions from training eligibility");
 
     // Withdraw consent
     const withdrawn = db.setTrainingConsent(userId, false, "v1.0");
@@ -357,13 +369,17 @@ async function runStage1Tests() {
     passed++;
 
   } finally {
-    await new Promise(resolve => testServer.close(resolve));
+    if (testServer) {
+      if (typeof testServer.closeAllConnections === "function") {
+        testServer.closeAllConnections();
+      }
+      await new Promise(resolve => testServer.close(resolve));
+    }
   }
 
   console.log("\n==============================================================");
   if (failed === 0) {
     console.log(` ALL ${passed} STAGE 1 PREDICTION PROVENANCE TESTS PASSED 100%!`);
-    process.exit(0);
   } else {
     console.error(` ${failed} TESTS FAILED! (${passed} passed)`);
     process.exit(1);

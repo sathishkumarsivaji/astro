@@ -70,24 +70,9 @@ export function evaluateFamilyExpansionTiming({ question = "", context = {}, isT
   const transits = chart.transits || chart.gocharDashboard || context.transits || {};
   const vargas = chart.vargas || context.vargas || {};
 
-  // Enrich dasha timeline with activated houses if only raw dashaTable or activeDasha is available
+  // Enrich dasha timeline with activated houses if available
   let effectiveDashaTimeline = Array.isArray(dashaTimeline) ? [...dashaTimeline] : [];
   const fifthLordName = traditionalEvidence.fifthLord?.planet;
-
-  if (effectiveDashaTimeline.length === 0 && chart.currentDasha?.lord) {
-    const curYear = context.referenceYear || new Date().getFullYear();
-    effectiveDashaTimeline = [
-      {
-        mahadasha: chart.currentDasha.lord,
-        antardasha: chart.currentDasha.subLord || "",
-        startYear: curYear,
-        endYear: curYear + 2,
-        startDate: `${curYear}-01-01`,
-        endDate: `${curYear + 2}-12-31`,
-        activatedHouses: (chart.currentDasha.lord === fifthLordName || chart.currentDasha.subLord === fifthLordName) ? [5] : []
-      }
-    ];
-  }
 
   // Evaluate via timingEngine
   const timingResult = computeTimingWindows({

@@ -87,17 +87,25 @@ async function executeSingleQuestionQA({
   // Stage 5: Evidence Retrieval & Evidence Graph Population
   const evidence = retrieveEvidence(plan, context);
 
-  // Stage 6: Hard Evidence Sufficiency Gate
-  const isSufficient = (evidence && evidence.status !== "INSUFFICIENT_DATA") || Boolean(evidence?.taskResult);
+  // Stage 6: Hard Evidence Sufficiency & Adversarial Abstention Gate
+  const isAdversarialOrMalformed = Boolean(
+    qUnderstanding.malformed?.isMalformed ||
+    qUnderstanding.malformed?.clarificationRequired ||
+    intentResult.primaryIntent === "CLARIFICATION" ||
+    intentResult.intents?.includes("CLARIFICATION")
+  );
+
+  const isSufficient = !isAdversarialOrMalformed && ((evidence && evidence.status !== "INSUFFICIENT_DATA") || Boolean(evidence?.taskResult));
   if (!isSufficient) {
-    const resolution = classifyResolution(plan, { ...evidence, status: "INSUFFICIENT_DATA" });
+    const insufficientEvidence = { ...evidence, status: "INSUFFICIENT_DATA" };
+    const resolution = classifyResolution(plan, insufficientEvidence);
     const synthResult = synthesizeAnswer({
       normalizedQ,
       intentResult,
       domainResult,
       entities,
       plan,
-      evidence: { ...evidence, status: "INSUFFICIENT_DATA" },
+      evidence: insufficientEvidence,
       contradictions: [],
       resolution,
       mode
@@ -107,6 +115,25 @@ async function executeSingleQuestionQA({
       answerObject: synthResult.answerObject,
       answerText: synthResult.answer
     });
+
+    const predictionId = `pred_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const predictionRecord = {
+      predictionId,
+      domain: String(domainResult.primaryDomain || plan.primaryDomain || "GENERAL").toUpperCase(),
+      eventDefinition: normalizedQ.raw || (typeof normalizedQ === "string" ? normalizedQ : "UNSPECIFIED_EVENT"),
+      predictedOutcome: "INSUFFICIENT_DATA",
+      timingIntervalStart: null,
+      timingIntervalEnd: null,
+      timingResolution: "INSUFFICIENT_DATA",
+      evidenceStatus: "INSUFFICIENT_DATA",
+      evidenceIds: synthResult.evidenceIds || ["EVIDENCE_STATUS_INSUFFICIENT_DATA"],
+      rulesVersion: "Parashari-v3.0",
+      modelVersion: "v3.0.0-discrete-hazard",
+      calibratedProbability: null,
+      calibrationStatus: "UNCALIBRATED",
+      isTrainingEligible: false,
+      observationDeadline: null
+    };
 
     return {
       answer: synthResult.answer,
@@ -120,6 +147,8 @@ async function executeSingleQuestionQA({
       limitations: synthResult.limitations || ["Required chart factors are absent."],
       answerObject: synthResult.answerObject,
       atomicMeta,
+      qaScore,
+      predictionRecord,
       pipelineAudit: {
         questionId: qUnderstanding.questionId,
         intent: intentResult.primaryIntent,

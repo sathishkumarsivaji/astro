@@ -134,10 +134,37 @@ async function runStage3Suite() {
     assert.strictEqual(outcomeData.outcome.eventOccurred, true);
     pass("4.1 Actual observed outcome reported with approximate event month/year");
 
-    // 6. Outcome verification audit
-    const verifyRes = await fetch(`${baseUrl}/api/outcomes/verify`, {
+    // 6. Outcome verification authorization test
+    // 6a. Ordinary user must be rejected with 403 Forbidden
+    const unauthVerifyRes = await fetch(`${baseUrl}/api/outcomes/verify`, {
       method: "POST",
       headers: authHeaders,
+      body: JSON.stringify({
+        outcomeId,
+        verificationMethod: "INDEPENDENT_DOCUMENTATION",
+        verificationStatus: "CORROBORATED",
+        notes: "Unauthorized attempt"
+      })
+    });
+    assert.strictEqual(unauthVerifyRes.status, 403, "Ordinary user must not verify outcome");
+    const unauthData = await unauthVerifyRes.json();
+    assert.strictEqual(unauthData.code, "FORBIDDEN_VERIFICATION_PERMISSION");
+    pass("5.1 Outcome verification rejects unauthorized ordinary user with 403");
+
+    // 6b. Authorized verifier user succeeds with 201 Created
+    const verifierUserId = `usr_verifier_${Date.now()}`;
+    db.saveUser(verifierUserId, { userId: verifierUserId, role: "verifier", isRegistered: true });
+    const verifierSession = createSignedSessionToken(verifierUserId, null, true);
+    const verifierAuthHeaders = {
+      "Content-Type": "application/json",
+      "x-session-token": verifierSession.sessionToken,
+      "Origin": "http://localhost:5173",
+      "Connection": "close"
+    };
+
+    const verifyRes = await fetch(`${baseUrl}/api/outcomes/verify`, {
+      method: "POST",
+      headers: verifierAuthHeaders,
       body: JSON.stringify({
         outcomeId,
         verificationMethod: "INDEPENDENT_DOCUMENTATION",
@@ -149,7 +176,7 @@ async function runStage3Suite() {
     const verifyData = await verifyRes.json();
     assert.strictEqual(verifyData.verification.verificationStatus, "CORROBORATED");
     assert.strictEqual(verifyData.verification.outcomeId, outcomeId);
-    pass("5.1 Outcome verification recorded with audit status CORROBORATED");
+    pass("5.2 Authorized verifier records outcome verification with status CORROBORATED");
 
     console.log("\n==============================================================");
     console.log(` ALL ${passed} STAGE 3 FEEDBACK & OUTCOMES TESTS PASSED 100%!`);

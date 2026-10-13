@@ -1685,6 +1685,26 @@ class AstroDatabase {
     return this.getModel(activeDep.modelId);
   }
 
+  rollbackModel(domain, rolledBackBy = "admin") {
+    const d = (domain || "").toUpperCase();
+    const activeDep = Object.values(this.state.model_deployments || {})
+      .find(dep => dep.domain === d && dep.isActive);
+    if (!activeDep) {
+      throw new Error(`NO_ACTIVE_DEPLOYMENT: No active deployment found for domain '${d}'.`);
+    }
+
+    const previousDeployment = Object.values(this.state.model_deployments || {})
+      .filter(dep => dep.domain === d && !dep.isActive && dep.deploymentId !== activeDep.deploymentId)
+      .sort((a, b) => new Date(b.deployedAt).getTime() - new Date(a.deployedAt).getTime())[0];
+
+    if (!previousDeployment) {
+      throw new Error(`NO_ROLLBACK_TARGET: No previous deployment found for domain '${d}' to rollback to.`);
+    }
+
+    activeDep.isActive = false;
+    return this.deployModel(previousDeployment.modelId, rolledBackBy, activeDep.modelId);
+  }
+
   saveCustomerAIPreferences(customerId, prefs = {}) {
     if (!customerId) throw new Error("MISSING_CUSTOMER_ID: customerId is required.");
     const record = {

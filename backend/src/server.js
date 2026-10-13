@@ -37,6 +37,16 @@ import {
   getPredictionById,
   listPredictionsForCustomer
 } from './services/predictionRecordService.js';
+import {
+  getLocalAiConfig,
+  checkLocalModelHealth,
+  scanLocalModels,
+  parseQuestionToSpecification,
+  rephraseAnswerWithLocalLLM,
+  LOCAL_MODEL_REGISTRY,
+  LOCAL_INFERENCE_STATUS,
+  invokeLocalLLM
+} from './services/localAiService.js';
 
 dotenv.config();
 
@@ -724,11 +734,25 @@ async function handleGenerateAstrology(req, res) {
   }
 
   const effectiveApiKey = GEMINI_API_KEY;
+  let useLocalModel = false;
   if (!effectiveApiKey) {
-    return res.status(503).json({
-      error: 'AI service unavailable: No server GEMINI_API_KEY configured.',
-      code: 'API_KEY_MISSING'
-    });
+    const localCfg = getLocalAiConfig();
+    if (localCfg.mode !== 'DETERMINISTIC_ONLY') {
+      try {
+        const localHealth = await checkLocalModelHealth(localCfg);
+        if (localHealth && localHealth.healthy) {
+          useLocalModel = true;
+        }
+      } catch {
+        useLocalModel = false;
+      }
+    }
+    if (!useLocalModel) {
+      return res.status(503).json({
+        error: 'AI service unavailable: No server GEMINI_API_KEY configured.',
+        code: 'API_KEY_MISSING'
+      });
+    }
   }
 
   const cost = 1;
@@ -744,60 +768,74 @@ async function handleGenerateAstrology(req, res) {
   }
 
   try {
-    const models = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash'
-    ];
-
-    let lastError = null;
     let generatedText = '';
 
-    for (const model of models) {
-      try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveApiKey}`;
-        const sysInstruction = lang === 'ta'
-          ? 'நீங்கள் ஒரு முதன்மை பாரம்பரிய வேத ஜோதிடர் மற்றும் வானியல் அறிஞர். வழங்கப்பட்ட எபிமெரிஸ் கணிதத்தை மட்டும் கொண்டு துல்லியமான, விரிவான ஜோதிட அறிக்கையை வழங்கவும்.'
-          : 'You are a master classical Vedic astrologer and astronomical scholar. Synthesize the provided high-precision planetary ephemeris into an authentic, deeply personalized multi-page astrological dossier.';
+    if (useLocalModel) {
+      const sysInstruction = lang === 'ta'
+        ? 'நீங்கள் ஒரு முதன்மை பாரம்பரிய வேத ஜோதிடர் மற்றும் வானியல் அறிஞர். வழங்கப்பட்ட எபிமெரிஸ் கணிதத்தை மட்டும் கொண்டு துல்லியமான, விரிவான ஜோதிட அறிக்கையை வழங்கவும்.'
+        : 'You are a master classical Vedic astrologer and astronomical scholar. Synthesize the provided high-precision planetary ephemeris into an authentic, deeply personalized multi-page astrological dossier.';
+      const localRes = await invokeLocalLLM({
+        systemPrompt: sysInstruction,
+        userPrompt: prompt,
+        temperature: 0.2,
+        maxTokens: 4096
+      });
+      generatedText = localRes.content;
+    } else {
+      const models = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash'
+      ];
 
-        const body = {
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          systemInstruction: { parts: [{ text: sysInstruction }] },
-          generationConfig: {
-            temperature: 0.2,
-            topP: 0.95,
-            maxOutputTokens: 8192
+      let lastError = null;
+
+      for (const model of models) {
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveApiKey}`;
+          const sysInstruction = lang === 'ta'
+            ? 'நீங்கள் ஒரு முதன்மை பாரம்பரிய வேத ஜோதிடர் மற்றும் வானியல் அறிஞர். வழங்கப்பட்ட எபிமெரிஸ் கணிதத்தை மட்டும் கொண்டு துல்லியமான, விரிவான ஜோதிட அறிக்கையை வழங்கவும்.'
+            : 'You are a master classical Vedic astrologer and astronomical scholar. Synthesize the provided high-precision planetary ephemeris into an authentic, deeply personalized multi-page astrological dossier.';
+
+          const body = {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            systemInstruction: { parts: [{ text: sysInstruction }] },
+            generationConfig: {
+              temperature: 0.2,
+              topP: 0.95,
+              maxOutputTokens: 8192
+            }
+          };
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            const firstCandidate = data.candidates?.[0];
+            const parts = firstCandidate?.content?.parts || [];
+            generatedText = parts.filter(p => !p.thought && p.text).map(p => p.text).join('\n\n') || parts.map(p => p.text || '').join('\n\n');
+            if (generatedText) break;
+          } else {
+            const errData = await response.json().catch(() => ({}));
+            lastError = new Error(errData.error?.message || `HTTP ${response.status}`);
           }
-        };
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          const firstCandidate = data.candidates?.[0];
-          const parts = firstCandidate?.content?.parts || [];
-          generatedText = parts.filter(p => !p.thought && p.text).map(p => p.text).join('\n\n') || parts.map(p => p.text || '').join('\n\n');
-          if (generatedText) break;
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          lastError = new Error(errData.error?.message || `HTTP ${response.status}`);
+        } catch (e) {
+          lastError = e;
         }
-      } catch (e) {
-        lastError = e;
       }
-    }
 
-    if (!generatedText) {
-      throw lastError || new Error('All AI model candidate attempts failed.');
+      if (!generatedText) {
+        throw lastError || new Error('All AI model candidate attempts failed.');
+      }
     }
 
     // SETTLE RESERVATION ATOMICALLY
@@ -810,6 +848,7 @@ async function handleGenerateAstrology(req, res) {
       success: true,
       text: gateResult.text,
       transactionId: requestId,
+      inferenceStatus: useLocalModel ? LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS : LOCAL_INFERENCE_STATUS.EXTERNAL_PROVIDER_SUCCESS,
       remainingCredits: updatedUser ? (updatedUser.availableCredits - (updatedUser.lockedCredits || 0)) : 0,
       _evidenceGate: {
         isValid: gateResult.isValid,
@@ -836,6 +875,129 @@ async function handleGenerateAstrology(req, res) {
 
 app.post('/api/generate-astrology', rateLimiter, authenticateSession, requireDatabaseReady, handleGenerateAstrology);
 app.post('/api/astrology-report', rateLimiter, authenticateSession, requireDatabaseReady, handleGenerateAstrology);
+
+// ---------------------------------------------------------------------------
+// 7b. Built-In Local AI Architecture & Question Understanding
+// ---------------------------------------------------------------------------
+app.get('/api/ai/local-status', async (req, res) => {
+  const config = getLocalAiConfig();
+  const health = await checkLocalModelHealth(config);
+  const detectedModels = scanLocalModels();
+  res.json({
+    mode: config.mode,
+    endpoint: config.endpoint,
+    activeModel: config.modelName,
+    health,
+    detectedModels,
+    supportedRegistry: LOCAL_MODEL_REGISTRY
+  });
+});
+
+app.post('/api/ai/parse-question', rateLimiter, async (req, res) => {
+  const { question, lang = 'en' } = req.body;
+  if (!question || typeof question !== 'string') {
+    return res.status(400).json({ error: 'Valid question string is required.' });
+  }
+
+  try {
+    const parsed = await parseQuestionToSpecification(question, { lang });
+    if (parsed) {
+      return res.json({
+        success: true,
+        source: parsed.source,
+        inferenceStatus: LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
+        model: parsed.model,
+        specification: parsed.specification
+      });
+    }
+
+    // Deterministic fallback parser
+    return res.json({
+      success: true,
+      source: 'DETERMINISTIC_FALLBACK',
+      inferenceStatus: LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK,
+      specification: {
+        rawQuestion: question,
+        language: lang,
+        domain: 'GENERAL',
+        event: 'GENERAL_EVENT',
+        task: 'INTERPRETATION',
+        subject: 'ACTIVE_PROFILE',
+        isCompound: false,
+        confidence: 0.85
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+      code: 'PARSE_FAILED',
+      inferenceStatus: LOCAL_INFERENCE_STATUS.LOCAL_MODEL_ERROR
+    });
+  }
+});
+
+app.post('/api/ai/rephrase-answer', rateLimiter, authenticateSession, async (req, res) => {
+  const { answerObject, lang = 'en', chartContext = null } = req.body;
+  if (!answerObject || typeof answerObject !== 'object') {
+    return res.status(400).json({ error: 'Valid answerObject is required.' });
+  }
+
+  try {
+    const rephrased = await rephraseAnswerWithLocalLLM(answerObject, { lang });
+    const textToGate = rephrased ? rephrased.rephrasedText : (answerObject.directAnswer || '');
+
+    // Strictly enforce Evidence Gate & Claim Firewall on LLM wording
+    const gateResult = validateAndSanitizeAIResponse(textToGate, chartContext, { lang });
+
+    res.json({
+      success: true,
+      source: rephrased ? rephrased.source : 'DETERMINISTIC_FALLBACK',
+      inferenceStatus: rephrased ? LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS : LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK,
+      model: rephrased ? rephrased.model : null,
+      text: gateResult.text,
+      _evidenceGate: {
+        isValid: gateResult.isValid,
+        sanitized: gateResult.sanitized,
+        violations: gateResult.violations
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+      code: 'REPHRASE_FAILED',
+      inferenceStatus: LOCAL_INFERENCE_STATUS.LOCAL_MODEL_ERROR
+    });
+  }
+});
+
+app.post('/api/ai/validate-response', rateLimiter, async (req, res) => {
+  const { text, chartContext = null, lang = 'en', modelCalibrated = false, timingResolution = 'YEAR' } = req.body;
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'Valid text string is required.' });
+  }
+
+  try {
+    const gateResult = validateAndSanitizeAIResponse(text, chartContext, {
+      lang,
+      modelCalibrated,
+      timingResolution
+    });
+
+    res.json({
+      success: true,
+      text: gateResult.text,
+      sanitized: gateResult.sanitized,
+      isValid: gateResult.isValid,
+      violations: gateResult.violations,
+      verifiedClaims: gateResult.verifiedClaims,
+      unsupportedClaims: gateResult.unsupportedClaims,
+      contradictoryClaims: gateResult.contradictoryClaims,
+      disclaimersAdded: gateResult.disclaimersAdded
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message, code: 'VALIDATION_FAILED' });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // 8. Privacy & Data Governance (Audit Point 23)
@@ -1186,6 +1348,22 @@ app.post('/api/outcomes/report', authenticateSession, (req, res) => {
 // Verify observed outcome (Quality gate / Admin or verification system)
 app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
   try {
+    const adminKey = req.headers['x-admin-key'] || req.query.adminKey;
+    const hasValidAdminKey = Boolean(adminKey && typeof adminKey === 'string' && ADMIN_METRICS_KEY &&
+      adminKey.length === ADMIN_METRICS_KEY.length &&
+      crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(ADMIN_METRICS_KEY)));
+
+    const user = db.getUser(req.user.userId);
+    const userRole = (user && (user.role || user.subscriptionTier)) || req.user.role || '';
+    const isAuthorizedRole = userRole === 'admin' || userRole === 'verifier' || userRole === 'auditor';
+
+    if (!hasValidAdminKey && !isAuthorizedRole) {
+      return res.status(403).json({
+        error: 'Forbidden. Outcome verification requires admin or verifier authority.',
+        code: 'FORBIDDEN_VERIFICATION_PERMISSION'
+      });
+    }
+
     const { outcomeId, verificationMethod, verificationStatus, notes } = req.body || {};
     if (!outcomeId) {
       return res.status(400).json({ error: 'outcomeId is required', code: 'MISSING_OUTCOME_ID' });

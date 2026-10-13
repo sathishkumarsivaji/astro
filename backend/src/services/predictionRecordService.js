@@ -39,8 +39,14 @@ export const PERMITTED_EVIDENCE_STATUSES = Object.freeze([
  */
 export function createPseudonymousCustomerId(userId, customSalt = "") {
   if (!userId) return "anon_guest";
-  const secret = process.env.SESSION_SECRET || "skr_astro_provenance_secret";
-  const hmac = crypto.createHmac("sha256", secret + customSalt);
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL: SESSION_SECRET is required to generate pseudonymous customer identifiers in production.");
+    }
+  }
+  const effectiveSecret = secret || "skr_astro_provenance_secret";
+  const hmac = crypto.createHmac("sha256", effectiveSecret + customSalt);
   hmac.update(String(userId));
   return `anon_${hmac.digest("hex").slice(0, 32)}`;
 }
@@ -104,7 +110,8 @@ export function recordPrediction({
     system: chartData.system?.name || chartData.system || "lahiri",
     ayanamsha: chartData.ayanamsha || "lahiri",
     houseSystem: chartData.houseSystem || "placidus",
-    engineVersion: "v3.0.0-audited"
+    engineVersion: chartData.calculationConfig?.engineVersion || chartData.engineVersion || "v3.0.0-audited",
+    astronomyEngineVersion: "4.2.0"
   };
 
   // Extract key non-sensitive astrological features for machine learning verification
@@ -117,27 +124,31 @@ export function recordPrediction({
   };
 
   const domain = String(questionMeta.domain || predictionResult.domain || "GENERAL").toUpperCase();
-  const eventDefinition = questionMeta.rawQuestion || questionMeta.intent || predictionResult.eventDefinition || "UNSPECIFIED_EVENT";
-  const predictedOutcome = predictionResult.predictedOutcome || predictionResult.outcomeToken || "ACTIVATION_WINDOW";
+  const eventDefinition = questionMeta.rawQuestion || questionMeta.intent || predictionResult.eventDefinition || "UNRESOLVED_EVENT_DEFINITION";
+  const predictedOutcome = predictionResult.predictedOutcome || predictionResult.outcomeToken || "UNRESOLVED_OUTCOME";
 
   let timingResolution = predictionResult.timingResolution || questionMeta.resolution || "NOT_DISCRIMINATING";
   if (!PERMITTED_TIMING_RESOLUTIONS.includes(timingResolution)) {
     timingResolution = "NOT_DISCRIMINATING";
   }
 
-  // Determine observation deadline
-  let finalDeadline = observationDeadline;
+  // Determine observation deadline without inventing synthetic dates
+  let finalDeadline = observationDeadline || null;
   if (!finalDeadline && predictionResult.timingIntervalEnd) {
-    finalDeadline = new Date(predictionResult.timingIntervalEnd).toISOString();
-  } else if (!finalDeadline) {
-    // Default observation window: 5 years from creation
-    const fiveYearsLater = new Date();
-    fiveYearsLater.setFullYear(fiveYearsLater.getFullYear() + 5);
-    finalDeadline = fiveYearsLater.toISOString();
+    try {
+      finalDeadline = new Date(predictionResult.timingIntervalEnd).toISOString();
+    } catch {
+      finalDeadline = null;
+    }
   }
 
   // Check user training consent
   const consent = userId ? db.getTrainingConsent(userId) : { consentGranted: false };
+
+  // Training eligibility strictly requires explicit consent, valid resolved event & outcome, and finite deadline
+  const hasValidEvent = Boolean(eventDefinition && eventDefinition !== "UNRESOLVED_EVENT_DEFINITION" && eventDefinition !== "UNSPECIFIED_EVENT");
+  const hasValidOutcome = Boolean(predictedOutcome && predictedOutcome !== "UNRESOLVED_OUTCOME" && predictedOutcome !== "ACTIVATION_WINDOW");
+  const isTrainingEligible = Boolean(consent.consentGranted && hasValidEvent && hasValidOutcome && finalDeadline != null);
 
   const canonicalRecord = {
     predictionId,
@@ -158,7 +169,7 @@ export function recordPrediction({
     calibratedProbability: predictionResult.calibratedProbability !== undefined ? Number(predictionResult.calibratedProbability) : null,
     calibrationStatus: predictionResult.calibrationStatus || "UNCALIBRATED",
     observationDeadline: finalDeadline,
-    isTrainingEligible: Boolean(consent.consentGranted),
+    isTrainingEligible,
     metadata: {
       rawUserId: userId || null,
       questionId: questionMeta.questionId || null,
@@ -176,7 +187,7 @@ export function recordPrediction({
     claimType: ev.claimType || "FACT",
     shastricRuleId: ev.shastricRuleId || null,
     astronomicalFactKeys: ev.astronomicalFactKeys || [],
-    evidenceStatus: PERMITTED_EVIDENCE_STATUSES.includes(ev.evidenceStatus) ? ev.evidenceStatus : "SUPPORTED",
+    evidenceStatus: (ev.evidenceStatus && PERMITTED_EVIDENCE_STATUSES.includes(ev.evidenceStatus)) ? ev.evidenceStatus : "UNASSESSED",
     weight: ev.weight !== undefined ? Number(ev.weight) : 1.0,
     narrativeExcerpt: ev.narrativeExcerpt || ev.text || "",
     createdAt: new Date().toISOString()

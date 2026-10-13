@@ -118,6 +118,82 @@ async function runStage5Suite() {
   assert.strictEqual(activeAfterReject.modelId, superiorCandidate.modelId, "Active model unchanged after rejected candidate");
   pass("5.1 Rejected candidate does not overwrite active production model");
 
+  // 6. Versioned baseline registry test
+  const careerBaseline = evaluateCandidateModel({
+    candidateModel: { modelId: "test_career_cand", domain: "CAREER", predictTiming: () => 25 },
+    holdoutDataset: holdoutTestSet
+  });
+  assert.strictEqual(careerBaseline.demographicBaselineMae, 3.85, "Uses domain-specific 3.85y baseline for CAREER");
+  pass("6.1 Baseline registry enforces domain-specific baselines (CAREER: 3.85y)");
+
+  // 7. Insufficient unique customers test (e.g. 1 user repeated 35 times)
+  const nonUniqueHoldout = [];
+  for (let i = 0; i < 35; i++) {
+    nonUniqueHoldout.push({
+      id: "single_customer_repeated",
+      actualEventAge: 27.0,
+      features: {}
+    });
+  }
+  const nonUniqueEval = evaluateCandidateModel({
+    candidateModel: superiorCandidate,
+    holdoutDataset: nonUniqueHoldout
+  });
+  assert.strictEqual(nonUniqueEval.passedReleaseGate, false);
+  assert.ok(nonUniqueEval.rejectionReason.includes("INSUFFICIENT_UNIQUE_CUSTOMERS"));
+  pass("7.1 Rejects evaluation with insufficient unique customers fail-closed");
+
+  // 8. Customer-level leakage detection
+  const leakingTrainingIds = new Set(["subj_1", "subj_2"]);
+  const leakageEval = evaluateCandidateModel({
+    candidateModel: superiorCandidate,
+    holdoutDataset: holdoutTestSet,
+    trainingCustomerIds: leakingTrainingIds
+  });
+  assert.strictEqual(leakageEval.passedReleaseGate, false);
+  assert.ok(leakageEval.rejectionReason.includes("CUSTOMER_LEAKAGE_DETECTED"));
+  pass("8.1 Rejects evaluation when customer-level leakage is detected");
+
+  // 9. Model artifact integrity verification (corrupted artifact hash)
+  const corruptedCandidate = {
+    modelId: `cand_corrupt_${Date.now()}`,
+    domain: "MARRIAGE",
+    artifactSha256: "intentional_corrupted_hash_00000000000000000000000000000000",
+    modelArtifact: { weights: [0.1, 0.2, 0.3] },
+    predictTiming: () => 27.5
+  };
+  const corruptCycle = await runContinuousLearningCycle({
+    candidateModel: corruptedCandidate,
+    holdoutTestSet,
+    domain: "MARRIAGE"
+  });
+  assert.strictEqual(corruptCycle.status, "REJECTED_AT_RELEASE_GATE");
+  assert.ok(corruptCycle.rejectionReason.includes("ARTIFACT_INTEGRITY_FAILED") || corruptCycle.rejectionReason.includes("ARTIFACT_HASH_MISMATCH"));
+  pass("9.1 Rejects candidate with corrupted/mismatched model artifact hash");
+
+  // 10. Automated Rollback to previous deployment
+  // Deploy another candidate first so we have a rollback history
+  const secondaryCandidate = {
+    modelId: `cand_secondary_${Date.now()}`,
+    domain: "MARRIAGE",
+    modelArtifact: { weights: [0.4, 0.5] },
+    predictTiming: () => 27.8
+  };
+  const secondCycle = await runContinuousLearningCycle({
+    candidateModel: secondaryCandidate,
+    holdoutTestSet,
+    domain: "MARRIAGE"
+  });
+  assert.strictEqual(secondCycle.status, "PROMOTED_TO_PRODUCTION");
+  assert.strictEqual(db.getActiveModel("MARRIAGE").modelId, secondaryCandidate.modelId);
+
+  // Now execute rollback
+  const rollbackResult = db.rollbackModel("MARRIAGE", "admin_auditor");
+  assert.ok(rollbackResult.isActive);
+  assert.strictEqual(rollbackResult.modelId, superiorCandidate.modelId, "Rollback restores previous active production model");
+  assert.strictEqual(db.getActiveModel("MARRIAGE").modelId, superiorCandidate.modelId);
+  pass("10.1 Successfully executes instant model rollback to previous production deployment");
+
   console.log("\n==============================================================");
   console.log(` ALL ${passed} STAGE 5 CONTINUOUS LEARNING TESTS PASSED 100%!`);
   console.log("==============================================================\n");

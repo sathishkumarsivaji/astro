@@ -14,6 +14,7 @@ import { classifyDomains, DOMAINS } from "./domainClassifier.js";
 import { extractEntities } from "./entityExtractor.js";
 import { resolveTemporalTimeframe } from "./temporalResolver.js";
 import { resolveChildrenSubject } from "./tasks/childrenCount.js";
+import { createQuestionSpecification, SPEC_DOMAINS, SPEC_EVENTS, SPEC_TASKS } from "./questionSpecification.js";
 
 function hashString(str) {
   const s = String(str);
@@ -407,6 +408,27 @@ export function understandQuestion({ question, conversationHistory = [], context
     malformed,
     requiredEvidence,
     answerability,
-    isCompound
+    isCompound,
+    specification: createQuestionSpecification({
+      originalQuestion: raw,
+      rawQuestion: raw,
+      normalizedQuestion: normalizedQ.raw || (typeof normalizedQ === "string" ? normalizedQ : raw),
+      language: lang,
+      intent: primaryIntent,
+      domain: SPEC_DOMAINS[primaryDomain] || SPEC_DOMAINS.GENERAL,
+      subject: subject || "ACTIVE_PROFILE",
+      eventDefinition: event || SPEC_EVENTS.GENERAL_EVENT,
+      event: event || SPEC_EVENTS.GENERAL_EVENT,
+      requestedTimingHorizon: entities.years?.length ? entities.years.join("-") : (entities.durationYears ? `Next ${entities.durationYears} years` : null),
+      horizon: entities.years?.length ? entities.years.join("-") : (entities.durationYears ? `Next ${entities.durationYears} years` : null),
+      requestedPrecision,
+      requiredChartFacts: (entities.planets || []).map(p => `planet.${p}`).concat((entities.houses || []).map(h => `house.${h}`)),
+      requiredRules: requiredEvidence?.primaryFactors || [],
+      missingInformation: ambiguity.isAmbiguous ? [ambiguity.reason] : [],
+      ambiguities: ambiguity.isAmbiguous ? [ambiguity.reason] : [],
+      contradictions: [],
+      evidenceRequirements: requiredEvidence?.primaryFactors || [],
+      answerResolutionStatus: ambiguity.isAmbiguous ? "UNRESOLVED_AMBIGUOUS" : (malformed?.clarificationRequired ? "CLARIFICATION_REQUIRED" : "RESOLVED")
+    })
   };
 }
