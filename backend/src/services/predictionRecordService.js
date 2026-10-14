@@ -171,7 +171,6 @@ export function recordPrediction({
     observationDeadline: finalDeadline,
     isTrainingEligible,
     metadata: {
-      rawUserId: userId || null,
       questionId: questionMeta.questionId || null,
       mode: questionMeta.mode || "novice"
     }

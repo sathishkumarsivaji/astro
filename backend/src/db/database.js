@@ -1781,6 +1781,14 @@ class AstroDatabase {
     };
   }
 
+  getPseudonymousCustomerId(userId, customSalt = "") {
+    if (!userId) return "anon_guest";
+    const secret = process.env.SESSION_SECRET || "skr_astro_provenance_secret";
+    const hmac = crypto.createHmac("sha256", secret + customSalt);
+    hmac.update(String(userId));
+    return `anon_${hmac.digest("hex").slice(0, 32)}`;
+  }
+
   // --- Privacy Erasure with Awaited DB Purge ---
   async purgeUser(userId) {
     // 1. Revoke all user sessions
@@ -1825,20 +1833,24 @@ class AstroDatabase {
       this.state.training_consent[userId].consentGranted = false;
       this.state.training_consent[userId].withdrawnAt = new Date().toISOString();
     }
+    const pseudoId = this.getPseudonymousCustomerId(userId);
     for (const pred of Object.values(this.state.prediction_records || {})) {
-      if (pred.pseudonymousCustomerId === userId || pred.metadata?.rawUserId === userId) {
+      if (pred.pseudonymousCustomerId === userId || pred.pseudonymousCustomerId === pseudoId || pred.metadata?.rawUserId === userId) {
         pred.pseudonymousCustomerId = "ANONYMIZED_CUSTOMER";
         pred.isTrainingEligible = false;
+        if (pred.metadata && pred.metadata.rawUserId) {
+          delete pred.metadata.rawUserId;
+        }
       }
     }
     for (const fb of Object.values(this.state.customer_feedback || {})) {
-      if (fb.customerId === userId) {
+      if (fb.customerId === userId || fb.customerId === pseudoId) {
         fb.customerId = "ANONYMIZED_CUSTOMER";
         fb.userCommentsRedacted = "[PURGED_UPON_USER_ERASURE_REQUEST]";
       }
     }
     for (const oc of Object.values(this.state.observed_outcomes || {})) {
-      if (oc.customerId === userId) {
+      if (oc.customerId === userId || oc.customerId === pseudoId) {
         oc.customerId = "ANONYMIZED_CUSTOMER";
       }
     }
@@ -1863,9 +1875,9 @@ class AstroDatabase {
         await client.query("DELETE FROM credit_reservations WHERE user_id = $1", [userId]);
         await client.query("DELETE FROM customer_ai_preferences WHERE customer_id = $1", [userId]);
         await client.query("UPDATE training_consent SET consent_granted = FALSE, withdrawn_at = NOW() WHERE customer_id = $1", [userId]);
-        await client.query("UPDATE prediction_records SET pseudonymous_customer_id = 'ANONYMIZED_CUSTOMER', is_training_eligible = FALSE WHERE pseudonymous_customer_id = $1", [userId]);
-        await client.query("UPDATE customer_feedback SET customer_id = 'ANONYMIZED_CUSTOMER', user_comments_redacted = '[PURGED_UPON_USER_ERASURE_REQUEST]' WHERE customer_id = $1", [userId]);
-        await client.query("UPDATE observed_outcomes SET customer_id = 'ANONYMIZED_CUSTOMER' WHERE customer_id = $1", [userId]);
+        await client.query("UPDATE prediction_records SET pseudonymous_customer_id = 'ANONYMIZED_CUSTOMER', is_training_eligible = FALSE WHERE pseudonymous_customer_id = $1 OR pseudonymous_customer_id = $2", [userId, pseudoId]);
+        await client.query("UPDATE customer_feedback SET customer_id = 'ANONYMIZED_CUSTOMER', user_comments_redacted = '[PURGED_UPON_USER_ERASURE_REQUEST]' WHERE customer_id = $1 OR customer_id = $2", [userId, pseudoId]);
+        await client.query("UPDATE observed_outcomes SET customer_id = 'ANONYMIZED_CUSTOMER' WHERE customer_id = $1 OR customer_id = $2", [userId, pseudoId]);
         await client.query("UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = $1", [userId]);
         await client.query("UPDATE payment_transactions SET user_id = 'ANONYMIZED_USER' WHERE user_id = $1", [userId]);
         await client.query("DELETE FROM users WHERE user_id = $1", [userId]);

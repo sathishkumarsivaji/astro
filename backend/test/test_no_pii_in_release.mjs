@@ -119,6 +119,20 @@ for (const file of jsonFiles) {
       fileFailed = true;
   }
 
+  // Check 5: rawUserId in prediction records or metadata
+  if (parsed && parsed.prediction_records) {
+    for (const [id, rec] of Object.entries(parsed.prediction_records)) {
+      if (rec.metadata && rec.metadata.rawUserId) {
+        console.error(`FAIL: ${file} - Contains rawUserId in prediction record ${id}`);
+        fileFailed = true;
+      }
+    }
+  }
+  if (/"rawUserId"\s*:\s*"[^"]+"/i.test(content)) {
+    console.error(`FAIL: ${file} - Contains non-null rawUserId string`);
+    fileFailed = true;
+  }
+
   if (!fileFailed) {
     console.log(`PASS: ${file}`);
   } else {

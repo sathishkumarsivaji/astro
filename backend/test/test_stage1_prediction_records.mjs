@@ -128,6 +128,8 @@ async function runStage1Tests() {
     const retrieved = getPredictionById(result.predictionRecord.predictionId);
     assert(retrieved, "Record must be retrievable");
     assert.equal(retrieved.predictionRecord.predictedOutcome, "MARRIAGE_ACTIVATION_WINDOW");
+    assert.equal(retrieved.predictionRecord.metadata?.rawUserId, undefined, "rawUserId must never be stored in prediction record metadata");
+    assert.equal(retrieved.predictionRecord.pseudonymousCustomerId.startsWith("anon_"), true, "Pseudonymous customer ID must be stored instead");
     assert.equal(retrieved.evidence.length, 1);
     assert.equal(retrieved.evidence[0].evidenceStatus, "SUPPORTED");
   });
@@ -261,6 +263,7 @@ async function runStage1Tests() {
     const purgedPred = db.getPredictionRecord(predId);
     assert(purgedPred, "Prediction record math is preserved for audit trail");
     assert.equal(purgedPred.pseudonymousCustomerId, "ANONYMIZED_CUSTOMER", "Customer ID must be anonymized");
+    assert.equal(purgedPred.metadata?.rawUserId, undefined, "rawUserId must never exist in prediction metadata");
     assert.equal(purgedPred.isTrainingEligible, false, "Record must be marked training ineligible");
     console.log("✓ [PASS] 5.1 User erasure anonymizes prediction records and revokes consent");
     passed++;
