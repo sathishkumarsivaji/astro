@@ -740,7 +740,7 @@ async function handleGenerateAstrology(req, res) {
     if (localCfg.mode !== 'DETERMINISTIC_ONLY') {
       try {
         const localHealth = await checkLocalModelHealth(localCfg);
-        if (localHealth && localHealth.healthy) {
+        if (localHealth && localHealth.healthy && localHealth.isModelInstalled) {
           useLocalModel = true;
         }
       } catch {
@@ -749,8 +749,8 @@ async function handleGenerateAstrology(req, res) {
     }
     if (!useLocalModel) {
       return res.status(503).json({
-        error: 'AI service unavailable: No server GEMINI_API_KEY configured.',
-        code: 'API_KEY_MISSING'
+        error: 'AI service unavailable: No server GEMINI_API_KEY configured and local model runtime has no supported model installed.',
+        code: 'API_KEY_OR_LOCAL_MODEL_MISSING'
       });
     }
   }

@@ -33,15 +33,15 @@ SKR ASTRO supports standard local inference servers via HTTP:
 
 ---
 
-## 3. Recommended Models
+## 3. Recommended & Supported Models
 
-For reliable parsing of `QuestionSpecification` and bilingual (English / Tamil) answer rephrasing, the following quantized models are recommended:
+For reliable parsing of `QuestionSpecification` and bilingual (English / Tamil) answer rephrasing, SKR ASTRO defines three explicit model roles:
 
-| Model | Size | Recommended RAM | Context | Recommended Use |
-| :--- | :--- | :--- | :--- | :--- |
-| **Qwen 2.5 0.5B Instruct** (`qwen2.5:0.5b-instruct`) | ~400 MB | 1 GB | 4,096 | Fast intent parsing & mobile/low-memory environments |
-| **Qwen 2.5 1.5B Instruct** (`qwen2.5:1.5b-instruct`) | ~1.1 GB | 2 GB | 8,192 | Balanced intent classification, Tamil support & wording |
-| **TinyLlama 1.1B Chat** (`tinyllama:1.1b-chat`) | ~650 MB | 1 GB | 2,048 | Lightweight question classification |
+| Model | Role | Size | Recommended RAM | Context | Recommended Use |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Qwen 2.5 1.5B Instruct** (`qwen2.5:1.5b-instruct`) | **Primary** | ~1.1 GB | 2 GB | 8,192 | Balanced intent classification, Tamil support & rich dossier wording |
+| **Qwen 2.5 0.5B Instruct** (`qwen2.5:0.5b-instruct`) | **Fallback** | ~400 MB | 1 GB | 4,096 | Fast intent parsing & mobile/low-memory environments |
+| **TinyLlama 1.1B Chat** (`tinyllama:1.1b-chat`) | **Benchmark Only** | ~650 MB | 1 GB | 2,048 | Dedicated comparative baseline benchmarking |
 
 ---
 
@@ -54,18 +54,22 @@ For reliable parsing of `QuestionSpecification` and bilingual (English / Tamil) 
    - macOS: `brew install ollama`
    - Linux: `curl -fsSL https://ollama.com/install.sh | sh`
 
-2. **Pull the Recommended Model**:
+2. **Pull the Primary Model**:
    ```bash
    ollama pull qwen2.5:1.5b-instruct
    ```
-   Or for minimal resource usage:
+   *(Optional)* Pull the fallback model for low-memory operation:
    ```bash
    ollama pull qwen2.5:0.5b-instruct
    ```
-
-3. **Verify Ollama is Running**:
+   *(Optional)* Pull TinyLlama for comparative benchmarking:
    ```bash
-   curl http://localhost:11434/api/tags
+   ollama pull tinyllama:1.1b-chat
+   ```
+
+3. **Verify Ollama is Running & Models are Installed**:
+   ```bash
+   ollama list
    ```
 
 ### Option B: Using llama.cpp server

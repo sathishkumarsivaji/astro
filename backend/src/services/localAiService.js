@@ -49,32 +49,63 @@ export const LOCAL_INFERENCE_STATUS = Object.freeze({
  * Supported Local Model Registry Metadata
  */
 export const LOCAL_MODEL_REGISTRY = Object.freeze({
-  "qwen2.5-0.5b-instruct": {
-    id: "qwen2.5-0.5b-instruct",
-    name: "Qwen 2.5 0.5B Instruct",
-    contextWindow: 4096,
-    recommendedRamMb: 1024,
-    sha256Expected: null, // Set when specific GGUF/ONNX artifact is registered
-    type: "GGUF/ONNX",
-    purpose: ["QUESTION_PARSING", "CONCISE_WORDING"]
-  },
-  "qwen2.5-1.5b-instruct": {
-    id: "qwen2.5-1.5b-instruct",
-    name: "Qwen 2.5 1.5B Instruct",
+  "qwen2.5:1.5b-instruct": {
+    id: "qwen2.5:1.5b-instruct",
+    name: "Qwen 2.5 1.5B Instruct (Primary)",
     contextWindow: 8192,
     recommendedRamMb: 2048,
     sha256Expected: null,
     type: "GGUF/ONNX",
-    purpose: ["QUESTION_PARSING", "DOSSIER_WORDING"]
+    purpose: ["QUESTION_PARSING", "DOSSIER_WORDING"],
+    role: "PRIMARY"
   },
-  "tinyllama-1.1b-chat": {
-    id: "tinyllama-1.1b-chat",
-    name: "TinyLlama 1.1B Chat",
+  "qwen2.5:0.5b-instruct": {
+    id: "qwen2.5:0.5b-instruct",
+    name: "Qwen 2.5 0.5B Instruct (Fallback)",
+    contextWindow: 4096,
+    recommendedRamMb: 1024,
+    sha256Expected: null,
+    type: "GGUF/ONNX",
+    purpose: ["QUESTION_PARSING", "CONCISE_WORDING"],
+    role: "FALLBACK"
+  },
+  "tinyllama:1.1b-chat": {
+    id: "tinyllama:1.1b-chat",
+    name: "TinyLlama 1.1B Chat (Benchmark Only)",
     contextWindow: 2048,
     recommendedRamMb: 1024,
     sha256Expected: null,
     type: "GGUF/ONNX",
-    purpose: ["QUESTION_PARSING"]
+    purpose: ["BENCHMARK_ONLY"],
+    role: "BENCHMARK_ONLY"
+  },
+  // Legacy aliases for backward compatibility
+  "qwen2.5-1.5b-instruct": {
+    id: "qwen2.5-1.5b-instruct",
+    aliasFor: "qwen2.5:1.5b-instruct",
+    name: "Qwen 2.5 1.5B Instruct",
+    contextWindow: 8192,
+    recommendedRamMb: 2048,
+    sha256Expected: null,
+    type: "GGUF/ONNX"
+  },
+  "qwen2.5-0.5b-instruct": {
+    id: "qwen2.5-0.5b-instruct",
+    aliasFor: "qwen2.5:0.5b-instruct",
+    name: "Qwen 2.5 0.5B Instruct",
+    contextWindow: 4096,
+    recommendedRamMb: 1024,
+    sha256Expected: null,
+    type: "GGUF/ONNX"
+  },
+  "tinyllama-1.1b-chat": {
+    id: "tinyllama-1.1b-chat",
+    aliasFor: "tinyllama:1.1b-chat",
+    name: "TinyLlama 1.1B Chat",
+    contextWindow: 2048,
+    recommendedRamMb: 1024,
+    sha256Expected: null,
+    type: "GGUF/ONNX"
   }
 });
 
@@ -128,17 +159,21 @@ export function scanLocalModels(customModelsDir = null) {
 
 /**
  * Retrieves the active Local AI runtime configuration.
+ * Default Primary Model: qwen2.5:1.5b-instruct
+ * Fallback Model: qwen2.5:0.5b-instruct
  */
 export function getLocalAiConfig() {
   const mode = process.env.ASTRO_AI_MODE || LOCAL_AI_MODES.LOCAL_FIRST;
   const endpoint = process.env.LOCAL_LLM_ENDPOINT || "http://127.0.0.1:11434"; // Default local Ollama/llama.cpp runner
-  const modelName = process.env.LOCAL_LLM_MODEL || "qwen2.5-0.5b-instruct";
+  const modelName = process.env.LOCAL_LLM_MODEL || "qwen2.5:1.5b-instruct";
+  const fallbackModelName = process.env.LOCAL_LLM_FALLBACK_MODEL || "qwen2.5:0.5b-instruct";
   const timeoutMs = parseInt(process.env.LOCAL_LLM_TIMEOUT_MS || "8000", 10);
 
   return {
     mode,
     endpoint,
     modelName,
+    fallbackModelName,
     timeoutMs,
     modelsDir: MODELS_DIR
   };
@@ -178,13 +213,33 @@ export async function checkLocalModelHealth(customConfig = null) {
 
     if (res && res.ok) {
       const data = await res.json().catch(() => ({}));
+      const rawList = data.models || data.data || [];
+      const modelNames = rawList.map(m => (typeof m === "string" ? m : (m.name || m.id || m.model || "")));
+
+      // Check if primary configured model is actually installed
+      const primaryInstalled = modelNames.some(m => m === cfg.modelName || m.startsWith(cfg.modelName) || cfg.modelName.startsWith(m));
+      const fallbackInstalled = modelNames.some(m => m === cfg.fallbackModelName || m.startsWith(cfg.fallbackModelName) || cfg.fallbackModelName.startsWith(m));
+
+      // Resolve effective active model: Primary if installed, else fallback if installed, else null
+      let effectiveActiveModel = null;
+      if (primaryInstalled) {
+        effectiveActiveModel = cfg.modelName;
+      } else if (fallbackInstalled) {
+        effectiveActiveModel = cfg.fallbackModelName;
+      }
+
       return {
         status: "ONLINE",
         healthy: true,
         mode: cfg.mode,
         endpoint: cfg.endpoint,
-        modelName: cfg.modelName,
-        availableModels: data.models || data.data || []
+        configuredModel: cfg.modelName,
+        fallbackModel: cfg.fallbackModelName,
+        effectiveActiveModel,
+        isModelInstalled: Boolean(effectiveActiveModel),
+        primaryInstalled,
+        fallbackInstalled,
+        availableModels: rawList
       };
     }
     return {
@@ -315,15 +370,17 @@ export async function parseQuestionToSpecification(rawQuestion, options = {}) {
 Your job is to parse the user's question into a strongly-typed JSON specification.
 Do NOT answer the question. Do NOT generate predictions. Output ONLY a valid JSON object matching this schema:
 {
-  "domain": "CAREER" | "BUSINESS" | "EDUCATION" | "TRAVEL" | "PROPERTY" | "VEHICLE" | "RELATIONSHIPS" | "FAMILY" | "FINANCE" | "WELLNESS" | "GENERAL",
-  "event": "FOREIGN_TRIP" | "WORK_ABROAD" | "PROPERTY_PURCHASE" | "CONSTRUCTION_START" | "VEHICLE_PURCHASE" | "BUSINESS_EXPANSION" | "JOB_CHANGE" | "MARRIAGE_TIMING" | "GENERAL_EVENT",
-  "task": "FACT" | "INTERPRETATION" | "TIMING" | "ELECTION" | "DECISION_SUPPORT" | "UNSAFE_GUARANTEE_REJECTION",
+  "domain": "MARRIAGE" | "RELATIONSHIPS" | "LOVE" | "SPOUSE" | "CAREER" | "EMPLOYMENT" | "BUSINESS" | "EDUCATION" | "RESEARCH" | "PROPERTY" | "VEHICLE" | "FINANCE" | "WEALTH" | "TRAVEL" | "FOREIGN_TRAVEL" | "FAMILY" | "LEADERSHIP" | "LEGAL" | "SPIRITUALITY" | "WELLNESS" | "DAILY_GUIDANCE" | "FORECAST" | "GENERAL",
+  "event": "MARRIAGE_TIMING" | "SPOUSE_MEETING" | "CAREER_OPPORTUNITY" | "JOB_CHANGE" | "PROMOTION_TIMING" | "BUSINESS_START" | "BUSINESS_EXPANSION" | "EXAM_SUCCESS" | "HIGHER_EDUCATION" | "PROPERTY_PURCHASE" | "CONSTRUCTION_START" | "VEHICLE_PURCHASE" | "FINANCIAL_STABILITY" | "FOREIGN_TRIP" | "WORK_ABROAD" | "FAMILY_EXPANSION" | "LEADERSHIP_ELEVATION" | "LEGAL_DISPUTE_RESOLUTION" | "GENERAL_EVENT",
+  "task": "FACT" | "INTERPRETATION" | "TIMING" | "FORECAST" | "ELECTION" | "DECISION_SUPPORT" | "UNSAFE_GUARANTEE_REJECTION",
   "subject": "ACTIVE_PROFILE" | "SPOUSE" | "CHILD" | "PARENT" | "BUSINESS_PARTNER",
   "isCompound": boolean,
   "confidence": number between 0.0 and 1.0
 }`;
 
-  const userPrompt = `Parse this question: "${rawQuestion}"`;
+  // Sanitize user prompt to prevent prompt injection from breaking JSON constraint
+  const sanitizedQuestion = rawQuestion.replace(/["\\]/g, " ").trim();
+  const userPrompt = `Parse this question: "${sanitizedQuestion}"`;
 
   try {
     const result = await invokeLocalLLM({
@@ -341,18 +398,31 @@ Do NOT answer the question. Do NOT generate predictions. Output ONLY a valid JSO
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
+
+    // Validate that the parsed domain is supported
+    const rawDomain = String(parsed.domain || "").toUpperCase();
+    const VALID_DOMAINS = [
+      "MARRIAGE", "RELATIONSHIPS", "LOVE", "SPOUSE",
+      "CAREER", "EMPLOYMENT", "BUSINESS",
+      "EDUCATION", "RESEARCH", "PROPERTY", "VEHICLE",
+      "FINANCE", "WEALTH", "TRAVEL", "FOREIGN_TRAVEL",
+      "FAMILY", "LEADERSHIP", "LEGAL", "SPIRITUALITY",
+      "WELLNESS", "DAILY_GUIDANCE", "FORECAST", "GENERAL"
+    ];
+    const validatedDomain = VALID_DOMAINS.includes(rawDomain) ? rawDomain : "GENERAL";
+
     return {
       source: "LOCAL_LLM",
       model: result.model,
       specification: {
         rawQuestion,
         language: lang,
-        domain: parsed.domain || "GENERAL",
+        domain: validatedDomain,
         event: parsed.event || "GENERAL_EVENT",
         task: parsed.task || "INTERPRETATION",
         subject: parsed.subject || "ACTIVE_PROFILE",
         isCompound: Boolean(parsed.isCompound),
-        confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.9
+        confidence: typeof parsed.confidence === "number" ? Math.min(1.0, Math.max(0.0, parsed.confidence)) : 0.9
       }
     };
   } catch (err) {

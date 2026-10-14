@@ -27,12 +27,15 @@ async function main() {
   console.log("\n[1] Active Configuration:");
   console.log(`    Mode:          ${config.mode}`);
   console.log(`    Endpoint:      ${config.endpoint}`);
-  console.log(`    Model Name:    ${config.modelName}`);
+  console.log(`    Primary Model: ${config.modelName}`);
+  console.log(`    Fallback Model:${config.fallbackModelName}`);
   console.log(`    Timeout:       ${config.timeoutMs} ms`);
 
   console.log("\n[2] Supported Model Registry:");
   for (const [key, meta] of Object.entries(LOCAL_MODEL_REGISTRY)) {
-    console.log(`    • ${meta.name} (${key}): Context ${meta.contextWindow}, Rec RAM: ${meta.recommendedRamMb} MB`);
+    if (!meta.aliasFor) {
+      console.log(`    • ${meta.name} (${key}): Role [${meta.role}], Context ${meta.contextWindow}, Rec RAM: ${meta.recommendedRamMb} MB`);
+    }
   }
 
   console.log("\n[3] Local Model Directory Scan:");
@@ -46,12 +49,15 @@ async function main() {
     }
   }
 
-  console.log("\n[4] Local Runtime Health Check:");
+  console.log("\n[4] Local Runtime Health & Model Installation Check:");
   console.log(`    Probing endpoint: ${config.endpoint}...`);
   const health = await checkLocalModelHealth(config);
 
   if (health.healthy) {
     console.log(`    ✓ Status: ONLINE (${health.status})`);
+    console.log(`    ✓ Primary Configured: ${health.configuredModel} -> Installed: ${health.primaryInstalled ? "YES" : "NO"}`);
+    console.log(`    ✓ Fallback Configured: ${health.fallbackModel} -> Installed: ${health.fallbackInstalled ? "YES" : "NO"}`);
+    console.log(`    ✓ Effective Active Model: ${health.effectiveActiveModel || "NONE (will use DETERMINISTIC_FALLBACK)"}`);
     if (health.availableModels && health.availableModels.length > 0) {
       console.log(`    ✓ Available Models in Runtime:`);
       for (const model of health.availableModels) {
