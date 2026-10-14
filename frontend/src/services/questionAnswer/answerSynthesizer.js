@@ -167,7 +167,7 @@ export function synthesizeAnswer({
     
     if (tr.intent === "FOREIGN_TRIP_TIMING") {
       relevantSections = ["travel", "overview"];
-    } else if (tr.intent === "HOME_CONSTRUCTION_TIMING") {
+    } else if (tr.intent === "HOME_CONSTRUCTION_TIMING" || tr.intent === "PROPERTY_BUY_VS_BUILD_DECISION") {
       relevantSections = ["property", "overview"];
     } else if (tr.intent === "VEHICLE_PURCHASE_TIMING") {
       relevantSections = ["vehicles", "overview"];

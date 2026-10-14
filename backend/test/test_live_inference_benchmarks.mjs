@@ -1,13 +1,16 @@
 /**
  * SKR ASTRO — Live Local Model Inference & Performance Benchmark Suite
  * ======================================================================
- * Benchmarks:
+ * Strictly verifies live local model inference using local Ollama daemon:
  * 1. Primary Model: qwen2.5:1.5b-instruct
  * 2. Fallback Model: qwen2.5:0.5b-instruct
  * 3. Execution metrics: Latency (ms), Memory RSS (MB), Token Throughput
  * 4. Multilingual Question Parsing: English & Tamil queries
  * 5. Server-Side Evidence Gate & Claim Firewall Grounding
- * 6. Graceful Deterministic Fallback on Unreachable/Stopped daemon
+ * 
+ * NOTE: This test requires active live local model inference.
+ * Deterministic fallback is strictly rejected here and verified separately
+ * in test_offline_fallback.mjs.
  */
 
 import assert from "node:assert/strict";
@@ -17,14 +20,13 @@ import {
   checkLocalModelHealth,
   parseQuestionToSpecification,
   rephraseAnswerWithLocalLLM,
-  LOCAL_INFERENCE_STATUS,
-  LOCAL_AI_MODES
+  LOCAL_INFERENCE_STATUS
 } from "../src/services/localAiService.js";
 import { validateAndSanitizeAIResponse } from "../src/middleware/aiEvidenceGate.js";
 
 async function runLiveBenchmark() {
   console.log("\n===========================================================================");
-  console.log(" SKR ASTRO: LIVE LOCAL MODEL INFERENCE & LATENCY BENCHMARK");
+  console.log(" SKR ASTRO: STRICT LIVE LOCAL MODEL INFERENCE & LATENCY BENCHMARK");
   console.log("===========================================================================\n");
 
   const health = await checkLocalModelHealth();
@@ -34,8 +36,10 @@ async function runLiveBenchmark() {
   console.log(`[ACTIVE MODEL]   Effective Active: ${health.effectiveActiveModel}\n`);
 
   if (!health.healthy || !health.isModelInstalled) {
-    console.warn("⚠ Local LLM runtime is offline or models are not installed. Skipping live inference.");
-    process.exit(0);
+    console.error("FATAL: Live local LLM runtime (Ollama) is offline or required models are not installed.");
+    console.error(`Status: ${health.status}, Healthy: ${health.healthy}, Primary installed: ${health.primaryInstalled}`);
+    console.error("Live inference benchmarks cannot proceed without active local model daemon.");
+    process.exit(1);
   }
 
   const testQueries = [
@@ -84,15 +88,22 @@ async function runLiveBenchmark() {
     const memAfter = process.memoryUsage().rss / (1024 * 1024);
 
     console.log(`• Query: "${q.text}"`);
-    console.log(`  -> Status:    ${result.inferenceStatus}`);
+    console.log(`  -> Status:    ${result?.inferenceStatus}`);
+    console.log(`  -> Source:    ${result?.source}`);
     console.log(`  -> Latency:   ${elapsed} ms`);
     console.log(`  -> RAM RSS:   ${memAfter.toFixed(1)} MB (Δ: ${(memAfter - memBefore).toFixed(2)} MB)`);
-    console.log(`  -> Domain:    ${result.specification.domain} (Confidence: ${result.specification.confidence})`);
-    console.log(`  -> Event:     ${result.specification.event}`);
-    console.log(`  -> Language:  ${result.specification.language}`);
+    console.log(`  -> Domain:    ${result?.specification?.domain} (Confidence: ${result?.specification?.confidence})`);
+    console.log(`  -> Event:     ${result?.specification?.event}`);
+    console.log(`  -> Language:  ${result?.specification?.language}`);
 
-    assert(result.specification.domain, "Parsed domain must be present");
-    assert(result.inferenceStatus === LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS || result.inferenceStatus === LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK);
+    assert(result, "Parsing result must not be null");
+    assert.equal(
+      result.inferenceStatus,
+      LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
+      `Live inference must report LOCAL_MODEL_SUCCESS (got: ${result.inferenceStatus})`
+    );
+    assert.equal(result.source, "LOCAL_LLM", "Source must be LOCAL_LLM for live benchmark");
+    assert(result.specification?.domain, "Parsed domain must be present");
 
     primaryResults.push({ ...q, elapsed, result });
   }
@@ -113,26 +124,24 @@ async function runLiveBenchmark() {
 
   for (const q of testQueries) {
     const start = performance.now();
-    const rawResult = await parseQuestionToSpecification(q.text, { config: fallbackConfig });
+    const result = await parseQuestionToSpecification(q.text, { config: fallbackConfig });
     const elapsed = Math.round(performance.now() - start);
-    const result = rawResult || {
-      source: "DETERMINISTIC_PARSER",
-      inferenceStatus: LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK,
-      specification: {
-        rawQuestion: q.text,
-        language: q.expectedLang,
-        domain: q.expectedDomain,
-        event: "CAREER_OPPORTUNITY",
-        task: "INTERPRETATION"
-      }
-    };
 
     console.log(`• Query: "${q.text}"`);
-    console.log(`  -> Status:    ${result.inferenceStatus}`);
+    console.log(`  -> Status:    ${result?.inferenceStatus}`);
+    console.log(`  -> Source:    ${result?.source}`);
     console.log(`  -> Latency:   ${elapsed} ms`);
-    console.log(`  -> Domain:    ${result.specification.domain} (Language: ${result.specification.language})`);
+    console.log(`  -> Domain:    ${result?.specification?.domain} (Language: ${result?.specification?.language})`);
 
-    assert(result.specification.domain, "Parsed domain must be present");
+    assert(result, "Fallback model parsing result must not be null");
+    assert.equal(
+      result.inferenceStatus,
+      LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
+      `Fallback model live inference must report LOCAL_MODEL_SUCCESS (got: ${result.inferenceStatus})`
+    );
+    assert.equal(result.source, "LOCAL_LLM", "Source must be LOCAL_LLM for fallback model");
+    assert(result.specification?.domain, "Parsed domain must be present");
+
     fallbackResults.push({ ...q, elapsed, result });
   }
 
@@ -146,6 +155,7 @@ async function runLiveBenchmark() {
   const sampleAnswerObject = {
     domain: "CAREER",
     headline: "Career Advancement Window: 2027 to 2028",
+    directAnswer: "Career advancement window: 2027 to 2028 based on 10th lord strength.",
     keyFindings: [
       "10th lord Sun operates in strength in Kendra.",
       "Jupiter transit activates 10th bhava in 2027-2028."
@@ -162,49 +172,21 @@ async function runLiveBenchmark() {
   };
 
   const rephraseStart = performance.now();
-  const rephraseResult = await rephraseAnswerWithLocalLLM({
-    answerObject: sampleAnswerObject,
-    targetLanguage: "en",
-    config: primaryConfig
+  const rephraseResult = await rephraseAnswerWithLocalLLM(sampleAnswerObject, {
+    config: primaryConfig,
+    lang: "en"
   });
   const rephraseElapsed = Math.round(performance.now() - rephraseStart);
 
   console.log(`• Answer Rephrase Latency: ${rephraseElapsed} ms`);
-  console.log(`• Inference Status:       ${rephraseResult.inferenceStatus}`);
-  console.log(`• Sanitized Wording Sample:\n${rephraseResult.rephrasedText.slice(0, 300)}...\n`);
+  console.log(`• Inference Status:       ${rephraseResult?.inferenceStatus}`);
+  console.log(`• Source:                 ${rephraseResult?.source}`);
+  console.log(`• Sanitized Wording Sample:\n${rephraseResult?.rephrasedText?.slice(0, 300)}...\n`);
 
-  assert(rephraseResult.rephrasedText.length > 50, "Rephrased text must not be empty");
-
-  console.log("---------------------------------------------------------------------------");
-  console.log(" BENCHMARK 4: OFFLINE DETERMINISTIC FALLBACK VERIFICATION");
-  console.log("---------------------------------------------------------------------------");
-
-  const offlineConfig = {
-    ...getLocalAiConfig(),
-    endpoint: "http://127.0.0.1:59999" // Unreachable port
-  };
-
-  const offlineStart = performance.now();
-  const rawOffline = await parseQuestionToSpecification("When is my wedding?", { config: offlineConfig });
-  const offlineElapsed = Math.round(performance.now() - offlineStart);
-  const offlineResult = rawOffline || {
-    source: "DETERMINISTIC_PARSER",
-    inferenceStatus: LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK,
-    specification: {
-      rawQuestion: "When is my wedding?",
-      language: "en",
-      domain: "MARRIAGE",
-      event: "MARRIAGE_WINDOW",
-      task: "INTERPRETATION"
-    }
-  };
-
-  console.log(`• Offline Fallback Latency: ${offlineElapsed} ms`);
-  console.log(`• Fallback Status:         ${offlineResult.inferenceStatus}`);
-  console.log(`• Parsed Domain:           ${offlineResult.specification.domain}`);
-
-  assert.equal(offlineResult.inferenceStatus, LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK, "Must cleanly fall back to deterministic parser");
-  assert.equal(offlineResult.specification.domain, "MARRIAGE", "Deterministic parser must correctly identify marriage domain");
+  assert(rephraseResult, "Rephrase result must not be null");
+  assert.equal(rephraseResult.inferenceStatus, LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS, "Rephrase must report LOCAL_MODEL_SUCCESS");
+  assert.equal(rephraseResult.source, "LOCAL_LLM");
+  assert(rephraseResult.rephrasedText && rephraseResult.rephrasedText.length > 50, "Rephrased text must not be empty");
 
   console.log("\n===========================================================================");
   console.log(" ALL LIVE INFERENCE BENCHMARKS COMPLETED SUCCESSFULLY (100% PASS)");
@@ -212,6 +194,6 @@ async function runLiveBenchmark() {
 }
 
 runLiveBenchmark().catch(err => {
-  console.error("Benchmark failed with error:", err);
+  console.error("Live benchmark failed with error:", err);
   process.exit(1);
 });

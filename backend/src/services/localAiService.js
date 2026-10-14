@@ -431,8 +431,55 @@ Do NOT answer the question. Do NOT generate predictions. Output ONLY a valid JSO
       throw new Error(`LOCAL_PARSER_ERROR: Local LLM failed in LOCAL_ONLY mode: ${err.message}`);
     }
     // LOCAL_FIRST or CLOUD_OPTIONAL mode: Gracefully fall back to deterministic parsing
-    return null;
+    return fallbackDeterministicQuestionParser(rawQuestion, lang);
   }
+}
+
+/**
+ * Deterministic rule-based fallback parser for offline scenarios.
+ */
+export function fallbackDeterministicQuestionParser(rawQuestion, lang = "en") {
+  const q = String(rawQuestion || "").toLowerCase();
+  let domain = "GENERAL";
+  let event = "GENERAL_EVENT";
+
+  if (q.includes("marri") || q.includes("wed") || q.includes("spouse") || q.includes("திருமண") || q.includes("கல்யாண")) {
+    domain = "MARRIAGE";
+    event = "MARRIAGE_TIMING";
+  } else if (q.includes("career") || q.includes("job") || q.includes("promotion") || q.includes("work") || q.includes("வேலை") || q.includes("பணி")) {
+    domain = "CAREER";
+    event = "CAREER_OPPORTUNITY";
+  } else if (q.includes("house") || q.includes("property") || q.includes("land") || q.includes("real estate") || q.includes("வீடு") || q.includes("சொத்து") || q.includes("மனை")) {
+    domain = "PROPERTY";
+    event = "PROPERTY_PURCHASE";
+  } else if (q.includes("child") || q.includes("baby") || q.includes("fertility") || q.includes("குழந்தை") || q.includes("சந்ததி")) {
+    domain = "FAMILY";
+    event = "FAMILY_EXPANSION";
+  } else if (q.includes("car") || q.includes("vehicle") || q.includes("வாகனம்") || q.includes("வண்டி")) {
+    domain = "VEHICLE";
+    event = "VEHICLE_PURCHASE";
+  } else if (q.includes("wealth") || q.includes("money") || q.includes("finance") || q.includes("பணம்") || q.includes("செல்வம்")) {
+    domain = "FINANCE";
+    event = "FINANCIAL_STABILITY";
+  } else if (q.includes("travel") || q.includes("abroad") || q.includes("foreign") || q.includes("பயணம்") || q.includes("வெளிநாடு")) {
+    domain = "TRAVEL";
+    event = "FOREIGN_TRIP";
+  }
+
+  return {
+    source: "DETERMINISTIC_PARSER",
+    inferenceStatus: LOCAL_INFERENCE_STATUS.DETERMINISTIC_FALLBACK,
+    specification: {
+      rawQuestion,
+      language: lang,
+      domain,
+      event,
+      task: "INTERPRETATION",
+      subject: "ACTIVE_PROFILE",
+      isCompound: false,
+      confidence: 0.85
+    }
+  };
 }
 
 /**
@@ -487,6 +534,7 @@ ${JSON.stringify({
 
     return {
       source: "LOCAL_LLM",
+      inferenceStatus: LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
       model: result.model,
       rephrasedText: result.content
     };

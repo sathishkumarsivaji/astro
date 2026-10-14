@@ -12,6 +12,7 @@ import { evaluateBusinessExpansionElection } from "./businessExpansionElection.j
 import { evaluateBusinessExpansionDecision } from "./businessExpansionDecision.js";
 import { evaluateForeignTripTiming } from "./foreignTripTiming.js";
 import { evaluateHomeConstructionTiming } from "./homeConstructionTiming.js";
+import { evaluatePropertyBuyVsBuildDecision } from "./propertyDecision.js";
 import { evaluateVehicleAcquisitionTiming } from "./vehicleAcquisitionTiming.js";
 import { evaluateMonthlyOutlook } from "./monthlyOutlook.js";
 import { evaluateChildrenCount, CHILDREN_COUNT_POLICY, resolveChildrenSubject } from "./childrenCount.js";
@@ -30,6 +31,7 @@ export {
   evaluateBusinessExpansionDecision,
   evaluateForeignTripTiming,
   evaluateHomeConstructionTiming,
+  evaluatePropertyBuyVsBuildDecision,
   evaluateVehicleAcquisitionTiming,
   evaluateMonthlyOutlook,
   evaluateChildrenCount,
@@ -124,6 +126,9 @@ export function dispatchTaskEvaluation({ intent, question, context = {}, isTamil
 
       case TASK_INTENTS.HOME_CONSTRUCTION_TIMING:
         return evaluateHomeConstructionTiming({ question, context, isTamil });
+
+      case TASK_INTENTS.PROPERTY_BUY_VS_BUILD_DECISION:
+        return evaluatePropertyBuyVsBuildDecision({ question, context, isTamil });
 
       case TASK_INTENTS.VEHICLE_PURCHASE_TIMING:
         return evaluateVehicleAcquisitionTiming({ question, context, isTamil });

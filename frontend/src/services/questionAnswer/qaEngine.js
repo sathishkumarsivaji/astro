@@ -83,6 +83,7 @@ async function executeSingleQuestionQA({
   plan.questionId = qUnderstanding.questionId;
   plan.rawQuestion = normalizedQ?.raw || (typeof normalizedQ === "string" ? normalizedQ : "");
   plan.mode = mode;
+  plan.isTamil = Boolean(normalizedQ?.isTamil || mode === "tamil");
 
   // Stage 5: Evidence Retrieval & Evidence Graph Population
   const evidence = retrieveEvidence(plan, context);

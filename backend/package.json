@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node test_backend.mjs && node test/test_stage1_prediction_records.mjs && node test/test_stage2_evidence_firewall.mjs && node test/test_stage3_feedback_outcomes.mjs && node test/test_stage5_continuous_learning.mjs && node test/test_local_ai_service.mjs && node test/test_local_ai_e2e_acceptance.mjs && node test/test_no_pii_in_release.mjs"
+    "test": "node test_backend.mjs && node test/test_stage1_prediction_records.mjs && node test/test_stage2_evidence_firewall.mjs && node test/test_stage3_feedback_outcomes.mjs && node test/test_stage5_continuous_learning.mjs && node test/test_local_ai_service.mjs && node test/test_local_ai_e2e_acceptance.mjs && node test/test_offline_fallback.mjs && node test/test_live_inference_benchmarks.mjs && node test/test_no_pii_in_release.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",

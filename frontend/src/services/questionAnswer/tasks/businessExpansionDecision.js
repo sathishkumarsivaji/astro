@@ -22,8 +22,10 @@ export function evaluateBusinessExpansionDecision({ question = "", context = {},
   const questionId = context.questionId || "TASK_BUSINESS_DECISION";
   const raw = String(question || "").toLowerCase();
 
-  const isBranchExplicit = /\b(branch|store|location|outlet|அலுவலகம்|கிளை)\b/i.test(raw);
+  const isBranchExplicit = /\b(branch|store|location|outlet|second\s+office|another\s+branch|அலுவலகம்|கிளை)\b/i.test(raw);
+  const isExistingExplicit = /\b(existing\s+enterprise|current\s+branch|same\s+business|தற்போதைய\s*தொழில்\s*கிளை)\b/i.test(raw);
   const isNewExplicit = /\b(new\s+business|start\s+business|new\s+industry|another\s+field|diversif|வேறு\s*தொழில்|புதிய\s*துறை|புதிய\s*தொழில்)\b/i.test(raw);
+  const isComparative = ((isBranchExplicit || isExistingExplicit) && isNewExplicit) || /(?:expand.*or.*(?:new|start)|(?:new|start).*or.*expand|வேறு.*அல்லது.*விரிவாக்கம்)/i.test(raw);
 
   // Decision breakdown profiles
   const newBusinessAnalysis = {
@@ -54,8 +56,8 @@ export function evaluateBusinessExpansionDecision({ question = "", context = {},
     limitationTa: "கிளை விரிவாக்கத்திற்கு நிலையான நிதி திட்டமிடலும், பணியாளர் நம்பகத்தன்மையும் மிக அவசியம்."
   };
 
-  // If specifically asking about branch expansion
-  if (isBranchExplicit && !isNewExplicit) {
+  // If specifically asking about branch/existing expansion ONLY (not comparative)
+  if (!isComparative && (isBranchExplicit || isExistingExplicit) && !isNewExplicit) {
     const directAnswer = isTamil
       ? "உங்கள் தற்போதைய தொழிலை விரிவுபடுத்துவது (புதிய கிளை தொடங்குதல்) வணிக கூட்டாண்மை (7-ம் பாவகம்), நிர்வாக திறன் (10-ம் பாவகம்) மற்றும் நிலையான லாபத்தை (11-ம் பாவகம்) அடிப்படையாகக் கொண்டது."
       : "Evaluating branch expansion for your existing enterprise centers on commercial trade partnerships (7th house), administrative authority (10th house), and recurrent revenue gains (11th house).";
@@ -88,8 +90,8 @@ export function evaluateBusinessExpansionDecision({ question = "", context = {},
     };
   }
 
-  // If specifically asking about starting a new business
-  if (isNewExplicit && !isBranchExplicit) {
+  // If specifically asking about starting a new business ONLY (not comparative)
+  if (!isComparative && isNewExplicit && !isBranchExplicit && !isExistingExplicit) {
     const directAnswer = isTamil
       ? "முற்றிலும் புதிய தொழில் தொடங்குவது உங்கள் சுயமுயற்சி (3-ம் பாவகம்), வணிக அறிவு (5-ம் பாவகம்) மற்றும் தொழில் ஆதிபத்தியம் (10-ம் பாவகம்) சார்ந்த புதிய கட்டமைப்பைக் கோருகிறது."
       : "Initiating a completely new business venture requires synthesizing entrepreneurial drive (3rd house), strategic intellect (5th house), and occupational leadership (10th house).";

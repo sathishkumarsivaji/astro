@@ -69,6 +69,15 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
     plan.requiredHouses.add(12);
     plan.requiredDashas = true;
     plan.requiredTransits = true;
+  } else if (primaryIntent === TASK_INTENTS.PROPERTY_BUY_VS_BUILD_DECISION) {
+    plan.requiredHouses.add(2);
+    plan.requiredHouses.add(4);
+    plan.requiredHouses.add(11);
+    plan.requiredPlanets.add("Mars");
+    plan.requiredPlanets.add("Venus");
+    plan.requiredPlanets.add("Saturn");
+    plan.requiredDashas = true;
+    plan.requiredTransits = true;
   } else if (primaryIntent === TASK_INTENTS.HOME_CONSTRUCTION_TIMING) {
     plan.requiredHouses.add(4);
     plan.requiredHouses.add(11);

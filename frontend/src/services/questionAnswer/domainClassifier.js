@@ -57,6 +57,9 @@ export function classifyDomains(normalizedQ, intentResult, history = []) {
   if (intents.has("BUSINESS_EXPANSION_ELECTION") || intents.has("BUSINESS_EXPANSION_DECISION") || intents.has("BUSINESS_DIVERSIFICATION_DECISION")) {
     domains.add(DOMAINS.BUSINESS);
   }
+  if (intents.has("PROPERTY_BUY_VS_BUILD_DECISION")) {
+    domains.add(DOMAINS.PROPERTY);
+  }
 
   // 1. Map directly from intent if specialized
   if (intents.has("SPOUSE_FAMILY") || intents.has("SPOUSE_DIRECTION") || intents.has("SPOUSE_DISTANCE") || intents.has("SPOUSE_CHARACTERISTICS") || intents.has("MARRIAGE")) {

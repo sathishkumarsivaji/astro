@@ -19,6 +19,7 @@ export const TASK_INTENTS = Object.freeze({
   BUSINESS_EXPANSION_DECISION: "BUSINESS_EXPANSION_DECISION",
   BUSINESS_DIVERSIFICATION_DECISION: "BUSINESS_DIVERSIFICATION_DECISION",
   FOREIGN_TRIP_TIMING: "FOREIGN_TRIP_TIMING",
+  PROPERTY_BUY_VS_BUILD_DECISION: "PROPERTY_BUY_VS_BUILD_DECISION",
   HOME_CONSTRUCTION_TIMING: "HOME_CONSTRUCTION_TIMING",
   VEHICLE_PURCHASE_TIMING: "VEHICLE_PURCHASE_TIMING",
   MONTHLY_OUTLOOK: "MONTHLY_OUTLOOK",
@@ -122,7 +123,7 @@ export function classifyIntent(normalizedQ, history = []) {
   }
 
   // D. Business Expansion vs Diversification Decision
-  if (/(?:expand.*or.*diversif|new\s+branch.*or.*different\s+business|open\s+another\s+branch.*or.*different\s+business|expand.*same\s+business.*or|branch.*different\s+business|வேறு\s*தொழில்.*அல்லது.*விரிவாக்கம்)/i.test(text)) {
+  if (/(?:expand.*or.*(?:diversif|new|start)|(?:expand.*existing.*or.*(?:new|start))|new\s+branch.*or.*different\s+business|open\s+another\s+branch.*or.*different\s+business|expand.*same\s+business.*or|branch.*different\s+business|வேறு\s*தொழில்.*அல்லது.*விரிவாக்கம்|தொழில்\s*விரிவாக்க.*அல்லது)/i.test(text)) {
     detectedIntents.add(TASK_INTENTS.BUSINESS_EXPANSION_DECISION);
     detectedIntents.add(TASK_INTENTS.BUSINESS_DIVERSIFICATION_DECISION);
   }
@@ -132,8 +133,12 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(TASK_INTENTS.FOREIGN_TRIP_TIMING);
   }
 
-  // F. Home Construction Timing (Building a home / house construction)
-  if (/(?:build|construct|erect).*(?:new\s+home|new\s+house|house|home)|house\s+construction|home\s+construction|(?:when\s+will\s+i|when\s+can\s+i|shall\s+i|will\s+i).*(?:build|construct).*(?:home|house)|புதிய\s*வீடு.*கட்ட|வீடு\s*கட்ட|கட்டிடப்\s*பணி/i.test(text)) {
+  // F0. Compound Property Comparison (Buy vs Build a house)
+  if (/(?:buy.*or.*build|build.*or.*buy|வாங்க.*அல்லது.*கட்ட|கட்ட.*அல்லது.*வாங்க|வாங்குவதா.*கட்டுவதா)/i.test(text) &&
+      /(?:house|home|property|flat|apartment|வீடு|மனை|நிலம்)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.PROPERTY_BUY_VS_BUILD_DECISION);
+  } else if (/(?:build|construct|erect).*(?:new\s+home|new\s+house|house|home)|house\s+construction|home\s+construction|(?:when\s+will\s+i|when\s+can\s+i|shall\s+i|will\s+i).*(?:build|construct).*(?:home|house)|புதிய\s*வீடு.*கட்ட|வீடு\s*கட்ட|கட்டிடப்\s*பணி/i.test(text)) {
+    // F. Home Construction Timing (Building a home / house construction)
     detectedIntents.add(TASK_INTENTS.HOME_CONSTRUCTION_TIMING);
   }
 
@@ -440,6 +445,7 @@ export function classifyIntent(normalizedQ, history = []) {
     TASK_INTENTS.BUSINESS_EXPANSION_DECISION,
     TASK_INTENTS.BUSINESS_DIVERSIFICATION_DECISION,
     TASK_INTENTS.FOREIGN_TRIP_TIMING,
+    TASK_INTENTS.PROPERTY_BUY_VS_BUILD_DECISION,
     TASK_INTENTS.HOME_CONSTRUCTION_TIMING,
     TASK_INTENTS.VEHICLE_PURCHASE_TIMING,
     TASK_INTENTS.MONTHLY_OUTLOOK,

@@ -76,7 +76,7 @@ export function retrieveEvidence(plan, context) {
       intent: plan.primaryIntent,
       question: plan.rawQuestion || context?.rawQuestion || context?.question || "",
       context,
-      isTamil: Boolean(context?.isTamil || context?.lang === "ta")
+      isTamil: Boolean(context?.isTamil || context?.lang === "ta" || plan?.isTamil || plan?.mode === "tamil" || /[\u0B80-\u0BFF]/.test(plan?.rawQuestion || ""))
     });
   }
 

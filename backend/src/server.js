@@ -905,8 +905,8 @@ app.post('/api/ai/parse-question', rateLimiter, async (req, res) => {
       return res.json({
         success: true,
         source: parsed.source,
-        inferenceStatus: LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
-        model: parsed.model,
+        inferenceStatus: parsed.inferenceStatus || LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
+        model: parsed.model || null,
         specification: parsed.specification
       });
     }
