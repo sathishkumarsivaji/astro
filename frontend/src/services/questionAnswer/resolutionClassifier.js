@@ -8,17 +8,42 @@
  * Implements Section 9 and Section 10 of the Precision Q&A Engine Mandate.
  */
 
+export const CANONICAL_TIMING_STATUSES = Object.freeze([
+  "DATE_RANGE",
+  "MONTH_RANGE",
+  "SEASON",
+  "YEAR",
+  "NOT_DISCRIMINATING",
+  "INSUFFICIENT_DATA"
+]);
+
 export const TIMING_RESOLUTIONS = Object.freeze({
   YEAR: "YEAR",
-  YEAR_RANGE: "YEAR_RANGE",
+  YEAR_RANGE: "YEAR",
   SEASON: "SEASON",
   MONTH_RANGE: "MONTH_RANGE",
   DATE_RANGE: "DATE_RANGE",
-  DATE: "DATE",
-  TIME: "TIME",
+  DATE: "DATE_RANGE",
+  TIME: "DATE_RANGE",
   NOT_DISCRIMINATING: "NOT_DISCRIMINATING",
   INSUFFICIENT_DATA: "INSUFFICIENT_DATA"
 });
+
+/**
+ * Normalizes any resolution token strictly into one of the 6 canonical statuses:
+ * DATE_RANGE, MONTH_RANGE, SEASON, YEAR, NOT_DISCRIMINATING, INSUFFICIENT_DATA
+ */
+export function toCanonicalTimingResolution(resolution) {
+  if (!resolution) return null;
+  const upper = String(resolution).toUpperCase().trim();
+  if (upper === "DATE_RANGE" || upper === "DATE" || upper === "TIME") return "DATE_RANGE";
+  if (upper === "MONTH_RANGE" || upper === "MONTH") return "MONTH_RANGE";
+  if (upper === "SEASON") return "SEASON";
+  if (upper === "YEAR" || upper === "YEAR_RANGE" || upper === "AGE_RANGE") return "YEAR";
+  if (upper === "NOT_DISCRIMINATING" || upper === "NO_DISCRIMINATING_WINDOW") return "NOT_DISCRIMINATING";
+  if (upper === "INSUFFICIENT_DATA") return "INSUFFICIENT_DATA";
+  return "NOT_DISCRIMINATING";
+}
 
 export const ANSWERABILITY_STATES = Object.freeze({
   ANSWERABLE: "ANSWERABLE",
@@ -150,19 +175,20 @@ export function classifyResolution(plan, evidence) {
     }
     if (state === "ANSWERED") {
       const hasWindows = Array.isArray(tr.candidateWindows) && tr.candidateWindows.length > 0;
-      const taskRes = tr.timingResolution !== undefined
+      const rawRes = tr.timingResolution !== undefined
         ? tr.timingResolution
         : (tr.evaluatedTimeframe?.kind === "LOCAL_DATE"
           ? TIMING_RESOLUTIONS.DATE
           : (tr.evaluatedTimeframe?.kind === "LOCAL_WEEK"
             ? TIMING_RESOLUTIONS.DATE_RANGE
             : (hasWindows ? TIMING_RESOLUTIONS.MONTH_RANGE : null)));
+      const canonicalRes = rawRes ? toCanonicalTimingResolution(rawRes) : null;
       return {
-        timingResolution: taskRes,
+        timingResolution: canonicalRes,
         timingContract: {
-          status: taskRes ? "TRADITIONAL_WINDOW" : "NO_DISCRIMINATING_WINDOW",
-          resolution: taskRes,
-          windows: tr.candidateWindows || [],
+          status: canonicalRes && canonicalRes !== "NOT_DISCRIMINATING" ? "TRADITIONAL_WINDOW" : "NO_DISCRIMINATING_WINDOW",
+          resolution: canonicalRes,
+          windows: canonicalRes && canonicalRes !== "NOT_DISCRIMINATING" ? (tr.candidateWindows || []) : [],
           empiricalStatus: "NOT_VALIDATED"
         },
         evidenceStatus: EVIDENCE_STATUSES.TRADITIONAL_ONLY,
@@ -197,7 +223,7 @@ export function classifyResolution(plan, evidence) {
 
   if (evidence.timingWindows && evidence.timingWindows.length > 0) {
     const firstWin = evidence.timingWindows[0];
-    timingResolution = firstWin.resolution || TIMING_RESOLUTIONS.MONTH_RANGE;
+    timingResolution = toCanonicalTimingResolution(firstWin.resolution || TIMING_RESOLUTIONS.MONTH_RANGE);
     timingContract = {
       status: "TRADITIONAL_WINDOW",
       resolution: timingResolution,

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results (V3)",
-    "generatedAt": "2026-10-10T11:48:18.385Z",
+    "generatedAt": "2026-10-14T13:34:51.947Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
     "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
@@ -17,59 +17,19 @@
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
       "initialCacheEntries": 20508,
-      "cacheHits": 3189,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
+      "cacheHits": 17623,
+      "cacheMisses": 0,
+      "recomputedCount": 0,
       "invalidatedEntries": 0,
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
-    },
-    "executionRecord": {
-      "runId": "RUN-COMBINED-BENCHMARK-20261010-001",
-      "cohortName": "FULL_COHORT_100_PERCENT",
-      "cohortType": "COMBINED_ALL_COHORTS",
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-      "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff:116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-      "cacheSnapshotVersion": "v3.0.0-20508",
-      "predictionCount": 6940,
-      "cacheHits": 3189,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
-      "errors": 0
-    },
-    "internalAggregateExecutionRecord": {
-      "runId": "RUN-INTERNAL-AGGREGATE-20261010-001",
-      "cohortName": "INTERNAL_EVALUATION_COMBINED",
-      "cohortType": "INTERNAL_DEVELOPMENT_EVAL",
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-      "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2:64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
-      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-      "cacheSnapshotVersion": "v3.0.0-20508",
-      "predictionCount": 3189,
-      "cacheHits": 3189,
-      "cacheMisses": 0,
-      "recomputedCount": 0,
-      "errors": 0
-    },
-    "historicalCacheSnapshot": {
-      "description": "Historical cumulative cache statistics preserved from v2 baseline run",
-      "initialCacheEntries": 10487,
-      "cumulativeCacheHits": 17623,
-      "cacheMisses": 0,
-      "recomputedCount": 0,
-      "note": "Preserved historical audit artifact; superseded by run-level execution records in v3."
+      "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
+      "calibrationHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
     }
   },
   "splits": {
     "BLIND_TEST": {
       "cohortName": "BLIND_TEST",
       "n": 1634,
-      "actualExecutionDurationSec": 0.54,
+      "actualExecutionDurationSec": 0.56,
       "actualPredictionCount": 1634,
       "cacheHits": 1634,
       "cacheMisses": 0,
@@ -77,7 +37,7 @@
       "errors": 0,
       "excludedCount": 24,
       "unknownCount": 0,
-      "elapsedSeconds": 0.54,
+      "elapsedSeconds": 0.56,
       "occurrence": {
         "n": 1584,
         "censoringBreakdown": {
@@ -94,7 +54,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.016, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=126) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.016, ROC-AUC=0.5569 (95% CI [0.5086, 0.6052]). Meets basic non-degeneracy criteria (TN=126) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 160,
@@ -281,8 +241,7 @@
           "within90DaysPct": 1.76,
           "within180DaysPct": 4.12,
           "within365DaysPct": 8.98
-        },
-        "baselineComparisonStatus": "STATISTICALLY_TIED"
+        }
       },
       "unionMode": {
         "status": "EVALUATED",
@@ -396,28 +355,12 @@
           "hasTrueNegatives": false
         },
         "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
-      },
-      "executionRecord": {
-        "runId": "RUN-INTERNAL-BLIND-20261010-001",
-        "cohortName": "BLIND_TEST",
-        "cohortType": "INTERNAL_BLIND_EVAL",
-        "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-        "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-        "evaluationDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
-        "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-        "cacheSnapshotVersion": "v3.0.0-20508",
-        "predictionCount": 1634,
-        "cacheHits": 1634,
-        "cacheMisses": 0,
-        "recomputedCount": 0,
-        "errors": 0
       }
     },
     "INTERNAL_HOLDOUT": {
       "cohortName": "INTERNAL_HOLDOUT",
       "n": 1555,
-      "actualExecutionDurationSec": 0.55,
+      "actualExecutionDurationSec": 0.71,
       "actualPredictionCount": 1555,
       "cacheHits": 1555,
       "cacheMisses": 0,
@@ -425,7 +368,7 @@
       "errors": 0,
       "excludedCount": 26,
       "unknownCount": 0,
-      "elapsedSeconds": 0.55,
+      "elapsedSeconds": 0.71,
       "occurrence": {
         "n": 1509,
         "censoringBreakdown": {
@@ -442,7 +385,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.5%, MCC=0.019, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=115) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.019, ROC-AUC=0.5419 (95% CI [0.4909, 0.5929]). Meets basic non-degeneracy criteria (TN=115) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 161,
@@ -629,8 +572,7 @@
           "within90DaysPct": 1.83,
           "within180DaysPct": 3.74,
           "within365DaysPct": 8.11
-        },
-        "baselineComparisonStatus": "STATISTICALLY_TIED"
+        }
       },
       "unionMode": {
         "status": "EVALUATED",
@@ -744,28 +686,12 @@
           "hasTrueNegatives": false
         },
         "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
-      },
-      "executionRecord": {
-        "runId": "RUN-INTERNAL-HOLDOUT-20261010-001",
-        "cohortName": "INTERNAL_HOLDOUT",
-        "cohortType": "INTERNAL_HOLDOUT_EVAL",
-        "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-        "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-        "evaluationDatasetHash": "64abc012ebf5dce739e32cf633ab2473a94b05a37b2e19f46bf2c7ee15c8bdff",
-        "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-        "cacheSnapshotVersion": "v3.0.0-20508",
-        "predictionCount": 1555,
-        "cacheHits": 1555,
-        "cacheMisses": 0,
-        "recomputedCount": 0,
-        "errors": 0
       }
     },
     "EXTERNAL_ASTRO_DATABANK_CERTIFIED": {
       "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
       "n": 3751,
-      "actualExecutionDurationSec": 1.69,
+      "actualExecutionDurationSec": 2.08,
       "actualPredictionCount": 3751,
       "cacheHits": 0,
       "cacheMisses": 3751,
@@ -773,7 +699,7 @@
       "errors": 0,
       "excludedCount": 556,
       "unknownCount": 25,
-      "elapsedSeconds": 1.69,
+      "elapsedSeconds": 2.08,
       "occurrence": {
         "n": 313,
         "censoringBreakdown": {
@@ -790,7 +716,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=0.5072 (95% CI [0.334, 0.6804]). Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 33,
@@ -977,8 +903,7 @@
           "within90DaysPct": 1.56,
           "within180DaysPct": 2.5,
           "within365DaysPct": 5.94
-        },
-        "baselineComparisonStatus": "STATISTICALLY_TIED"
+        }
       },
       "unionMode": {
         "status": "NOT_AVAILABLE",
@@ -1094,29 +1019,13 @@
           "hasTrueNegatives": false
         },
         "validationStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED"
-      },
-      "executionRecord": {
-        "runId": "RUN-ADB-EXTERNAL-20261010-001",
-        "cohortName": "EXTERNAL_ASTRO_DATABANK_CERTIFIED",
-        "cohortType": "EXTERNAL_INDEPENDENT",
-        "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-        "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-        "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-        "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-        "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-        "cacheSnapshotVersion": "v3.0.0-20508",
-        "predictionCount": 3751,
-        "cacheHits": 0,
-        "cacheMisses": 3751,
-        "recomputedCount": 3751,
-        "errors": 0
       }
     },
     "EXTERNAL_SENSITIVITY": {
       "AA_ONLY": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
         "n": 2591,
-        "actualExecutionDurationSec": 1.75,
+        "actualExecutionDurationSec": 1.84,
         "actualPredictionCount": 2591,
         "cacheHits": 0,
         "cacheMisses": 2591,
@@ -1124,7 +1033,7 @@
         "errors": 0,
         "excludedCount": 262,
         "unknownCount": 3,
-        "elapsedSeconds": 1.75,
+        "elapsedSeconds": 1.84,
         "occurrence": {
           "n": 193,
           "censoringBreakdown": {
@@ -1297,7 +1206,7 @@
       "A_ONLY": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
         "n": 1160,
-        "actualExecutionDurationSec": 1.87,
+        "actualExecutionDurationSec": 1.79,
         "actualPredictionCount": 1160,
         "cacheHits": 0,
         "cacheMisses": 1160,
@@ -1305,7 +1214,7 @@
         "errors": 0,
         "excludedCount": 294,
         "unknownCount": 22,
-        "elapsedSeconds": 1.87,
+        "elapsedSeconds": 1.79,
         "occurrence": {
           "n": 120,
           "censoringBreakdown": {
@@ -1478,7 +1387,7 @@
       "ALL_INDEPENDENT": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
         "n": 4798,
-        "actualExecutionDurationSec": 0.64,
+        "actualExecutionDurationSec": 1.02,
         "actualPredictionCount": 4798,
         "cacheHits": 4798,
         "cacheMisses": 0,
@@ -1486,7 +1395,7 @@
         "errors": 0,
         "excludedCount": 686,
         "unknownCount": 28,
-        "elapsedSeconds": 0.64,
+        "elapsedSeconds": 1.02,
         "occurrence": {
           "n": 428,
           "censoringBreakdown": {
@@ -1659,7 +1568,7 @@
       "REGRESSION_SAMPLE": {
         "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
         "n": 500,
-        "actualExecutionDurationSec": 1.78,
+        "actualExecutionDurationSec": 1.74,
         "actualPredictionCount": 500,
         "cacheHits": 0,
         "cacheMisses": 500,
@@ -1667,7 +1576,7 @@
         "errors": 0,
         "excludedCount": 68,
         "unknownCount": 3,
-        "elapsedSeconds": 1.78,
+        "elapsedSeconds": 1.74,
         "occurrence": {
           "n": 427,
           "censoringBreakdown": {

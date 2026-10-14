@@ -37,6 +37,7 @@ import {
   getPredictionById,
   listPredictionsForCustomer
 } from './services/predictionRecordService.js';
+import { replayPrediction } from './services/predictionReplayService.js';
 import {
   getLocalAiConfig,
   checkLocalModelHealth,
@@ -1318,6 +1319,7 @@ app.post('/api/outcomes/report', authenticateSession, (req, res) => {
       reportedDate,
       datePrecision,
       isCensored,
+      outcomeCategory,
       observationEndedAt,
       metadata
     } = req.body || {};
@@ -1332,6 +1334,7 @@ app.post('/api/outcomes/report', authenticateSession, (req, res) => {
       predictionId,
       customerId: userId,
       eventOccurred: Boolean(eventOccurred),
+      outcomeCategory: outcomeCategory || (Boolean(isCensored) ? "CENSORED" : "USER_REPORTED"),
       reportedDate: reportedDate || null,
       datePrecision: datePrecision || "APPROX_YEAR",
       isCensored: Boolean(isCensored),
@@ -1382,6 +1385,23 @@ app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
     return res.status(201).json({ success: true, verification: verificationRecord });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to verify outcome.', details: err.message });
+  }
+});
+
+// Replay prediction against observed outcome (Phase 4 & Phase 5)
+app.post('/api/predictions/:id/replay', authenticateSession, (req, res) => {
+  try {
+    const predictionId = req.params.id;
+    const { observedOutcomeOverride, options } = req.body || {};
+    const replayResult = replayPrediction(predictionId, observedOutcomeOverride, options);
+
+    if (!replayResult.success) {
+      return res.status(replayResult.code === 'NOT_FOUND' ? 404 : 400).json(replayResult);
+    }
+
+    return res.json(replayResult);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to replay prediction.', details: err.message });
   }
 });
 

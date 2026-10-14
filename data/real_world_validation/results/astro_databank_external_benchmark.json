@@ -3,7 +3,7 @@
     "title": "Astro-Databank Independent External Validation Benchmark (V3)",
     "sourceURL": "https://www.astro.com/astro-databank/",
     "exportFormat": "WIKIDUMP_MEDIAWIKI_XML",
-    "generatedAt": "2026-10-10T11:48:18.149Z",
+    "generatedAt": "2026-10-14T13:34:51.741Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
     "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
@@ -26,38 +26,18 @@
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
       "initialCacheEntries": 20508,
-      "cacheHits": 0,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
+      "cacheHits": 17623,
+      "cacheMisses": 0,
+      "recomputedCount": 0,
       "invalidatedEntries": 0,
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
-    },
-    "executionRecord": {
-      "runId": "RUN-ADB-EXTERNAL-20261010-001",
-      "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-      "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-      "cacheSnapshotVersion": "v3.0.0-20508",
-      "predictionCount": 3751,
-      "cacheHits": 0,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
-      "errors": 0,
-      "recomputationStats": {
-        "cacheHitRate": 0,
-        "missRate": 1,
-        "recomputationRatio": 1
-      }
+      "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
+      "calibrationHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
     }
   },
   "primaryBenchmark": {
     "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
     "n": 3751,
-    "actualExecutionDurationSec": 1.69,
+    "actualExecutionDurationSec": 2.08,
     "actualPredictionCount": 3751,
     "cacheHits": 0,
     "cacheMisses": 3751,
@@ -65,7 +45,7 @@
     "errors": 0,
     "excludedCount": 556,
     "unknownCount": 25,
-    "elapsedSeconds": 1.69,
+    "elapsedSeconds": 2.08,
     "occurrence": {
       "n": 313,
       "censoringBreakdown": {
@@ -82,7 +62,7 @@
       "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
       "classifierStatus": "NON_DISCRIMINATIVE",
       "isDegenerate": false,
-      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=0.5072 (95% CI [0.334, 0.6804]). Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
       "status": "NOT_DISCRIMINATIVE",
       "confusionMatrix": {
         "tp": 33,
@@ -194,18 +174,6 @@
           "fittedParameters": {
             "intercept": 2.1631,
             "slope": 0.3938
-          },
-          "astrologyOnlyComparisonModelMCC": 0.0397,
-          "primaryCalibratedClassifierMCC": 0.0109,
-          "thresholdContext": {
-            "operatingThreshold": 0.91,
-            "decisionRule": "Validation-frozen cross-model comparison threshold (tau = 0.91)",
-            "confusionMatrix": {
-              "tp": 84,
-              "fp": 2,
-              "tn": 9,
-              "fn": 218
-            }
           }
         },
         {
@@ -236,41 +204,7 @@
             "betaAstrology": 0.3627
           }
         }
-      ],
-      "primaryCalibratedClassifierMCC": 0.0109,
-      "astrologyOnlyComparisonModelMCC": 0.0397,
-      "thresholdContext": {
-        "primaryCalibratedClassifier": {
-          "operatingThreshold": 0.89,
-          "decisionRule": "High-specificity calibration constraint (Specificity >= 90%)",
-          "confusionMatrix": {
-            "tp": 33,
-            "fp": 1,
-            "tn": 10,
-            "fn": 269
-          },
-          "specificity": 0.9091,
-          "sensitivity": 0.1093,
-          "accuracy": 0.1374,
-          "mcc": 0.0109,
-          "rocAuc": 0.5072
-        },
-        "astrologyOnlyComparisonModel": {
-          "operatingThreshold": 0.91,
-          "decisionRule": "Validation-frozen cross-model comparison threshold (tau = 0.91)",
-          "confusionMatrix": {
-            "tp": 84,
-            "fp": 2,
-            "tn": 9,
-            "fn": 218
-          },
-          "specificity": 0.8182,
-          "sensitivity": 0.2781,
-          "accuracy": 0.2971,
-          "mcc": 0.0397,
-          "rocAuc": 0.5072
-        }
-      }
+      ]
     },
     "timing": {
       "n": 320,
@@ -315,8 +249,7 @@
         "within90DaysPct": 1.56,
         "within180DaysPct": 2.5,
         "within365DaysPct": 5.94
-      },
-      "baselineComparisonStatus": "STATISTICALLY_TIED"
+      }
     },
     "unionMode": {
       "status": "NOT_AVAILABLE",
@@ -468,13 +401,13 @@
     "demographicBaselineMAE": 6.41,
     "demographicBaselineWithin1yPct": 19.38,
     "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%) on the independent external Astro-Databank cohort (N=320). Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
   },
   "sensitivityAnalyses": {
     "AA_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
       "n": 2591,
-      "actualExecutionDurationSec": 1.75,
+      "actualExecutionDurationSec": 1.84,
       "actualPredictionCount": 2591,
       "cacheHits": 0,
       "cacheMisses": 2591,
@@ -482,7 +415,7 @@
       "errors": 0,
       "excludedCount": 262,
       "unknownCount": 3,
-      "elapsedSeconds": 1.75,
+      "elapsedSeconds": 1.84,
       "occurrence": {
         "n": 193,
         "censoringBreakdown": {
@@ -655,7 +588,7 @@
     "A_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
       "n": 1160,
-      "actualExecutionDurationSec": 1.87,
+      "actualExecutionDurationSec": 1.79,
       "actualPredictionCount": 1160,
       "cacheHits": 0,
       "cacheMisses": 1160,
@@ -663,7 +596,7 @@
       "errors": 0,
       "excludedCount": 294,
       "unknownCount": 22,
-      "elapsedSeconds": 1.87,
+      "elapsedSeconds": 1.79,
       "occurrence": {
         "n": 120,
         "censoringBreakdown": {
@@ -836,7 +769,7 @@
     "ALL_INDEPENDENT": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
       "n": 4798,
-      "actualExecutionDurationSec": 0.64,
+      "actualExecutionDurationSec": 1.02,
       "actualPredictionCount": 4798,
       "cacheHits": 4798,
       "cacheMisses": 0,
@@ -844,7 +777,7 @@
       "errors": 0,
       "excludedCount": 686,
       "unknownCount": 28,
-      "elapsedSeconds": 0.64,
+      "elapsedSeconds": 1.02,
       "occurrence": {
         "n": 428,
         "censoringBreakdown": {
@@ -1017,7 +950,7 @@
     "ASTRO_DATABANK_REGRESSION_SAMPLE": {
       "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
       "n": 500,
-      "actualExecutionDurationSec": 1.78,
+      "actualExecutionDurationSec": 1.74,
       "actualPredictionCount": 500,
       "cacheHits": 0,
       "cacheMisses": 500,
@@ -1025,7 +958,7 @@
       "errors": 0,
       "excludedCount": 68,
       "unknownCount": 3,
-      "elapsedSeconds": 1.78,
+      "elapsedSeconds": 1.74,
       "occurrence": {
         "n": 427,
         "censoringBreakdown": {
@@ -1282,18 +1215,6 @@
         "fittedParameters": {
           "intercept": 2.1631,
           "slope": 0.3938
-        },
-        "astrologyOnlyComparisonModelMCC": 0.0397,
-        "primaryCalibratedClassifierMCC": 0.0109,
-        "thresholdContext": {
-          "operatingThreshold": 0.91,
-          "decisionRule": "Validation-frozen cross-model comparison threshold (tau = 0.91)",
-          "confusionMatrix": {
-            "tp": 84,
-            "fp": 2,
-            "tn": 9,
-            "fn": 218
-          }
         }
       },
       {
@@ -1325,6 +1246,6 @@
         }
       }
     ],
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%) on the independent external Astro-Databank cohort (N=320). Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
   }
 }

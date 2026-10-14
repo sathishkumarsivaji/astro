@@ -6,35 +6,11 @@
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-    "generatedAt": "2026-10-10T11:48:18.382Z",
+    "generatedAt": "2026-10-14T13:34:51.944Z",
     "modelVersion": "2.2.0",
-    "schemaVersion": "3.0",
-    "cacheProvenance": {
-      "initialCacheEntries": 20508,
-      "cacheHits": 0,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
-      "invalidatedEntries": 0,
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3"
-    },
-    "executionRecord": {
-      "runId": "RUN-ADB-EXTERNAL-20261010-001",
-      "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
-      "predictionEngineHash": "0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1",
-      "calibrationModelHash": "029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3",
-      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-      "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-      "cacheSnapshotVersion": "v3.0.0-20508",
-      "predictionCount": 3751,
-      "cacheHits": 0,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
-      "errors": 0
-    }
+    "schemaVersion": "3.0"
   },
-  "evaluationDate": "2026-10-10T11:48:18.382Z",
+  "evaluationDate": "2026-10-14T13:34:51.944Z",
   "independenceVerification": {
     "status": "VERIFIED_INDEPENDENT",
     "totalExportRecords": 6036,
@@ -50,8 +26,8 @@
       "tn": 10,
       "fn": 269
     },
-    "occurrenceClassifierStatus": "NON_DISCRIMINATIVE",
-    "occurrenceIsDegenerate": false,
+    "occurrenceClassifierStatus": "DEGENERATE_BASE_RATE_CLASSIFIER",
+    "occurrenceIsDegenerate": true,
     "fourModelComparison": [
       {
         "modelId": "MODEL_0_NULL",
@@ -132,9 +108,7 @@
         "fittedParameters": {
           "intercept": 2.1631,
           "slope": 0.3938
-        },
-        "astrologyOnlyComparisonModelMCC": 0.0397,
-        "primaryCalibratedClassifierMCC": 0.0109
+        }
       },
       {
         "modelId": "MODEL_3_COMBINED",
@@ -189,22 +163,7 @@
     "demographicBaselineMAE": 6.41,
     "demographicBaselineWithin1yPct": 19.38,
     "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%) on the independent external Astro-Databank cohort (N=320). Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.",
-    "primaryCalibratedClassifierMCC": 0.0109,
-    "astrologyOnlyComparisonModelMCC": 0.0397,
-    "primaryConfusionMatrix": {
-      "tp": 33,
-      "fp": 1,
-      "tn": 10,
-      "fn": 269
-    },
-    "comparisonConfusionMatrix": {
-      "tp": 84,
-      "fp": 2,
-      "tn": 9,
-      "fn": 218
-    },
-    "mccOperatingPointsExplanation": "Both metrics evaluate the exact same cohort (N=313, 302 positive events, 11 negative lifelong controls) with identical score ranking (ROC-AUC=0.5072). primaryCalibratedClassifierMCC (0.0109) operates at the calibrated high-specificity point (applied threshold ~0.89, Specificity=90.91%, TP=33, FP=1, TN=10, FN=269). astrologyOnlyComparisonModelMCC (0.0397) operates at the frozen cross-model comparison threshold tau=0.91 (applied threshold 0.91, Specificity=81.82%, TP=84, FP=2, TN=9, FN=218). Neither operating point achieves statistical or clinical predictive significance."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
   },
   "conclusion": "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
 }

@@ -1436,11 +1436,25 @@ class AstroDatabase {
     if (!outcome || !outcome.outcomeId || !outcome.predictionId) {
       throw new Error("INVALID_OUTCOME: outcomeId and predictionId are required.");
     }
+    const VALID_CATEGORIES = [
+      "USER_REPORTED",
+      "INDEPENDENTLY_VERIFIED",
+      "UNVERIFIED",
+      "CONFLICTING",
+      "CENSORED",
+      "UNKNOWN",
+      "INVALID"
+    ];
+    const category = VALID_CATEGORIES.includes(outcome.outcomeCategory)
+      ? outcome.outcomeCategory
+      : (outcome.isCensored ? "CENSORED" : "USER_REPORTED");
+
     const record = {
       outcomeId: outcome.outcomeId,
       predictionId: outcome.predictionId,
       customerId: outcome.customerId || "ANONYMOUS",
       eventOccurred: Boolean(outcome.eventOccurred),
+      outcomeCategory: category,
       reportedDate: outcome.reportedDate || null,
       datePrecision: outcome.datePrecision || "APPROX_YEAR",
       isCensored: Boolean(outcome.isCensored),
@@ -1484,7 +1498,17 @@ class AstroDatabase {
     if (!verification || !verification.verificationId || !verification.outcomeId) {
       throw new Error("INVALID_VERIFICATION: verificationId and outcomeId are required.");
     }
-    const VALID_STATUSES = ["UNVERIFIED", "CORROBORATED", "INDEPENDENTLY_VERIFIED", "REJECTED_CONTRADICTORY"];
+    const VALID_STATUSES = [
+      "USER_REPORTED",
+      "INDEPENDENTLY_VERIFIED",
+      "UNVERIFIED",
+      "CONFLICTING",
+      "CENSORED",
+      "UNKNOWN",
+      "INVALID",
+      "CORROBORATED",
+      "REJECTED_CONTRADICTORY"
+    ];
     const status = VALID_STATUSES.includes(verification.verificationStatus) ? verification.verificationStatus : "UNVERIFIED";
     const record = {
       verificationId: verification.verificationId,

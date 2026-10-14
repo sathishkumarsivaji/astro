@@ -21,6 +21,7 @@
     "test:negative": "node test_negative_data_matrix.mjs",
     "test:full": "node test_full_audit.mjs",
     "test:research": "node test_real_world_empirical_benchmark.mjs && node test_v3_statistical_integrity.mjs",
+    "test:forensic": "node test_25_point_forensic_pipeline_audit.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },
