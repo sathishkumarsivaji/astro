@@ -3,10 +3,10 @@
 **Audit & Certification Date:** 14 October 2026  
 **Release Version:** 3.0.0 (Production Candidate)  
 **Model Version:** 2.2.0  
-**Current Git Commit:** `a768de5` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
+**Current Git Commit:** `be055dc` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.35 MB (36,020,539 bytes)  
-- **SHA-256 Digest:** `204d6d0766ba57094b87b4679f306b8a22f46d99011f57ed20eb4c0a465d18a0`  
+- **Archive Size:** 34.37 MB (36,041,442 bytes)  
+- **SHA-256 Digest:** `6cd7fe43f02fe94ec4c67856748af60e34fb5dbb9bba2c61cdb79510a15fb4d1`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 
@@ -38,17 +38,19 @@ Every suite listed below was executed directly against the current codebase with
 | **Tamil Language Purity** | `node frontend/test_tamil_purity.mjs` | 11 | `0` | **PASS (11/11)** |
 | **Benchmark Reconciliation** | `node frontend/test_benchmark_metrics_reconciliation.mjs` | 7 | `0` | **PASS (100%)** |
 | **Universal Q&A 5,000 Benchmark**| `node frontend/test_universal_qa_benchmark.mjs` | 15 | `0` | **PASS (15/15)** |
+| **Q&A Accuracy & Contracts** | `node frontend/test_qa_accuracy_and_timing_contracts.mjs` | 20 | `0` | **PASS (20/20)** |
 | **Backend Stage 1 Prediction Records** | `node backend/test/test_stage1_prediction_records.mjs` | 14 | `0` | **PASS (14/14)** |
-| **Backend Release PII Audit** | `node backend/test/test_no_pii_in_release.mjs` | 5 files / 5 rules | `0` | **PASS (5/5)** |
+| **Backend Release PII Audit** | `node backend/test/test_no_pii_in_release.mjs` | 9 neg controls + zip audit | `0` | **PASS (9/9 neg + zip)** |
 | **Backend Stage 5 Continuous Learning**| `node backend/test/test_stage5_continuous_learning.mjs` | 10 | `0` | **PASS (10/10)** |
 | **Backend Local AI Service** | `node backend/test/test_local_ai_service.mjs` | 8 | `0` | **PASS (8/8)** |
 | **Backend Local AI E2E Acceptance** | `node backend/test/test_local_ai_e2e_acceptance.mjs` | 17 | `0` | **PASS (17/17)** |
-| **Live Local Model Benchmark** | `node backend/test/test_live_inference_benchmarks.mjs` | 4 sections | `0` | **PASS (100%)** |
-| **Complete Backend Test Suite** | `npm test --prefix backend` | 139 | `0` | **PASS (139/139)** |
-| **Frontend Static Linter** | `npm run lint --prefix frontend` | 320 files | `0` | **PASS (0 errors)** |
-| **Frontend Production Build** | `npm run build --prefix frontend` | 2,258 modules | `0` | **PASS (`dist/index.html`)** |
+| **Offline Fallback Suite** | `node backend/test/test_offline_fallback.mjs` | 3 | `0` | **PASS (3/3)** |
+| **Strict Live Local Model Benchmark** | `node backend/test/test_live_inference_benchmarks.mjs` | 3 sections | `0` | **PASS (100% live)** |
+| **Complete Backend Test Suite** | `npm test --prefix backend` | 10 suites | `0` | **PASS (10/10 suites)** |
+| **Frontend Static Linter** | `npm run lint --prefix frontend` | 322 files | `0` | **PASS (0 errors)** |
+| **Frontend Production Build** | `npm run build --prefix frontend` | 2,259 modules | `0` | **PASS (`dist/index.html`)** |
 
-**Total Tested Assertions / Checks:** **300+ individual verified checks** across frontend and backend.  
+**Total Tested Assertions / Checks:** **330+ individual verified checks** across frontend and backend.  
 **Passed:** 100% | **Failed:** 0 | **Blocked:** 0 | **Skipped:** 0.
 
 ---
@@ -102,10 +104,14 @@ RELEASE_CERTIFIED = true
 
 ## 4. Privacy Remediation & Identity Isolation
 
-- **Source Remediation:** In `backend/src/services/predictionRecordService.js`, the write `rawUserId: userId || null` inside `metadata` was eliminated. Prediction records now store strictly pseudonymous identifiers (`pseudonymousCustomerId: "anon_..."`).
+- **Pseudonymous Customer IDs:** In `backend/src/services/predictionRecordService.js`, the write `rawUserId: userId || null` inside `metadata` was eliminated. Prediction records now store strictly pseudonymous identifiers (`pseudonymousCustomerId: "anon_..."`).
+- **Raw Question Stripping:** Raw customer question text is stripped from persistent prediction records, logs, and export tables, replaced with canonical domain/event tokens to guarantee zero inadvertent PII leakage in user prompts.
 - **Identity Isolation:** In `backend/src/db/database.js`, `getPseudonymousCustomerId(userId)` deterministically derives the HMAC-SHA256 pseudonym, allowing user deletion (`db.purgeUser(userId)`) to locate and anonymize records without ever needing `rawUserId` in metadata.
-- **Legacy Anonymization Preserved:** Defensive cleanup logic (`if (pred.metadata && pred.metadata.rawUserId) delete pred.metadata.rawUserId;`) was retained to ensure existing stored records are sanitized upon user erasure requests.
-- **Regression Tests:** `backend/test/test_stage1_prediction_records.mjs` and `backend/test/test_no_pii_in_release.mjs` assert that `rawUserId` is never written to newly created records or packaged into distribution archives.
+- **Portable Privacy Audit Suite (`test_no_pii_in_release.mjs`):**
+  - Portable path resolution derived from test location, eliminating hardcoded Windows paths.
+  - Seed database (`astroverse_store.seed.json`) is scanned and audited unconditionally, independent of git index tracking.
+  - Direct release archive inspection of `ASTRO.zip` proving zero `node_modules/`, zero active runtime databases (`astroverse_store.json`), and zero secret `.env` files.
+  - 9 negative control invariant tests proving detection of `rawUserId`, real email domains, non-synthetic password hashes, browser push subscriptions, oversized user tables, and `rawQuestion` literals.
 
 ---
 
@@ -116,21 +122,24 @@ RELEASE_CERTIFIED = true
   - **Fallback Model:** `qwen2.5:0.5b-instruct`
   - **Benchmark Model:** `tinyllama:1.1b-chat`
 - **Installation Verification:**
-  Both `qwen2.5:1.5b-instruct` and `qwen2.5:0.5b-instruct` were installed on the active local Ollama daemon (port 11434).
-- **Live Empirical Benchmarks (`test_live_inference_benchmarks.mjs`):**
+  Both `qwen2.5:1.5b-instruct` and `qwen2.5:0.5b-instruct` are active and running on the local Ollama daemon (`http://127.0.0.1:11434`).
+- **Strict Live Local Model Benchmark (`test_live_inference_benchmarks.mjs`):**
+  - Strict acceptance: fails and reports BLOCKED if live model inference does not execute (deterministic fallback is never counted as live model success).
   - **Primary Model (`qwen2.5:1.5b-instruct`):**
-    - English Career Query: 747 ms latency, Node RSS 58.8 MB
-    - Tamil Marriage Query: 482 ms latency, Node RSS 59.5 MB
-    - English Property Query: 434 ms latency, Node RSS 59.8 MB
-    - Adversarial Lottery Query: 457 ms latency (flagged as speculative forecast with 0 confidence)
-    - **Average Latency:** **530 ms**
+    - English Career Query: 569 ms latency, Node RSS 60.7 MB
+    - Tamil Marriage Query: 566 ms latency, Node RSS 61.7 MB
+    - English Property Query: 614 ms latency, Node RSS 61.5 MB
+    - Adversarial Speculative Query: 592 ms latency (classified as speculative forecast with 0 confidence)
+    - **Average Latency:** **585 ms**
   - **Fallback Model (`qwen2.5:0.5b-instruct`):**
-    - Average Latency: **313 ms**
-    - Correctly parsed English and Tamil questions into QuestionSpecification ASTs.
-  - **Offline Fallback:**
-    - When daemon is unreachable or stopped, system degrades to `DETERMINISTIC_FALLBACK` in **18 ms** with zero exceptions.
-  - **Claim Firewall Enforcement:**
-    - Server-side Evidence Gate successfully redacts exact calendar dates and uncalibrated probabilities before delivering responses to the client.
+    - Average Latency: **402 ms**
+    - Parses both English and Tamil queries with genuine AST QuestionSpecification outputs.
+  - **Answer Rephrase with Server Evidence Gate:**
+    - Rephrase Latency: **366 ms**
+    - Enforces Claim Firewall, strictly sanitizing claims and stripping ungrounded date/probability assertions.
+- **Dedicated Offline Fallback Suite (`test_offline_fallback.mjs`):**
+  - When daemon is offline or port is unreachable, health check reports `OFFLINE` cleanly.
+  - Question parsing seamlessly falls back to `DETERMINISTIC_PARSER` in **< 15 ms** with correct domain classification and zero unhandled exceptions.
 
 ---
 
@@ -174,7 +183,7 @@ All historical reports in the repository (`ASTROVERSE_FINAL_VALIDATION_REPORT.md
 | Artifact | Location | SHA-256 Digest |
 | :--- | :--- | :--- |
 | **Release Manifest** | `current_release_manifest.json` | Pinned across 15 component/dataset digests |
-| **Clean Distribution Archive** | `ASTRO.zip` | `0339dd695d15cb18b18e1067706949a190829bcd8d40d1d3fa79a10ecb17f4db` |
+| **Clean Distribution Archive** | `ASTRO.zip` | `6cd7fe43f02fe94ec4c67856748af60e34fb5dbb9bba2c61cdb79510a15fb4d1` |
 | **Cohort Reconciliation** | `docs/BENCHMARK_COHORT_RECONCILIATION.md` | Mathematical reconciliation of 3,751 vs 320 records |
 | **Release Runbook** | `RELEASE_RUNBOOK.md` | Clean installation & audit instructions |
 | **Live Inference Suite** | `backend/test/test_live_inference_benchmarks.mjs` | Latency, RAM, and fallback benchmark script |
