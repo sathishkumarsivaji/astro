@@ -413,6 +413,7 @@ Do NOT answer the question. Do NOT generate predictions. Output ONLY a valid JSO
 
     return {
       source: "LOCAL_LLM",
+      inferenceStatus: LOCAL_INFERENCE_STATUS.LOCAL_MODEL_SUCCESS,
       model: result.model,
       specification: {
         rawQuestion,

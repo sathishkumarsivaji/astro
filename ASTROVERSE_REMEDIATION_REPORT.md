@@ -1,12 +1,22 @@
 # ASTROVERSE — Comprehensive Forensic Remediation & Release Verification Report
 
-**Audit Date:** October 12, 2026  
+> [!NOTE]
+> **HISTORICAL ARCHIVE DOCUMENT — FOR PROVENANCE & REGRESSION AUDIT ONLY**  
+> **Historical Release:** Version 3.0.0-rc1 / Pre-v3.0.0-final (Commit `6603089`, October 12, 2026)  
+> **Historical Engine Hash:** `0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1`  
+> **Historical Calibration Hash:** `029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3`  
+> 
+> **For the current authoritative release certification, refer to:**  
+> [`CURRENT_RELEASE_CERTIFICATION_REPORT_2026-10-14.md`](file:///d:/ASTRO/CURRENT_RELEASE_CERTIFICATION_REPORT_2026-10-14.md)  
+> and [`current_release_manifest.json`](file:///d:/ASTRO/current_release_manifest.json) (Current Engine Hash: `14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703`, Calibration Hash: `aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4`).
+
+**Historical Audit Date:** October 12, 2026  
 **Auditor Roles:** Senior Software Verification Engineer, Statistical Validation Specialist, Astronomy-Engine Auditor, Application Security Reviewer  
-**Release Version:** 3.0.0  
+**Release Version:** 3.0.0 (Historical Revision 6603089)  
 **Model Version:** 2.2.0  
 **Git Branch / Commit:** `remediation/forensic-accuracy-and-release-integrity` (`6603089`)  
-**Release Gate Status:** `RELEASE_CERTIFIED = true` (17/17 Gates Passed)  
-**Distribution Archive:** `D:\ASTRO\ASTRO.zip` (SHA-256: `d0f676ccd5d65fe976f112e1b11d084e38dccb7b502769b9c82a13ddf6dbed60`, Size: 34.30 MB)
+**Release Gate Status:** `RELEASE_CERTIFIED = true` (Historical commit 6603089)  
+**Historical Distribution Archive:** `D:\ASTRO\ASTRO.zip` (SHA-256: `d0f676ccd5d65fe976f112e1b11d084e38dccb7b502769b9c82a13ddf6dbed60`, Size: 34.30 MB)
 
 ---
 

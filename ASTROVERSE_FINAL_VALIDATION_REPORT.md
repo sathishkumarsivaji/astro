@@ -1,6 +1,16 @@
 # ASTROVERSE — SCIENTIFIC VALIDATION, REAL-WORLD EMPIRICAL ACCURACY & PROVENANCE REPORT (V3)
 
-**Publication & Audit Date:** October 2026  
+> [!NOTE]
+> **HISTORICAL ARCHIVE DOCUMENT — FOR PROVENANCE & REGRESSION AUDIT ONLY**  
+> **Historical Release:** Version 2.2.0 / Pre-v3.0.0 Refactor (Commit `6603089`, October 12, 2026)  
+> **Historical Engine Hash:** `0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1`  
+> **Historical Calibration Hash:** `029d3d5d6712d83989fd408ee86bdc30320bb0315eaddba4f04d61ece188adb3`  
+> 
+> **For the current authoritative release certification, refer to:**  
+> [`CURRENT_RELEASE_CERTIFICATION_REPORT_2026-10-14.md`](file:///d:/ASTRO/CURRENT_RELEASE_CERTIFICATION_REPORT_2026-10-14.md)  
+> and [`current_release_manifest.json`](file:///d:/ASTRO/current_release_manifest.json) (Current Engine Hash: `14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703`, Calibration Hash: `aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4`).
+
+**Publication & Audit Date:** October 2026 (Historical)  
 **Repository Version:** ASTROVERSE Production 2.2.0-Audited  
 **Audit Standard:** Anti-Fabrication, Pre-Cutoff Commitment Hashing, Independent Ground-Truth Empirical Benchmarking  
 **Primary Datasets:** 

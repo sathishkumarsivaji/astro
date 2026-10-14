@@ -1,6 +1,15 @@
 # ASTROVERSE — Q&A Engine Test Results & Forensic Verification Report
 
-**Date:** 12 October 2026  
+> [!NOTE]
+> **HISTORICAL ARCHIVE DOCUMENT — FOR PROVENANCE & REGRESSION AUDIT ONLY**  
+> **Historical Release:** Commit `6603089` (October 12, 2026)  
+> **Historical Engine Hash:** `0aba354759f94afc34f2140ef8fe3e2fb869080fc90405264f54f6a05750fbe1`  
+> 
+> **For the current authoritative release certification, refer to:**  
+> [`CURRENT_RELEASE_CERTIFICATION_REPORT_2026-10-14.md`](file:///d:/ASTRO/CURRENT_RELEASE_CERTIFICATION_REPORT_2026-10-14.md)  
+> and [`current_release_manifest.json`](file:///d:/ASTRO/current_release_manifest.json) (Current Engine Hash: `14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703`).
+
+**Historical Date:** 12 October 2026  
 **Auditor / Verification Engineer:** Principal AI Architect, Verification Engineer & Astrology Domain Auditor  
 **Scope:** Frontend Question & Answer Engine, Intent Classifier, Domain Taxonomy, Evidence Planner, Deterministic Answer Synthesizer, Follow-Up Memory Router, Semantic Claim Firewall, Universal 5,000-Question Frozen Benchmark, and 17-Point Release Certification Gate.  
 **Platform / Runtime:** Node.js v24.17.0 (x64-win32), Vite v5.4.19, React 19.
