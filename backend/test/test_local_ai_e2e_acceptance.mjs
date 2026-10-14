@@ -281,6 +281,7 @@ async function runAcceptanceSuite() {
     const smallCohort = Array.from({ length: 15 }, (_, i) => ({
       id: `subj_${i}`,
       actualEventAge: 28,
+      consentGranted: true,
       features: {}
     }));
     const res = validateHoldoutCohortIntegrity({
@@ -295,6 +296,7 @@ async function runAcceptanceSuite() {
     const cohort = Array.from({ length: 35 }, (_, i) => ({
       id: `subj_${i}`,
       actualEventAge: 28,
+      consentGranted: true,
       features: {}
     }));
     const leakingTrainingIds = new Set(["subj_5", "subj_99"]);
@@ -311,6 +313,7 @@ async function runAcceptanceSuite() {
     const cohort = Array.from({ length: 35 }, (_, i) => ({
       id: i < 5 ? "subj_duplicate" : `subj_${i}`,
       actualEventAge: 28,
+      consentGranted: true,
       features: {}
     }));
     const res = validateHoldoutCohortIntegrity({
@@ -329,7 +332,8 @@ async function runAcceptanceSuite() {
     const corruptedCandidate = {
       modelId: "test_corrupt_cand",
       artifactSha256: "0000000000000000000000000000000000000000000000000000000000000000",
-      modelArtifact: { weights: [0.1, 0.2] }
+      modelArtifact: { weights: [0.1, 0.2] },
+      predictTiming: () => 28.0
     };
     const res = verifyModelArtifactIntegrity(corruptedCandidate);
     assert.equal(res.isValid, false);
@@ -348,6 +352,7 @@ async function runAcceptanceSuite() {
     const holdoutSet = Array.from({ length: 35 }, (_, i) => ({
       id: `subj_f_${i}`,
       actualEventAge: 27.0,
+      consentGranted: true,
       features: {}
     }));
 

@@ -1367,7 +1367,7 @@ app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
       });
     }
 
-    const { outcomeId, verificationMethod, verificationStatus, notes } = req.body || {};
+    const { outcomeId, verificationMethod, verificationStatus, notes, evidenceReference, changeReason } = req.body || {};
     if (!outcomeId) {
       return res.status(400).json({ error: 'outcomeId is required', code: 'MISSING_OUTCOME_ID' });
     }
@@ -1379,12 +1379,25 @@ app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
       verificationMethod: verificationMethod || "SELF_REPORTED_ONLY",
       verificationStatus: verificationStatus || "UNVERIFIED",
       verifiedBy: req.user.userId,
-      notes: notes || ""
+      evidenceReference: evidenceReference || null,
+      notes: notes || "",
+      changeReason: changeReason || notes || "Verification update"
     });
 
     return res.status(201).json({ success: true, verification: verificationRecord });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to verify outcome.', details: err.message });
+  }
+});
+
+// Retrieve outcome verification history (Section 11)
+app.get('/api/outcomes/:id/verification-history', authenticateSession, (req, res) => {
+  try {
+    const outcomeId = req.params.id;
+    const history = db.getOutcomeVerificationHistory(outcomeId);
+    return res.json({ success: true, outcomeId, history, count: history.length });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to retrieve verification history.', details: err.message });
   }
 });
 

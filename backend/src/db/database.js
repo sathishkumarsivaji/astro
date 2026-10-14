@@ -1509,7 +1509,26 @@ class AstroDatabase {
       "CORROBORATED",
       "REJECTED_CONTRADICTORY"
     ];
+    const prior = this.getOutcomeVerification(verification.outcomeId);
+    const priorStatus = prior ? prior.verificationStatus : "NONE";
     const status = VALID_STATUSES.includes(verification.verificationStatus) ? verification.verificationStatus : "UNVERIFIED";
+
+    // Strict validation: INDEPENDENTLY_VERIFIED requires valid independent evidence procedure
+    const INDEPENDENT_METHODS = [
+      "CIVIL_MARRIAGE_REGISTRATION_CERTIFICATE",
+      "GOVERNMENT_CIVIL_RECORD",
+      "PUBLIC_INDEPENDENT_RECORD",
+      "THIRD_PARTY_AUDITED_RECORD",
+      "CORROBORATED"
+    ];
+    if (status === "INDEPENDENTLY_VERIFIED") {
+      const method = String(verification.verificationMethod || "").toUpperCase();
+      const isRecognized = INDEPENDENT_METHODS.includes(method) || method.startsWith("DOC_") || method.startsWith("INDEPENDENT_");
+      if (!isRecognized) {
+        throw new Error(`INVALID_VERIFICATION_PROCEDURE: Status 'INDEPENDENTLY_VERIFIED' requires recognized independent verification procedure (got: '${verification.verificationMethod}').`);
+      }
+    }
+
     const record = {
       verificationId: verification.verificationId,
       outcomeId: verification.outcomeId,
@@ -1517,9 +1536,27 @@ class AstroDatabase {
       verificationStatus: status,
       verifiedAt: verification.verifiedAt || new Date().toISOString(),
       verifiedBy: verification.verifiedBy || null,
-      notes: verification.notes || ""
+      evidenceReference: verification.evidenceReference || null,
+      notes: verification.notes || "",
+      priorStatus,
+      changeReason: verification.changeReason || "Status verification"
     };
     this.state.outcome_verification[record.verificationId] = record;
+
+    // Append to auditable verification history
+    this.state.verification_history = this.state.verification_history || [];
+    this.state.verification_history.push({
+      verificationId: record.verificationId,
+      outcomeId: record.outcomeId,
+      verificationActor: record.verifiedBy || "SYSTEM_AUDITOR",
+      verificationMethod: record.verificationMethod,
+      timestamp: record.verifiedAt,
+      evidenceReference: record.evidenceReference,
+      priorStatus,
+      newStatus: status,
+      changeReason: record.changeReason
+    });
+
     this.persist();
 
     if (this.pgConnected && this.pgPool) {
@@ -1549,6 +1586,11 @@ class AstroDatabase {
   getOutcomeVerification(outcomeId) {
     return Object.values(this.state.outcome_verification || {})
       .find(v => v.outcomeId === outcomeId) || null;
+  }
+
+  getOutcomeVerificationHistory(outcomeId) {
+    return (this.state.verification_history || [])
+      .filter(h => h.outcomeId === outcomeId);
   }
 
   registerModel(modelEntry) {

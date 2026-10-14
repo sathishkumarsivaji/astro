@@ -360,7 +360,8 @@ testCase(16, "Candidate that overfits TRAIN but fails BLIND_TEST is rejected at 
   const blindCohort = Array.from({ length: 35 }, (_, idx) => ({
     customerId: `cust_blind_${idx}`,
     eventDefinition: "MARRIAGE_EVENT",
-    actualEventAge: 25.0
+    actualEventAge: 25.0,
+    consentGranted: true
   }));
 
   const result = evaluateCandidateModel({
@@ -390,6 +391,8 @@ testCase(18, "Frozen cohort digest mismatch fails closed", () => {
 testCase(19, "Corrupted model artifact fails verification closed", () => {
   const corruptedModel = {
     modelId: "cand_corrupted",
+    modelArtifact: { weights: [0.12, 0.45], bias: 0.05 },
+    predictTiming: () => 28.0,
     artifactSha256: "0000000000000000000000000000000000000000000000000000000000000000",
     hyperparameters: { beta: 0.5 }
   };

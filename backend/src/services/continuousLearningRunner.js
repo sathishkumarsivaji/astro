@@ -41,7 +41,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 4.28,
     baselineBrier: 0.18,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849"
   },
   "CAREER": {
     domain: "CAREER",
@@ -52,7 +54,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 3.85,
     baselineBrier: 0.20,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "88307ad60eedf6bcfd5a9172ab59ef32c327c6008fb3d3b3e3c0259a7d9c7d31"
   },
   "PROPERTY": {
     domain: "PROPERTY",
@@ -63,7 +67,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 5.12,
     baselineBrier: 0.22,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703"
   },
   "VEHICLE": {
     domain: "VEHICLE",
@@ -74,7 +80,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 3.10,
     baselineBrier: 0.19,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "82cd6150cb1f737aa3d1390fbacdadb64af18fad7b5e05e8e7910d2937d0f5d0"
   },
   "BUSINESS": {
     domain: "BUSINESS",
@@ -85,7 +93,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 4.05,
     baselineBrier: 0.21,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "e6e6549c3405d663cfcd88dc95c1c17db971960f17301759225ea9e986633481"
   },
   "EDUCATION": {
     domain: "EDUCATION",
@@ -96,7 +106,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 2.65,
     baselineBrier: 0.16,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
   },
   "GENERAL": {
     domain: "GENERAL",
@@ -107,7 +119,9 @@ export const BASELINE_REGISTRY = Object.freeze({
     datasetVersion: "v3.0.0-audited",
     baselineMae: 4.50,
     baselineBrier: 0.25,
-    minSampleSize: 30
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03"
   }
 });
 
@@ -121,6 +135,21 @@ export const RELEASE_GATE_THRESHOLDS = Object.freeze({
   DEMOGRAPHIC_BASELINE_MAE: 4.28,
   MAX_PERMITTED_ECE: 0.15
 });
+
+/**
+ * Returns domain-specific release gate thresholds, preventing reliance on a global threshold.
+ */
+export function getReleaseGateThresholds(domain = "MARRIAGE") {
+  const baseline = getDomainBaseline(domain);
+  return {
+    domain: baseline.domain,
+    baselineMae: baseline.baselineMae,
+    minSampleSize: baseline.minSampleSize || 30,
+    maxPermittedEce: 0.15,
+    population: baseline.population,
+    eventDefinition: baseline.eventDefinition
+  };
+}
 
 /**
  * Retrieves domain-specific baseline from registry.
@@ -209,9 +238,13 @@ export function validateHoldoutCohortIntegrity({
   holdoutDataset = [],
   trainingCustomerIds = new Set(),
   domain = "MARRIAGE",
-  minSampleSize = RELEASE_GATE_THRESHOLDS.MIN_TEST_SAMPLE_SIZE
+  minSampleSize = null
 }) {
+  const effectiveMinSampleSize = minSampleSize !== null
+    ? minSampleSize
+    : (getDomainBaseline(domain).minSampleSize || RELEASE_GATE_THRESHOLDS.MIN_TEST_SAMPLE_SIZE);
   const issues = [];
+  const exclusionLedger = [];
   const validObservations = [];
   const customerIdsSeen = new Set();
   const duplicateSignatures = new Set();
@@ -220,32 +253,58 @@ export function validateHoldoutCohortIntegrity({
     const custId = sample.customerId || sample.id;
     if (!custId) {
       issues.push("MISSING_CUSTOMER_IDENTIFIER");
+      exclusionLedger.push({ customerId: null, reason: "MISSING_CUSTOMER_IDENTIFIER", timestamp: new Date().toISOString() });
       continue;
     }
 
     // Customer leakage check
     if (trainingCustomerIds.has(custId)) {
-      issues.push(`CUSTOMER_LEAKAGE_DETECTED: Customer '${custId}' exists in both training and holdout partitions.`);
+      const issue = `CUSTOMER_LEAKAGE_DETECTED: Customer '${custId}' exists in both training and holdout partitions.`;
+      issues.push(issue);
+      exclusionLedger.push({ customerId: custId, reason: "CUSTOMER_LEAKAGE_DETECTED", timestamp: new Date().toISOString() });
       continue;
     }
 
     // Duplicate detection
     const sig = `${custId}_${sample.eventDefinition || domain}_${sample.actualEventAge}`;
     if (duplicateSignatures.has(sig)) {
-      issues.push(`DUPLICATE_OBSERVATION: Duplicate record for customer '${custId}'.`);
+      const issue = `DUPLICATE_OBSERVATION: Duplicate record for customer '${custId}'.`;
+      issues.push(issue);
+      exclusionLedger.push({ customerId: custId, reason: "DUPLICATE_OBSERVATION", timestamp: new Date().toISOString() });
       continue;
     }
     duplicateSignatures.add(sig);
 
     // Completed observation period validation (exclude right-censored without event)
     if (sample.isCensored || sample.actualEventAge == null || !Number.isFinite(sample.actualEventAge)) {
+      exclusionLedger.push({ customerId: custId, reason: "CENSORED_OR_INCOMPLETE", timestamp: new Date().toISOString() });
       continue; // Exclude from timing MAE without error
     }
 
-    // Consent validation: if customer revoked consent, exclude
-    if (sample.consentGranted === false) {
+    // Affirmative & Authoritative Consent Verification (Section 5)
+    // 1. Exclude if sample does not affirmatively grant consent (undefined, null, false)
+    if (sample.consentGranted !== true) {
+      exclusionLedger.push({ customerId: custId, reason: "CONSENT_NOT_CONFIRMED", timestamp: new Date().toISOString() });
+      issues.push(`CONSENT_NOT_CONFIRMED: Customer '${custId}' lacks affirmative training consent.`);
       continue;
     }
+
+    // 2. Cross-check against authoritative consent service and user deletion status
+    try {
+      const explicitConsent = db.state?.training_consent ? db.state.training_consent[custId] : null;
+      if (explicitConsent && (explicitConsent.consentGranted === false || explicitConsent.withdrawnAt)) {
+        exclusionLedger.push({ customerId: custId, reason: "CONSENT_REVOKED", timestamp: new Date().toISOString() });
+        issues.push(`CONSENT_REVOKED: Customer '${custId}' has authoritatively revoked training consent.`);
+        continue;
+      }
+
+      const user = db.getUser ? db.getUser(custId) : null;
+      if (user && user.isDeleted) {
+        exclusionLedger.push({ customerId: custId, reason: "USER_DELETED", timestamp: new Date().toISOString() });
+        issues.push(`USER_DELETED: Customer '${custId}' account is marked deleted.`);
+        continue;
+      }
+    } catch (_) {}
 
     customerIdsSeen.add(custId);
     validObservations.push(sample);
@@ -254,12 +313,12 @@ export function validateHoldoutCohortIntegrity({
   const sampleSize = validObservations.length;
   const uniqueCustomers = customerIdsSeen.size;
 
-  if (sampleSize < minSampleSize) {
-    issues.push(`INSUFFICIENT_SAMPLE_SIZE: Usable evaluated sample size ${sampleSize} is below required threshold ${minSampleSize}.`);
+  if (sampleSize < effectiveMinSampleSize) {
+    issues.push(`INSUFFICIENT_SAMPLE_SIZE: Usable evaluated sample size ${sampleSize} is below required threshold ${effectiveMinSampleSize}.`);
   }
 
-  if (uniqueCustomers < minSampleSize) {
-    issues.push(`INSUFFICIENT_UNIQUE_CUSTOMERS: Unique customer count ${uniqueCustomers} is below required threshold ${minSampleSize}.`);
+  if (uniqueCustomers < effectiveMinSampleSize) {
+    issues.push(`INSUFFICIENT_UNIQUE_CUSTOMERS: Unique customer count ${uniqueCustomers} is below required threshold ${effectiveMinSampleSize}.`);
   }
 
   return {
@@ -267,6 +326,7 @@ export function validateHoldoutCohortIntegrity({
     sampleSize,
     uniqueCustomers,
     validObservations,
+    exclusionLedger,
     issues
   };
 }
@@ -408,6 +468,22 @@ export function evaluateCandidateModel({
 export function verifyModelArtifactIntegrity(candidateModel) {
   if (!candidateModel) return { isValid: false, reason: "NULL_CANDIDATE_MODEL" };
 
+  // Section 7 Integrity Gate: Reject candidates where only hyperparameters are provided without a serialized model artifact
+  if (!candidateModel.modelArtifact && !candidateModel.modelArtifactPath) {
+    return {
+      isValid: false,
+      reason: "MISSING_SERIALIZED_MODEL_ARTIFACT: Candidate model must provide verifiable modelArtifact or modelArtifactPath. Hyperparameters alone cannot substitute for the actual trained model artifact."
+    };
+  }
+
+  // Require verifiable production inference implementation
+  if (typeof candidateModel.predictTiming !== "function" && typeof candidateModel.predictOccurrence !== "function" && !candidateModel.inferenceImplementation) {
+    return {
+      isValid: false,
+      reason: "MISSING_INFERENCE_IMPLEMENTATION: Candidate model must provide verifiable predictTiming, predictOccurrence, or inferenceImplementation function."
+    };
+  }
+
   // 1. If physical artifact path provided, verify file existence and SHA-256
   if (candidateModel.modelArtifactPath && fs.existsSync(candidateModel.modelArtifactPath)) {
     try {
@@ -426,8 +502,10 @@ export function verifyModelArtifactIntegrity(candidateModel) {
   }
 
   // 2. If serialized artifact object provided, hash it
-  if (candidateModel.modelArtifact || candidateModel.hyperparameters) {
-    const content = JSON.stringify(candidateModel.modelArtifact || candidateModel.hyperparameters);
+  if (candidateModel.modelArtifact) {
+    const content = typeof candidateModel.modelArtifact === "string"
+      ? candidateModel.modelArtifact
+      : JSON.stringify(candidateModel.modelArtifact);
     const computedSha = crypto.createHash("sha256").update(content).digest("hex");
     if (candidateModel.artifactSha256 && candidateModel.artifactSha256 !== computedSha) {
       return {
@@ -438,10 +516,10 @@ export function verifyModelArtifactIntegrity(candidateModel) {
     return { isValid: true, artifactSha256: computedSha };
   }
 
-  // 3. Artifact is missing entirely
+  // 3. Artifact is missing entirely or file path did not exist
   return {
     isValid: false,
-    reason: "MISSING_SERIALIZED_MODEL_ARTIFACT: Candidate model must provide verifiable modelArtifact or modelArtifactPath."
+    reason: "MISSING_SERIALIZED_MODEL_ARTIFACT: Physical model artifact file not found and serialized buffer absent."
   };
 }
 
