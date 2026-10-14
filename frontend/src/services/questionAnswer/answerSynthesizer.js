@@ -11,7 +11,7 @@ import { evaluateComparison } from "./comparisonEngine.js";
 import { evaluatePersonCharacteristic } from "./personCharacteristicEngine.js";
 import { calculateDomainImportanceScores } from "./domainRanker.js";
 import { generateMilestoneTimeline } from "./milestoneTimelineEngine.js";
-import { buildTimingWindowId, buildHouseFactId } from "./evidenceGraph.js";
+import { buildTimingWindowId, buildHouseFactId, humanizeEvidenceToken } from "./evidenceGraph.js";
 import { TASK_INTENTS } from "./intentClassifier.js";
 import { isTaskIntent } from "./tasks/index.js";
 import { evaluateGemstoneRemedies } from "../consultationEngine.js";
@@ -182,9 +182,22 @@ export function synthesizeAnswer({
       ...(tr.candidateWindows?.flatMap(w => w.supportingEvidence || []) || [])
     ].filter(Boolean);
 
-    timingWindow = tr.recommendation?.preferredWindow
-      || (tr.candidateWindows?.[0] && tr.candidateWindows[0].windowStart ? `${tr.candidateWindows[0].windowStart} – ${tr.candidateWindows[0].windowEnd}` : "")
-      || (tr.evaluatedRange ? `${tr.evaluatedRange.start} – ${tr.evaluatedRange.end}` : "");
+    const isNonDiscriminating = tr.timingStatus === "NOT_DISCRIMINATING" ||
+      tr.answerState === "NO_DISCRIMINATING_WINDOW" ||
+      !tr.candidateWindows ||
+      tr.candidateWindows.length === 0;
+
+    if (isNonDiscriminating) {
+      timingWindow = null;
+      if (resolution) {
+        resolution.timingStatus = "NOT_DISCRIMINATING";
+        resolution.timingResolution = "NOT_DISCRIMINATING";
+      }
+    } else {
+      timingWindow = tr.recommendation?.preferredWindow
+        || (tr.candidateWindows?.[0] && tr.candidateWindows[0].windowStart ? `${tr.candidateWindows[0].windowStart} – ${tr.candidateWindows[0].windowEnd}` : "")
+        || (tr.evaluatedRange ? `${tr.evaluatedRange.start} – ${tr.evaluatedRange.end}` : null);
+    }
   }
 
   // CASE 1: SPOUSE FAMILY WEALTH COMPARISON
@@ -620,32 +633,64 @@ export function synthesizeAnswer({
     const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : null);
     const winYearsStr = (startYear && endYear) ? `${startYear}–${endYear}` : (win?.years || null);
 
+    // Classify property inquiry subtype: BUY_LAND, BUILD_HOUSE, or BUY_EXISTING_PROPERTY
+    let propType = "BUY_EXISTING_PROPERTY";
+    if (/land|plot|site|ground|agriculture|acre|நிலம்|மனை/i.test(rawQ)) {
+      propType = "BUY_LAND";
+    } else if (/build|construct|erect|foundation|roof|கட்ட|கட்டுமானம்/i.test(rawQ)) {
+      propType = "BUILD_HOUSE";
+    }
+
+    const typeDescEn = propType === "BUY_LAND"
+      ? "vacant land or plot acquisition"
+      : (propType === "BUILD_HOUSE" ? "home construction" : "residential property acquisition (built home/flat)");
+
+    const typeDescTa = propType === "BUY_LAND"
+      ? "நிலம் அல்லது மனை வாங்குதல்"
+      : (propType === "BUILD_HOUSE" ? "வீடு கட்டுதல்" : "குடியிருப்பு அல்லது கட்டிய வீடு வாங்குதல்");
+
     if (isTamil) {
       if (hasCalculatedWindow) {
-        directAnswer = `உங்கள் ஜாதகத்தில் 4-ம் பாவகம் (${h4.sign || "சுக ஸ்தானம்"}) மற்றும் பூமி காரகன் செவ்வாயின் அமைப்பைப் பார்க்கும்போது, சொத்து வாங்குவதற்கான சாதகமான யோகம் உள்ளது. குறிப்பாக ${winYearsStr} காலகட்டத்தில் சொத்து மற்றும் மனை சேர்க்கை வாய்ப்புகள் சாதகமாக உள்ளன.`;
-        timingWindow = `${winYearsStr} (சாதகமான சொத்து சேர்க்கை காலம்)`;
+        directAnswer = `உங்கள் ஜாதகத்தில் 4-ம் பாவகம் (${h4.sign || "சுக ஸ்தானம்"}) மற்றும் பூமி காரகன் செவ்வாயின் அமைப்பைப் பார்க்கும்போது, ${typeDescTa} செய்வதற்கான சாதகமான யோகம் உள்ளது. குறிப்பாக ${winYearsStr} காலகட்டத்தில் அதற்கான வாய்ப்புகள் சாதகமாக உள்ளன.`;
+        timingWindow = `${winYearsStr} (${typeDescTa} சாதகமான காலம்)`;
+        if (resolution) {
+          resolution.timingStatus = "CONVERGENCE_ESTABLISHED";
+          resolution.timingResolution = "YEAR_RANGE";
+        }
       } else {
-        directAnswer = `உங்கள் ஜாதகத்தில் 4-ம் பாவகம் (${h4.sign || "சுக ஸ்தானம்"}) மற்றும் பூமி காரகன் செவ்வாயின் நிலைகள் சொத்து வாங்கும் அடிப்படை திறனை சுட்டிக்காட்டுகின்றன. ஆனால் துல்லியமான சொத்து சேர்க்கைக்கான குறிப்பிட்ட ஆண்டுக் காலம் தசா மற்றும் கோச்சார கணிதத்தில் தனித்து உறுதி செய்யப்படவில்லை.`;
-        timingWindow = "NO_DISCRIMINATING_WINDOW";
+        directAnswer = `உங்கள் ஜாதகத்தில் 4-ம் பாவகம் (${h4.sign || "சுக ஸ்தானம்"}) மற்றும் பூமி காரகன் செவ்வாயின் நிலைகள் ${typeDescTa} செய்வதற்கான அடிப்படைத் திறனை சுட்டிக்காட்டுகின்றன. ஆனால் இதற்கான குறிப்பிட்ட குறுகிய காலக்கோடு தசா மற்றும் கோச்சார கணிதத்தில் தனித்து உறுதி செய்யப்படவில்லை (தனித்துவமான காலக்கோடு இல்லை).`;
+        timingWindow = null;
+        if (resolution) {
+          resolution.timingStatus = "NOT_DISCRIMINATING";
+          resolution.timingResolution = "NOT_DISCRIMINATING";
+        }
       }
-      reasoningChain = `4-ம் அதிபதியின் நிலை, செவ்வாயின் பலம் மற்றும் சுக்கிரனின் காரகத்துவங்கள் ஆராயப்பட்டு, நடப்பு தசா-புக்தி மற்றும் குரு பெயர்ச்சியின் சுப பார்வை இணையும் சாத்தியக்கூறுகள் பகுப்பாய்வு செய்யப்பட்டன.`;
-      whatCannotBeConcluded = "ஜோதிடம் வாய்ப்புகளின் காலக்கட்டத்தை மட்டுமே சுட்டிக்காட்டுகிறது; சந்தை மதிப்பு, வங்கி கடன் அனுமதி போன்ற நடைமுறை நிபந்தனைகளை ஜாதகம் முடிவு செய்யாது.";
+      reasoningChain = `4-ம் அதிபதியின் நிலை, செவ்வாயின் பலம் மற்றும் சுக்கிரனின் காரகத்துவங்கள் (${propType}) ஆராயப்பட்டு, நடப்பு தசா-புக்தி மற்றும் கோச்சார பார்வைகள் பகுப்பாய்வு செய்யப்பட்டன.`;
+      whatCannotBeConcluded = "ஜோதிடம் வாய்ப்புகளின் காலக்கட்டத்தை மட்டுமே சுட்டிக்காட்டுகிறது; பத்திரப் பதிவு, சந்தை மதிப்பு, வங்கி கடன் அனுமதி போன்ற நடைமுறை சட்டப்பூர்வ நிபந்தனைகளை ஜாதகம் முடிவு செய்யாது.";
     } else {
       if (hasCalculatedWindow) {
-        directAnswer = `Your 4th house of immovable property (${h4.sign || "Matru/Sukha Bhava"}) and Bhumi Karaka Mars indicate strong property acquisition potential, with opportunities clustering in the ${winYearsStr} window.`;
-        timingWindow = `${winYearsStr} (Prime Property Window)`;
+        directAnswer = `Your 4th house of immovable assets (${h4.sign || "Matru/Sukha Bhava"}) and Bhumi Karaka Mars indicate strong potential for ${typeDescEn}, with favorable indicators clustering in the ${winYearsStr} window.`;
+        timingWindow = `${winYearsStr} (Prime ${propType === "BUY_LAND" ? "Land" : (propType === "BUILD_HOUSE" ? "Construction" : "Property")} Window)`;
+        if (resolution) {
+          resolution.timingStatus = "CONVERGENCE_ESTABLISHED";
+          resolution.timingResolution = "YEAR_RANGE";
+        }
       } else {
-        directAnswer = `Your 4th house of immovable property (${h4.sign || "Matru/Sukha Bhava"}) and Bhumi Karaka Mars indicate foundational property potential, though no discriminating chronological timing window has been specifically isolated without additional transit activation.`;
-        timingWindow = "NO_DISCRIMINATING_WINDOW";
+        directAnswer = `Your 4th house of immovable assets (${h4.sign || "Matru/Sukha Bhava"}) and Bhumi Karaka Mars indicate foundational potential for ${typeDescEn}, though no discriminating chronological timing window has been specifically isolated without additional transit activation.`;
+        timingWindow = null;
+        if (resolution) {
+          resolution.timingStatus = "NOT_DISCRIMINATING";
+          resolution.timingResolution = "NOT_DISCRIMINATING";
+        }
       }
-      reasoningChain = `Synthesized 4th house dispositor, Mars strength, and supportive transit aspects of Jupiter crossing natal property significators.`;
-      whatCannotBeConcluded = "Real estate astrological indicators mark opportune momentum; bank loan authorizations and commercial titles depend strictly on mundane legal processes.";
+      reasoningChain = `Synthesized 4th house dispositor, Mars strength, and supportive transit aspects relevant to ${propType} under classical Parashari principles.`;
+      whatCannotBeConcluded = "Real estate astrological indicators mark opportune momentum; legal title clearance, municipal authorizations, and mortgage sanctions depend strictly on mundane legal procedures.";
     }
 
     astroEvidenceList = [
       `4th House: ${h4.sign || "-"} ${h4.lord ? `(Lord: ${h4.lord})` : ""}`.trim(),
       `Mars (Bhumi Karaka): House ${mars.house || "-"}${mars.sign ? ` in ${mars.sign}` : ""}${mars.dignity ? ` (${mars.dignity})` : ""}`,
-      hasCalculatedWindow ? `Property Timing Window: ${winYearsStr}` : "Property Timing Window: NO_DISCRIMINATING_WINDOW"
+      hasCalculatedWindow ? `Property Timing Window: ${winYearsStr}` : "Property Timing: No discriminating window isolated"
     ];
     relevantSections = ["property", "assets", "timeline"];
     evidenceIds = ["HOUSE_FACT_H4", "PLANET_FACT_MARS", hasCalculatedWindow ? "TIMING_WIN_PROPERTY" : "TIMING_WIN_NO_WINDOW"];
@@ -1158,12 +1203,16 @@ export function synthesizeAnswer({
   // Build the 9-section Answer
   const answerParts = [
     `${hDirect}\n${directAnswer.trim()}`,
-    `${hEvidence}\n${astroEvidenceList.map(e => `• ${e}`).join("\n")}`,
+    `${hEvidence}\n${astroEvidenceList.map(e => `• ${humanizeEvidenceToken(e, isTamil)}`).join("\n")}`,
     `${hReasoning}\n${reasoningChain.trim()}`
   ];
 
   if (plan.includeTiming || timingWindow) {
-    answerParts.push(`${hTiming}\n${timingWindow || (isTamil ? "தசா-கோச்சார சுப பார்வை காலம் (காலக்கோடு வரம்பு நிர்ணயிக்கப்படவில்லை)" : "Dasha-Transit Period (No specific narrow window isolated)")}`);
+    if (timingWindow && resolution?.timingStatus !== "NOT_DISCRIMINATING" && resolution?.timingResolution !== "NOT_DISCRIMINATING" && timingWindow !== "NO_DISCRIMINATING_WINDOW") {
+      answerParts.push(`${hTiming}\n${timingWindow}`);
+    } else {
+      answerParts.push(`${hTiming}\n${isTamil ? "தனித்துவமான காலக்கோடு அடையாளம் காணப்படவில்லை" : "No discriminating timing window identified"}`);
+    }
   }
 
   answerParts.push(

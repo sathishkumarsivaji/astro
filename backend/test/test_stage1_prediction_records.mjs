@@ -23,6 +23,7 @@ import {
   createPseudonymousCustomerId,
   hashBirthData,
   hashCalculationConfig,
+  deriveCanonicalEventDefinition,
   PERMITTED_TIMING_RESOLUTIONS,
   PERMITTED_EVIDENCE_STATUSES
 } from "../src/services/predictionRecordService.js";
@@ -130,6 +131,8 @@ async function runStage1Tests() {
     assert.equal(retrieved.predictionRecord.predictedOutcome, "MARRIAGE_ACTIVATION_WINDOW");
     assert.equal(retrieved.predictionRecord.metadata?.rawUserId, undefined, "rawUserId must never be stored in prediction record metadata");
     assert.equal(retrieved.predictionRecord.pseudonymousCustomerId.startsWith("anon_"), true, "Pseudonymous customer ID must be stored instead");
+    assert.notEqual(retrieved.predictionRecord.eventDefinition, questionMeta.rawQuestion, "eventDefinition must never store raw question text");
+    assert.equal(retrieved.predictionRecord.eventDefinition, "MARRIAGE_EVENT", "eventDefinition must resolve to canonical domain token");
     assert.equal(retrieved.evidence.length, 1);
     assert.equal(retrieved.evidence[0].evidenceStatus, "SUPPORTED");
   });

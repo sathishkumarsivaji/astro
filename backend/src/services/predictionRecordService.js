@@ -34,6 +34,34 @@ export const PERMITTED_EVIDENCE_STATUSES = Object.freeze([
 ]);
 
 /**
+ * Derives a normalized canonical event definition token from domain and intent.
+ * Raw natural language questions are never stored as event definitions to prevent PII exposure.
+ */
+export function deriveCanonicalEventDefinition(domain, intent) {
+  if (intent && typeof intent === "string" && intent.trim()) {
+    const sanitized = intent.trim().toUpperCase().replace(/[^A-Z0-9_]/g, "_");
+    if (sanitized && sanitized !== "UNRESOLVED_EVENT_DEFINITION") {
+      return sanitized;
+    }
+  }
+  const domainUpper = String(domain || "").toUpperCase().trim();
+  const DOMAIN_EVENT_MAP = {
+    MARRIAGE: "MARRIAGE_EVENT",
+    CAREER: "CAREER_EVENT",
+    FINANCE: "FINANCE_EVENT",
+    HEALTH: "HEALTH_EVENT",
+    CHILDREN: "CHILDREN_EVENT",
+    PROPERTY: "PROPERTY_EVENT",
+    VEHICLE: "VEHICLE_EVENT",
+    BUSINESS: "BUSINESS_EVENT",
+    RELATIONSHIP: "RELATIONSHIP_EVENT",
+    EDUCATION: "EDUCATION_EVENT",
+    TRAVEL: "TRAVEL_EVENT"
+  };
+  return DOMAIN_EVENT_MAP[domainUpper] || (domainUpper && domainUpper !== "GENERAL" ? `${domainUpper}_EVENT` : null);
+}
+
+/**
  * Derives a pseudonymous customer ID using HMAC-SHA256.
  * Raw customer IDs or personal identifiers are never stored directly in prediction training tables.
  */
@@ -124,7 +152,23 @@ export function recordPrediction({
   };
 
   const domain = String(questionMeta.domain || predictionResult.domain || "GENERAL").toUpperCase();
-  const eventDefinition = questionMeta.rawQuestion || questionMeta.intent || predictionResult.eventDefinition || "UNRESOLVED_EVENT_DEFINITION";
+
+  // Resolve canonical event definition: prefer explicit eventDefinition or intent token.
+  // NEVER store rawQuestion as eventDefinition to prevent user-entered text or PII
+  // from entering training tables.
+  let eventDefinition = (predictionResult.eventDefinition && String(predictionResult.eventDefinition).trim()) ||
+    (questionMeta.eventDefinition && String(questionMeta.eventDefinition).trim()) ||
+    (questionMeta.intent && String(questionMeta.intent).trim()) ||
+    null;
+
+  if (!eventDefinition && (questionMeta.rawQuestion || questionMeta.intent)) {
+    eventDefinition = deriveCanonicalEventDefinition(domain, questionMeta.intent);
+  }
+
+  if (!eventDefinition) {
+    eventDefinition = "UNRESOLVED_EVENT_DEFINITION";
+  }
+
   const predictedOutcome = predictionResult.predictedOutcome || predictionResult.outcomeToken || "UNRESOLVED_OUTCOME";
 
   let timingResolution = predictionResult.timingResolution || questionMeta.resolution || "NOT_DISCRIMINATING";

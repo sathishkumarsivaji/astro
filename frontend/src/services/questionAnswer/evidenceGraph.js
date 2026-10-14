@@ -196,3 +196,111 @@ export function buildResolutionId(res) {
 export function buildAnswerId(id) {
   return `ANSWER_${String(id).toUpperCase()}`;
 }
+
+function formatProper(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+/**
+ * Translates raw internal evidence token IDs into human-readable astrological prose.
+ * Protects customer-facing output from ever leaking raw IDs like DASHA_FACT_MARS_ALL.
+ */
+export function humanizeEvidenceToken(tokenId, isTamil = false) {
+  if (!tokenId || typeof tokenId !== "string") return "";
+  const token = tokenId.trim();
+
+  // If it's already a full human-readable sentence or doesn't look like an internal token ID
+  if (!/^[A-Z0-9_]{3,}$/.test(token)) {
+    return token;
+  }
+
+  // 1. DASHA_FACT tokens
+  const dashaMatch = token.match(/^DASHA_FACT_([A-Z]+)(?:_([A-Z]+))?$/);
+  if (dashaMatch) {
+    const md = formatProper(dashaMatch[1]);
+    const ad = dashaMatch[2] ? formatProper(dashaMatch[2]) : null;
+    if (!ad || ad.toUpperCase() === "ALL") {
+      return isTamil
+        ? `${md} மகாதசை கால இயக்கம்`
+        : `${md} Mahadasha period activation`;
+    }
+    return isTamil
+      ? `${md} மகாதசை – ${ad} அந்தர்தசை காலக்கட்டம்`
+      : `${md} Mahadasha – ${ad} Antardasha sub-period`;
+  }
+
+  // 2. LORD_FACT tokens
+  const lordMatch = token.match(/^LORD_FACT_(?:H|L)(\d+)(?:_([A-Z]+))?$/);
+  if (lordMatch) {
+    const houseNum = lordMatch[1];
+    const planet = lordMatch[2] ? formatProper(lordMatch[2]) : null;
+    if (planet) {
+      return isTamil
+        ? `${houseNum}-ம் பாவக அதிபதியான ${planet} பகவான்`
+        : `${houseNum}th House Lord (${planet})`;
+    }
+    return isTamil
+      ? `${houseNum}-ம் பாவக அதிபதி தொடர்பு`
+      : `${houseNum}th House Lordship`;
+  }
+
+  // 3. HOUSE_FACT tokens
+  const houseMatch = token.match(/^HOUSE_FACT_H(\d+)$/);
+  if (houseMatch) {
+    const h = houseMatch[1];
+    return isTamil
+      ? `${h}-ம் பாவக ஜோதிடக் குறியீடுகள்`
+      : `${h}th House astrological significations`;
+  }
+
+  // 4. PLANET_FACT tokens
+  const planetMatch = token.match(/^PLANET_FACT_([A-Z]+)(?:_([A-Z]+))?$/);
+  if (planetMatch) {
+    const planet = formatProper(planetMatch[1]);
+    return isTamil
+      ? `${planet} கிரக நிலை மற்றும் காரகத்துவம்`
+      : `${planet} planetary placement & significations`;
+  }
+
+  // 5. TRANSIT_FACT tokens
+  const transitMatch = token.match(/^TRANSIT_FACT_([A-Z]+)(?:_([A-Z]+))?$/);
+  if (transitMatch) {
+    const planet = formatProper(transitMatch[1]);
+    const sign = transitMatch[2] ? formatProper(transitMatch[2]) : null;
+    return isTamil
+      ? `கோச்சார ${planet}${sign && sign !== "Sign" ? ` (${sign} ராசி)` : ""} சஞ்சாரம்`
+      : `Transit ${planet}${sign && sign !== "Sign" ? ` in ${sign}` : ""}`;
+  }
+
+  // 6. VARGA_FACT tokens
+  if (token.startsWith("VARGA_FACT_")) {
+    const vargaMap = {
+      VARGA_FACT_D16_VEHICLE_CONFIRMED: isTamil ? "D16 சோடசாம்ச வர்க்க வாகன காரக உறுதிப்பாடு" : "D16 Shodashamsha confirmation for vehicle acquisition",
+      VARGA_FACT_D4_PROPERTY_CONFIRMED: isTamil ? "D4 சதுர்த்தாம்ச வர்க்க சொத்து காரக உறுதிப்பாடு" : "D4 Chaturthamsha confirmation for real estate & fixed assets",
+      VARGA_FACT_D9_7TH_CONFIRMED: isTamil ? "D9 நவாம்ச 7-ம் பாவக சுப தொடர்பு" : "D9 Navamsha confirmation for partnership harmony",
+      VARGA_FACT_D10_10TH_CONFIRMED: isTamil ? "D10 தசாம்ச தொழில் ஆதிபத்திய உறுதிப்பாடு" : "D10 Dashamsha confirmation for professional enterprise",
+      VARGA_FACT_D7_PROGENY_CONFIRMED: isTamil ? "D7 சப்தாம்ச புத்திர பாவ அமைவு" : "D7 Saptamsha progeny factor alignment",
+      VARGA_FACT_D2_WEALTH_CONFIRMED: isTamil ? "D2 ஹோரா தன பாவ அமைவு" : "D2 Hora wealth factor alignment"
+    };
+    if (vargaMap[token]) return vargaMap[token];
+    return isTamil ? "வர்க்கச் சக்கர உறுதிப்பாடு" : "Divisional varga confirmation";
+  }
+
+  // 7. TASK tokens
+  if (token.startsWith("TASK_")) {
+    const taskMap = {
+      TASK_CHILDREN_COUNT: isTamil ? "குழந்தைகள் எண்ணிக்கை குறித்த பாரம்பரிய ஆய்வு" : "Children count inquiry (qualitative assessment)",
+      TASK_CHILDREN_OUTLOOK: isTamil ? "புத்திர பாவ பாரம்பரிய வழிகாட்டல்" : "Children domain traditional guidance",
+      TASK_HOME_CONSTRUCTION_TIMING: isTamil ? "வீடு கட்டுதல் காலக்கணிப்பு" : "Home construction timing evaluation",
+      TASK_VEHICLE_PURCHASE_TIMING: isTamil ? "வாகனம் வாங்குதல் காலக்கணிப்பு" : "Vehicle purchase timing evaluation",
+      TASK_BUSINESS_EXPANSION_DECISION: isTamil ? "வணிக விரிவாக்க முடிவெடுத்தல்" : "Business expansion decision assessment",
+      TASK_FOREIGN_TRIP_TIMING: isTamil ? "வெளிநாட்டுப் பயண காலக்கணிப்பு" : "Foreign travel timing evaluation"
+    };
+    if (taskMap[token]) return taskMap[token];
+  }
+
+  // 8. General fallback for underscore tokens
+  const words = token.toLowerCase().split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  return words;
+}

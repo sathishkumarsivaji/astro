@@ -9,6 +9,7 @@
  */
 
 import { computeTimingWindows } from "../timingEngine.js";
+import { humanizeEvidenceToken } from "../evidenceGraph.js";
 
 /**
  * Evaluates the vehicle acquisition timing task.
@@ -36,7 +37,19 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
     referenceYear: context.referenceYear || (new Date().getFullYear())
   });
 
-  const candidateWindows = timingResult.timingWindows || [];
+  const rawWindows = timingResult.timingWindows || [];
+
+  // Filter out broad multi-year spans (> 3 years, like an entire 7-year Mars Mahadasha)
+  // which lack specific sub-period or transit discrimination.
+  const candidateWindows = rawWindows.filter(w => {
+    if (!w.windowStart || !w.windowEnd) return false;
+    const s = parseInt(String(w.windowStart).slice(0, 4), 10);
+    const e = parseInt(String(w.windowEnd).slice(0, 4), 10);
+    if (isNaN(s) || isNaN(e)) return false;
+    const span = e - s;
+    return span <= 3;
+  });
+
   const hasWindows = candidateWindows.length > 0;
 
   if (!hasWindows) {
@@ -45,8 +58,8 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
       : "The current calculated dasha-transit progression does not indicate a discriminating window for purchasing a new vehicle within the immediate calculated horizon (NO_DISCRIMINATING_WINDOW).";
 
     const reason = isTamil
-      ? "வாகன யோகத்திற்கு 4-ம் பாவகம் (வாகன ஸ்தானம்), சுக போக காரகன் சுக்கிரன் மற்றும் இயந்திர காரகன் செவ்வாயின் தசா-கோச்சார ஒருங்கிணைவு தேவைப்படுகிறது. தற்போதைய கணிப்பில் இந்த ஒருங்கிணைவு போதுமான அளவு வலுப்பெறவில்லை."
-      : "Ordinary vehicle acquisition in Vedic astrology is governed by the 4th house (Vahana sthana), natural vehicle significator Venus (Shukra), and mechanical significator Mars (Kuja). Operative periods do not show simultaneous convergence on the vehicle axis.";
+      ? "வாகன யோகத்திற்கு 4-ம் பாவகம் (வாகன ஸ்தானம்), சுக போக காரகன் சுக்கிரன் மற்றும் இயந்திர காரகன் செவ்வாயின் தசா-கோச்சார ஒருங்கிணைவு தேவைப்படுகிறது. தற்போதைய கணிப்பில் இந்த ஒருங்கிணைவு போதுமான அளவு குறுகிய கால அளவில் தனித்து அமையவில்லை."
+      : "Ordinary vehicle acquisition in Vedic astrology is governed by the 4th house (Vahana sthana), natural vehicle significator Venus (Shukra), and mechanical significator Mars (Kuja). Operative periods do not show simultaneous discriminating convergence on the vehicle axis.";
 
     const limitation = isTamil
       ? "ஜோதிட காலக்கணிப்பு ஒரு குறியீட்டு வாய்ப்பு மட்டுமே; தனிநபர் பட்ஜெட், கடன் வசதி, வாகனப் பராமரிப்பு மற்றும் அன்றாட தேவையே வாகனம் வாங்குவதை தீர்மானிக்க வேண்டும்."
@@ -57,12 +70,14 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
       intent: "VEHICLE_PURCHASE_TIMING",
       vehicleType: "ORDINARY_VEHICLE",
       answerState: "NO_DISCRIMINATING_WINDOW",
+      timingStatus: "NOT_DISCRIMINATING",
+      timingResolution: "NOT_DISCRIMINATING",
+      timingWindow: null,
       directAnswer,
       reason,
       limitation,
       recommendation: null,
       candidateWindows: [],
-      timingResolution: null,
       supportingClaims: [],
       limitingClaims: [
         "No discriminating dasha-transit convergence for vehicle purchase in the evaluated horizon.",
@@ -74,7 +89,7 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
     };
   }
 
-  // Windows exist
+  // Windows exist and are discriminating (<= 3 years)
   const primaryWin = candidateWindows[0];
   const windowStr = primaryWin.windowStart && primaryWin.windowEnd
     ? `${primaryWin.windowStart} – ${primaryWin.windowEnd}`
@@ -92,11 +107,24 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
     ? "ஜோதிட காலம் ஒரு வழிகாட்டல் மட்டுமே; நிதித் திட்டமிடல், வாகன பயன்பாடு மற்றும் ஓட்டுநர் பாதுகாப்பு நடைமுறைகளே முதன்மையானவை."
     : "Astrological timing indicates classical traditional alignment only; purchase financing, maintenance budgeting, and operational need govern vehicle acquisition.";
 
+  const readableClaims = [
+    `4th House (Vahana Sthana) activation under ${primaryWin.descriptionEn || "operative dasha period"}`,
+    "Venus (natural vehicle karaka) and Mars mechanical indicators"
+  ];
+
+  const sanitizedWindows = candidateWindows.map(w => ({
+    ...w,
+    supportingEvidence: (w.supportingEvidence || []).map(token => humanizeEvidenceToken(token, isTamil))
+  }));
+
   return {
     questionId,
     intent: "VEHICLE_PURCHASE_TIMING",
     vehicleType: "ORDINARY_VEHICLE",
     answerState: "ANSWERED",
+    timingStatus: "CONVERGENCE_ESTABLISHED",
+    timingResolution: primaryWin.resolution || "YEAR",
+    timingWindow: windowStr,
     directAnswer,
     reason,
     limitation,
@@ -104,9 +132,8 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
       preferredWindow: windowStr,
       primaryDashaPeriod: primaryWin.descriptionEn
     },
-    candidateWindows,
-    timingResolution: primaryWin.resolution || "YEAR",
-    supportingClaims: primaryWin.supportingEvidence || [],
+    candidateWindows: sanitizedWindows,
+    supportingClaims: readableClaims,
     limitingClaims: [limitation],
     missingInputs: [],
     traditionalMethod: "4th Bhava (Vahana Sthana), Venus & Mars Planetary Activation under Vimshottari Dasha",
