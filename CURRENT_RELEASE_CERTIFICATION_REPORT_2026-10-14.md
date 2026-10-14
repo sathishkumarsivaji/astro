@@ -5,8 +5,8 @@
 **Model Version:** 2.2.0  
 **Current Git Commit:** `be055dc` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.37 MB (36,041,442 bytes)  
-- **SHA-256 Digest:** `6cd7fe43f02fe94ec4c67856748af60e34fb5dbb9bba2c61cdb79510a15fb4d1`  
+- **Archive Size:** 34.37 MB (36,041,838 bytes)  
+- **SHA-256 Digest:** `5afe1e777c46ed3b15fa94717130df57c7208dc4e0213cf7822601d9128d2674`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 
@@ -183,7 +183,7 @@ All historical reports in the repository (`ASTROVERSE_FINAL_VALIDATION_REPORT.md
 | Artifact | Location | SHA-256 Digest |
 | :--- | :--- | :--- |
 | **Release Manifest** | `current_release_manifest.json` | Pinned across 15 component/dataset digests |
-| **Clean Distribution Archive** | `ASTRO.zip` | `6cd7fe43f02fe94ec4c67856748af60e34fb5dbb9bba2c61cdb79510a15fb4d1` |
+| **Clean Distribution Archive** | `ASTRO.zip` | `5afe1e777c46ed3b15fa94717130df57c7208dc4e0213cf7822601d9128d2674` |
 | **Cohort Reconciliation** | `docs/BENCHMARK_COHORT_RECONCILIATION.md` | Mathematical reconciliation of 3,751 vs 320 records |
 | **Release Runbook** | `RELEASE_RUNBOOK.md` | Clean installation & audit instructions |
 | **Live Inference Suite** | `backend/test/test_live_inference_benchmarks.mjs` | Latency, RAM, and fallback benchmark script |
