@@ -70,7 +70,7 @@ if (shouldPack) {
   console.log(`\nGenerating clean distribution archive ${zipName}...`);
 
   try {
-    execSync(`git archive --format=zip -o "${zipPath}" HEAD`, { cwd: ROOT, stdio: "inherit" });
+    execSync(`git archive --format=zip --mtime="2000-01-01T00:00:00Z" -o "${zipPath}" HEAD`, { cwd: ROOT, stdio: "inherit" });
     if (!fs.existsSync(zipPath)) {
       throw new Error(`Failed to generate ${zipPath}`);
     }

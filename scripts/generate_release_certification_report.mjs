@@ -53,7 +53,7 @@ for (const command of commands) {
   commandResults.push(run(command, cwd));
 }
 
-execSync(`git archive --format=zip -o "${ARCHIVE_PATH}" HEAD`, { cwd: ROOT, stdio: "ignore" });
+execSync(`git archive --format=zip --mtime="2000-01-01T00:00:00Z" -o "${ARCHIVE_PATH}" HEAD`, { cwd: ROOT, stdio: "ignore" });
 const archiveHash = sha256File(ARCHIVE_PATH);
 const gate = commandResults.find(result => result.command.includes("test_release_certification_gate"));
 const stage5 = commandResults.find(result => result.command.includes("test:stage5"));
