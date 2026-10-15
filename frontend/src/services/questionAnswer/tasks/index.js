@@ -18,6 +18,9 @@ import { evaluateMonthlyOutlook } from "./monthlyOutlook.js";
 import { evaluateChildrenCount, CHILDREN_COUNT_POLICY, resolveChildrenSubject } from "./childrenCount.js";
 import { evaluateChildrenOutlook, CHILDREN_OUTLOOK_EVIDENCE_PLAN } from "./childrenOutlook.js";
 import { evaluateFamilyExpansionTiming } from "./familyExpansionTiming.js";
+import { evaluateJobTransitionDecision } from "./jobTransitionDecision.js";
+import { evaluateWealthAccumulationDecision } from "./wealthAccumulationDecision.js";
+import { evaluateWellnessVitalityCycle } from "./wellnessVitalityCycle.js";
 
 export {
   TASK_INTENTS,
@@ -36,7 +39,10 @@ export {
   evaluateMonthlyOutlook,
   evaluateChildrenCount,
   evaluateChildrenOutlook,
-  evaluateFamilyExpansionTiming
+  evaluateFamilyExpansionTiming,
+  evaluateJobTransitionDecision,
+  evaluateWealthAccumulationDecision,
+  evaluateWellnessVitalityCycle
 };
 
 /**
@@ -145,6 +151,15 @@ export function dispatchTaskEvaluation({ intent, question, context = {}, isTamil
 
       case CHILDREN_TASKS.FAMILY_EXPANSION_TIMING:
         return evaluateFamilyExpansionTiming({ question, context, isTamil });
+
+      case TASK_INTENTS.JOB_TRANSITION_DECISION:
+        return evaluateJobTransitionDecision({ question, context, isTamil });
+
+      case TASK_INTENTS.WEALTH_ACCUMULATION_DECISION:
+        return evaluateWealthAccumulationDecision({ question, context, isTamil });
+
+      case TASK_INTENTS.WELLNESS_VITALITY_CYCLE:
+        return evaluateWellnessVitalityCycle({ question, context, isTamil });
 
       default:
         return buildUnsupportedTaskAnswer({

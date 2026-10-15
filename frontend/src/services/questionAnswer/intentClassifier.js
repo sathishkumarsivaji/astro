@@ -23,6 +23,9 @@ export const TASK_INTENTS = Object.freeze({
   HOME_CONSTRUCTION_TIMING: "HOME_CONSTRUCTION_TIMING",
   VEHICLE_PURCHASE_TIMING: "VEHICLE_PURCHASE_TIMING",
   MONTHLY_OUTLOOK: "MONTHLY_OUTLOOK",
+  JOB_TRANSITION_DECISION: "JOB_TRANSITION_DECISION",
+  WEALTH_ACCUMULATION_DECISION: "WEALTH_ACCUMULATION_DECISION",
+  WELLNESS_VITALITY_CYCLE: "WELLNESS_VITALITY_CYCLE",
   ...CHILDREN_TASKS
 });
 
@@ -150,6 +153,21 @@ export function classifyIntent(normalizedQ, history = []) {
   // H. Monthly Outlook (Upcoming months forecast)
   if (/(?:upcoming|coming|next\s+few|next\s+3|next\s+three)\s+months|(?:how\s+will\s+my|what\s+about\s+my)\s+(?:upcoming|coming|next)\s+months|monthly\s+(?:outlook|forecast|prediction)|அடுத்த\s*மாதங்கள்|வரவிருக்கும்\s*மாதங்கள்/i.test(text)) {
     detectedIntents.add(TASK_INTENTS.MONTHLY_OUTLOOK);
+  }
+
+  // I. Job Transition & Career Movement Decision
+  if (/(?:switch.*or.*stay|stay.*or.*switch|change.*or.*continue|continue.*or.*change|job\s+transition|should\s+i\s+(?:switch|change)\s+(?:my\s+)?job|leave\s+current\s+job|switch\s+companies|வேலை.*(?:மாற|தொடர|மாறுவதா|தொடர்வதா)|(?:மாறுவதா.*தொடர்வதா|தொடர்வதா.*மாறுவதா)|வேலை\s*மாற்ற|புதிய\s*பணிக்கு\s*மாறுவதா)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.JOB_TRANSITION_DECISION);
+  }
+
+  // J. Wealth Accumulation & Financial Decision
+  if (/(?:invest.*or.*save|save.*or.*invest|invest.*or.*clear.*debt|wealth\s+accumulation|financial\s+growth|invest\s+or\s+pay\s+debt|capital\s+allocation|முதலீடு.*(?:சேமிப்பு|கடன்|அடைப்பதா|சேமிப்பதா|வளர்ச்சி)|(?:சேமிப்பதா.*முதலீடா|முதலீடா.*சேமிப்பதா)|பண\s*சேர்க்கை|கடன்\s*அடைக்க|செல்வ\s*வளர்ச்சி)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.WEALTH_ACCUMULATION_DECISION);
+  }
+
+  // K. Wellness & Vitality Rhythm Cycles
+  if (/(?:vitality\s+cycle|energy\s+rhythm|physical\s+vitality|wellness\s+cycle|energy\s+levels|உடல்\s*ஆற்றல்|சக்தி\s*நிலை|புத்துணர்ச்சி\s*சுழற்சி|ஆரோக்கிய\s*சுழற்சி)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.WELLNESS_VITALITY_CYCLE);
   }
 
   // 1. Specialized Spouse & Relationship Intents
@@ -449,6 +467,9 @@ export function classifyIntent(normalizedQ, history = []) {
     TASK_INTENTS.HOME_CONSTRUCTION_TIMING,
     TASK_INTENTS.VEHICLE_PURCHASE_TIMING,
     TASK_INTENTS.MONTHLY_OUTLOOK,
+    TASK_INTENTS.JOB_TRANSITION_DECISION,
+    TASK_INTENTS.WEALTH_ACCUMULATION_DECISION,
+    TASK_INTENTS.WELLNESS_VITALITY_CYCLE,
     CHILDREN_TASKS.CHILDREN_COUNT,
     CHILDREN_TASKS.CHILDREN_OUTLOOK,
     CHILDREN_TASKS.FAMILY_EXPANSION_TIMING,

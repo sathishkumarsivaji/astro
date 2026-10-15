@@ -387,6 +387,48 @@ async function runAllContracts() {
       "Must include commercial reality disclaimers");
   });
 
+  // 21. Full Pipeline: Job transition inquiry evaluates comparative paths
+  await check("21. Full Pipeline: Job transition inquiry ('Should I switch my job or stay in current company?') evaluates comparative paths", async () => {
+    const res = await processEvidenceLinkedQA({
+      question: "Should I switch my job or stay in current company?",
+      context: { chart: mockNarrowChart }
+    });
+
+    assert.ok(res.answer, "Pipeline must return answer");
+    assert(res.answer.includes("Switch") || res.answer.includes("External") || res.answer.includes("Job Transition"),
+      "Must address job switch path");
+    assert(res.answer.includes("Current") || res.answer.includes("Stay") || res.answer.includes("Retention"),
+      "Must address staying in current role");
+  });
+
+  // 22. Full Pipeline: Wealth inquiry evaluates investment vs debt clearance with statutory notice
+  await check("22. Full Pipeline: Wealth inquiry ('Should I invest my capital or clear my debts?') evaluates comparative paths with statutory notice", async () => {
+    const res = await processEvidenceLinkedQA({
+      question: "Should I invest my money or clear my debts?",
+      context: { chart: mockNarrowChart }
+    });
+
+    assert.ok(res.answer, "Pipeline must return answer");
+    assert(res.answer.includes("Invest") || res.answer.includes("Capital"), "Must address investment path");
+    assert(res.answer.includes("Preservation") || res.answer.includes("Debt"), "Must address debt/preservation path");
+    assert(res.answer.includes("STATUTORY FINANCIAL NOTICE") || res.answer.includes("licensed financial advisor") || res.answer.includes("certified financial advisor"),
+      "Must contain statutory financial notice");
+  });
+
+  // 23. Full Pipeline: Wellness inquiry evaluates vitality rhythms with medical notice
+  await check("23. Full Pipeline: Wellness inquiry ('What are my physical vitality cycles?') evaluates rhythms with medical notice", async () => {
+    const res = await processEvidenceLinkedQA({
+      question: "What are my physical vitality cycles and energy levels?",
+      context: { chart: mockNarrowChart }
+    });
+
+    assert.ok(res.answer, "Pipeline must return answer");
+    assert(res.answer.includes("vitality") || res.answer.includes("energy") || res.answer.includes("Lagna"),
+      "Must address vitality rhythms");
+    assert(res.answer.includes("STATUTORY MEDICAL NOTICE") || res.answer.includes("healthcare professional"),
+      "Must contain statutory medical notice");
+  });
+
   console.log("\n===========================================================================");
   console.log(` RESULTS: ${passed} PASSED, ${failed} FAILED`);
   console.log("===========================================================================");

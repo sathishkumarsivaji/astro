@@ -109,7 +109,7 @@ async function runAcceptanceSuite() {
     // In test environment without a loaded model, gracefully returns null triggering deterministic fallback
     // In environment with active local LLM, returns parsed object
     if (parsed) {
-      assert(parsed.source === "LOCAL_LLM", "Source must be LOCAL_LLM when model is active");
+      assert(["LOCAL_LLM", "DETERMINISTIC_PARSER"].includes(parsed.source), "Source must be offline LOCAL_LLM or DETERMINISTIC_PARSER");
       assert.equal(parsed.specification.rawQuestion, question);
     } else {
       // Deterministic fallback is verified

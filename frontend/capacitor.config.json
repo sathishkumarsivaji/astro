@@ -1,0 +1,16 @@
+{
+  "appId": "com.skrastro.app",
+  "appName": "SKR ASTRO",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0c0a09",
+      "showSpinner": false
+    }
+  }
+}
