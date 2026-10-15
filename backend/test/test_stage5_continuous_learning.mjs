@@ -92,7 +92,8 @@ const eligibleCounts = Object.fromEntries(
 const report = {
   reportVersion: "STAGE5_CONTINUOUS_LEARNING_REPORT_V1",
   softwareTest: false,
-  generatedAt: new Date().toISOString(),
+  generatedAt: null,
+  generatedAtPolicy: "OMITTED_FROM_HASHED_ARTIFACT_TO_KEEP_REPLAY_DETERMINISTIC",
   evaluationPolicy: {
     cohortSelection: "FULL_PARTITIONS",
     selectionLimit: null,
