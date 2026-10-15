@@ -134,7 +134,8 @@ testCase(1, "Verified marriage date inside forecast updates performance metric (
     verificationId: `ver_c1_${Date.now()}`,
     outcomeId,
     verificationMethod: "CIVIL_MARRIAGE_REGISTRATION_CERTIFICATE",
-    verificationStatus: "INDEPENDENTLY_VERIFIED"
+    verificationStatus: "INDEPENDENTLY_VERIFIED",
+    evidenceReference: "DOC_CIVIL_REG_REF_CASE01"
   });
 
   const replay = replayPrediction(predictionRecord.predictionId);
@@ -159,7 +160,8 @@ testCase(2, "Verified marriage date outside forecast records prediction miss, ne
     verificationId: `ver_c2_${Date.now()}`,
     outcomeId,
     verificationMethod: "CIVIL_MARRIAGE_REGISTRATION_CERTIFICATE",
-    verificationStatus: "INDEPENDENTLY_VERIFIED"
+    verificationStatus: "INDEPENDENTLY_VERIFIED",
+    evidenceReference: "DOC_CIVIL_REG_REF_CASE02"
   });
 
   const replay = replayPrediction(predictionRecord.predictionId);
@@ -424,7 +426,8 @@ testCase(21, "Planetary rule contradiction on verified event records rule failur
     verificationId: `ver_c21_${Date.now()}`,
     outcomeId,
     verificationMethod: "GOVERNMENT_CIVIL_RECORD",
-    verificationStatus: "INDEPENDENTLY_VERIFIED"
+    verificationStatus: "INDEPENDENTLY_VERIFIED",
+    evidenceReference: "DOC_GOV_RECORD_REF_CASE21"
   });
 
   const replay = replayPrediction(predictionRecord.predictionId);

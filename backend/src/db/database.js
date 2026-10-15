@@ -1246,9 +1246,12 @@ class AstroDatabase {
       pseudonymousCustomerId: record.pseudonymousCustomerId,
       createdAt: record.createdAt || new Date().toISOString(),
       birthDataHash: record.birthDataHash,
+      birthDate: record.birthDate || record.metadata?.birthDate || null,
       calculationConfigJson: record.calculationConfigJson || {},
-      chartFeaturesJson: record.chartFeaturesJson || {},
-      domain: (record.domain || "UNKNOWN").toUpperCase(),
+      chartFeaturesJson: record.chartFeaturesJson || record.featureVectorSnapshot || {},
+      featureVectorSnapshot: record.featureVectorSnapshot || record.chartFeaturesJson || {},
+      domain: (record.domain || record.canonicalEvent || "UNKNOWN").toUpperCase(),
+      canonicalEvent: record.canonicalEvent || (record.domain ? `${record.domain.toUpperCase()}_EVENT` : ""),
       eventDefinition: record.eventDefinition || "",
       predictedOutcome: record.predictedOutcome || "",
       timingIntervalStart: record.timingIntervalStart || null,
@@ -1455,6 +1458,7 @@ class AstroDatabase {
       customerId: outcome.customerId || "ANONYMOUS",
       eventOccurred: Boolean(outcome.eventOccurred),
       outcomeCategory: category,
+      actualEventAge: outcome.actualEventAge !== undefined ? Number(outcome.actualEventAge) : (outcome.eventAge !== undefined ? Number(outcome.eventAge) : null),
       reportedDate: outcome.reportedDate || null,
       datePrecision: outcome.datePrecision || "APPROX_YEAR",
       isCensored: Boolean(outcome.isCensored),
@@ -1538,6 +1542,9 @@ class AstroDatabase {
       const method = String(verification.verificationMethod || "").toUpperCase();
       if (!RECOGNIZED_INDEPENDENT_METHODS.has(method)) {
         throw new Error(`INVALID_VERIFICATION_PROCEDURE: Status 'INDEPENDENTLY_VERIFIED' requires recognized independent verification procedure (got: '${verification.verificationMethod}').`);
+      }
+      if (!verification.evidenceReference || String(verification.evidenceReference).trim().length === 0) {
+        throw new Error("MISSING_EVIDENCE_REFERENCE: Status 'INDEPENDENTLY_VERIFIED' requires an explicit, non-empty evidenceReference documenting the verifiable source record.");
       }
     }
 

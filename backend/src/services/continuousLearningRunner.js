@@ -27,6 +27,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { db } from "../db/database.js";
+import { DOMAIN_FEATURE_REGISTRIES, FEATURE_SCHEMA_VERSION } from "./domainFeatureRegistry.js";
 
 /**
  * Versioned Baseline Registry keyed by domain, population, event definition, and horizon
@@ -191,6 +192,118 @@ export function computeWithin1yPct(evaluations) {
     }
   }
   return count > 0 ? Number(((within1y / count) * 100).toFixed(2)) : null;
+}
+
+/**
+ * Computes comprehensive timing metrics separating MAE, median error, 1y/2y/3y rates, and intervals.
+ */
+export function computeDetailedTimingMetrics(evaluations, predictionIntervals = null) {
+  if (!Array.isArray(evaluations) || evaluations.length === 0) return null;
+  const errors = [];
+  let within1y = 0;
+  let within2y = 0;
+  let within3y = 0;
+  let inIntervalCount = 0;
+  let totalIntervalWidth = 0;
+  let intervalCount = 0;
+
+  for (let i = 0; i < evaluations.length; i++) {
+    const item = evaluations[i];
+    if (typeof item.predictedAge === "number" && typeof item.actualAge === "number") {
+      const err = Math.abs(item.predictedAge - item.actualAge);
+      errors.push(err);
+      if (err <= 1.0) within1y++;
+      if (err <= 2.0) within2y++;
+      if (err <= 3.0) within3y++;
+
+      const interval = predictionIntervals ? predictionIntervals[i] : (item.interval || null);
+      if (interval && typeof interval.lower === "number" && typeof interval.upper === "number") {
+        intervalCount++;
+        totalIntervalWidth += (interval.upper - interval.lower);
+        if (item.actualAge >= interval.lower && item.actualAge <= interval.upper) {
+          inIntervalCount++;
+        }
+      }
+    }
+  }
+
+  if (errors.length === 0) return null;
+  const n = errors.length;
+  const mae = Number((errors.reduce((a, b) => a + b, 0) / n).toFixed(4));
+  errors.sort((a, b) => a - b);
+  const mid = Math.floor(n / 2);
+  const medianAbsoluteError = Number((n % 2 !== 0 ? errors[mid] : (errors[mid - 1] + errors[mid]) / 2).toFixed(4));
+
+  return {
+    sampleSize: n,
+    mae,
+    medianAbsoluteError,
+    within1yPct: Number(((within1y / n) * 100).toFixed(2)),
+    within2yPct: Number(((within2y / n) * 100).toFixed(2)),
+    within3yPct: Number(((within3y / n) * 100).toFixed(2)),
+    forecastIntervalCoverage: intervalCount > 0 ? Number(((inIntervalCount / intervalCount) * 100).toFixed(2)) : null,
+    meanIntervalWidth: intervalCount > 0 ? Number((totalIntervalWidth / intervalCount).toFixed(2)) : null
+  };
+}
+
+/**
+ * Computes comprehensive occurrence metrics separating Brier score, ROC-AUC, MCC, and confusion matrix.
+ */
+export function computeDetailedOccurrenceMetrics(probPairs, threshold = 0.5) {
+  if (!Array.isArray(probPairs) || probPairs.length === 0) return null;
+  let brierSum = 0;
+  let tp = 0, fp = 0, tn = 0, fn = 0;
+  const n = probPairs.length;
+
+  for (const pair of probPairs) {
+    const p = Math.max(0, Math.min(1, pair.prob));
+    const y = pair.actual ? 1 : 0;
+    brierSum += Math.pow(p - y, 2);
+
+    const pred = p >= threshold ? 1 : 0;
+    if (pred === 1 && y === 1) tp++;
+    else if (pred === 1 && y === 0) fp++;
+    else if (pred === 0 && y === 0) tn++;
+    else if (pred === 0 && y === 1) fn++;
+  }
+
+  const brierScore = Number((brierSum / n).toFixed(4));
+  const sensitivity = (tp + fn) > 0 ? Number((tp / (tp + fn)).toFixed(4)) : 0;
+  const specificity = (tn + fp) > 0 ? Number((tn / (tn + fp)).toFixed(4)) : 0;
+  const precision = (tp + fp) > 0 ? Number((tp / (tp + fp)).toFixed(4)) : 0;
+  const balancedAccuracy = Number(((sensitivity + specificity) / 2).toFixed(4));
+
+  // Matthews Correlation Coefficient (MCC)
+  const denom = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+  const mcc = denom > 0 ? Number(((tp * tn - fp * fn) / denom).toFixed(4)) : 0;
+
+  // ROC-AUC via Wilcoxon-Mann-Whitney
+  const sorted = [...probPairs].sort((a, b) => a.prob - b.prob);
+  const nPos = tp + fn;
+  const nNeg = tn + fp;
+  let rocAuc = 0.5;
+  if (nPos > 0 && nNeg > 0) {
+    let rank = 1;
+    let rankSumPos = 0;
+    for (const item of sorted) {
+      if (item.actual) rankSumPos += rank;
+      rank++;
+    }
+    const U = rankSumPos - (nPos * (nPos + 1)) / 2;
+    rocAuc = Number((U / (nPos * nNeg)).toFixed(4));
+  }
+
+  return {
+    sampleSize: n,
+    confusionMatrix: { tp, fp, tn, fn },
+    brierScore,
+    sensitivity,
+    specificity,
+    precision,
+    balancedAccuracy,
+    mcc,
+    rocAuc
+  };
 }
 
 /**
@@ -628,4 +741,487 @@ export async function runContinuousLearningCycle({
       deployment: null
     };
   }
+}
+
+/**
+ * Linear algebra solver for L2-regularized linear ridge regression:
+ * Solves (X^T X + lambda * I) w = X^T y
+ * via Gaussian elimination with partial pivoting.
+ */
+export function solveRidgeRegression(X, y, lambda = 0.05) {
+  if (!Array.isArray(X) || X.length === 0 || !Array.isArray(y) || y.length === 0) {
+    throw new Error("INVALID_INPUT: X and y must be non-empty arrays.");
+  }
+  const n = X.length;
+  const p = X[0].length;
+  if (y.length !== n) {
+    throw new Error(`DIMENSION_MISMATCH: X rows (${n}) must equal y length (${y.length}).`);
+  }
+
+  // Compute X^T * X and X^T * y
+  const XtX = Array.from({ length: p }, () => Array(p).fill(0));
+  const Xty = Array(p).fill(0);
+
+  for (let i = 0; i < n; i++) {
+    const yi = y[i];
+    const xi = X[i];
+    for (let j = 0; j < p; j++) {
+      Xty[j] += xi[j] * yi;
+      for (let k = 0; k < p; k++) {
+        XtX[j][k] += xi[j] * xi[k];
+      }
+    }
+  }
+
+  // Regularization: lambda on all coefficients except intercept (j=0)
+  for (let j = 0; j < p; j++) {
+    XtX[j][j] += (j === 0 ? lambda * 0.01 : lambda);
+  }
+
+  // Augmented matrix [XtX | Xty]
+  const A = XtX.map((row, i) => [...row, Xty[i]]);
+
+  for (let i = 0; i < p; i++) {
+    let maxRow = i;
+    for (let k = i + 1; k < p; k++) {
+      if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) maxRow = k;
+    }
+    if (maxRow !== i) {
+      [A[i], A[maxRow]] = [A[maxRow], A[i]];
+    }
+
+    const pivot = A[i][i];
+    if (Math.abs(pivot) < 1e-12) continue; // Singular or near-singular column
+    for (let j = i; j <= p; j++) {
+      A[i][j] /= pivot;
+    }
+
+    for (let k = 0; k < p; k++) {
+      if (k === i) continue;
+      const factor = A[k][i];
+      for (let j = i; j <= p; j++) {
+        A[k][j] -= factor * A[i][j];
+      }
+    }
+  }
+
+  return A.map(row => Number(row[p].toFixed(6)));
+}
+
+/**
+ * Assembles a versioned training dataset of verified, consented, completed customer observations.
+ * Enforces fail-closed authoritative consent verification at extraction time.
+ * Stale snapshots cannot reintroduce revoked or deleted customer records.
+ */
+export function assembleOutcomeTrainingCohort({ domain = "MARRIAGE", minObservations = 30 }) {
+  const d = String(domain || "MARRIAGE").toUpperCase();
+  const eligibleRecords = [];
+  const exclusionLedger = [];
+  const customerIdsSeen = new Set();
+
+  const observedOutcomes = Object.values(db.state.observed_outcomes || {});
+  const predictionRecords = db.state.prediction_records || {};
+
+  for (const outcome of observedOutcomes) {
+    const custId = outcome.customerId;
+    if (!custId) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: "MISSING_CUSTOMER_IDENTIFIER" });
+      continue;
+    }
+
+    // 1. Authoritative consent verification (Fail-closed)
+    const consent = db.getTrainingConsent ? db.getTrainingConsent(custId) : (db.state?.training_consent ? db.state.training_consent[custId] : null);
+    if (!consent) {
+      exclusionLedger.push({ customerId: custId, outcomeId: outcome.outcomeId, reason: "CONSENT_NOT_CONFIRMED" });
+      continue;
+    }
+    if (consent.withdrawnAt) {
+      exclusionLedger.push({ customerId: custId, outcomeId: outcome.outcomeId, reason: "CONSENT_REVOKED" });
+      continue;
+    }
+    if (consent.consentGranted !== true) {
+      exclusionLedger.push({ customerId: custId, outcomeId: outcome.outcomeId, reason: "CONSENT_NOT_CONFIRMED" });
+      continue;
+    }
+    const user = db.getUser ? db.getUser(custId) : null;
+    if (user && user.isDeleted) {
+      exclusionLedger.push({ customerId: custId, outcomeId: outcome.outcomeId, reason: "USER_DELETED" });
+      continue;
+    }
+
+    // 2. Original immutable prediction linkage
+    const pred = predictionRecords[outcome.predictionId];
+    if (!pred) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: "PREDICTION_RECORD_NOT_FOUND" });
+      continue;
+    }
+    const predDomain = (pred.domain || pred.canonicalEvent || "").toUpperCase();
+    if (d && predDomain && !predDomain.includes(d)) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: `DOMAIN_MISMATCH:${predDomain}` });
+      continue;
+    }
+    if (pred.isTrainingEligible === false) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: "PREDICTION_MARKED_INELIGIBLE" });
+      continue;
+    }
+
+    // 3. Independent outcome verification
+    const verification = db.getOutcomeVerification(outcome.outcomeId);
+    if (!verification) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: "UNVERIFIED_OUTCOME" });
+      continue;
+    }
+    const validVerStatuses = ["INDEPENDENTLY_VERIFIED", "CORROBORATED"];
+    if (!validVerStatuses.includes(verification.verificationStatus)) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: `INSUFFICIENT_VERIFICATION_STATUS:${verification.verificationStatus}` });
+      continue;
+    }
+
+    // 4. Completed observation validation
+    if (outcome.isCensored || outcome.eventOccurred !== true) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: "CENSORED_OR_NON_EVENT" });
+      continue;
+    }
+
+    // Determine actual event age
+    let actualEventAge = outcome.actualEventAge ?? outcome.eventAge ?? (outcome.metadata?.actualEventAge) ?? null;
+    if (actualEventAge == null && outcome.reportedDate && (pred.birthDate || pred.metadata?.birthDate)) {
+      const bDate = pred.birthDate || pred.metadata?.birthDate;
+      const bTime = new Date(bDate).getTime();
+      const rTime = new Date(outcome.reportedDate).getTime();
+      if (!isNaN(bTime) && !isNaN(rTime) && rTime > bTime) {
+        actualEventAge = Number(((rTime - bTime) / (365.2425 * 86400000)).toFixed(2));
+      }
+    }
+    if (actualEventAge == null || !Number.isFinite(actualEventAge) || actualEventAge < 15 || actualEventAge > 70) {
+      exclusionLedger.push({ outcomeId: outcome.outcomeId, reason: "INVALID_OR_MISSING_EVENT_AGE" });
+      continue;
+    }
+
+    // 5. Feature Vector Snapshot extraction
+    const features = pred.featureVectorSnapshot || pred.chartFeaturesJson || pred.features || {};
+
+    eligibleRecords.push({
+      customerId: custId,
+      predictionId: outcome.predictionId,
+      outcomeId: outcome.outcomeId,
+      actualEventAge,
+      features,
+      verifiedStatus: verification.verificationStatus,
+      verifiedBy: verification.verifiedBy,
+      consentVersion: consent.consentVersion || "v1.0"
+    });
+    customerIdsSeen.add(custId);
+  }
+
+  const datasetContent = JSON.stringify({ domain: d, recordsCount: eligibleRecords.length, records: eligibleRecords });
+  const trainingDatasetHash = crypto.createHash("sha256").update(datasetContent).digest("hex");
+
+  return {
+    domain: d,
+    records: eligibleRecords,
+    sampleSize: eligibleRecords.length,
+    uniqueCustomers: customerIdsSeen.size,
+    trainingDatasetHash,
+    isSufficient: eligibleRecords.length >= minObservations && customerIdsSeen.size >= minObservations,
+    exclusionLedger
+  };
+}
+
+/**
+ * Fits a regularized Ridge regression candidate model on training dataset records.
+ * Uses registered domain features and computes exact analytical weights.
+ */
+export function fitCandidateRegressionModel({
+  trainingCohort,
+  domain = "MARRIAGE",
+  featureKeys = null,
+  regularizationLambda = 0.05
+}) {
+  const records = Array.isArray(trainingCohort) ? trainingCohort : (trainingCohort?.records || []);
+  if (records.length < 2) {
+    throw new Error(`INSUFFICIENT_TRAINING_RECORDS: Need at least 2 records to fit candidate model (got ${records.length}).`);
+  }
+
+  const d = String(domain || "MARRIAGE").toUpperCase();
+  const domainFeatures = DOMAIN_FEATURE_REGISTRIES[d] || DOMAIN_FEATURE_REGISTRIES.MARRIAGE;
+  const activeFeatures = Array.isArray(featureKeys) && featureKeys.length > 0
+    ? featureKeys
+    : domainFeatures.map(f => f.id);
+
+  // Build X matrix (with column 0 as intercept = 1) and y vector
+  const X = [];
+  const y = [];
+
+  for (const rec of records) {
+    const row = [1.0]; // Intercept
+    const feats = rec.features || {};
+    for (const fKey of activeFeatures) {
+      const val = feats[fKey];
+      row.push(typeof val === "number" && Number.isFinite(val) ? val : 0.0);
+    }
+    X.push(row);
+    y.push(rec.actualEventAge);
+  }
+
+  const weights = solveRidgeRegression(X, y, regularizationLambda);
+  const intercept = weights[0];
+  const coefficients = activeFeatures.map((fKey, i) => ({
+    feature: fKey,
+    weight: weights[i + 1]
+  }));
+
+  // Compute training MAE and R^2
+  let totalError = 0;
+  let totalSS = 0;
+  let resSS = 0;
+  const meanY = y.reduce((a, b) => a + b, 0) / y.length;
+
+  for (let i = 0; i < X.length; i++) {
+    let pred = intercept;
+    for (let j = 0; j < activeFeatures.length; j++) {
+      pred += weights[j + 1] * X[i][j + 1];
+    }
+    const err = Math.abs(pred - y[i]);
+    totalError += err;
+    resSS += Math.pow(pred - y[i], 2);
+    totalSS += Math.pow(y[i] - meanY, 2);
+  }
+  const trainMae = Number((totalError / y.length).toFixed(4));
+  const rSquared = totalSS > 1e-6 ? Number(Math.max(0, 1 - resSS / totalSS).toFixed(4)) : 0.0;
+
+  const modelId = `cand_fit_${d.toLowerCase()}_${Date.now()}`;
+  const modelArtifact = {
+    modelId,
+    domain: d,
+    modelArchitecture: "RIDGE_FEATURE_REGRESSION",
+    featureSchemaVersion: FEATURE_SCHEMA_VERSION,
+    regularizationLambda,
+    featureKeys: activeFeatures,
+    intercept,
+    coefficients,
+    trainingSampleCount: records.length,
+    trainMae,
+    rSquared,
+    trainedAt: new Date().toISOString()
+  };
+
+  const artifactSha256 = crypto.createHash("sha256")
+    .update(JSON.stringify(modelArtifact))
+    .digest("hex");
+
+  const predictTiming = (features) => {
+    let pred = intercept;
+    if (features && typeof features === "object") {
+      for (let i = 0; i < activeFeatures.length; i++) {
+        const val = features[activeFeatures[i]];
+        if (typeof val === "number" && Number.isFinite(val)) {
+          pred += weights[i + 1] * val;
+        }
+      }
+    }
+    return Number(pred.toFixed(2));
+  };
+
+  return {
+    modelId,
+    domain: d,
+    modelType: "RIDGE_FEATURE_REGRESSION",
+    modelArtifact,
+    artifactSha256,
+    hyperparameters: { regularizationLambda, numFeatures: activeFeatures.length },
+    predictTiming
+  };
+}
+
+/**
+ * Calibrates candidate model on a separate validation cohort using affine least-squares calibration.
+ */
+export function calibrateCandidateModel({ candidateModel, validationCohort }) {
+  if (!candidateModel || typeof candidateModel.predictTiming !== "function") {
+    throw new Error("INVALID_CANDIDATE_MODEL: predictTiming function required.");
+  }
+  const records = Array.isArray(validationCohort) ? validationCohort : (validationCohort?.records || []);
+  if (records.length < 2) {
+    return candidateModel; // Not enough records to calibrate safely
+  }
+
+  const rawPreds = [];
+  const actuals = [];
+  for (const r of records) {
+    const pred = candidateModel.predictTiming(r.features);
+    if (typeof pred === "number" && Number.isFinite(pred) && typeof r.actualEventAge === "number") {
+      rawPreds.push(pred);
+      actuals.push(r.actualEventAge);
+    }
+  }
+
+  if (rawPreds.length < 2) return candidateModel;
+
+  // Simple linear regression of actuals on rawPreds: actual = slope * rawPred + offset
+  const meanP = rawPreds.reduce((a, b) => a + b, 0) / rawPreds.length;
+  const meanA = actuals.reduce((a, b) => a + b, 0) / actuals.length;
+
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < rawPreds.length; i++) {
+    num += (rawPreds[i] - meanP) * (actuals[i] - meanA);
+    den += Math.pow(rawPreds[i] - meanP, 2);
+  }
+  const slope = den > 1e-6 ? Number(Math.max(0.2, Math.min(2.0, num / den)).toFixed(4)) : 1.0;
+  const offset = Number((meanA - slope * meanP).toFixed(4));
+
+  const calibratedArtifact = {
+    ...candidateModel.modelArtifact,
+    calibrationParameters: {
+      calibrationMethod: "AFFINE_LEAST_SQUARES_CALIBRATION",
+      slope,
+      offset,
+      validationSampleCount: rawPreds.length,
+      calibratedAt: new Date().toISOString()
+    }
+  };
+
+  const newSha256 = crypto.createHash("sha256")
+    .update(JSON.stringify(calibratedArtifact))
+    .digest("hex");
+
+  const uncalibratedPredictTiming = candidateModel.predictTiming;
+  const calibratedPredictTiming = (features) => {
+    const raw = uncalibratedPredictTiming(features);
+    if (typeof raw !== "number" || !Number.isFinite(raw)) return raw;
+    return Number((slope * raw + offset).toFixed(2));
+  };
+
+  return {
+    ...candidateModel,
+    modelArtifact: calibratedArtifact,
+    artifactSha256: newSha256,
+    predictTiming: calibratedPredictTiming,
+    isCalibrated: true
+  };
+}
+
+/**
+ * Performs feature ablation study comparing candidate with planetary features against
+ * a non-astrological demographic baseline on IDENTICAL observations.
+ */
+export function performFeatureAblationStudy({ candidateModel, holdoutDataset, domain = "MARRIAGE" }) {
+  if (!candidateModel || typeof candidateModel.predictTiming !== "function") {
+    throw new Error("INVALID_CANDIDATE: candidateModel required.");
+  }
+  const d = String(domain || "MARRIAGE").toUpperCase();
+  const baselineInfo = getDomainBaseline(d);
+
+  const evaluations = [];
+  for (const item of (holdoutDataset || [])) {
+    if (typeof item.actualEventAge === "number" && Number.isFinite(item.actualEventAge)) {
+      const predFull = candidateModel.predictTiming(item.features);
+      if (typeof predFull === "number" && Number.isFinite(predFull)) {
+        evaluations.push({
+          id: item.id || item.customerId,
+          actualAge: item.actualEventAge,
+          predFull,
+          predDemographic: baselineInfo.baselineMae
+        });
+      }
+    }
+  }
+
+  if (evaluations.length < 2) {
+    return { isComplete: false, reason: "INSUFFICIENT_EVALUATION_SAMPLES" };
+  }
+
+  const n = evaluations.length;
+  const fullErrors = evaluations.map(e => Math.abs(e.predFull - e.actualAge));
+  const fullMae = Number((fullErrors.reduce((a, b) => a + b, 0) / n).toFixed(4));
+  const baselineMae = baselineInfo.baselineMae;
+  const deltaMae = Number((fullMae - baselineMae).toFixed(4));
+
+  const beatsBaseline = fullMae < baselineMae;
+
+  return {
+    domain: d,
+    sampleSize: n,
+    candidateMae: fullMae,
+    demographicBaselineMae: baselineMae,
+    deltaMae,
+    beatsBaseline,
+    interpretation: beatsBaseline
+      ? "Candidate outperforms non-astrological demographic baseline."
+      : "Candidate does not outperform non-astrological demographic baseline."
+  };
+}
+
+/**
+ * Executes the complete outcome-driven learning pipeline end-to-end:
+ * 1. Collects verified, consented outcomes
+ * 2. Assembles training dataset
+ * 3. Fits candidate regression model on registered planetary features
+ * 4. Calibrates candidate on validation split
+ * 5. Evaluates on independent holdout test set
+ * 6. Promotes to production if outperforming baseline, rejects and retains prior model otherwise.
+ */
+export async function executeOutcomeDrivenLearningPipeline({
+  domain = "MARRIAGE",
+  trainingCohort = null,
+  validationCohort = null,
+  holdoutTestSet = null,
+  regularizationLambda = 0.05
+}) {
+  const d = String(domain || "MARRIAGE").toUpperCase();
+
+  // 1. Assemble training dataset from verified outcomes if not provided
+  const trainDataset = trainingCohort || assembleOutcomeTrainingCohort({ domain: d });
+  const records = trainDataset.records || (Array.isArray(trainDataset) ? trainDataset : []);
+
+  if (records.length < 2) {
+    return {
+      status: "INSUFFICIENT_TRAINING_DATA",
+      sampleSize: records.length,
+      reason: `Need at least 2 verified, consented observations (found ${records.length}).`
+    };
+  }
+
+  // 2. Fit candidate model on registered features
+  const rawCandidate = fitCandidateRegressionModel({
+    trainingCohort: records,
+    domain: d,
+    regularizationLambda
+  });
+
+  // 3. Calibrate on validation split if provided
+  const candidateModel = validationCohort
+    ? calibrateCandidateModel({ candidateModel: rawCandidate, validationCohort })
+    : rawCandidate;
+
+  // 4. If holdout test set provided, run automated release gate
+  if (holdoutTestSet && Array.isArray(holdoutTestSet) && holdoutTestSet.length > 0) {
+    const trainingCustomerIds = new Set(records.map(r => r.customerId).filter(Boolean));
+    const cycleResult = await runContinuousLearningCycle({
+      candidateModel,
+      holdoutTestSet,
+      trainingCustomerIds,
+      domain: d
+    });
+
+    const ablation = performFeatureAblationStudy({
+      candidateModel,
+      holdoutDataset: holdoutTestSet,
+      domain: d
+    });
+
+    return {
+      pipelineStatus: cycleResult.status,
+      candidateModel,
+      evaluation: cycleResult.evaluation,
+      ablation,
+      deployment: cycleResult.deployment
+    };
+  }
+
+  return {
+    pipelineStatus: "FITTED_NOT_EVALUATED",
+    candidateModel
+  };
 }

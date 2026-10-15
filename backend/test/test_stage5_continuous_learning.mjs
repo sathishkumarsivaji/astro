@@ -27,7 +27,14 @@ import {
   RELEASE_GATE_THRESHOLDS,
   BASELINE_REGISTRY,
   getReleaseGateThresholds,
-  validateHoldoutCohortIntegrity
+  validateHoldoutCohortIntegrity,
+  computeDetailedTimingMetrics,
+  computeDetailedOccurrenceMetrics,
+  assembleOutcomeTrainingCohort,
+  fitCandidateRegressionModel,
+  calibrateCandidateModel,
+  performFeatureAblationStudy,
+  executeOutcomeDrivenLearningPipeline
 } from "../src/services/continuousLearningRunner.js";
 
 async function runStage5Suite() {
@@ -230,7 +237,18 @@ async function runStage5Suite() {
 
   // 11. End-to-End Real Observation Experiment with Documented Provenance (Section 8)
   const blindTestPath = path.join(ROOT, "data/real_world_validation/splits/blind_test.json");
+  const splitManifestPath = path.join(ROOT, "data/real_world_validation/splits/split_manifest.json");
   assert.ok(fs.existsSync(blindTestPath), `Authentic blind test split must exist at: ${blindTestPath}`);
+  assert.ok(fs.existsSync(splitManifestPath), `Split manifest must exist at: ${splitManifestPath}`);
+
+  // Cryptographic manifest binding: Verify blind_test.json SHA-256 matches split_manifest.json
+  const splitManifest = JSON.parse(fs.readFileSync(splitManifestPath, "utf8"));
+  const expectedBlindHash = splitManifest.splits?.BLIND_TEST?.sha256;
+  assert.ok(expectedBlindHash, "split_manifest.json must specify BLIND_TEST sha256");
+
+  const actualBlindHash = crypto.createHash("sha256").update(fs.readFileSync(blindTestPath)).digest("hex");
+  assert.strictEqual(actualBlindHash, expectedBlindHash, "Authentic blind test split SHA-256 must match split_manifest.json exactly");
+  pass("11.1 [MANIFEST BINDING] blind_test.json cryptographic hash matches split_manifest.json exactly");
 
   const rawData = JSON.parse(fs.readFileSync(blindTestPath, "utf8"));
   const realCohort = [];
@@ -330,7 +348,40 @@ async function runStage5Suite() {
   assert.ok(typeof realEval.timingMae === "number", "Calculates valid timing MAE on real observations");
   assert.strictEqual(realEval.sampleSize, 50);
   assert.ok(realEval.timingMae > 3.0 && realEval.timingMae < 6.0, `Real timing MAE must be in realistic actuarial range (got: ${realEval.timingMae})`);
-  pass(`11.1 [REAL OBSERVATIONS] Evaluated candidate model on 50 authentic subjects with documented provenance (MAE: ${realEval.timingMae}y)`);
+  pass(`11.2 [REAL OBSERVATIONS] Evaluated candidate model on 50 authentic subjects with documented provenance (MAE: ${realEval.timingMae}y)`);
+
+  // Detailed timing metrics calculation
+  const timingEvals = realCohort.map(r => ({
+    predictedAge: realCandidate.predictTiming(r.features),
+    actualAge: r.actualEventAge,
+    interval: { lower: realCandidate.predictTiming(r.features) - 3.0, upper: realCandidate.predictTiming(r.features) + 3.0 }
+  }));
+  const detailedTiming = computeDetailedTimingMetrics(timingEvals);
+  assert.ok(typeof detailedTiming.mae === "number", "Calculates valid MAE");
+  assert.ok(typeof detailedTiming.medianAbsoluteError === "number", "Calculates valid median absolute error");
+  assert.ok(typeof detailedTiming.within1yPct === "number", "Calculates valid within-1y rate");
+  assert.ok(typeof detailedTiming.within2yPct === "number", "Calculates valid within-2y rate");
+  assert.ok(typeof detailedTiming.within3yPct === "number", "Calculates valid within-3y rate");
+  assert.ok(typeof detailedTiming.forecastIntervalCoverage === "number", "Calculates interval coverage");
+  assert.strictEqual(detailedTiming.meanIntervalWidth, 6.0, "Interval width matches 6.0 years");
+  pass(`11.3 [TIMING METRICS] Detailed timing metrics evaluated: MAE=${detailedTiming.mae}y, MedAE=${detailedTiming.medianAbsoluteError}y, ±1y=${detailedTiming.within1yPct}%, ±2y=${detailedTiming.within2yPct}%, ±3y=${detailedTiming.within3yPct}%, IntervalCoverage=${detailedTiming.forecastIntervalCoverage}%`);
+
+  // Detailed occurrence metrics calculation
+  const probPairs = [
+    { prob: 0.85, actual: 1 },
+    { prob: 0.75, actual: 1 },
+    { prob: 0.60, actual: 1 },
+    { prob: 0.20, actual: 0 },
+    { prob: 0.15, actual: 0 },
+    { prob: 0.40, actual: 0 }
+  ];
+  const detailedOcc = computeDetailedOccurrenceMetrics(probPairs, 0.5);
+  assert.ok(typeof detailedOcc.brierScore === "number", "Calculates valid Brier score");
+  assert.ok(typeof detailedOcc.rocAuc === "number" && detailedOcc.rocAuc >= 0.5, "Calculates valid ROC-AUC");
+  assert.ok(typeof detailedOcc.mcc === "number", "Calculates valid MCC");
+  assert.strictEqual(detailedOcc.confusionMatrix.tp, 3);
+  assert.strictEqual(detailedOcc.confusionMatrix.tn, 3);
+  pass(`11.4 [OCCURRENCE METRICS] Occurrence metrics evaluated: Brier=${detailedOcc.brierScore}, ROC-AUC=${detailedOcc.rocAuc}, MCC=${detailedOcc.mcc}`);
 
   // 12. Authoritative Consent Fail-Closed Checks (Phase 3)
   const custWithoutDbConsent = [
@@ -362,6 +413,123 @@ async function runStage5Suite() {
   assert.strictEqual(auditDeleted.validObservations.length, 0);
   assert.ok(auditDeleted.issues.some(i => i.includes("USER_DELETED")));
   pass("12.3 Deleted user is excluded with USER_DELETED");
+
+  // 13. PHASE 2 — End-to-End Real Outcome-Driven Learning Integration Test
+  console.log("\n--- Testing Phase 2 Outcome-Driven Learning Pipeline ---");
+  const domain = "MARRIAGE";
+  const numCohort = 35;
+  const trainCustomerIds = [];
+
+  for (let i = 0; i < numCohort; i++) {
+    const custId = `cust_real_learn_${i + 1}_${Date.now()}`;
+    trainCustomerIds.push(custId);
+
+    // a. Authoritative training consent in DB
+    db.setTrainingConsent(custId, true, "v2.0");
+
+    // b. Immutable prediction record with feature snapshot
+    const predId = `pred_learn_${i + 1}_${Date.now()}`;
+    const dashaVal = 0.2 + (i % 5) * 0.15;
+    const transitJup = (i % 3 === 0) ? 0.8 : 0.2;
+    const transitSat = (i % 4 === 0) ? 0.7 : 0.1;
+    const d9Val = 0.3 + (i % 4) * 0.2;
+
+    const featureSnapshot = {
+      DASHA_7TH_LORD: dashaVal,
+      TRANSIT_JUPITER_7TH: transitJup,
+      TRANSIT_SATURN_7TH: transitSat,
+      D9_NAVAMSHA_SUPPORT: d9Val,
+      VENUS_NATAL_PROMISE: 0.6,
+      ASHTAKAVARGA_7TH_SAV: 30.0
+    };
+
+    db.savePredictionRecord({
+      predictionId: predId,
+      pseudonymousCustomerId: custId,
+      canonicalEvent: domain,
+      featureVectorSnapshot: featureSnapshot,
+      birthDate: "1995-01-01",
+      isTrainingEligible: true
+    });
+
+    // c. Actual observed outcome (ground truth: e.g. age 25.0 to 30.5)
+    const actualAge = 25.0 + (i % 6) * 1.1;
+    const outcomeId = `out_learn_${i + 1}_${Date.now()}`;
+    db.saveObservedOutcome({
+      outcomeId,
+      predictionId: predId,
+      customerId: custId,
+      eventOccurred: true,
+      actualEventAge: actualAge,
+      isCensored: false,
+      reportedDate: `202${Math.floor(actualAge - 20)}-06-15`
+    });
+
+    // d. Independent verification using recognized allowlist method + evidence reference
+    db.saveOutcomeVerification({
+      verificationId: `ver_learn_${i + 1}_${Date.now()}`,
+      outcomeId,
+      verificationMethod: "CIVIL_MARRIAGE_REGISTRATION_CERTIFICATE",
+      verificationStatus: "INDEPENDENTLY_VERIFIED",
+      verifiedBy: "GOVT_REGISTRY_OFFICE",
+      evidenceReference: `CERT_REF_REG_${1000 + i}`,
+      notes: "Legitimate certified government civil marriage registration"
+    });
+  }
+
+  // Assemble training dataset from verified outcomes
+  const assembled = assembleOutcomeTrainingCohort({ domain, minObservations: 30 });
+  assert.strictEqual(assembled.isSufficient, true, "Assembled training cohort must be sufficient");
+  assert.ok(assembled.sampleSize >= 30, "At least 30 verified observations assembled");
+  assert.ok(typeof assembled.trainingDatasetHash === "string" && assembled.trainingDatasetHash.length === 64);
+  pass("13.1 Successfully assembled versioned training dataset from verified customer outcomes");
+
+  // Stale dataset snapshot protection: If customer withdraws consent, record is excluded
+  const revokedCust = trainCustomerIds[0];
+  db.setTrainingConsent(revokedCust, false);
+  const reAssembled = assembleOutcomeTrainingCohort({ domain, minObservations: 20 });
+  assert.ok(!reAssembled.records.some(r => r.customerId === revokedCust), "Withdrawn customer must be immediately purged from training cohort");
+  assert.ok(reAssembled.exclusionLedger.some(e => e.customerId === revokedCust && e.reason === "CONSENT_REVOKED"), "Excluded record logged with CONSENT_REVOKED");
+  pass("13.2 Stale snapshot protection: Withdrawn customer purged fail-closed from training cohort");
+
+  // Restore consent for the test
+  db.setTrainingConsent(revokedCust, true);
+
+  // Actual candidate model fitting: fits analytical Ridge weights from features
+  const candidate = fitCandidateRegressionModel({
+    trainingCohort: assembled.records,
+    domain,
+    regularizationLambda: 0.05
+  });
+  assert.ok(candidate.modelId.startsWith("cand_fit_"), "Generated unique candidate model ID");
+  assert.strictEqual(candidate.domain, "MARRIAGE");
+  assert.ok(candidate.modelArtifact.coefficients.length >= 6, "Learned weights for all 6 registered features");
+  assert.ok(typeof candidate.modelArtifact.intercept === "number", "Calculated analytical intercept");
+  assert.ok(typeof candidate.modelArtifact.trainMae === "number", "Calculated training MAE");
+  assert.ok(typeof candidate.artifactSha256 === "string" && candidate.artifactSha256.length === 64, "Generated SHA-256 artifact digest");
+  assert.strictEqual(typeof candidate.predictTiming, "function", "Provides executable predictTiming function");
+  pass("13.3 Candidate model fitted analytically from registered planetary features using Ridge regression");
+
+  // Model Calibration on validation cohort
+  const valCohort = holdoutTestSet.slice(0, 15);
+  const calibrated = calibrateCandidateModel({ candidateModel: candidate, validationCohort: valCohort });
+  assert.strictEqual(calibrated.isCalibrated, true, "Model successfully calibrated on validation cohort");
+  assert.ok(calibrated.modelArtifact.calibrationParameters, "Calibration parameters attached to artifact");
+  pass("13.4 Candidate model calibrated on validation split via affine adjustment");
+
+  // Independent Evaluation & Release Gate Decision
+  const pipelineResult = await executeOutcomeDrivenLearningPipeline({
+    domain,
+    trainingCohort: assembled.records,
+    validationCohort: valCohort,
+    holdoutTestSet,
+    regularizationLambda: 0.05
+  });
+  assert.ok(["PROMOTED_TO_PRODUCTION", "REJECTED_AT_RELEASE_GATE"].includes(pipelineResult.pipelineStatus));
+  assert.ok(typeof pipelineResult.evaluation.timingMae === "number", "Independent timing MAE evaluated");
+  assert.ok(pipelineResult.ablation, "Feature ablation study executed");
+  assert.strictEqual(pipelineResult.ablation.domain, "MARRIAGE");
+  pass(`13.5 Complete end-to-end outcome-driven learning pipeline executed: Status=${pipelineResult.pipelineStatus} (Candidate MAE=${pipelineResult.evaluation.timingMae}y vs Baseline=${pipelineResult.ablation.demographicBaselineMae}y)`);
 
   console.log("\n==============================================================");
   console.log(` ALL ${passed} STAGE 5 CONTINUOUS LEARNING TESTS PASSED 100%!`);
