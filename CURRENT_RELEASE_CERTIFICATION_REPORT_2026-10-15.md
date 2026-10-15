@@ -3,10 +3,10 @@
 **Audit & Certification Date:** 15 October 2026  
 **Release Version:** 3.1.0 (Production Candidate)  
 **Model Version:** 2.2.0  
-**Current Git Commit:** `91bac41` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
+**Current Git Commit:** `59257ec` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.41 MB (36,082,585 bytes)  
-- **SHA-256 Digest:** `ce2a50c2982b2987783e5e18b04d7dc23b93881f44083baf3ef52d1a6cb07b6b`  
+- **Archive Size:** 34.42 MB (36,090,503 bytes)  
+- **SHA-256 Digest:** `0668f4248d1b4994c83e4fa9a58c8c0ac923c06cef2c50772d0a64351b1a59f4`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 
@@ -26,11 +26,10 @@ In compliance with the project's zero-fabrication charter:
 
 | Phase | Component | Remediation Description | Verification Script & Status |
 | :--- | :--- | :--- | :--- |
-| **Phase 1** | `backend/test/test_stage5_continuous_learning.mjs` | Fixed path to `data/real_world_validation/splits/blind_test.json`. Removed mock simulated fallback (`fail` if missing). Replaced fake age imputation (`26.5`) with authentic date calculations from `firstDocumentedMarriage`. Replaced dummy predictor (`29.5`) with authentic parameter-driven discrete-time hazard model predictor from `v3_hazard_pipeline_checkpoint.json`. | `node backend/test/test_stage5_continuous_learning.mjs`<br>**PASS (14/14, 100%)** |
-| **Phase 2** | `backend/src/services/continuousLearningRunner.js` | Continuous learning promotion pipeline bound strictly to cryptographic artifact verification (`artifactSha256`), holdout leakage rejection, unique customer validation, and automatic rollback to prior active production model upon candidate rejection. | `node backend/test/test_stage5_continuous_learning.mjs`<br>**PASS (100%)** |
-| **Phase 3** | `backend/src/services/continuousLearningRunner.js` | Enforced fail-closed authoritative consent verification in `validateHoldoutCohortIntegrity`. Explicitly checks `db.state.training_consent` for customer records. Rejects missing consent (`CONSENT_NOT_CONFIRMED`), withdrawn consent (`CONSENT_REVOKED`), and deleted accounts (`USER_DELETED`). Swallowed error catch blocks eliminated. | `node backend/test/test_stage5_continuous_learning.mjs` Tests 12.1–12.3<br>**PASS (100%)** |
-| **Phase 4** | `backend/src/db/database.js` & `backend/src/server.js` | Prohibited prefix matching (`DOC_*`, `INDEPENDENT_*`) for `INDEPENDENTLY_VERIFIED` outcomes; enforced strict allowlist of 12 recognized methods (`RECOGNIZED_INDEPENDENT_METHODS`). Implemented IDOR protection on `GET /api/outcomes/:id/verification-history` requiring verifier/auditor role or record ownership. | `node backend/test/test_stage3_feedback_outcomes.mjs` Tests 5.1–5.6<br>**PASS (100%)** |
-| **Phase 5** | Question Answering & Intent Engine | Implemented 3 dedicated decision tasks: `jobTransitionDecision.js` (job switch vs staying in company), `wealthAccumulationDecision.js` (investing vs debt clearance), and `wellnessVitalityCycle.js` (vitality rhythms with statutory non-medical disclaimer). | `node frontend/test_qa_accuracy_and_timing_contracts.mjs` Checks 21–23<br>**PASS (23/23, 100%)** |
+| **Phase 1 & 2** | `backend/test/test_stage5_continuous_learning.mjs` | Fixed path to `data/real_world_validation/splits/blind_test.json`. Removed mock simulated fallback (`fail` if missing). Replaced fake age imputation (`26.5`) with authentic date calculations from `firstDocumentedMarriage`. Replaced dummy predictor (`29.5`) with authentic parameter-driven discrete-time hazard model predictor from `v3_hazard_pipeline_checkpoint.json`. Implemented real outcome-driven continuous learning pipeline (Ridge regression fitting, affine calibration, feature ablation, and fail-closed gate). | `node backend/test/test_stage5_continuous_learning.mjs`<br>**PASS (22/22, 100%)** |
+| **Phase 2 & 3** | `backend/src/services/continuousLearningRunner.js` | Enforced fail-closed authoritative consent verification in `validateHoldoutCohortIntegrity` and `assembleOutcomeTrainingCohort`. Explicitly checks `db.state.training_consent` for customer records. Rejects missing consent (`CONSENT_NOT_CONFIRMED`), withdrawn consent (`CONSENT_REVOKED`), and deleted accounts (`USER_DELETED`). Swallowed error catch blocks eliminated. | `node backend/test/test_stage5_continuous_learning.mjs` Tests 12.1–13.5<br>**PASS (100%)** |
+| **Phase 4** | `backend/src/db/database.js` & `backend/src/server.js` | Prohibited prefix matching (`DOC_*`, `INDEPENDENT_*`) for `INDEPENDENTLY_VERIFIED` outcomes; enforced strict allowlist of 12 recognized methods (`RECOGNIZED_INDEPENDENT_METHODS`). Mandatory non-empty `evidenceReference` required for independent verification. Implemented IDOR protection on `GET /api/outcomes/:id/verification-history` requiring verifier/auditor role or record ownership. | `node backend/test/test_stage3_feedback_outcomes.mjs` Tests 5.1–5.6<br>**PASS (100%)** |
+| **Phase 5** | Question Answering & Intent Engine | Implemented 3 dedicated decision tasks: `jobTransitionDecision.js` (job switch vs staying in company), `wealthAccumulationDecision.js` (investing vs debt clearance), and `wellnessVitalityCycle.js` (vitality rhythms with statutory non-medical disclaimer). Also implemented comprehensive timing metrics (MAE, MedAE, 1y/2y/3y rates, interval coverage) and occurrence metrics (Brier, ROC-AUC, MCC, confusion matrix). | `node frontend/test_qa_accuracy_and_timing_contracts.mjs` Checks 21–23<br>**PASS (23/23, 100%)** |
 | **Phase 6** | Benchmark Metrics Reconciliation | Reconciled `primaryCalibratedClassifierMCC: 0.0109` and `astrologyOnlyComparisonModelMCC: 0.0397` in `astro_databank_external_benchmark.json` and `external_validation_report.json`. Enforced Cross-Cohort Disclosure Firewall ensuring zero leakage of internal blind test figures into external reports. | `node frontend/test_benchmark_metrics_reconciliation.mjs`<br>**PASS (100%)** |
 | **Phase 7** | Release Artifact Hash Synchronization | Synchronized runtime calculation engines, fitted calibration parameters, prediction cache (20,508 records), and release manifests via `scripts/sync_release_hashes.mjs`. | `node scripts/sync_release_hashes.mjs`<br>**PASS (100%)** |
 | **Phase 8** | Release Certification Gate | Executed complete 17-point cryptographic release certification gate across runtime engines, dataset splits, cache bindings, production build, and security firewalls. | `node frontend/test_release_certification_gate.mjs`<br>**PASS (17/17, 100%)** |
@@ -49,7 +48,7 @@ Every suite listed below was executed directly against the current codebase with
 | **Q&A Accuracy & Contracts** | `node frontend/test_qa_accuracy_and_timing_contracts.mjs` | 23 | `0` | **PASS (23/23)** |
 | **Backend Release PII Audit** | `node backend/test/test_no_pii_in_release.mjs` | 9 neg controls + zip audit | `0` | **PASS (9/9 neg + zip)** |
 | **Backend Stage 3 Feedback & Outcomes** | `node backend/test/test_stage3_feedback_outcomes.mjs` | 11 | `0` | **PASS (11/11)** |
-| **Backend Stage 5 Continuous Learning**| `node backend/test/test_stage5_continuous_learning.mjs` | 14 | `0` | **PASS (14/14)** |
+| **Backend Stage 5 Continuous Learning**| `node backend/test/test_stage5_continuous_learning.mjs` | 22 | `0` | **PASS (22/22)** |
 | **Backend Phase 12 Adversarial Controls**| `node backend/test/test_phase12_adversarial_negative_controls.mjs` | 25 | `0` | **PASS (25/25)** |
 | **Backend Local AI Service** | `node backend/test/test_local_ai_service.mjs` | 8 | `0` | **PASS (8/8)** |
 | **Backend Local AI E2E Acceptance** | `node backend/test/test_local_ai_e2e_acceptance.mjs` | 17 | `0` | **PASS (17/17)** |
@@ -142,5 +141,5 @@ The application codebase is configured to run ubiquitously across all targeted p
 The repository is certified as a clean, complete, and mathematically authentic distribution.
 
 - **Clean ZIP Archive:** `ASTRO.zip`
-- **Archive SHA-256 Digest:** `ce2a50c2982b2987783e5e18b04d7dc23b93881f44083baf3ef52d1a6cb07b6b`
+- **Archive SHA-256 Digest:** `0668f4248d1b4994c83e4fa9a58c8c0ac923c06cef2c50772d0a64351b1a59f4`
 - **Verification Verdict:** **`RELEASE_CERTIFIED = true`**
