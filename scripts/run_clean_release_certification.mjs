@@ -48,6 +48,7 @@ try {
   execSync(`tar -xf "${zipPath}" -C "${sandboxDir}"`, { stdio: "inherit" });
 
   const feDir = path.join(sandboxDir, "frontend");
+  const backendDir = path.join(sandboxDir, "backend");
   if (!fs.existsSync(path.join(feDir, "package.json"))) {
     throw new Error("Clean extracted source missing frontend/package.json");
   }
@@ -56,6 +57,10 @@ try {
   certificationStage = "NPM_CI";
   console.log("\n[4] Executing clean 'npm ci' in isolated environment (mandatory, no cache skipping)...");
   execSync("npm ci --no-audit --prefer-offline", { cwd: feDir, stdio: "inherit" });
+  if (fs.existsSync(path.join(backendDir, "package.json"))) {
+    console.log("\n[4b] Executing clean backend 'npm ci' in isolated environment...");
+    execSync("npm ci --no-audit --prefer-offline", { cwd: backendDir, stdio: "inherit" });
+  }
 
   // Step 4: Run static lint & heuristic compliance
   certificationStage = "NPM_RUN_LINT";
@@ -66,6 +71,12 @@ try {
   certificationStage = "NPM_RUN_BUILD";
   console.log("\n[6] Executing 'npm run build' in isolated environment...");
   execSync("npm run build", { cwd: feDir, stdio: "inherit" });
+
+  if (fs.existsSync(path.join(backendDir, "package.json"))) {
+    certificationStage = "BACKEND_STAGE5";
+    console.log("\n[6b] Running backend Stage 5 real-data learning contract...");
+    execSync("npm run test:stage5", { cwd: backendDir, stdio: "inherit" });
+  }
 
   // Step 6: Run mandatory regression tests
   certificationStage = "MANDATORY_TESTS";

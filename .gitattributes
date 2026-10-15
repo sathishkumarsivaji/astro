@@ -14,3 +14,5 @@
 *.txt text eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
+release_certification_report.json export-ignore
+ASTRO.zip export-ignore

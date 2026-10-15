@@ -24,6 +24,7 @@ function byteHash(filePath) {
 }
 
 export function generateReleaseManifest() {
+  const packageManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   const astroEnginePath = path.join(ROOT, 'frontend/src/services/astroEngine.js');
   const empiricalEvaluationEnginePath = path.join(ROOT, 'frontend/src/services/realWorldValidation/empiricalEvaluationEngine.js');
   const discreteHazardSurvivalEnginePath = path.join(ROOT, 'frontend/src/services/realWorldValidation/discreteHazardSurvivalEngine.js');
@@ -46,7 +47,7 @@ export function generateReleaseManifest() {
 
   const nowIso = new Date().toISOString();
   const manifest = {
-    releaseVersion: "3.0.0",
+    releaseVersion: packageManifest.version,
     modelVersion: "2.2.0",
     schemaVersion: "3.0",
     astronomyEngineVersion: "4.2.0",

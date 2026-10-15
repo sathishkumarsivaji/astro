@@ -1,0 +1,68 @@
+{
+  "reportVersion": "STAGE5_CONTINUOUS_LEARNING_REPORT_V1",
+  "softwareTest": false,
+  "generatedAt": "2026-10-15T15:39:20.780Z",
+  "evaluationPolicy": {
+    "cohortSelection": "FULL_PARTITIONS",
+    "selectionLimit": null,
+    "checkpointReuse": false,
+    "thresholdSelection": "VALIDATION_ONLY",
+    "blindPolicy": "FROZEN_UNTOUCHED",
+    "externalHoldoutPolicy": "FROZEN_INDEPENDENT",
+    "syntheticOutcomesCreated": false,
+    "syntheticFeatureSnapshotsCreated": false
+  },
+  "datasets": {
+    "TRAIN": {
+      "path": "data/real_world_validation/splits/train.json",
+      "sha256": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+      "rows": 9366
+    },
+    "VALIDATION": {
+      "path": "data/real_world_validation/splits/val.json",
+      "sha256": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
+      "rows": 3155
+    },
+    "BLIND_TEST": {
+      "path": "data/real_world_validation/splits/blind_test.json",
+      "sha256": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
+      "rows": 1634
+    },
+    "EXTERNAL_HOLDOUT": {
+      "path": "data/external_validation/astro_databank/astro_databank_true_independent.json",
+      "sha256": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
+      "rows": 4798
+    }
+  },
+  "eligibleImmutableEnvelopeRows": {
+    "TRAIN": 0,
+    "VALIDATION": 0,
+    "BLIND_TEST": 0,
+    "EXTERNAL_HOLDOUT": 0
+  },
+  "status": "BLOCKED",
+  "reason": "AUTHORIZED_IMMUTABLE_OUTCOME_STORE_LINKAGE_REQUIRED",
+  "exclusions": {
+    "TRAIN": {
+      "excludedRows": 9366,
+      "reason": "MISSING_ORIGINAL_PREDICTION_FEATURE_SNAPSHOT_OR_CURRENT_CONSENT_OR_OUTCOME_REPORT"
+    },
+    "VALIDATION": {
+      "excludedRows": 3155,
+      "reason": "MISSING_ORIGINAL_PREDICTION_FEATURE_SNAPSHOT_OR_CURRENT_CONSENT_OR_OUTCOME_REPORT"
+    },
+    "BLIND_TEST": {
+      "excludedRows": 1634,
+      "reason": "MISSING_ORIGINAL_PREDICTION_FEATURE_SNAPSHOT_OR_CURRENT_CONSENT_OR_OUTCOME_REPORT"
+    },
+    "EXTERNAL_HOLDOUT": {
+      "excludedRows": 4798,
+      "reason": "MISSING_ORIGINAL_PREDICTION_FEATURE_SNAPSHOT_OR_CURRENT_CONSENT_OR_OUTCOME_REPORT"
+    }
+  },
+  "metrics": {
+    "occurrence": "NOT_RUN",
+    "timing": "NOT_RUN",
+    "independentImprovement": "NOT_ESTABLISHED"
+  }
+}

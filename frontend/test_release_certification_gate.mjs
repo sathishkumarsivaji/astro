@@ -448,11 +448,8 @@ check(
 let lintSucceeds = true;
 let lintDetail = "";
 try {
-  const lintOutput = execSync("npm run lint", { cwd: FRONTEND_DIR, encoding: "utf8" });
-  if (!lintOutput.includes("0 errors")) {
-    lintSucceeds = false;
-    lintDetail = "npm run lint reported errors";
-  } else {
+  execSync("npm run lint", { cwd: FRONTEND_DIR, encoding: "utf8", stdio: "pipe" });
+  {
     // Check for banned synthetic heuristic identifiers using word boundaries
     const bannedPatterns = [
       "\\bstrengthPercentage\\b",
@@ -465,7 +462,7 @@ try {
     const bannedMatches = scanForBannedPatterns(path.join(FRONTEND_DIR, "src/services"), bannedPatterns);
 
     if (bannedMatches.length === 0) {
-      lintDetail = "npm run lint passed with 0 errors; zero banned synthetic heuristics";
+      lintDetail = "npm run lint exited with code 0; zero banned synthetic heuristics";
     } else {
       lintSucceeds = false;
       lintDetail = `Banned heuristic identifiers found: ${bannedMatches.join("; ").slice(0, 100)}`;

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node test_backend.mjs && node test/test_no_pii_in_release.mjs"
+    "test": "node test_backend.mjs && node test/test_no_pii_in_release.mjs",
+    "test:stage5": "node test/test_stage5_continuous_learning.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
