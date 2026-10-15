@@ -9,6 +9,7 @@
     "lint": "npm --prefix frontend run lint",
     "test": "npm --prefix frontend test",
     "test:menus": "npm --prefix frontend run test:menus",
+    "test:outcome-learning": "npm --prefix frontend run test:outcome-learning",
     "test:smoke": "npm --prefix frontend run test:smoke",
     "test:core": "npm --prefix frontend run test:core",
     "test:security": "npm --prefix frontend run test:security",

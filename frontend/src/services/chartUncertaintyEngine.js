@@ -115,6 +115,7 @@ export function runBirthTimePerturbationAnalysis({
   // 2. Perturbed Evaluations
   const sortedOffsets = [...offsets].sort((a, b) => a - b);
   const evaluatedPerturbations = [];
+  const skippedPerturbations = [];
 
   let minOffsetD1LagnaChange = null;
   let minOffsetD9LagnaChange = null;
@@ -125,7 +126,22 @@ export function runBirthTimePerturbationAnalysis({
   for (const offset of sortedOffsets) {
     if (offset === 0) continue;
     const { shiftedDate, shiftedTime } = shiftDateTime(birthDate, birthTime, offset);
-    const perturbedChart = calculatePlanetaryPositions(shiftedDate, shiftedTime, lat, lng, system, tz);
+    let perturbedChart;
+    try {
+      perturbedChart = calculatePlanetaryPositions(shiftedDate, shiftedTime, lat, lng, system, tz);
+    } catch (error) {
+      const message = String(error?.message || error);
+      if (message.startsWith("NONEXISTENT_LOCAL_TIME") || message.startsWith("AMBIGUOUS_LOCAL_TIME")) {
+        skippedPerturbations.push({
+          offsetMinutes: offset,
+          shiftedDate,
+          shiftedTime,
+          reason: message.split(":")[0]
+        });
+        continue;
+      }
+      throw error;
+    }
     const points = extractChartPoints(perturbedChart);
 
     const d1LagnaChanged = points.ascendantSign !== baseline.ascendantSign;
@@ -189,6 +205,7 @@ export function runBirthTimePerturbationAnalysis({
       ...baseline
     },
     perturbations: evaluatedPerturbations,
+    skippedPerturbations,
     sensitivityMetrics: {
       minOffsetD1LagnaChangeMinutes: minOffsetD1LagnaChange,
       minOffsetD9LagnaChangeMinutes: minOffsetD9LagnaChange,
@@ -225,7 +242,10 @@ export function runBirthTimePerturbationAnalysis({
     },
     disclosure: {
       astronomicalRate: "Ascendant rotates 360° per ~1440 minutes (~1° every 4 minutes). Navamsha spans 3°20' (~13.3 minutes). Dashamsha spans 3°00' (~12 minutes).",
-      caveat: "Conclusions dependent on Ascendant sign, divisional ascendants, or bhava cusps become unreliable and are classified as BIRTH_TIME_SENSITIVE when birth-time uncertainty exceeds the sensitivity threshold."
+      caveat: "Conclusions dependent on Ascendant sign, divisional ascendants, or bhava cusps become unreliable and are classified as BIRTH_TIME_SENSITIVE when birth-time uncertainty exceeds the sensitivity threshold.",
+      skippedPerturbationCaveat: skippedPerturbations.length
+        ? "One or more local-time perturbations crossed a timezone transition and were not evaluated because that civil time does not exist or is ambiguous."
+        : null
     }
   };
 }

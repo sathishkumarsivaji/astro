@@ -1,0 +1,57 @@
+{
+  "reportVersion": "OUTCOME_LEARNING_REPORT_V1",
+  "generatedAt": "2026-10-15T14:14:21.337Z",
+  "status": "BLOCKED",
+  "reason": "TRAIN_VALIDATION_BLIND_TEST_REQUIRE_ELIGIBLE_RECORDS",
+  "sourceHash": "bad44d02c968615e8a2e323a10477b7f10036f7294dbe546803d8e55a0994d41",
+  "datasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc68499dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99adc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
+  "modelHash": "9f047ca7acbc5fc9745169f482d7bf84c3147b441388f8bebfd7ede180b904d0",
+  "provenance": {
+    "featureHorizon": "ORIGINAL_PREDICTION_SNAPSHOT_ONLY",
+    "excludedStatuses": [
+      "UNVERIFIED",
+      "CONFLICTING",
+      "CENSORED",
+      "UNKNOWN",
+      "INVALID"
+    ],
+    "leakageControls": [
+      "PERSON",
+      "SPOUSE",
+      "EVENT",
+      "OUTCOME_FEATURE_KEY_SCAN"
+    ],
+    "validationPolicy": "THRESHOLD_SELECTED_ON_VALIDATION_ONLY",
+    "blindTestPolicy": "FROZEN_AND_UNTOUCHED_UNTIL_FINAL_EVALUATION"
+  },
+  "result": {
+    "status": "BLOCKED",
+    "reason": "TRAIN_VALIDATION_BLIND_TEST_REQUIRE_ELIGIBLE_RECORDS",
+    "thresholds": null,
+    "metrics": null,
+    "models": null,
+    "preparedSummary": {
+      "TRAIN": {
+        "eligibleRows": 0,
+        "excludedRows": 9366,
+        "exclusionReasons": {
+          "MISSING_OUTCOME_REPORT": 9366
+        }
+      },
+      "VALIDATION": {
+        "eligibleRows": 0,
+        "excludedRows": 3155,
+        "exclusionReasons": {
+          "MISSING_OUTCOME_REPORT": 3155
+        }
+      },
+      "BLIND_TEST": {
+        "eligibleRows": 0,
+        "excludedRows": 1634,
+        "exclusionReasons": {
+          "MISSING_OUTCOME_REPORT": 1634
+        }
+      }
+    }
+  }
+}
