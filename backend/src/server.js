@@ -1390,10 +1390,29 @@ app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
   }
 });
 
-// Retrieve outcome verification history (Section 11)
+// Retrieve outcome verification history (Section 11) - Protected against IDOR
 app.get('/api/outcomes/:id/verification-history', authenticateSession, (req, res) => {
   try {
     const outcomeId = req.params.id;
+    const user = db.getUser(req.user.userId);
+    const userRole = (user && (user.role || user.subscriptionTier)) || req.user.role || '';
+    const isAuthorizedRole = userRole === 'admin' || userRole === 'verifier' || userRole === 'auditor';
+
+    const outcome = db.getObservedOutcomeById(outcomeId);
+    if (!outcome) {
+      return res.status(404).json({ error: 'Outcome not found.', code: 'OUTCOME_NOT_FOUND' });
+    }
+
+    const pseudoId = db.getPseudonymousCustomerId(req.user.userId);
+    const isOwner = outcome.customerId === req.user.userId || outcome.customerId === pseudoId;
+
+    if (!isAuthorizedRole && !isOwner) {
+      return res.status(403).json({
+        error: 'Forbidden. You do not have permission to view verification history for this outcome.',
+        code: 'FORBIDDEN_VERIFICATION_HISTORY'
+      });
+    }
+
     const history = db.getOutcomeVerificationHistory(outcomeId);
     return res.json({ success: true, outcomeId, history, count: history.length });
   } catch (err) {

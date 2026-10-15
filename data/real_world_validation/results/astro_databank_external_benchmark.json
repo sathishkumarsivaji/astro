@@ -174,7 +174,8 @@
           "fittedParameters": {
             "intercept": 2.1631,
             "slope": 0.3938
-          }
+          },
+          "astrologyOnlyComparisonModelMCC": 0.0397
         },
         {
           "modelId": "MODEL_3_COMBINED",
@@ -204,7 +205,8 @@
             "betaAstrology": 0.3627
           }
         }
-      ]
+      ],
+      "primaryCalibratedClassifierMCC": 0.0109
     },
     "timing": {
       "n": 320,
@@ -401,7 +403,7 @@
     "demographicBaselineMAE": 6.41,
     "demographicBaselineWithin1yPct": 19.38,
     "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
   },
   "sensitivityAnalyses": {
     "AA_ONLY": {
@@ -1215,7 +1217,8 @@
         "fittedParameters": {
           "intercept": 2.1631,
           "slope": 0.3938
-        }
+        },
+        "astrologyOnlyComparisonModelMCC": 0.0397
       },
       {
         "modelId": "MODEL_3_COMBINED",
@@ -1246,6 +1249,6 @@
         }
       }
     ],
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
   }
 }

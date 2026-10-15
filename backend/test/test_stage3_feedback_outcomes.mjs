@@ -178,6 +178,63 @@ async function runStage3Suite() {
     assert.strictEqual(verifyData.verification.outcomeId, outcomeId);
     pass("5.2 Authorized verifier records outcome verification with status CORROBORATED");
 
+    // 6c. Negative Test: Prohibit arbitrary prefix matching for INDEPENDENTLY_VERIFIED
+    const invalidMethodRes = await fetch(`${baseUrl}/api/outcomes/verify`, {
+      method: "POST",
+      headers: verifierAuthHeaders,
+      body: JSON.stringify({
+        outcomeId,
+        verificationMethod: "DOC_ARBITRARY_UNRECOGNIZED_METHOD",
+        verificationStatus: "INDEPENDENTLY_VERIFIED",
+        notes: "Attempt with unlisted arbitrary prefix"
+      })
+    });
+    assert.strictEqual(invalidMethodRes.status, 500, "Unrecognized method must fail validation");
+    const invalidMethodData = await invalidMethodRes.json();
+    assert.ok(invalidMethodData.details.includes("INVALID_VERIFICATION_PROCEDURE"), "Must reject unrecognized method procedure");
+    pass("5.3 Prohibits arbitrary prefix matching (DOC_*) without allowlist match");
+
+    // 6d. IDOR Protection: Stranger ordinary user cannot view verification history
+    const strangerUserId = `usr_stranger_${Date.now()}`;
+    db.saveUser(strangerUserId, { userId: strangerUserId, role: "user", isRegistered: true });
+    const strangerSession = createSignedSessionToken(strangerUserId, null, true);
+    const strangerAuthHeaders = {
+      "Content-Type": "application/json",
+      "x-session-token": strangerSession.sessionToken,
+      "Origin": "http://localhost:5173",
+      "Connection": "close"
+    };
+
+    const strangerHistoryRes = await fetch(`${baseUrl}/api/outcomes/${outcomeId}/verification-history`, {
+      method: "GET",
+      headers: strangerAuthHeaders
+    });
+    assert.strictEqual(strangerHistoryRes.status, 403, "Stranger user must be forbidden from viewing verification history");
+    const strangerHistoryData = await strangerHistoryRes.json();
+    assert.strictEqual(strangerHistoryData.code, "FORBIDDEN_VERIFICATION_HISTORY");
+    pass("5.4 IDOR protection: Unauthorized stranger user cannot access outcome verification history (403)");
+
+    // 6e. Outcome owner CAN view verification history
+    const ownerHistoryRes = await fetch(`${baseUrl}/api/outcomes/${outcomeId}/verification-history`, {
+      method: "GET",
+      headers: authHeaders
+    });
+    assert.strictEqual(ownerHistoryRes.status, 200, "Owner can access verification history");
+    const ownerHistoryData = await ownerHistoryRes.json();
+    assert.strictEqual(ownerHistoryData.success, true);
+    assert.ok(ownerHistoryData.history.length >= 1);
+    pass("5.5 Outcome owner can access own outcome verification history (200)");
+
+    // 6f. Authorized verifier CAN view verification history
+    const verifierHistoryRes = await fetch(`${baseUrl}/api/outcomes/${outcomeId}/verification-history`, {
+      method: "GET",
+      headers: verifierAuthHeaders
+    });
+    assert.strictEqual(verifierHistoryRes.status, 200, "Verifier can access verification history");
+    const verifierHistoryData = await verifierHistoryRes.json();
+    assert.strictEqual(verifierHistoryData.success, true);
+    pass("5.6 Authorized verifier can access outcome verification history (200)");
+
     console.log("\n==============================================================");
     console.log(` ALL ${passed} STAGE 3 FEEDBACK & OUTCOMES TESTS PASSED 100%!`);
     console.log("==============================================================\n");

@@ -238,7 +238,8 @@ export function validateHoldoutCohortIntegrity({
   holdoutDataset = [],
   trainingCustomerIds = new Set(),
   domain = "MARRIAGE",
-  minSampleSize = null
+  minSampleSize = null,
+  requireAuthoritativeConsent = false
 }) {
   const effectiveMinSampleSize = minSampleSize !== null
     ? minSampleSize
@@ -289,22 +290,56 @@ export function validateHoldoutCohortIntegrity({
       continue;
     }
 
-    // 2. Cross-check against authoritative consent service and user deletion status
-    try {
-      const explicitConsent = db.state?.training_consent ? db.state.training_consent[custId] : null;
-      if (explicitConsent && (explicitConsent.consentGranted === false || explicitConsent.withdrawnAt)) {
-        exclusionLedger.push({ customerId: custId, reason: "CONSENT_REVOKED", timestamp: new Date().toISOString() });
-        issues.push(`CONSENT_REVOKED: Customer '${custId}' has authoritatively revoked training consent.`);
-        continue;
-      }
+    // 2. Authoritative database consent verification for customer records
+    const isCustomerRecord = sample.isCustomerRecord === true || requireAuthoritativeConsent === true;
+    if (isCustomerRecord) {
+      try {
+        const explicitConsent = db.getTrainingConsent ? db.getTrainingConsent(custId) : (db.state?.training_consent ? db.state.training_consent[custId] : null);
+        if (explicitConsent && (explicitConsent.withdrawnAt || (explicitConsent.grantedAt && explicitConsent.consentGranted === false))) {
+          exclusionLedger.push({ customerId: custId, reason: "CONSENT_REVOKED", timestamp: new Date().toISOString() });
+          issues.push(`CONSENT_REVOKED: Customer '${custId}' has authoritatively revoked training consent.`);
+          continue;
+        }
+        if (!explicitConsent || explicitConsent.consentGranted !== true) {
+          exclusionLedger.push({ customerId: custId, reason: "CONSENT_NOT_CONFIRMED", timestamp: new Date().toISOString() });
+          issues.push(`CONSENT_NOT_CONFIRMED: Customer '${custId}' lacks authoritative training consent record in database.`);
+          continue;
+        }
 
-      const user = db.getUser ? db.getUser(custId) : null;
-      if (user && user.isDeleted) {
-        exclusionLedger.push({ customerId: custId, reason: "USER_DELETED", timestamp: new Date().toISOString() });
-        issues.push(`USER_DELETED: Customer '${custId}' account is marked deleted.`);
+        const user = db.getUser ? db.getUser(custId) : null;
+        if (user && user.isDeleted) {
+          exclusionLedger.push({ customerId: custId, reason: "USER_DELETED", timestamp: new Date().toISOString() });
+          issues.push(`USER_DELETED: Customer '${custId}' account is marked deleted.`);
+          continue;
+        }
+      } catch (err) {
+        // Fail-closed: Never swallow errors that prevent establishing consent
+        exclusionLedger.push({ customerId: custId, reason: "CONSENT_CHECK_ERROR", timestamp: new Date().toISOString() });
+        issues.push(`CONSENT_CHECK_ERROR: Failed to establish authoritative consent for '${custId}': ${err.message}`);
         continue;
       }
-    } catch (_) {}
+    } else {
+      // General cross-check for any explicit revocation or user deletion in db
+      try {
+        const explicitConsent = db.state?.training_consent ? db.state.training_consent[custId] : null;
+        if (explicitConsent && (explicitConsent.consentGranted === false || explicitConsent.withdrawnAt)) {
+          exclusionLedger.push({ customerId: custId, reason: "CONSENT_REVOKED", timestamp: new Date().toISOString() });
+          issues.push(`CONSENT_REVOKED: Customer '${custId}' has authoritatively revoked training consent.`);
+          continue;
+        }
+
+        const user = db.getUser ? db.getUser(custId) : null;
+        if (user && user.isDeleted) {
+          exclusionLedger.push({ customerId: custId, reason: "USER_DELETED", timestamp: new Date().toISOString() });
+          issues.push(`USER_DELETED: Customer '${custId}' account is marked deleted.`);
+          continue;
+        }
+      } catch (err) {
+        exclusionLedger.push({ customerId: custId, reason: "CONSENT_CHECK_ERROR", timestamp: new Date().toISOString() });
+        issues.push(`CONSENT_CHECK_ERROR: Failed to verify consent status for '${custId}': ${err.message}`);
+        continue;
+      }
+    }
 
     customerIdsSeen.add(custId);
     validObservations.push(sample);

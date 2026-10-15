@@ -163,7 +163,21 @@
     "demographicBaselineMAE": 6.41,
     "demographicBaselineWithin1yPct": 19.38,
     "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.",
+    "primaryCalibratedClassifierMCC": 0.0109,
+    "astrologyOnlyComparisonModelMCC": 0.0397,
+    "primaryConfusionMatrix": {
+      "tp": 33,
+      "fp": 1,
+      "tn": 10,
+      "fn": 269
+    },
+    "comparisonConfusionMatrix": {
+      "tp": 84,
+      "fp": 2,
+      "tn": 9,
+      "fn": 218
+    }
   },
   "conclusion": "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
 }

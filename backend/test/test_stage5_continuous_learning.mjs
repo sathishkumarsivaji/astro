@@ -26,7 +26,8 @@ import {
   runContinuousLearningCycle,
   RELEASE_GATE_THRESHOLDS,
   BASELINE_REGISTRY,
-  getReleaseGateThresholds
+  getReleaseGateThresholds,
+  validateHoldoutCohortIntegrity
 } from "../src/services/continuousLearningRunner.js";
 
 async function runStage5Suite() {
@@ -50,9 +51,11 @@ async function runStage5Suite() {
   // Create synthetic holdout test cohort (35 subjects, N >= 30) with affirmative consent
   const holdoutTestSet = [];
   for (let i = 0; i < 35; i++) {
+    const id = `subj_${i + 1}`;
+    db.setTrainingConsent(id, true);
     // Actuarial ground truth: average marriage age ~27.5
     holdoutTestSet.push({
-      id: `subj_${i + 1}`,
+      id,
       actualEventAge: 26.0 + (i % 6) * 1.5,
       consentGranted: true,
       features: { dashaLord: "Jupiter", venusDignity: 1 }
@@ -226,37 +229,139 @@ async function runStage5Suite() {
   pass("10.1 Successfully executes instant model rollback to previous production deployment");
 
   // 11. End-to-End Real Observation Experiment with Documented Provenance (Section 8)
-  const blindTestPath = path.join(ROOT, "data/real_world_validation/blind_test.json");
-  if (fs.existsSync(blindTestPath)) {
-    const rawData = JSON.parse(fs.readFileSync(blindTestPath, "utf8"));
-    const realCohort = rawData.slice(0, 50).map((item, idx) => ({
-      id: item.id || `real_blind_${idx}`,
-      actualEventAge: item.actualMarriageAge || 26.5,
+  const blindTestPath = path.join(ROOT, "data/real_world_validation/splits/blind_test.json");
+  assert.ok(fs.existsSync(blindTestPath), `Authentic blind test split must exist at: ${blindTestPath}`);
+
+  const rawData = JSON.parse(fs.readFileSync(blindTestPath, "utf8"));
+  const realCohort = [];
+  const exclusionReasons = { NO_MARRIAGE: 0, MISSING_DATE: 0, OUT_OF_RANGE: 0 };
+
+  for (const item of rawData) {
+    if (item.hasDocumentedMarriage !== true || !item.firstDocumentedMarriage) {
+      exclusionReasons.NO_MARRIAGE++;
+      continue;
+    }
+    const m = item.firstDocumentedMarriage;
+    const bYear = item.birthYear || (item.birthDate ? parseInt(item.birthDate.slice(0, 4), 10) : null);
+    const mYear = m.marriageYear || (m.marriageDate ? parseInt(m.marriageDate.slice(0, 4), 10) : null);
+    if (!bYear || !mYear || mYear < bYear) {
+      exclusionReasons.MISSING_DATE++;
+      continue;
+    }
+
+    let actualMarriageAge = null;
+    if (item.birthDate && m.marriageDate && /^\d{4}-\d{2}-\d{2}/.test(item.birthDate) && /^\d{4}-\d{2}-\d{2}/.test(m.marriageDate)) {
+      const bTime = new Date(item.birthDate).getTime();
+      const mTime = new Date(m.marriageDate).getTime();
+      if (!isNaN(bTime) && !isNaN(mTime) && mTime > bTime) {
+        actualMarriageAge = Number(((mTime - bTime) / (365.2425 * 86400000)).toFixed(2));
+      }
+    }
+    if (actualMarriageAge == null) {
+      actualMarriageAge = mYear - bYear;
+    }
+    if (actualMarriageAge < 16 || actualMarriageAge > 65) {
+      exclusionReasons.OUT_OF_RANGE++;
+      continue;
+    }
+
+    realCohort.push({
+      id: item.sourceRecordId || item.id,
+      actualEventAge: actualMarriageAge,
       consentGranted: true,
-      features: item.features || {}
-    }));
-
-    const realCandidateArtifact = { weights: [0.0912], schema: "v3.0.0-audited" };
-    const realCandidate = {
-      modelId: `cand_real_eval_${Date.now()}`,
-      domain: "MARRIAGE",
-      modelArtifact: realCandidateArtifact,
-      artifactSha256: crypto.createHash("sha256").update(JSON.stringify(realCandidateArtifact)).digest("hex"),
-      predictTiming: () => 29.5 // Real prediction
-    };
-
-    const realEval = evaluateCandidateModel({
-      candidateModel: realCandidate,
-      holdoutDataset: realCohort,
-      demographicBaselineMae: RELEASE_GATE_THRESHOLDS.DEMOGRAPHIC_BASELINE_MAE
+      isExternalBenchmark: true,
+      sourceDataset: item.sourceDataset || "VedAstro 15000-Famous-People",
+      features: {
+        birthYear: bYear,
+        gender: item.gender,
+        latitude: item.latitude,
+        longitude: item.longitude
+      }
     });
 
-    assert.ok(typeof realEval.timingMae === "number", "Calculates valid timing MAE on real observations");
-    assert.strictEqual(realEval.sampleSize, 50);
-    pass("11.1 [REAL OBSERVATIONS] Evaluated candidate model on authentic cohort with documented provenance");
-  } else {
-    pass("11.1 [REAL OBSERVATIONS] Real observation file absent (simulated check)");
+    if (realCohort.length >= 50) break;
   }
+
+  assert.strictEqual(realCohort.length, 50, "Extracted exactly 50 authentic observations from blind test");
+  assert.ok(realCohort.every(r => typeof r.actualEventAge === "number" && r.actualEventAge >= 16 && r.actualEventAge <= 65), "All authentic marriage ages are strictly valid and non-synthetic");
+
+  // Load authentic fitted parameters from v3 hazard pipeline checkpoint
+  const checkpointPath = path.join(ROOT, "data/real_world_validation/cache/v3_hazard_pipeline_checkpoint.json");
+  assert.ok(fs.existsSync(checkpointPath), "v3 hazard pipeline checkpoint must exist");
+  const checkpoint = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
+  const baselineTable = checkpoint.discreteHazardModelV3.trainFit.baselineTable;
+  const betaAstro = checkpoint.discreteHazardModelV3.trainFit.coefficients.betaAstro; // 0.0912
+
+  const realCandidateArtifact = {
+    modelType: "COMBINED_DISCRETE_HAZARD",
+    baselineTableLength: baselineTable.length,
+    betaAstro,
+    schema: "v3.0.0-audited"
+  };
+  const realCandidate = {
+    modelId: `cand_real_eval_${Date.now()}`,
+    domain: "MARRIAGE",
+    modelArtifact: realCandidateArtifact,
+    artifactSha256: crypto.createHash("sha256").update(JSON.stringify(realCandidateArtifact)).digest("hex"),
+    predictTiming: (features) => {
+      const featScore = (features && features.gender === "Female") ? 0.7 : 0.3;
+      let surv = 1.0;
+      const eventProbs = [];
+      for (const bin of baselineTable) {
+        const logit = bin.logit + betaAstro * (featScore - 0.5);
+        const h = 1 / (1 + Math.exp(-logit));
+        const pEvent = surv * h;
+        eventProbs.push({ midpoint: bin.midpoint, pEvent });
+        surv *= (1 - h);
+      }
+      const sumP = eventProbs.reduce((acc, b) => acc + b.pEvent, 0);
+      if (sumP <= 1e-4) return 27.5;
+      const wSum = eventProbs.reduce((acc, b) => acc + b.midpoint * b.pEvent, 0);
+      return Number((wSum / sumP).toFixed(2));
+    }
+  };
+
+  const realEval = evaluateCandidateModel({
+    candidateModel: realCandidate,
+    holdoutDataset: realCohort,
+    demographicBaselineMae: RELEASE_GATE_THRESHOLDS.DEMOGRAPHIC_BASELINE_MAE
+  });
+
+  assert.ok(typeof realEval.timingMae === "number", "Calculates valid timing MAE on real observations");
+  assert.strictEqual(realEval.sampleSize, 50);
+  assert.ok(realEval.timingMae > 3.0 && realEval.timingMae < 6.0, `Real timing MAE must be in realistic actuarial range (got: ${realEval.timingMae})`);
+  pass(`11.1 [REAL OBSERVATIONS] Evaluated candidate model on 50 authentic subjects with documented provenance (MAE: ${realEval.timingMae}y)`);
+
+  // 12. Authoritative Consent Fail-Closed Checks (Phase 3)
+  const custWithoutDbConsent = [
+    { id: "cust_unregistered_consent_1", isCustomerRecord: true, consentGranted: true, actualEventAge: 27.0, features: {} }
+  ];
+  const auditNoDb = validateHoldoutCohortIntegrity({ holdoutDataset: custWithoutDbConsent, requireAuthoritativeConsent: true });
+  assert.strictEqual(auditNoDb.validObservations.length, 0);
+  assert.ok(auditNoDb.issues.some(i => i.includes("CONSENT_NOT_CONFIRMED")));
+  pass("12.1 Customer without authoritative DB consent record is rejected fail-closed");
+
+  // Withdrawn consent
+  db.setTrainingConsent("cust_withdrawn_1", false);
+  const custWithdrawn = [
+    { id: "cust_withdrawn_1", isCustomerRecord: true, consentGranted: true, actualEventAge: 27.0, features: {} }
+  ];
+  const auditWithdrawn = validateHoldoutCohortIntegrity({ holdoutDataset: custWithdrawn, requireAuthoritativeConsent: true });
+  assert.strictEqual(auditWithdrawn.validObservations.length, 0);
+  assert.ok(auditWithdrawn.issues.some(i => i.includes("CONSENT_REVOKED")));
+  pass("12.2 Customer with withdrawn DB consent is excluded with CONSENT_REVOKED");
+
+  // Deleted user
+  const deletedUserId = `usr_deleted_${Date.now()}`;
+  db.saveUser(deletedUserId, { userId: deletedUserId, isDeleted: true });
+  db.setTrainingConsent(deletedUserId, true);
+  const custDeleted = [
+    { id: deletedUserId, isCustomerRecord: true, consentGranted: true, actualEventAge: 27.0, features: {} }
+  ];
+  const auditDeleted = validateHoldoutCohortIntegrity({ holdoutDataset: custDeleted, requireAuthoritativeConsent: true });
+  assert.strictEqual(auditDeleted.validObservations.length, 0);
+  assert.ok(auditDeleted.issues.some(i => i.includes("USER_DELETED")));
+  pass("12.3 Deleted user is excluded with USER_DELETED");
 
   console.log("\n==============================================================");
   console.log(` ALL ${passed} STAGE 5 CONTINUOUS LEARNING TESTS PASSED 100%!`);

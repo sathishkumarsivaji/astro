@@ -1494,6 +1494,11 @@ class AstroDatabase {
       .find(o => o.predictionId === predictionId) || null;
   }
 
+  getObservedOutcomeById(outcomeId) {
+    if (!outcomeId) return null;
+    return (this.state.observed_outcomes || {})[outcomeId] || null;
+  }
+
   saveOutcomeVerification(verification) {
     if (!verification || !verification.verificationId || !verification.outcomeId) {
       throw new Error("INVALID_VERIFICATION: verificationId and outcomeId are required.");
@@ -1514,17 +1519,24 @@ class AstroDatabase {
     const status = VALID_STATUSES.includes(verification.verificationStatus) ? verification.verificationStatus : "UNVERIFIED";
 
     // Strict validation: INDEPENDENTLY_VERIFIED requires valid independent evidence procedure
-    const INDEPENDENT_METHODS = [
+    // Strictly prohibited: prefix matching (e.g. DOC_*, INDEPENDENT_*). Must match explicit allowlist.
+    const RECOGNIZED_INDEPENDENT_METHODS = new Set([
+      "CIVIL_REGISTRATION_CERTIFICATE",
       "CIVIL_MARRIAGE_REGISTRATION_CERTIFICATE",
+      "MARRIAGE_CERTIFICATE",
+      "GOVERNMENT_ISSUED_ID",
       "GOVERNMENT_CIVIL_RECORD",
+      "OFFICIAL_GAZETTE_NOTICE",
+      "COURT_ORDER",
+      "MUNICIPAL_RECORD",
       "PUBLIC_INDEPENDENT_RECORD",
       "THIRD_PARTY_AUDITED_RECORD",
+      "INDEPENDENT_DOCUMENTATION",
       "CORROBORATED"
-    ];
+    ]);
     if (status === "INDEPENDENTLY_VERIFIED") {
       const method = String(verification.verificationMethod || "").toUpperCase();
-      const isRecognized = INDEPENDENT_METHODS.includes(method) || method.startsWith("DOC_") || method.startsWith("INDEPENDENT_");
-      if (!isRecognized) {
+      if (!RECOGNIZED_INDEPENDENT_METHODS.has(method)) {
         throw new Error(`INVALID_VERIFICATION_PROCEDURE: Status 'INDEPENDENTLY_VERIFIED' requires recognized independent verification procedure (got: '${verification.verificationMethod}').`);
       }
     }
