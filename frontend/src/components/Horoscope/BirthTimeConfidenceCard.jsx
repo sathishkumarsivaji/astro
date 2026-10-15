@@ -38,10 +38,21 @@ export default function BirthTimeConfidenceCard({
     }
   ];
 
-  // Calculate sensitivity parameters if chartData is present
-  const rawAscDegree = chartData?.ascendant?.degree ?? chartData?.ascendantSign?.degree ?? null;
-  const ascDegree = typeof rawAscDegree === "number" && Number.isFinite(rawAscDegree) ? rawAscDegree : null;
-  const isNearAscBoundary = ascDegree !== null ? (ascDegree < 1.5 || ascDegree > 28.5) : null;
+  const sensitivityAudit = chartData?.canonicalContext?.sensitivityAudit;
+  const sensitivityMetrics = sensitivityAudit?.sensitivityMetrics;
+  const getSensitivityLabel = (isSensitive, unavailableLabel = isTamil ? "கணக்கீடு இல்லை" : "Unavailable") => {
+    if (typeof isSensitive !== "boolean") return unavailableLabel;
+    return isSensitive
+      ? (isTamil ? "அதிக உணர்திறன்" : "Sensitive")
+      : (isTamil ? "நிலையானது" : "Stable");
+  };
+  const getSensitivityClass = (isSensitive) => (
+    typeof isSensitive !== "boolean"
+      ? "text-stone-400"
+      : isSensitive
+        ? "text-amber-700"
+        : "text-emerald-700"
+  );
 
   return (
     <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-amber-200/80 shadow-xs space-y-4">
@@ -93,42 +104,38 @@ export default function BirthTimeConfidenceCard({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div className="p-2 rounded-lg bg-white border border-amber-200/60 text-center">
             <span className="text-[10px] text-stone-500 block">{isTamil ? "லக்ன ராசி (D1)" : "Lagna (D1)"}</span>
-            <span className={`font-bold text-xs ${
-              isNearAscBoundary === null 
-                ? "text-stone-400" 
-                : isNearAscBoundary 
-                  ? "text-amber-700" 
-                  : "text-emerald-700"
-            }`}>
-              {isNearAscBoundary === null
-                ? (isTamil ? "கணக்கீடு இல்லை" : "Unavailable")
-                : isNearAscBoundary
-                  ? (isTamil ? "அதிக உணர்திறன் (High)" : "High Sensitivity")
-                  : (isTamil ? "நிலையானது (Low)" : "Low / Stable")}
+            <span className={`font-bold text-xs ${getSensitivityClass(sensitivityMetrics?.isD1LagnaSensitive)}`}>
+              {getSensitivityLabel(sensitivityMetrics?.isD1LagnaSensitive)}
             </span>
           </div>
 
           <div className="p-2 rounded-lg bg-white border border-amber-200/60 text-center">
             <span className="text-[10px] text-stone-500 block">{isTamil ? "நவாம்சம் (D9)" : "Navamsha (D9)"}</span>
-            <span className="font-bold text-xs text-amber-700">
-              {isTamil ? "நடுத்தரம் (Medium)" : "Medium (±3 min)"}
+            <span className={`font-bold text-xs ${getSensitivityClass(sensitivityMetrics?.isD9LagnaSensitive)}`}>
+              {getSensitivityLabel(sensitivityMetrics?.isD9LagnaSensitive)}
             </span>
           </div>
 
           <div className="p-2 rounded-lg bg-white border border-amber-200/60 text-center">
             <span className="text-[10px] text-stone-500 block">{isTamil ? "ஷஷ்டியாம்சம் (D60)" : "D60 Shashtiamsha"}</span>
-            <span className="font-bold text-xs text-purple-700">
-              {isTamil ? "மிக அதிகம் (Very High)" : "Very High (±1 min)"}
+            <span className="font-bold text-xs text-stone-500">
+              {isTamil ? "தனி தணிக்கை தேவை" : "Not assessed"}
             </span>
           </div>
 
           <div className="p-2 rounded-lg bg-white border border-amber-200/60 text-center">
             <span className="text-[10px] text-stone-500 block">{isTamil ? "சந்திர ராசி & தசா" : "Moon & Dasha"}</span>
-            <span className="font-bold text-xs text-emerald-700">
-              {isTamil ? "மிகக் குறைவு (Stable)" : "Stable (Low)"}
+            <span className={`font-bold text-xs ${getSensitivityClass(sensitivityMetrics?.isMoonNakshatraSensitive)}`}>
+              {getSensitivityLabel(sensitivityMetrics?.isMoonNakshatraSensitive)}
             </span>
           </div>
         </div>
+        {sensitivityAudit?.status && (
+          <p className="text-[10px] text-stone-600">
+            {isTamil ? "ஒட்டுமொத்த தணிக்கை நிலை: " : "Overall perturbation audit: "}
+            <span className="font-bold">{sensitivityAudit.status}</span>
+          </p>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,12 @@ import {
   Award
 } from "lucide-react";
 import { TRANSLATIONS } from "../../services/localization";
+import {
+  MENU_REGISTRY,
+  PRIMARY_MENU_IDS,
+  EXPLORE_MENU_IDS,
+  TIMELINE_MENU_IDS
+} from "../../config/menuRegistry";
 
 export default function Sidebar({
   activeTab,
@@ -42,25 +48,42 @@ export default function Sidebar({
   const isTamil = lang === "ta";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-  const mainNavItems = [
-    { id: "home", label: isTamil ? "முகப்பு" : "Home", icon: Sparkles, desc: isTamil ? "தினசரி பார்வை & வழிகாட்டல்" : "Daily Cosmic Overview" },
-    { id: "chart", label: isTamil ? "என் ஜாதகம்" : "My Chart", icon: Compass, desc: isTamil ? "D1-D60 சக்கரங்கள் & கிரகங்கள்" : "Vedic Birth Kundli & Vargas" },
-    { id: "ask", label: isTamil ? "கேளுங்கள்" : "Ask AstroVerse", icon: MessageSquare, desc: isTamil ? "AI ஜோதிட வழிகாட்டல்" : "AI Master Consultation" },
-    { id: "timeline", label: isTamil ? "காலக்கோடு" : "Timeline", icon: Calendar, desc: isTamil ? "0-120 ஆண்டு தசா கட்டங்கள்" : "0–120 Yrs Dasha & Gochara" },
-    { id: "relationships", label: isTamil ? "பொருத்தம்" : "Relationships", icon: Heart, desc: isTamil ? "14 பரிமாண திருமண பொருத்தம்" : "14-Domain Kundli Matching" },
-    { id: "explore", label: isTamil ? "ஆராய்க" : "Explore Tools", icon: Layers, desc: isTamil ? "பஞ்சாங்கம், கைரேகை, எண்கள்" : "Panchang, Palm, Numerology" }
-  ];
+  const iconByMenuId = {
+    home: Sparkles,
+    chart: Compass,
+    ask: MessageSquare,
+    timeline: Calendar,
+    relationships: Heart,
+    explore: Layers,
+    rectification: ShieldCheck,
+    panchang: Clock,
+    recovery: Clock,
+    palm: Hand,
+    numerology: Hash,
+    names: Baby,
+    journal: BookOpen,
+    calendar: Calendar,
+    gochar: Clock,
+    dasha: Calendar
+  };
 
-  const exploreSubItems = [
-    { id: "rectification", label: isTamil ? "பிறந்த நேர திருத்தம்" : "Birth-Time Rectification", icon: ShieldCheck },
-    { id: "panchang", label: isTamil ? "பஞ்சாங்கம் & முகூர்த்தம்" : "Panchang & Muhurta", icon: Clock },
-    { id: "recovery", label: isTamil ? "பிறப்பு நேரம் மீட்பு (நஷ்ட ஜாதகம்)" : "Birth Recovery Wizard", icon: Clock },
-    { id: "palm", label: isTamil ? "கைரேகை ஆய்வு" : "Palmistry Analysis", icon: Hand },
-    { id: "numerology", label: isTamil ? "வேத எண் கணிதம்" : "Vedic Numerology", icon: Hash },
-    { id: "names", label: isTamil ? "குழந்தை பெயர்கள்" : "Baby Name Generator", icon: Baby },
-    { id: "journal", label: isTamil ? "ஜோதிட நாட்குறிப்பு" : "Astrology Journal", icon: BookOpen },
-    { id: "calendar", label: isTamil ? "தனிப்பயன் நாட்காட்டி" : "Personalized Calendar", icon: Calendar }
-  ];
+  const menuLabel = (id) => {
+    const item = MENU_REGISTRY[id];
+    return item ? t[item.labelKey] : id;
+  };
+
+  const mainNavItems = PRIMARY_MENU_IDS.map((id) => ({
+    ...MENU_REGISTRY[id],
+    label: menuLabel(id),
+    icon: iconByMenuId[id]
+  }));
+
+  const exploreSubItems = [...EXPLORE_MENU_IDS, ...TIMELINE_MENU_IDS.filter((id) => id === "journal" || id === "calendar")]
+    .map((id) => ({
+      ...MENU_REGISTRY[id],
+      label: menuLabel(id),
+      icon: iconByMenuId[id]
+    }));
 
   const handleNavClick = (tabId) => {
     setActiveTab(tabId);
@@ -70,7 +93,7 @@ export default function Sidebar({
   };
 
   const handleSubNavClick = (subId) => {
-    if (subId === "journal" || subId === "calendar") {
+    if (TIMELINE_MENU_IDS.includes(subId)) {
       setActiveTab("timeline");
       if (setTimelineSubTab) setTimelineSubTab(subId);
     } else {

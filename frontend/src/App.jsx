@@ -27,9 +27,20 @@ const PersonalizedCalendar = lazy(() => import("./components/Calendar/Personaliz
 const AstrologyJournal = lazy(() => import("./components/Journal/AstrologyJournal"));
 
 import { calculateChartBySystem } from "./astrology";
-import { DEMO_BIRTH_PROFILE } from "./types/birthProfile";
+import { DEMO_BIRTH_PROFILE, normalizeBirthProfile } from "./types/birthProfile";
 import { fetchUserCredits, fetchCurrentUser, initGuestSession, logoutUser } from "./services/aiAstrologyService";
 import { TRANSLATIONS } from "./services/localization";
+import { attachCanonicalChartContext } from "./services/canonicalChartContext";
+import {
+  DEFAULT_NAVIGATION,
+  EXPLORE_MENU_IDS,
+  MENU_REGISTRY,
+  navigateToMenu,
+  navigationFromUrl,
+  navigationToUrl,
+  normalizeNavigation,
+  TIMELINE_MENU_IDS
+} from "./config/menuRegistry";
 import { Sparkles, FileText, Compass, MessageSquare, Calendar, Heart, Layers, Clock, Hand, Hash, Baby, Crown, Lock, ShieldCheck, BookOpen } from "lucide-react";
 
 export default function App() {
@@ -45,10 +56,73 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // 6 Core Architectural Experiences: "home", "chart", "ask", "timeline", "relationships", "explore"
-  const [activeTab, setActiveTab] = useState("home");
-  const [timelineSubTab, setTimelineSubTab] = useState("dasha"); // "dasha", "gochar"
-  const [exploreSubTab, setExploreSubTab] = useState("panchang"); // "panchang", "recovery", "palm", "numerology", "names"
+  // All primary and secondary navigation is normalized through one contract.
+  const [navigation, setNavigation] = useState(() => {
+    try {
+      if (typeof window !== "undefined" && window.location?.search) {
+        const fromUrl = navigationFromUrl(window.location.href);
+        if (window.location.search.includes("menu=")) return fromUrl;
+      }
+      const saved = sessionStorage.getItem("astro_navigation");
+      return normalizeNavigation(saved ? JSON.parse(saved) : DEFAULT_NAVIGATION);
+    } catch {
+      return DEFAULT_NAVIGATION;
+    }
+  });
+  const restoringNavigationFromHistory = React.useRef(false);
+  const activeTab = navigation.primaryMenu;
+  const timelineSubTab = navigation.timelineMenu;
+  const exploreSubTab = navigation.exploreMenu;
+  const commitNavigation = (menuId) => {
+    const next = navigateToMenu(navigation, menuId);
+    if (
+      next.primaryMenu === navigation.primaryMenu
+      && next.timelineMenu === navigation.timelineMenu
+      && next.exploreMenu === navigation.exploreMenu
+    ) {
+      return;
+    }
+    setNavigation(next);
+    if (!restoringNavigationFromHistory.current && typeof window !== "undefined" && window.history) {
+      window.history.pushState({ astroNavigation: next }, "", navigationToUrl(next, window.location.href));
+    }
+  };
+  const setActiveTab = commitNavigation;
+  const setTimelineSubTab = (menuId) => {
+    if (TIMELINE_MENU_IDS.includes(menuId)) {
+      commitNavigation(menuId);
+    }
+  };
+  const setExploreSubTab = (menuId) => {
+    if (EXPLORE_MENU_IDS.includes(menuId)) {
+      commitNavigation(menuId);
+    }
+  };
+
+  React.useEffect(() => {
+    try {
+      sessionStorage.setItem("astro_navigation", JSON.stringify(navigation));
+    } catch {
+      // Navigation persistence is optional; in-memory navigation remains authoritative.
+    }
+    if (typeof window !== "undefined" && window.history && !restoringNavigationFromHistory.current) {
+      window.history.replaceState(
+        { ...(window.history.state || {}), astroNavigation: navigation },
+        "",
+        navigationToUrl(navigation, window.location.href)
+      );
+    }
+    restoringNavigationFromHistory.current = false;
+  }, [navigation]);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      restoringNavigationFromHistory.current = true;
+      setNavigation(navigationFromUrl(window.location.href));
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
   
   const [isExpertMode, setIsExpertMode] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
@@ -127,7 +201,7 @@ export default function App() {
   const [birthProfile, setBirthProfile] = useState(() => {
     try {
       const saved = typeof window !== "undefined" && window.sessionStorage ? sessionStorage.getItem("astro_active_profile") : null;
-      return saved ? JSON.parse(saved) : null;
+      return saved ? normalizeBirthProfile(JSON.parse(saved)) : null;
     } catch {
       return null;
     }
@@ -142,7 +216,7 @@ export default function App() {
           birthProfile.system || "lahiri",
           birthProfile
         );
-        setChartData({ ...data, profile: birthProfile });
+        setChartData(attachCanonicalChartContext(data, birthProfile));
       } catch (err) {
         console.warn("Could not automatically restore chart data:", err);
       }
@@ -150,8 +224,8 @@ export default function App() {
   }, []);
 
   const handleApplyProfile = (data) => {
-    setChartData(data);
-    const prof = data.profile || null;
+    const prof = data?.profile ? normalizeBirthProfile(data.profile) : null;
+    setChartData(data && prof ? attachCanonicalChartContext(data, prof) : data);
     setBirthProfile(prof);
     try {
       if (typeof window !== "undefined" && window.sessionStorage) {
@@ -190,7 +264,7 @@ export default function App() {
     const validUtcOffset = Number.isFinite(parsedOffset) ? parsedOffset : null;
     const validTimezoneId = timezoneId || null;
 
-    const recoveredProfile = {
+    const recoveredProfile = normalizeBirthProfile({
       name: name?.trim() || (isTamil ? "ஜாதகர்" : "Native"),
       birthDate,
       birthTime,
@@ -202,7 +276,7 @@ export default function App() {
       system: "lahiri",
       isDemo: false,
       source: "inferred"
-    };
+    });
 
     setBirthProfile(recoveredProfile);
     try {
@@ -219,7 +293,7 @@ export default function App() {
           recoveredProfile.system || "lahiri",
           recoveredProfile
         );
-        setChartData({ ...updatedData, profile: recoveredProfile });
+        setChartData(attachCanonicalChartContext(updatedData, recoveredProfile));
         showToast(isTamil ? "மீட்கப்பட்ட ஜாதகம் வெற்றிகரமாக ஏற்றப்பட்டது!" : "Reconstructed birth chart calculated successfully!", "info");
       } catch (err) {
         console.warn("Recovered chart calculation deferred until location confirmed:", err);
@@ -231,10 +305,10 @@ export default function App() {
   const applyRectifiedBirthTime = (rectifiedTime) => {
     if (!rectifiedTime) return;
     const baseProfile = birthProfile || DEMO_BIRTH_PROFILE;
-    const updatedProfile = {
+    const updatedProfile = normalizeBirthProfile({
       ...baseProfile,
       birthTime: rectifiedTime
-    };
+    });
 
     setBirthProfile(updatedProfile);
     try {
@@ -250,7 +324,7 @@ export default function App() {
         updatedProfile.system || "lahiri",
         updatedProfile
       );
-      setChartData({ ...updatedData, profile: updatedProfile });
+      setChartData(attachCanonicalChartContext(updatedData, updatedProfile));
       showToast(isTamil ? `திருத்தப்பட்ட பிறந்த நேரம் (${rectifiedTime}) வெற்றிகரமாக பொருத்தப்பட்டது!` : `Rectified birth time (${rectifiedTime}) applied successfully!`, "info");
       setActiveTab("chart");
     } catch (err) {
@@ -570,22 +644,28 @@ export default function App() {
           <div className="space-y-6 animate-fadeIn">
             {/* Secondary Tabs Navigation */}
             <div className="flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-white border border-amber-200/80 shadow-2xs">
-              {[
-                { id: "rectification", label: isTamil ? "பிறந்த நேர திருத்தம்" : "Birth-Time Rectification", icon: ShieldCheck },
-                { id: "panchang", label: isTamil ? "பஞ்சாங்கம் & முகூர்த்தம்" : "Panchanga & Muhurta", icon: Clock },
-                { id: "recovery", label: isTamil ? "பிறந்த நேர மீட்பு" : "Birth Recovery", icon: Sparkles },
-                { id: "palm", label: isTamil ? "சாமுத்ரிக கைரேகை" : "Palmistry", icon: Hand },
-                { id: "numerology", label: isTamil ? "எண் கணிதம்" : "Numerology", icon: Hash },
-                { id: "names", label: isTamil ? "குழந்தை பெயர்கள்" : "Baby Names", icon: Baby },
-                { id: "journal", label: isTamil ? "நாட்குறிப்பு" : "Milestone Journal", icon: BookOpen },
-                { id: "calendar", label: isTamil ? "நாட்காட்டி" : "Transit Calendar", icon: Calendar }
-              ].map(sub => {
-                const Icon = sub.icon;
-                const isSelected = exploreSubTab === sub.id;
+              {[...EXPLORE_MENU_IDS, "journal", "calendar"].map((menuId) => {
+                const sub = MENU_REGISTRY[menuId];
+                const iconByMenuId = {
+                  rectification: ShieldCheck,
+                  panchang: Clock,
+                  recovery: Sparkles,
+                  palm: Hand,
+                  numerology: Hash,
+                  names: Baby,
+                  journal: BookOpen,
+                  calendar: Calendar
+                };
+                const Icon = iconByMenuId[menuId];
+                const isSelected = (exploreSubTab === menuId && EXPLORE_MENU_IDS.includes(menuId))
+                  || (timelineSubTab === menuId && TIMELINE_MENU_IDS.includes(menuId));
                 return (
                   <button
-                    key={sub.id}
-                    onClick={() => setExploreSubTab(sub.id)}
+                    key={menuId}
+                    onClick={() => {
+                      if (TIMELINE_MENU_IDS.includes(menuId)) setTimelineSubTab(menuId);
+                      else setExploreSubTab(menuId);
+                    }}
                     className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                       isSelected
                         ? "bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-xs"
@@ -593,7 +673,7 @@ export default function App() {
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
-                    <span>{sub.label}</span>
+                    <span>{t[sub.labelKey]}</span>
                   </button>
                 );
               })}
