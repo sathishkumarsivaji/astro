@@ -26,12 +26,28 @@
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
       "initialCacheEntries": 20508,
-      "cacheHits": 17623,
-      "cacheMisses": 0,
-      "recomputedCount": 0,
+      "cacheHits": 0,
+      "cacheMisses": 3751,
+      "recomputedCount": 3751,
       "invalidatedEntries": 0,
       "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
       "calibrationHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
+    },
+    "executionRecord": {
+      "runId": "RUN-ADB-EXTERNAL-20261010-001",
+      "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
+      "cohortType": "EXTERNAL_INDEPENDENT",
+      "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
+      "calibrationModelHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4",
+      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
+      "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
+      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+      "cacheSnapshotVersion": "v3.0.0-20508",
+      "predictionCount": 3751,
+      "cacheHits": 0,
+      "cacheMisses": 3751,
+      "recomputedCount": 3751,
+      "errors": 0
     }
   },
   "primaryBenchmark": {
