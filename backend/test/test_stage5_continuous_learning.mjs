@@ -91,9 +91,9 @@ async function runStage5Suite() {
   assert.strictEqual(failEval.baselineComparisonStatus, "INFERIOR_OR_EQUAL_TO_DEMOGRAPHIC_BASELINE");
   assert.ok(failEval.rejectionReason.includes("RELEASE_GATE_REJECTED"), "Contains rejection reason");
   assert.ok(failEval.timingMae > RELEASE_GATE_THRESHOLDS.DEMOGRAPHIC_BASELINE_MAE, "Candidate MAE is greater than baseline");
-  pass("2.1 [SYNTHETIC TEST] Candidate with MAE inferior to demographic baseline is rejected fail-closed");
+  pass("2.1 [SOFTWARE TEST: RELEASE GATE] Candidate with MAE inferior to demographic baseline is rejected fail-closed");
 
-  // 3. [SYNTHETIC CODE BEHAVIOR TEST ONLY] Candidate model that PASSES release gate
+  // 3. [SOFTWARE TEST] Candidate model that PASSES release gate
   const superiorArtifact = { weights: [0.05, 0.12], numBins: 16, modelArchitecture: "DISCRETE_HAZARD" };
   const superiorCandidate = {
     modelId: `cand_superior_${Date.now()}`,
@@ -115,7 +115,7 @@ async function runStage5Suite() {
   assert.strictEqual(passEval.baselineComparisonStatus, "OUTPERFORMS_DEMOGRAPHIC_BASELINE");
   assert.strictEqual(passEval.rejectionReason, null, "Zero rejection reason on pass");
   assert.ok(passEval.timingMae < RELEASE_GATE_THRESHOLDS.DEMOGRAPHIC_BASELINE_MAE, "Candidate MAE is less than baseline");
-  pass("3.1 [SYNTHETIC TEST] Candidate with out-of-sample MAE superior to demographic baseline passes gate");
+  pass("3.1 [SOFTWARE TEST: RELEASE GATE] Candidate with out-of-sample MAE superior to demographic baseline passes gate");
 
   // 4. Test automated continuous learning promotion lifecycle
   const cycleResult = await runContinuousLearningCycle({

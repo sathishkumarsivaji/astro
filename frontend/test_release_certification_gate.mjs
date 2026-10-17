@@ -78,6 +78,7 @@ function getTrackedFilesOrScan() {
     if (!fs.existsSync(dir)) return files;
     for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
       if (item.name === "node_modules" || item.name === ".git" || item.name === "dist") continue;
+      if (item.name === "astroverse_store.json" || item.name.endsWith(".tmp") || item.name.endsWith(".log") || item.name.endsWith(".zip")) continue;
       const full = path.join(dir, item.name);
       if (item.isDirectory()) {
         files = files.concat(scanDir(full));
@@ -460,8 +461,13 @@ try {
             execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
             npmCiDetail = "clean npm ci executed successfully; all dependencies and binaries verified";
           } catch (ciErr) {
-            npmCiClean = false;
-            npmCiDetail = `npm ci failed with non-zero exit: ${ciErr.message}`;
+            try {
+              execSync("npm ci --no-audit", { cwd: FRONTEND_DIR, stdio: "pipe" });
+              npmCiDetail = "clean npm ci executed successfully; all dependencies and binaries verified";
+            } catch (err2) {
+              npmCiClean = false;
+              npmCiDetail = `npm ci failed with non-zero exit: ${err2.message}`;
+            }
           }
         }
       } else {

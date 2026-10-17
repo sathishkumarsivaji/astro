@@ -167,7 +167,7 @@ export function getLocalAiConfig() {
   const endpoint = process.env.LOCAL_LLM_ENDPOINT || "http://127.0.0.1:11434"; // Default local Ollama/llama.cpp runner
   const modelName = process.env.LOCAL_LLM_MODEL || "qwen2.5:1.5b-instruct";
   const fallbackModelName = process.env.LOCAL_LLM_FALLBACK_MODEL || "qwen2.5:0.5b-instruct";
-  const timeoutMs = parseInt(process.env.LOCAL_LLM_TIMEOUT_MS || "8000", 10);
+  const timeoutMs = parseInt(process.env.LOCAL_LLM_TIMEOUT_MS || "60000", 10);
 
   return {
     mode,
