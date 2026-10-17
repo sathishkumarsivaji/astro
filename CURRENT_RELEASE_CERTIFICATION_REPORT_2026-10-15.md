@@ -1,12 +1,12 @@
 # SKR ASTRO / ASTROVERSE — Authoritative Release Certification Report
 
 **Audit & Certification Date:** 15 October 2026  
-**Release Version:** 3.1.0 (Production Candidate)  
+**Release Version:** 3.0.0  
 **Model Version:** 2.2.0  
-**Current Git Commit:** `af7931b` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
+**Current Git Commit:** `bd64176` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.42 MB (36,090,669 bytes)  
-- **SHA-256 Digest:** `3b7f2f81579bb17e7f65e1053fa710e136d9199f39c5c29ac9aeb53aa7f3e563`  
+- **Archive Size:** 34.42 MB (36,091,340 bytes)  
+- **SHA-256 Digest:** `895bf3748455b2dc54ee40434519e9340cf14be6baa83b52b3341390fce89dfd`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 
@@ -141,5 +141,5 @@ The application codebase is configured to run ubiquitously across all targeted p
 The repository is certified as a clean, complete, and mathematically authentic distribution.
 
 - **Clean ZIP Archive:** `ASTRO.zip`
-- **Archive SHA-256 Digest:** `3b7f2f81579bb17e7f65e1053fa710e136d9199f39c5c29ac9aeb53aa7f3e563`
+- **Archive SHA-256 Digest:** `895bf3748455b2dc54ee40434519e9340cf14be6baa83b52b3341390fce89dfd`
 - **Verification Verdict:** **`RELEASE_CERTIFIED = true`**
