@@ -3,10 +3,10 @@
 **Audit & Certification Date:** 15 October 2026  
 **Release Version:** 3.1.0 (Production Candidate)  
 **Model Version:** 2.2.0  
-**Current Git Commit:** `59257ec` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
+**Current Git Commit:** `af7931b` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.42 MB (36,090,503 bytes)  
-- **SHA-256 Digest:** `0668f4248d1b4994c83e4fa9a58c8c0ac923c06cef2c50772d0a64351b1a59f4`  
+- **Archive Size:** 34.42 MB (36,090,668 bytes)  
+- **SHA-256 Digest:** `65d21550c40c8a63191906fd269bab1cadf03e51a10dc98aaf789370dd77d40e`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 
@@ -141,5 +141,5 @@ The application codebase is configured to run ubiquitously across all targeted p
 The repository is certified as a clean, complete, and mathematically authentic distribution.
 
 - **Clean ZIP Archive:** `ASTRO.zip`
-- **Archive SHA-256 Digest:** `0668f4248d1b4994c83e4fa9a58c8c0ac923c06cef2c50772d0a64351b1a59f4`
+- **Archive SHA-256 Digest:** `65d21550c40c8a63191906fd269bab1cadf03e51a10dc98aaf789370dd77d40e`
 - **Verification Verdict:** **`RELEASE_CERTIFIED = true`**
