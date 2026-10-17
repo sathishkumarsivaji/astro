@@ -366,7 +366,7 @@ async function runStage5Suite() {
   assert.strictEqual(detailedTiming.meanIntervalWidth, 6.0, "Interval width matches 6.0 years");
   pass(`11.3 [TIMING METRICS] Detailed timing metrics evaluated: MAE=${detailedTiming.mae}y, MedAE=${detailedTiming.medianAbsoluteError}y, ±1y=${detailedTiming.within1yPct}%, ±2y=${detailedTiming.within2yPct}%, ±3y=${detailedTiming.within3yPct}%, IntervalCoverage=${detailedTiming.forecastIntervalCoverage}%`);
 
-  // Detailed occurrence metrics calculation
+  // 11.4 Software Unit Test: Occurrence metric calculations on standard synthetic verification vector
   const probPairs = [
     { prob: 0.85, actual: 1 },
     { prob: 0.75, actual: 1 },
@@ -381,7 +381,7 @@ async function runStage5Suite() {
   assert.ok(typeof detailedOcc.mcc === "number", "Calculates valid MCC");
   assert.strictEqual(detailedOcc.confusionMatrix.tp, 3);
   assert.strictEqual(detailedOcc.confusionMatrix.tn, 3);
-  pass(`11.4 [OCCURRENCE METRICS] Occurrence metrics evaluated: Brier=${detailedOcc.brierScore}, ROC-AUC=${detailedOcc.rocAuc}, MCC=${detailedOcc.mcc}`);
+  pass(`11.4 [SOFTWARE TEST: OCCURRENCE METRICS] Implementation verified on standard vector: Brier=${detailedOcc.brierScore}, ROC-AUC=${detailedOcc.rocAuc}, MCC=${detailedOcc.mcc}`);
 
   // 12. Authoritative Consent Fail-Closed Checks (Phase 3)
   const custWithoutDbConsent = [
@@ -529,7 +529,7 @@ async function runStage5Suite() {
   assert.ok(typeof pipelineResult.evaluation.timingMae === "number", "Independent timing MAE evaluated");
   assert.ok(pipelineResult.ablation, "Feature ablation study executed");
   assert.strictEqual(pipelineResult.ablation.domain, "MARRIAGE");
-  pass(`13.5 Complete end-to-end outcome-driven learning pipeline executed: Status=${pipelineResult.pipelineStatus} (Candidate MAE=${pipelineResult.evaluation.timingMae}y vs Baseline=${pipelineResult.ablation.demographicBaselineMae}y)`);
+  pass(`13.5 [SYNTHETIC SOFTWARE TEST] Complete outcome-driven learning pipeline mechanics verified: Status=${pipelineResult.pipelineStatus} (Synthetic Candidate MAE=${pipelineResult.evaluation.timingMae}y vs Baseline=${pipelineResult.ablation.demographicBaselineMae}y)`);
 
   console.log("\n==============================================================");
   console.log(` ALL ${passed} STAGE 5 CONTINUOUS LEARNING TESTS PASSED 100%!`);
