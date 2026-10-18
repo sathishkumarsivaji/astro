@@ -1,0 +1,23 @@
+{
+  "startedAt": "2026-10-18T18:45:42.865Z",
+  "nodeVersion": "v24.17.0",
+  "platform": "win32",
+  "arch": "x64",
+  "frontend": {
+    "status": "SUCCESS",
+    "exitCode": 0,
+    "durationMs": 29016
+  },
+  "backend": {
+    "status": "SUCCESS",
+    "exitCode": 0,
+    "durationMs": 2829
+  },
+  "verification": {
+    "success": true,
+    "missingPackages": [],
+    "missingBinaries": []
+  },
+  "completedAt": "2026-10-18T18:46:14.712Z",
+  "overallSuccess": true
+}

@@ -472,26 +472,8 @@ try {
       }
 
       if (!nodeModulesExists || !backendModulesExists || missingPackages.length > 0 || missingBinaries.length > 0) {
-        // If missing or partial, fail if partial, or execute clean npm ci if cleanly absent
-        if ((nodeModulesExists && missingPackages.length > 0) || missingBinaries.length > 0) {
-          npmCiClean = false;
-          npmCiDetail = `Incomplete / corrupted node_modules detected. Missing packages: [${missingPackages.join(", ")}]; missing binaries: [${missingBinaries.join(", ")}]. Must run clean npm ci.`;
-        } else {
-          try {
-            execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
-            execSync("npm ci --no-audit --prefer-offline", { cwd: path.join(ROOT, "backend"), stdio: "pipe" });
-            npmCiDetail = "clean npm ci executed successfully for frontend and backend; all dependencies and binaries verified";
-          } catch (ciErr) {
-            try {
-              execSync("npm ci --no-audit", { cwd: FRONTEND_DIR, stdio: "pipe" });
-              execSync("npm ci --no-audit", { cwd: path.join(ROOT, "backend"), stdio: "pipe" });
-              npmCiDetail = "clean npm ci executed successfully for frontend and backend; all dependencies and binaries verified";
-            } catch (err2) {
-              npmCiClean = false;
-              npmCiDetail = `Clean dependency installation required. Please run 'npm ci --prefix frontend' and 'npm ci --prefix backend'. (Exit error: ${err2.message})`;
-            }
-          }
-        }
+        npmCiClean = false;
+        npmCiDetail = `BLOCKED_DEPENDENCIES: Clean dependency installation required before running release certification gate. Run 'node scripts/prepare_environment.mjs'. Missing packages: [${missingPackages.join(", ")}]; missing binaries: [${missingBinaries.join(", ")}].`;
       } else {
         npmCiDetail = `package.json and lockfile verified; all ${requiredFrontendPackages.length + requiredBackendPackages.length} frontend and backend dependencies verified in node_modules; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
       }
