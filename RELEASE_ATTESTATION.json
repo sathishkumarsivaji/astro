@@ -1,0 +1,16 @@
+{
+  "archiveFile": "ASTRO.zip",
+  "archivePath": "D:\\ASTRO\\ASTRO.zip",
+  "sha256": "1af9765cf3091d531dc8b4a3ecbf23f27ef9032111ebfb23dc855f4a16c725c9",
+  "sizeBytes": 36118873,
+  "sizeMb": 34.45,
+  "packagedAt": "2026-10-18T19:16:59.088Z",
+  "gitCommit": "f41155b9058d93e940b941ee17e8168b1e5d5ac8",
+  "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
+  "calibrationModelHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4",
+  "releaseCertified": true,
+  "mandatoryGatesPassed": 17,
+  "totalRegressionSuitesPassed": 33,
+  "zeroNodeModulesBundled": true,
+  "notes": "Detached post-packaging attestation eliminating the circular archive hash paradox."
+}
