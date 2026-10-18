@@ -3,10 +3,10 @@
 **Audit & Certification Date:** 15 October 2026  
 **Release Version:** 3.0.0  
 **Model Version:** 2.2.0  
-**Current Git Commit:** `a7f9c8c` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
+**Current Git Commit:** `0a7069d` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.42 MB (36,091,327 bytes)  
-- **SHA-256 Digest:** `a9b4952373e5187125c402bb18f5913585e4ee193748d0de11ce56afe325c681`  
+- **Archive Size:** 34.42 MB (36,092,079 bytes)  
+- **SHA-256 Digest:** `89b38cdca3174a591d990b1c44725769cf4d30d8cf4f597c36e94674dafb3a44`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 
@@ -29,6 +29,8 @@ In compliance with the project's zero-fabrication charter:
 | **Phase 1 & 2** | `backend/test/test_stage5_continuous_learning.mjs` | Fixed path to `data/real_world_validation/splits/blind_test.json`. Removed mock simulated fallback (`fail` if missing). Replaced fake age imputation (`26.5`) with authentic date calculations from `firstDocumentedMarriage`. Replaced dummy predictor (`29.5`) with authentic parameter-driven discrete-time hazard model predictor from `v3_hazard_pipeline_checkpoint.json`. Implemented real outcome-driven continuous learning pipeline (Ridge regression fitting, affine calibration, feature ablation, and fail-closed gate). | `node backend/test/test_stage5_continuous_learning.mjs`<br>**PASS (22/22, 100%)** |
 | **Phase 2 & 3** | `backend/src/services/continuousLearningRunner.js` | Enforced fail-closed authoritative consent verification in `validateHoldoutCohortIntegrity` and `assembleOutcomeTrainingCohort`. Explicitly checks `db.state.training_consent` for customer records. Rejects missing consent (`CONSENT_NOT_CONFIRMED`), withdrawn consent (`CONSENT_REVOKED`), and deleted accounts (`USER_DELETED`). Swallowed error catch blocks eliminated. | `node backend/test/test_stage5_continuous_learning.mjs` Tests 12.1–13.5<br>**PASS (100%)** |
 | **Phase 4** | `backend/src/db/database.js` & `backend/src/server.js` | Prohibited prefix matching (`DOC_*`, `INDEPENDENT_*`) for `INDEPENDENTLY_VERIFIED` outcomes; enforced strict allowlist of 12 recognized methods (`RECOGNIZED_INDEPENDENT_METHODS`). Mandatory non-empty `evidenceReference` required for independent verification. Implemented IDOR protection on `GET /api/outcomes/:id/verification-history` requiring verifier/auditor role or record ownership. | `node backend/test/test_stage3_feedback_outcomes.mjs` Tests 5.1–5.6<br>**PASS (100%)** |
+| **Phase 3 (Hybrid Framework)** | `backend/src/services/birthQualityAndFeatureEngineering.js` | Audited and preserved birth-time precision, provenance, and Rodden ratings (`AA`, `A`, `B`, `C`, `DD`, `X`). Propagated birth-time uncertainty to divisional charts and bhava cusps (suppresses D9 for $\Delta t > 10$m and D60 for $\Delta t > 2$m). Evaluated empirical timing error across birth-time quality strata on authentic holdout. | `node backend/test/test_phase3_and_4_birth_quality_and_feature_engineering.mjs` Checks 1.1–3.2<br>**PASS (100%)** |
+| **Phase 4 (Hybrid Framework)** | `backend/src/services/birthQualityAndFeatureEngineering.js` | Implemented continuous Gaussian aspect proximity functions $f(\Delta\theta) = \exp(-d^2 / 2\sigma^2)$, Dasha $\times$ Transit non-linear interaction terms, and multi-family feature ablation across 8 distinct astrological families. Strictly verified that astrological features do not beat demographic baseline without hybrid calibration. | `node backend/test/test_phase3_and_4_birth_quality_and_feature_engineering.mjs` Checks 4.1–7.1<br>**PASS (100%)** |
 | **Phase 5** | Question Answering & Intent Engine | Implemented 3 dedicated decision tasks: `jobTransitionDecision.js` (job switch vs staying in company), `wealthAccumulationDecision.js` (investing vs debt clearance), and `wellnessVitalityCycle.js` (vitality rhythms with statutory non-medical disclaimer). Also implemented comprehensive timing metrics (MAE, MedAE, 1y/2y/3y rates, interval coverage) and occurrence metrics (Brier, ROC-AUC, MCC, confusion matrix). | `node frontend/test_qa_accuracy_and_timing_contracts.mjs` Checks 21–23<br>**PASS (23/23, 100%)** |
 | **Phase 6** | Benchmark Metrics Reconciliation | Reconciled `primaryCalibratedClassifierMCC: 0.0109` and `astrologyOnlyComparisonModelMCC: 0.0397` in `astro_databank_external_benchmark.json` and `external_validation_report.json`. Enforced Cross-Cohort Disclosure Firewall ensuring zero leakage of internal blind test figures into external reports. | `node frontend/test_benchmark_metrics_reconciliation.mjs`<br>**PASS (100%)** |
 | **Phase 7** | Release Artifact Hash Synchronization | Synchronized runtime calculation engines, fitted calibration parameters, prediction cache (20,508 records), and release manifests via `scripts/sync_release_hashes.mjs`. | `node scripts/sync_release_hashes.mjs`<br>**PASS (100%)** |
@@ -50,11 +52,12 @@ Every suite listed below was executed directly against the current codebase with
 | **Backend Stage 3 Feedback & Outcomes** | `node backend/test/test_stage3_feedback_outcomes.mjs` | 11 | `0` | **PASS (11/11)** |
 | **Backend Stage 5 Continuous Learning**| `node backend/test/test_stage5_continuous_learning.mjs` | 22 | `0` | **PASS (22/22)** |
 | **Backend Phase 12 Adversarial Controls**| `node backend/test/test_phase12_adversarial_negative_controls.mjs` | 25 | `0` | **PASS (25/25)** |
+| **Backend Phase 3 & 4 Quality & Features**| `node backend/test/test_phase3_and_4_birth_quality_and_feature_engineering.mjs` | 11 | `0` | **PASS (11/11)** |
 | **Backend Local AI Service** | `node backend/test/test_local_ai_service.mjs` | 8 | `0` | **PASS (8/8)** |
 | **Backend Local AI E2E Acceptance** | `node backend/test/test_local_ai_e2e_acceptance.mjs` | 17 | `0` | **PASS (17/17)** |
 | **Offline Fallback Suite** | `node backend/test/test_offline_fallback.mjs` | 3 | `0` | **PASS (3/3)** |
 | **Strict Live Local Model Benchmark** | `node backend/test/test_live_inference_benchmarks.mjs` | 3 sections | `0` | **PASS (100% live)** |
-| **Complete Backend Test Suite** | `npm test --prefix backend` | 11 suites | `0` | **PASS (11/11 suites)** |
+| **Complete Backend Test Suite** | `npm test --prefix backend` | 12 suites | `0` | **PASS (12/12 suites)** |
 | **Frontend Static Linter** | `npm run lint --prefix frontend` | 322 files | `0` | **PASS (0 errors)** |
 | **Frontend Production Build** | `npm run build --prefix frontend` | 2,259 modules | `0` | **PASS (`dist/index.html`)** |
 
