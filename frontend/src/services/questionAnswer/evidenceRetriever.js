@@ -408,16 +408,32 @@ export function retrieveEvidence(plan, context) {
     };
   }
 
-  // 8. D10 Analysis
+  // 8. D10 & D9 Analysis
   let vargaAnalysis = null;
   let vargaMissing = false;
-  const isD9Target = plan.requiredVargas.includes("D9") && !plan.requiredVargas.includes("D10") && (plan.primaryDomain === "marriage" || plan.primaryDomain === "relationships" || plan.rawQuestion?.toLowerCase().includes("d9") || plan.rawQuestion?.includes("நவாம்ச"));
+
+  const explicitVargas = plan.explicitVargas || new Set();
+  const rawQ = String(plan.rawQuestion || "").toLowerCase();
+
+  const isD9Explicit = explicitVargas.has("D9") ||
+    plan.userClaimedSign != null ||
+    /(d9|navamsha|நவாம்ச)/i.test(rawQ) ||
+    (plan.primaryIntent === "VARGA_INTERPRETATION" && plan.requiredVargas.includes("D9"));
+
+  const isD10Explicit = explicitVargas.has("D10") ||
+    plan.userClaimedSign != null ||
+    /(d10|dasamsha|தசாம்சம்)/i.test(rawQ) ||
+    (plan.primaryIntent === "VARGA_INTERPRETATION" && (plan.requiredVargas.includes("D10") || !plan.requiredVargas.includes("D9")));
+
+  const isD9Target = plan.requiredVargas.includes("D9") && !plan.requiredVargas.includes("D10") && (isD9Explicit || Boolean(d9Info.ascendant));
   if (isD9Target) {
     const calculatedD9Asc = d9Info.ascendant || null;
     const userClaimedSign = plan.userClaimedSign || null;
 
     if (!calculatedD9Asc) {
-      vargaMissing = true;
+      if (isD9Explicit) {
+        vargaMissing = true;
+      }
       vargaAnalysis = {
         varga: "D9",
         lagna: null,
@@ -465,12 +481,14 @@ export function retrieveEvidence(plan, context) {
       calculatedFacts.push({ id: d9Id, factor: "D9_Ascendant", sign: calculatedD9Asc, lord: d9LagnaLord });
       evidenceGraph.addNode({ id: d9Id, category: EVIDENCE_CATEGORIES.VARGA_FACT, label: `D9 Navamsha Lagna ${calculatedD9Asc}`, value: calculatedD9Asc });
     }
-  } else if (plan.requiredVargas.includes("D10") || plan.primaryIntent === "VARGA_INTERPRETATION") {
+  } else if ((plan.requiredVargas.includes("D10") || plan.primaryIntent === "VARGA_INTERPRETATION") && (isD10Explicit || Boolean(d10Info.ascendant))) {
     const calculatedD10Asc = d10Info.ascendant || null;
     const userClaimedSign = plan.userClaimedSign || null;
 
     if (!calculatedD10Asc) {
-      vargaMissing = true;
+      if (isD10Explicit) {
+        vargaMissing = true;
+      }
       vargaAnalysis = {
         varga: "D10",
         lagna: null,

@@ -27,6 +27,44 @@ export function evaluateBusinessExpansionDecision({ question = "", context = {},
   const isNewExplicit = /\b(new\s+business|start\s+business|new\s+industry|another\s+field|diversif|வேறு\s*தொழில்|புதிய\s*துறை|புதிய\s*தொழில்)\b/i.test(raw);
   const isComparative = ((isBranchExplicit || isExistingExplicit) && isNewExplicit) || /(?:expand.*or.*(?:new|start)|(?:new|start).*or.*expand|வேறு.*அல்லது.*விரிவாக்கம்)/i.test(raw);
 
+  const hasChart = Boolean(context.chartData || context.chart);
+  const isAmbiguousQuery = /\b(more\s+business|expand\s+to\s+more)\b/i.test(raw);
+
+  // If question is ambiguous (e.g. "expand to more business") or if no chart context is provided for comparative analysis
+  if (isAmbiguousQuery || (!hasChart && !isBranchExplicit && !isExistingExplicit && !isNewExplicit)) {
+    const directAnswer = isTamil
+      ? "நீங்கள் ஏற்கனவே உள்ள தொழிலில் மற்றொரு கிளையைத் திறக்க விரும்புகிறீர்களா, அல்லது முற்றிலும் வேறுபட்ட புதிய தொழிலைத் தொடங்க விரும்புகிறீர்களா?"
+      : "Do you mean opening another branch of the same business, or starting a different business?";
+
+    const reason = isTamil
+      ? "ஏற்கனவே உள்ள தொழிலை விரிவுபடுத்துவது 7 மற்றும் 10-ம் பாவகங்களின் வலுவை அடிப்படையாகக் கொண்டது; புதிய தொழிலில் இறங்குவது (பன்முகப்படுத்தல்) 3, 5 மற்றும் 9-ம் பாவகங்கள் மற்றும் கூடுதல் மூலதனத்தை சார்ந்தது."
+      : "Scaling an existing business synthesizes established 7th and 10th house infrastructure; diversifying into a different industry requires distinct significators and alternate capital risk management.";
+
+    const limitation = isTamil
+      ? "சரியான வணிக வகையை தெளிவுபடுத்தாமல் துல்லியமான ஜோதிட ஒப்பீட்டை வழங்க முடியாது."
+      : "Astrological trade assessment requires distinguishing between operational branch scaling and new industry diversification.";
+
+    return {
+      questionId,
+      intent: "BUSINESS_EXPANSION_DECISION",
+      decisionType: "CLARIFICATION_REQUIRED",
+      answerState: "CLARIFICATION_REQUIRED",
+      directAnswer,
+      reason,
+      limitation,
+      recommendation: null,
+      clarificationPrompt: directAnswer,
+      options: isTamil
+        ? ["தற்போதைய தொழிலில் புதிய கிளை", "முற்றிலும் வேறுபட்ட புதிய தொழில்"]
+        : ["Opening another branch of the same business", "Starting a completely different business"],
+      supportingClaims: [],
+      limitingClaims: [limitation],
+      missingInputs: ["Clarification: Branch scaling vs New industry diversification"],
+      traditionalMethod: "JYOTISH_COMMERCIAL_SYNTHESIS",
+      empiricalStatus: "NOT_VALIDATED"
+    };
+  }
+
   // Decision breakdown profiles
   const newBusinessAnalysis = {
     category: "NEW_BUSINESS",

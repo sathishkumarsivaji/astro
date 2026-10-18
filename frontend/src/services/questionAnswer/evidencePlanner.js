@@ -46,6 +46,8 @@ export function planRequiredEvidence({ intentResult, domainResult, entities }) {
     includeRemedies: Boolean(req.remedyRequested || intents.has(QUESTION_INTENTS.REMEDY)),
     dashaPair: entities?.dashaPair || null,
     userClaimedSign: entities?.signs?.[0] || null,
+    explicitVargas: new Set(entities?.vargas || []),
+    rawQuestion: entities?.rawText || "",
     targetYears: entities?.years || [],
     durationYears: entities?.durationYears || null,
     specificFactors: []
