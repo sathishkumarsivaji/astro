@@ -111,6 +111,32 @@ export const BASELINE_REGISTRY = Object.freeze({
     evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
     provenanceHash: "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
   },
+  "WEALTH": {
+    domain: "WEALTH",
+    population: "GENERAL_ADULT",
+    eventDefinition: "FIRST_MAJOR_CAPITAL_ACCUMULATION",
+    predictionHorizonYears: 10,
+    baselineModelVersion: "actuarial-wealth-v1.0",
+    datasetVersion: "v3.0.0-audited",
+    baselineMae: 4.80,
+    baselineBrier: 0.22,
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703"
+  },
+  "FAMILY": {
+    domain: "FAMILY",
+    population: "GENERAL_ADULT",
+    eventDefinition: "FIRST_CHILD_BIRTH",
+    predictionHorizonYears: 8,
+    baselineModelVersion: "actuarial-family-v1.0",
+    datasetVersion: "v3.0.0-audited",
+    baselineMae: 3.65,
+    baselineBrier: 0.20,
+    minSampleSize: 30,
+    evaluationMethodology: "OUT_OF_SAMPLE_MEDIAN_AGE",
+    provenanceHash: "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4"
+  },
   "GENERAL": {
     domain: "GENERAL",
     population: "GLOBAL",

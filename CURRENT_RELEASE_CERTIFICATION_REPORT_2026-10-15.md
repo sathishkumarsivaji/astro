@@ -3,10 +3,10 @@
 **Audit & Certification Date:** 15 October 2026  
 **Release Version:** 3.0.0  
 **Model Version:** 2.2.0  
-**Current Git Commit:** `bd64176` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
+**Current Git Commit:** `a7f9c8c` (Branch: `remediation/forensic-accuracy-and-release-integrity`)  
 **Clean Distribution Archive:** `ASTRO.zip`  
-- **Archive Size:** 34.42 MB (36,091,326 bytes)  
-- **SHA-256 Digest:** `1064f3270b71bf79e60aa7fcac0e3f6667afd26dea62151a984e1f9a3174bd0d`  
+- **Archive Size:** 34.42 MB (36,091,327 bytes)  
+- **SHA-256 Digest:** `a9b4952373e5187125c402bb18f5913585e4ee193748d0de11ce56afe325c681`  
 - **Archive Purity:** 100% verified (0 `node_modules`, 0 `.env` secrets, 0 untracked test stores)  
 **Certification Status:** `RELEASE_CERTIFIED = true` (17/17 Mandatory Release Gates Passed)
 

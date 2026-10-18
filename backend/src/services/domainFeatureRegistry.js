@@ -133,10 +133,121 @@ export const CAREER_FEATURE_REGISTRY = Object.freeze([
   }
 ]);
 
+export const PROPERTY_FEATURE_REGISTRY = Object.freeze([
+  {
+    id: "DASHA_4TH_LORD",
+    name: "Operating Dasha/Antardasha Lord Connection to 4th House",
+    domain: "PROPERTY",
+    description: "Evaluates whether operating dasha lord owns, occupies, or aspects the 4th house or Mars.",
+    validRange: [0.0, 1.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astronomy/dashaEngine.js",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  },
+  {
+    id: "TRANSIT_MARS_JUPITER_4TH",
+    name: "Transiting Mars/Jupiter Aspect on 4th House",
+    domain: "PROPERTY",
+    description: "Continuous angular proximity of transiting Mars or Jupiter to 4th cusp or 4th lord.",
+    validRange: [0.0, 1.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astroEngine.js:calculateTransitAspects",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  },
+  {
+    id: "ASHTAKAVARGA_4TH_SAV",
+    name: "4th House Sarvashtakavarga (SAV) Bindus",
+    domain: "PROPERTY",
+    description: "Normalized Sarvashtakavarga score of the 4th house sign.",
+    validRange: [0.0, 56.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astroEngine.js:calculateClassicalAshtakavarga",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  }
+]);
+
+export const WEALTH_FEATURE_REGISTRY = Object.freeze([
+  {
+    id: "DASHA_2ND_11TH_LORD",
+    name: "Operating Dasha/Antardasha Lord Connection to 2nd or 11th House",
+    domain: "WEALTH",
+    description: "Evaluates whether operating dasha lord owns, occupies, or aspects dhana (2nd) or labha (11th) houses.",
+    validRange: [0.0, 1.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astronomy/dashaEngine.js",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  },
+  {
+    id: "JUPITER_DHANA_PROMISE",
+    name: "Natal Jupiter and 11th Lord Dignity",
+    domain: "WEALTH",
+    description: "Evaluates strength of Jupiter as karaka for wealth and 11th house occupants.",
+    validRange: [0.0, 1.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astroEngine.js:calculatePlanetaryPositions",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  }
+]);
+
+export const FAMILY_FEATURE_REGISTRY = Object.freeze([
+  {
+    id: "DASHA_5TH_LORD",
+    name: "Operating Dasha/Antardasha Lord Connection to 5th House",
+    domain: "FAMILY",
+    description: "Evaluates whether operating dasha lord connects to 5th house of progeny or Jupiter.",
+    validRange: [0.0, 1.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astronomy/dashaEngine.js",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  },
+  {
+    id: "TRANSIT_JUPITER_5TH",
+    name: "Transiting Jupiter Aspect on 5th House",
+    domain: "FAMILY",
+    description: "Evaluates transit aspect of Jupiter over natal 5th house or 5th lord.",
+    validRange: [0.0, 1.0],
+    missingSemantics: FEATURE_STATE.MISSING,
+    source: "astroEngine.js:calculateTransitAspects",
+    prohibitsFutureEventData: true,
+    isCounterIndication: false,
+    version: FEATURE_SCHEMA_VERSION
+  }
+]);
+
 export const DOMAIN_FEATURE_REGISTRIES = Object.freeze({
   MARRIAGE: MARRIAGE_FEATURE_REGISTRY,
-  CAREER: CAREER_FEATURE_REGISTRY
+  CAREER: CAREER_FEATURE_REGISTRY,
+  PROPERTY: PROPERTY_FEATURE_REGISTRY,
+  WEALTH: WEALTH_FEATURE_REGISTRY,
+  FAMILY: FAMILY_FEATURE_REGISTRY
 });
+
+/**
+ * Computes continuous Gaussian aspect proximity feature value:
+ * f(Delta theta) = exp(- (d(Delta theta, theta_0)^2) / (2 * sigma^2))
+ * where sigma is the orb width in degrees (default 3.0 degrees).
+ */
+export function computeContinuousAspectProximity(angle1, angle2, targetAspect = 0, sigma = 3.0) {
+  if (typeof angle1 !== "number" || typeof angle2 !== "number" || !Number.isFinite(angle1) || !Number.isFinite(angle2)) {
+    return 0.0;
+  }
+  let diff = Math.abs(angle1 - angle2) % 360;
+  if (diff > 180) diff = 360 - diff;
+  const angularDistance = Math.abs(diff - targetAspect);
+  return Number(Math.exp(-Math.pow(angularDistance, 2) / (2 * Math.pow(sigma, 2))).toFixed(4));
+}
 
 /**
  * Retrieves the feature registry list for a given event domain.
