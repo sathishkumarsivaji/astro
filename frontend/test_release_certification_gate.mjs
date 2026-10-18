@@ -410,12 +410,14 @@ try {
       npmCiClean = false;
       npmCiDetail = `Contaminated release archives found: ${zipAuditFailures.join("; ")}`;
     } else {
-      // Gate 12 Strengthening: Verify installation completeness, not mere directory existence.
+      // Gate 12 Strengthening: Verify installation completeness across frontend and backend.
       const nodeModulesDir = path.join(FRONTEND_DIR, "node_modules");
       const nodeModulesExists = fs.existsSync(nodeModulesDir);
+      const backendModulesDir = path.join(ROOT, "backend", "node_modules");
+      const backendModulesExists = fs.existsSync(backendModulesDir);
       
-      // Verify all required production and dev packages exist in node_modules
-      const requiredPackages = [
+      // Verify all required production and dev packages exist in frontend
+      const requiredFrontendPackages = [
         "astronomy-engine",
         "react",
         "react-dom",
@@ -425,19 +427,28 @@ try {
         "vite",
         "oxlint"
       ];
+      const requiredBackendPackages = [
+        "express",
+        "geo-tz",
+        "helmet",
+        "pg",
+        "web-push",
+        "dotenv",
+        "cors"
+      ];
       
       let missingPackages = [];
       let missingBinaries = [];
       
       if (nodeModulesExists) {
-        for (const pkgName of requiredPackages) {
+        for (const pkgName of requiredFrontendPackages) {
           const pkgPath = path.join(nodeModulesDir, pkgName, "package.json");
           if (!fs.existsSync(pkgPath)) {
-            missingPackages.push(pkgName);
+            missingPackages.push(`frontend:${pkgName}`);
           }
         }
 
-        // Verify required executable binaries in node_modules/.bin
+        // Verify required executable binaries in frontend node_modules/.bin
         const binDir = path.join(nodeModulesDir, ".bin");
         const requiredBins = process.platform === "win32"
           ? ["vite.cmd", "oxlint.cmd"]
@@ -451,27 +462,38 @@ try {
         }
       }
 
-      if (!nodeModulesExists || missingPackages.length > 0 || missingBinaries.length > 0) {
+      if (backendModulesExists) {
+        for (const pkgName of requiredBackendPackages) {
+          const pkgPath = path.join(backendModulesDir, pkgName, "package.json");
+          if (!fs.existsSync(pkgPath)) {
+            missingPackages.push(`backend:${pkgName}`);
+          }
+        }
+      }
+
+      if (!nodeModulesExists || !backendModulesExists || missingPackages.length > 0 || missingBinaries.length > 0) {
         // If missing or partial, fail if partial, or execute clean npm ci if cleanly absent
-        if (nodeModulesExists && (missingPackages.length > 0 || missingBinaries.length > 0)) {
+        if ((nodeModulesExists && missingPackages.length > 0) || missingBinaries.length > 0) {
           npmCiClean = false;
           npmCiDetail = `Incomplete / corrupted node_modules detected. Missing packages: [${missingPackages.join(", ")}]; missing binaries: [${missingBinaries.join(", ")}]. Must run clean npm ci.`;
         } else {
           try {
             execSync("npm ci --no-audit --prefer-offline", { cwd: FRONTEND_DIR, stdio: "pipe" });
-            npmCiDetail = "clean npm ci executed successfully; all dependencies and binaries verified";
+            execSync("npm ci --no-audit --prefer-offline", { cwd: path.join(ROOT, "backend"), stdio: "pipe" });
+            npmCiDetail = "clean npm ci executed successfully for frontend and backend; all dependencies and binaries verified";
           } catch (ciErr) {
             try {
               execSync("npm ci --no-audit", { cwd: FRONTEND_DIR, stdio: "pipe" });
-              npmCiDetail = "clean npm ci executed successfully; all dependencies and binaries verified";
+              execSync("npm ci --no-audit", { cwd: path.join(ROOT, "backend"), stdio: "pipe" });
+              npmCiDetail = "clean npm ci executed successfully for frontend and backend; all dependencies and binaries verified";
             } catch (err2) {
               npmCiClean = false;
-              npmCiDetail = `npm ci failed with non-zero exit: ${err2.message}`;
+              npmCiDetail = `Clean dependency installation required. Please run 'npm ci --prefix frontend' and 'npm ci --prefix backend'. (Exit error: ${err2.message})`;
             }
           }
         }
       } else {
-        npmCiDetail = `package.json and lockfile verified; all ${requiredPackages.length} dependencies and binaries verified in node_modules; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
+        npmCiDetail = `package.json and lockfile verified; all ${requiredFrontendPackages.length + requiredBackendPackages.length} frontend and backend dependencies verified in node_modules; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
       }
     }
   }
