@@ -1,0 +1,335 @@
+[
+  {
+    "adbId": "ADB_27019",
+    "name": "Cities: San Diego CA",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Plane crash",
+    "ageAtEvent": 128.5,
+    "rawDate": "1978/09/25",
+    "description": "144 killed in the air &amp; on the ground when 2 planes collided"
+  },
+  {
+    "adbId": "ADB_27034",
+    "name": "Cities: Chicago IL",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Train accident",
+    "ageAtEvent": 139.22,
+    "rawDate": "1972/10/30",
+    "description": "45 killed &amp; over 200 injured when 2 cummuter trains collided"
+  },
+  {
+    "adbId": "ADB_27034",
+    "name": "Cities: Chicago IL",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Plane crash",
+    "ageAtEvent": 145.78,
+    "rawDate": "1979/05/25",
+    "description": "Killed 272 aboard and 3 on the ground"
+  },
+  {
+    "adbId": "ADB_27034",
+    "name": "Cities: Chicago IL",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Heat wave (peak)",
+    "ageAtEvent": 161.92,
+    "rawDate": "1995/07/14",
+    "description": "560 died in Chicago in record heat wave"
+  },
+  {
+    "adbId": "ADB_27041",
+    "name": "Cities: New York NY (proclaim)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Conflagration",
+    "ageAtEvent": 181.84,
+    "rawDate": "1835/12/16",
+    "description": "530 buildings destroyed"
+  },
+  {
+    "adbId": "ADB_27041",
+    "name": "Cities: New York NY (proclaim)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Fire, major",
+    "ageAtEvent": 222.81,
+    "rawDate": "1876/12/05",
+    "description": "More than 300 died in Brooklyn Theater fire"
+  },
+  {
+    "adbId": "ADB_27041",
+    "name": "Cities: New York NY (proclaim)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Fire, major",
+    "ageAtEvent": 257.11,
+    "rawDate": "1911/03/25",
+    "description": "145 killed in Triangle Shirtwaist factory"
+  },
+  {
+    "adbId": "ADB_27041",
+    "name": "Cities: New York NY (proclaim)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Train accident",
+    "ageAtEvent": 264.71,
+    "rawDate": "1918/11/01",
+    "description": "92 died when subway train derailed"
+  },
+  {
+    "adbId": "ADB_27041",
+    "name": "Cities: New York NY (proclaim)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Plane crash",
+    "ageAtEvent": 306.84,
+    "rawDate": "1960/12/16",
+    "description": "134 killed in the plane &amp; on the ground when 2 airliners collided in fog"
+  },
+  {
+    "adbId": "ADB_27052",
+    "name": "Cities: Baltimore MD",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Conflagration",
+    "ageAtEvent": 158.33,
+    "rawDate": "1904/02/07",
+    "description": "1400 buildings destroyed"
+  },
+  {
+    "adbId": "ADB_27067",
+    "name": "Cities: Detroit MI",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Plane crash",
+    "ageAtEvent": 185.54,
+    "rawDate": "1987/08/16",
+    "description": "156 killed in the plane &amp; on the ground"
+  },
+  {
+    "adbId": "ADB_27076",
+    "name": "Cities: Jackson MS",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Tornado",
+    "ageAtEvent": 143.11,
+    "rawDate": "1966/03/03",
+    "description": "F5 on the Fujita scale"
+  },
+  {
+    "adbId": "ADB_27096",
+    "name": "Cities: Kansas City MO",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Accident",
+    "ageAtEvent": 128.4,
+    "rawDate": "1981/07/18",
+    "description": "113 killed, 186 injured when a hotel suspended walkway collapsed"
+  },
+  {
+    "adbId": "ADB_27103",
+    "name": "Cities: Cleveland OH",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Explosion",
+    "ageAtEvent": 129.38,
+    "rawDate": "1944/10/20",
+    "description": "130 killed when liquid-gas tanks exploded"
+  },
+  {
+    "adbId": "ADB_27118",
+    "name": "Cities: Waco TX",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Fire, major",
+    "ageAtEvent": 136.64,
+    "rawDate": "1993/04/19",
+    "description": "80 Branch Davidian cult members died during FBI attack"
+  },
+  {
+    "adbId": "ADB_27143",
+    "name": "Cities: New York NY (elec)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Conflagration",
+    "ageAtEvent": 149.61,
+    "rawDate": "1835/12/16",
+    "description": "530 buildings destroyed"
+  },
+  {
+    "adbId": "ADB_27143",
+    "name": "Cities: New York NY (elec)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Fire, major",
+    "ageAtEvent": 190.58,
+    "rawDate": "1876/12/05",
+    "description": "More than 300 died in Brooklyn Theater fire"
+  },
+  {
+    "adbId": "ADB_27143",
+    "name": "Cities: New York NY (elec)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Fire, major",
+    "ageAtEvent": 224.88,
+    "rawDate": "1911/03/25",
+    "description": "145 killed in Triangle Shirtwaist factory"
+  },
+  {
+    "adbId": "ADB_27143",
+    "name": "Cities: New York NY (elec)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Train accident",
+    "ageAtEvent": 232.48,
+    "rawDate": "1918/11/01",
+    "description": "92 died when subway train derailed"
+  },
+  {
+    "adbId": "ADB_27143",
+    "name": "Cities: New York NY (elec)",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Mundane : Plane crash",
+    "ageAtEvent": 274.61,
+    "rawDate": "1960/12/16",
+    "description": "134 killed in the plane &amp; on the ground when 2 airliners collided in fog"
+  },
+  {
+    "adbId": "ADB_37149",
+    "name": "Saint Catherine",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Social : Great Publicity",
+    "ageAtEvent": 127,
+    "rawDate": "1933/00/00",
+    "description": "Beatified"
+  },
+  {
+    "adbId": "ADB_37149",
+    "name": "Saint Catherine",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Health : Miraculous healing",
+    "ageAtEvent": 127,
+    "rawDate": "1933/00/00",
+    "description": "Body exhumed, no decay"
+  },
+  {
+    "adbId": "ADB_37149",
+    "name": "Saint Catherine",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Work : Prize",
+    "ageAtEvent": 141,
+    "rawDate": "1947/00/00",
+    "description": "Canonized"
+  },
+  {
+    "adbId": "ADB_55627",
+    "name": "Duke of Saxe-Coburg and Gotha Charles Edward",
+    "reason": "NEGATIVE_SUBJECT_AGE",
+    "eventCode": "Death of Father",
+    "ageAtEvent": -0.31,
+    "rawDate": "1884/03/28",
+    "description": "Haemophilia, age 30"
+  },
+  {
+    "adbId": "ADB_55718",
+    "name": "Ferdinand Cheval",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Work : Great Achievement",
+    "ageAtEvent": 133,
+    "rawDate": "1969/00/00",
+    "description": "castle protected monument"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Social : Great Publicity",
+    "ageAtEvent": 153,
+    "rawDate": "1339/00/00",
+    "description": "Battle of Laupen (against Fribourg)"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Social : Great Publicity",
+    "ageAtEvent": 218.51,
+    "rawDate": "1405/05/14",
+    "description": "Townfire"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Financial : Gain significant money",
+    "ageAtEvent": 228.43,
+    "rawDate": "1415/04/15",
+    "description": "Occupation of Aargau region (till 1798)"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Financial : Best Period",
+    "ageAtEvent": 289.62,
+    "rawDate": "1476/06/22",
+    "description": "Battle of Murten against Charles le Téméraire (at noon)"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Financial : Gain significant money",
+    "ageAtEvent": 349.23,
+    "rawDate": "1536/02/02",
+    "description": "Occupation of region of Vaud (till 1798)"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Death by Execution",
+    "ageAtEvent": 563,
+    "rawDate": "1749/00/00",
+    "description": "Henzi Plot (against the City)"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Social : Great Publicity",
+    "ageAtEvent": 611.32,
+    "rawDate": "1798/03/05",
+    "description": "French attack, end of the &quot;Ancien Régime&quot;"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Misc. : Find something",
+    "ageAtEvent": 629,
+    "rawDate": "1815/00/00",
+    "description": "Vienna Congress:Jura comes to Berne (till 1979)"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Work : Gain social status",
+    "ageAtEvent": 662.06,
+    "rawDate": "1848/11/28",
+    "description": "Berne gets federal city of Switzerland"
+  },
+  {
+    "adbId": "ADB_67741",
+    "name": "Cities: Berne:Conj. Jup-Sat",
+    "reason": "IMPLAUSIBLE_AGE_EXCEEDS_120_YEARS",
+    "eventCode": "Social : Left group",
+    "ageAtEvent": 788,
+    "rawDate": "1974/06/00",
+    "description": "Referendum for the new Canton Jura is accepted"
+  },
+  {
+    "adbId": "ADB_77551",
+    "name": "Remco Campert",
+    "reason": "EVENT_BEFORE_BIRTH_YEAR",
+    "eventCode": "Death of Significant person",
+    "birthYear": 1929,
+    "eventYear": 1921,
+    "rawDate": "1921/10/08",
+    "description": "Grandfather Jan Remco Theodoor Campert, born 15 June 1874 in Leiden"
+  },
+  {
+    "adbId": "ADB_78120",
+    "name": "Julius Caesar",
+    "reason": "INVALID_EVENT_DATE",
+    "eventCode": "Death by Homicide",
+    "rawDate": "-0043/03/14",
+    "description": "15 March in hist. sources, but 14 March in correct Julian calendar"
+  }
+]

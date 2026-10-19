@@ -1,0 +1,686 @@
+{
+  "metadata": {
+    "runId": "CELEB_BENCHMARK_1792434776128",
+    "timestamp": "2026-10-19T18:32:56.128Z",
+    "evaluationStandard": "RIGOROUS_EMPIRICAL_OUT_OF_SAMPLE_ABLATION",
+    "partitionScheme": "PERSON_LEVEL_HASH_SHA256",
+    "partitionRatios": {
+      "TRAIN": 0.6,
+      "VAL": 0.2,
+      "TEST": 0.2
+    },
+    "leakagePreventionFirewall": "VERIFIED_ACTIVE"
+  },
+  "domainBenchmarks": {
+    "CAREER_BUSINESS": {
+      "domain": "CAREER_BUSINESS",
+      "sampleSize": {
+        "total": 1668,
+        "train": 862,
+        "val": 346,
+        "test": 460,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 12.636,
+          "medAe": 11.132,
+          "acc1Yr": 5.43,
+          "acc2Yr": 9.13,
+          "q25": 5.868,
+          "q75": 17.41,
+          "iqr": 11.542,
+          "cIndex": 0.5,
+          "logLikelihood": -1915.88
+        },
+        "modelB_demographic": {
+          "mae": 11.973,
+          "medAe": 9.999,
+          "acc1Yr": 4.13,
+          "acc2Yr": 10,
+          "q25": 5.043,
+          "q75": 16.878,
+          "iqr": 11.835,
+          "cIndex": 0.5786,
+          "logLikelihood": -1891.95
+        },
+        "modelC_astrologyOnly": {
+          "mae": 13.035,
+          "medAe": 11.754,
+          "acc1Yr": 3.26,
+          "acc2Yr": 7.83,
+          "q25": 5.824,
+          "q75": 17.724,
+          "iqr": 11.9,
+          "cIndex": 0.4768,
+          "logLikelihood": -1928.82
+        },
+        "modelD_combinedHybrid": {
+          "mae": 12.119,
+          "medAe": 10.545,
+          "acc1Yr": 4.57,
+          "acc2Yr": 8.26,
+          "q25": 5.282,
+          "q75": 16.861,
+          "iqr": 11.579,
+          "cIndex": 0.5743,
+          "logLikelihood": -1896.78
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": 0.146,
+        "cIndexDeltaVsDemographic": -0.0043,
+        "lrtChiSquare": 0,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 1,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "AWARDS_HONORS": {
+      "domain": "AWARDS_HONORS",
+      "sampleSize": {
+        "total": 664,
+        "train": 361,
+        "val": 127,
+        "test": 176,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 12.851,
+          "medAe": 12.065,
+          "acc1Yr": 5.68,
+          "acc2Yr": 9.09,
+          "q25": 5.123,
+          "q75": 19.754,
+          "iqr": 14.631,
+          "cIndex": 0.5,
+          "logLikelihood": -732.87
+        },
+        "modelB_demographic": {
+          "mae": 10.313,
+          "medAe": 8.283,
+          "acc1Yr": 5.11,
+          "acc2Yr": 15.34,
+          "q25": 3.763,
+          "q75": 15.497,
+          "iqr": 11.734,
+          "cIndex": 0.6771,
+          "logLikelihood": -702.24
+        },
+        "modelC_astrologyOnly": {
+          "mae": 13.803,
+          "medAe": 12.872,
+          "acc1Yr": 2.27,
+          "acc2Yr": 6.25,
+          "q25": 7.303,
+          "q75": 18.752,
+          "iqr": 11.449,
+          "cIndex": 0.5364,
+          "logLikelihood": -740.45
+        },
+        "modelD_combinedHybrid": {
+          "mae": 10.528,
+          "medAe": 8.996,
+          "acc1Yr": 6.82,
+          "acc2Yr": 14.77,
+          "q25": 3.336,
+          "q75": 16.149,
+          "iqr": 12.813,
+          "cIndex": 0.6834,
+          "logLikelihood": -704.86
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": 0.215,
+        "cIndexDeltaVsDemographic": 0.0063,
+        "lrtChiSquare": 0,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 1,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "HEALTH_WELLNESS": {
+      "domain": "HEALTH_WELLNESS",
+      "sampleSize": {
+        "total": 309,
+        "train": 177,
+        "val": 68,
+        "test": 64,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 17.399,
+          "medAe": 17,
+          "acc1Yr": 1.56,
+          "acc2Yr": 6.25,
+          "q25": 11.516,
+          "q75": 21.933,
+          "iqr": 10.417,
+          "cIndex": 0.5,
+          "logLikelihood": -282.62
+        },
+        "modelB_demographic": {
+          "mae": 12.686,
+          "medAe": 11.341,
+          "acc1Yr": 1.56,
+          "acc2Yr": 6.25,
+          "q25": 6.483,
+          "q75": 17.439,
+          "iqr": 10.956,
+          "cIndex": 0.7217,
+          "logLikelihood": -266.32
+        },
+        "modelC_astrologyOnly": {
+          "mae": 17.33,
+          "medAe": 16.98,
+          "acc1Yr": 0,
+          "acc2Yr": 1.56,
+          "q25": 9.686,
+          "q75": 21.103,
+          "iqr": 11.417,
+          "cIndex": 0.5486,
+          "logLikelihood": -283.07
+        },
+        "modelD_combinedHybrid": {
+          "mae": 12.329,
+          "medAe": 10.21,
+          "acc1Yr": 7.81,
+          "acc2Yr": 10.94,
+          "q25": 5.826,
+          "q75": 18.046,
+          "iqr": 12.22,
+          "cIndex": 0.7334,
+          "logLikelihood": -266.48
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": -0.357,
+        "cIndexDeltaVsDemographic": 0.0117,
+        "lrtChiSquare": 0,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 1,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "RELATIONSHIPS": {
+      "domain": "RELATIONSHIPS",
+      "sampleSize": {
+        "total": 1044,
+        "train": 589,
+        "val": 218,
+        "test": 237,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 10.064,
+          "medAe": 7.743,
+          "acc1Yr": 5.49,
+          "acc2Yr": 11.39,
+          "q25": 4.257,
+          "q75": 12.743,
+          "iqr": 8.486,
+          "cIndex": 0.5,
+          "logLikelihood": -949.84
+        },
+        "modelB_demographic": {
+          "mae": 9.852,
+          "medAe": 7.915,
+          "acc1Yr": 5.06,
+          "acc2Yr": 12.66,
+          "q25": 4.205,
+          "q75": 12.513,
+          "iqr": 8.308,
+          "cIndex": 0.589,
+          "logLikelihood": -943.74
+        },
+        "modelC_astrologyOnly": {
+          "mae": 9.953,
+          "medAe": 7.695,
+          "acc1Yr": 8.02,
+          "acc2Yr": 13.08,
+          "q25": 3.474,
+          "q75": 13.273,
+          "iqr": 9.799,
+          "cIndex": 0.5185,
+          "logLikelihood": -949.64
+        },
+        "modelD_combinedHybrid": {
+          "mae": 9.761,
+          "medAe": 7.744,
+          "acc1Yr": 8.44,
+          "acc2Yr": 13.92,
+          "q25": 3.815,
+          "q75": 12.322,
+          "iqr": 8.507,
+          "cIndex": 0.587,
+          "logLikelihood": -943.43
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": -0.091,
+        "cIndexDeltaVsDemographic": -0.002,
+        "lrtChiSquare": 0.62,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 0.73771,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "FAMILY_CHILDREN": {
+      "domain": "FAMILY_CHILDREN",
+      "sampleSize": {
+        "total": 353,
+        "train": 217,
+        "val": 44,
+        "test": 92,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 10.841,
+          "medAe": 8.436,
+          "acc1Yr": 8.7,
+          "acc2Yr": 16.3,
+          "q25": 3.166,
+          "q75": 13.563,
+          "iqr": 10.397,
+          "cIndex": 0.5,
+          "logLikelihood": -378.86
+        },
+        "modelB_demographic": {
+          "mae": 10.265,
+          "medAe": 7.191,
+          "acc1Yr": 5.43,
+          "acc2Yr": 14.13,
+          "q25": 3.836,
+          "q75": 12.96,
+          "iqr": 9.124,
+          "cIndex": 0.6165,
+          "logLikelihood": -372.92
+        },
+        "modelC_astrologyOnly": {
+          "mae": 11.19,
+          "medAe": 8.56,
+          "acc1Yr": 11.96,
+          "acc2Yr": 17.39,
+          "q25": 2.987,
+          "q75": 15.997,
+          "iqr": 13.01,
+          "cIndex": 0.5145,
+          "logLikelihood": -382.38
+        },
+        "modelD_combinedHybrid": {
+          "mae": 10.404,
+          "medAe": 7.778,
+          "acc1Yr": 5.43,
+          "acc2Yr": 13.04,
+          "q25": 3.825,
+          "q75": 12.886,
+          "iqr": 9.061,
+          "cIndex": 0.6047,
+          "logLikelihood": -373.81
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": 0.139,
+        "cIndexDeltaVsDemographic": -0.0118,
+        "lrtChiSquare": 0,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 1,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "LEGAL_MUNDANE": {
+      "domain": "LEGAL_MUNDANE",
+      "sampleSize": {
+        "total": 327,
+        "train": 170,
+        "val": 63,
+        "test": 94,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 15.49,
+          "medAe": 13.395,
+          "acc1Yr": 0,
+          "acc2Yr": 0,
+          "q25": 10.296,
+          "q75": 20.157,
+          "iqr": 9.861,
+          "cIndex": 0.5,
+          "logLikelihood": -403.82
+        },
+        "modelB_demographic": {
+          "mae": 14.122,
+          "medAe": 12.935,
+          "acc1Yr": 3.19,
+          "acc2Yr": 7.45,
+          "q25": 7.748,
+          "q75": 19.317,
+          "iqr": 11.569,
+          "cIndex": 0.5857,
+          "logLikelihood": -396.85
+        },
+        "modelC_astrologyOnly": {
+          "mae": 14.646,
+          "medAe": 11.876,
+          "acc1Yr": 2.13,
+          "acc2Yr": 2.13,
+          "q25": 7.759,
+          "q75": 19.181,
+          "iqr": 11.422,
+          "cIndex": 0.5799,
+          "logLikelihood": -401.37
+        },
+        "modelD_combinedHybrid": {
+          "mae": 13.834,
+          "medAe": 11.645,
+          "acc1Yr": 4.26,
+          "acc2Yr": 7.45,
+          "q25": 7.606,
+          "q75": 18.887,
+          "iqr": 11.281,
+          "cIndex": 0.6432,
+          "logLikelihood": -395.46
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": -0.288,
+        "cIndexDeltaVsDemographic": 0.0575,
+        "lrtChiSquare": 2.78,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 0.24781,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "BEREAVEMENT_FAMILY_LOSS": {
+      "domain": "BEREAVEMENT_FAMILY_LOSS",
+      "sampleSize": {
+        "total": 386,
+        "train": 215,
+        "val": 79,
+        "test": 92,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 17.427,
+          "medAe": 14.306,
+          "acc1Yr": 3.26,
+          "acc2Yr": 8.7,
+          "q25": 6.71,
+          "q75": 27.69,
+          "iqr": 20.98,
+          "cIndex": 0.5,
+          "logLikelihood": -412.41
+        },
+        "modelB_demographic": {
+          "mae": 16.496,
+          "medAe": 13.78,
+          "acc1Yr": 1.09,
+          "acc2Yr": 5.43,
+          "q25": 6.417,
+          "q75": 25.094,
+          "iqr": 18.677,
+          "cIndex": 0.604,
+          "logLikelihood": -407.38
+        },
+        "modelC_astrologyOnly": {
+          "mae": 17.629,
+          "medAe": 13.759,
+          "acc1Yr": 2.17,
+          "acc2Yr": 5.43,
+          "q25": 7.486,
+          "q75": 25.898,
+          "iqr": 18.412,
+          "cIndex": 0.5188,
+          "logLikelihood": -412.2
+        },
+        "modelD_combinedHybrid": {
+          "mae": 16.438,
+          "medAe": 12.969,
+          "acc1Yr": 2.17,
+          "acc2Yr": 5.43,
+          "q25": 6.464,
+          "q75": 24.674,
+          "iqr": 18.21,
+          "cIndex": 0.6221,
+          "logLikelihood": -406.91
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": -0.058,
+        "cIndexDeltaVsDemographic": 0.0181,
+        "lrtChiSquare": 0.94,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 0.63088,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "DEATH_END_OF_LIFE": {
+      "domain": "DEATH_END_OF_LIFE",
+      "sampleSize": {
+        "total": 2650,
+        "train": 1561,
+        "val": 516,
+        "test": 573,
+        "isSufficientPower": true
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 16.057,
+          "medAe": 13.708,
+          "acc1Yr": 3.84,
+          "acc2Yr": 8.38,
+          "q25": 5.452,
+          "q75": 21.568,
+          "iqr": 16.116,
+          "cIndex": 0.5,
+          "logLikelihood": -2556.46
+        },
+        "modelB_demographic": {
+          "mae": 13.663,
+          "medAe": 11.419,
+          "acc1Yr": 4.89,
+          "acc2Yr": 9.6,
+          "q25": 5.264,
+          "q75": 18.714,
+          "iqr": 13.45,
+          "cIndex": 0.6363,
+          "logLikelihood": -2454.38
+        },
+        "modelC_astrologyOnly": {
+          "mae": 16.132,
+          "medAe": 13.357,
+          "acc1Yr": 4.01,
+          "acc2Yr": 8.2,
+          "q25": 5.637,
+          "q75": 21.594,
+          "iqr": 15.957,
+          "cIndex": 0.4939,
+          "logLikelihood": -2558.6
+        },
+        "modelD_combinedHybrid": {
+          "mae": 13.877,
+          "medAe": 11.711,
+          "acc1Yr": 5.24,
+          "acc2Yr": 9.25,
+          "q25": 5.258,
+          "q75": 18.781,
+          "iqr": 13.523,
+          "cIndex": 0.6341,
+          "logLikelihood": -2462.42
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": 0.214,
+        "cIndexDeltaVsDemographic": -0.0022,
+        "lrtChiSquare": 0,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 1,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "PROPERTY_RESIDENCE": {
+      "domain": "PROPERTY_RESIDENCE",
+      "sampleSize": {
+        "total": 84,
+        "train": 37,
+        "val": 19,
+        "test": 28,
+        "isSufficientPower": false
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 10.293,
+          "medAe": 7,
+          "acc1Yr": 3.57,
+          "acc2Yr": 10.71,
+          "q25": 5.014,
+          "q75": 16.279,
+          "iqr": 11.265,
+          "cIndex": 0.5,
+          "logLikelihood": -110.86
+        },
+        "modelB_demographic": {
+          "mae": 11.394,
+          "medAe": 10.294,
+          "acc1Yr": 7.14,
+          "acc2Yr": 14.29,
+          "q25": 4.239,
+          "q75": 15.127,
+          "iqr": 10.888,
+          "cIndex": 0.5013,
+          "logLikelihood": -114.89
+        },
+        "modelC_astrologyOnly": {
+          "mae": 14.293,
+          "medAe": 14.54,
+          "acc1Yr": 0,
+          "acc2Yr": 0,
+          "q25": 7.503,
+          "q75": 19.977,
+          "iqr": 12.474,
+          "cIndex": 0.4461,
+          "logLikelihood": -118.3
+        },
+        "modelD_combinedHybrid": {
+          "mae": 11.21,
+          "medAe": 8.392,
+          "acc1Yr": 14.29,
+          "acc2Yr": 25,
+          "q25": 2.462,
+          "q75": 17.859,
+          "iqr": 15.397,
+          "cIndex": 0.4838,
+          "logLikelihood": -115.29
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": -0.184,
+        "cIndexDeltaVsDemographic": -0.0175,
+        "lrtChiSquare": 0,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 1,
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
+      }
+    },
+    "FINANCIAL": {
+      "domain": "FINANCIAL",
+      "sampleSize": {
+        "total": 69,
+        "train": 26,
+        "val": 16,
+        "test": 27,
+        "isSufficientPower": false
+      },
+      "models": {
+        "modelA_population": {
+          "mae": 11.328,
+          "medAe": 10.13,
+          "acc1Yr": 3.7,
+          "acc2Yr": 11.11,
+          "q25": 5.795,
+          "q75": 17.91,
+          "iqr": 12.115,
+          "cIndex": 0.5,
+          "logLikelihood": -108.52
+        },
+        "modelB_demographic": {
+          "mae": 13.316,
+          "medAe": 9.413,
+          "acc1Yr": 11.11,
+          "acc2Yr": 14.81,
+          "q25": 5.055,
+          "q75": 20.5,
+          "iqr": 15.445,
+          "cIndex": 0.5172,
+          "logLikelihood": -114.41
+        },
+        "modelC_astrologyOnly": {
+          "mae": 13.924,
+          "medAe": 11.922,
+          "acc1Yr": 0,
+          "acc2Yr": 3.7,
+          "q25": 7.195,
+          "q75": 18.345,
+          "iqr": 11.15,
+          "cIndex": 0.6121,
+          "logLikelihood": -115.46
+        },
+        "modelD_combinedHybrid": {
+          "mae": 11.061,
+          "medAe": 8.767,
+          "acc1Yr": 3.7,
+          "acc2Yr": 7.41,
+          "q25": 5.152,
+          "q75": 16.782,
+          "iqr": 11.63,
+          "cIndex": 0.569,
+          "logLikelihood": -108.18
+        }
+      },
+      "comparison": {
+        "maeDeltaVsDemographic": -2.255,
+        "cIndexDeltaVsDemographic": 0.0518,
+        "lrtChiSquare": 12.46,
+        "lrtDegreesOfFreedom": 2,
+        "lrtPValue": 0.00216,
+        "isStatisticallySignificant": true,
+        "astrologicalIncrementalValue": "DEMONSTRATED",
+        "empiricalStatus": "EMPIRICALLY_VALIDATED"
+      }
+    }
+  },
+  "overallAssessment": {
+    "totalDomainsEvaluated": 10,
+    "adequatelyPoweredDomains": 8,
+    "domainsWithAstrologyAdvantage": 3,
+    "domainsWithStatisticalSignificance": 1,
+    "poweredDomainsWithStatisticalSignificance": 0,
+    "globalEmpiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED",
+    "scientificConclusion": "Astrological features did not demonstrate statistically significant out-of-sample predictive superiority over demographic baselines on any adequately powered domain (N >= 100, p >= 0.05). Systems must preserve the EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED classification and avoid unsubstantiated predictive claims.",
+    "mandatoryDisclaimer": "ASTROVERSE prediction models are research instruments. In rigorous out-of-sample historical milestone benchmarks, demographic cohorts (birth era and gender) account for detectable timing distributions; astrological factors do not demonstrate statistically significant incremental predictive precision. Predictions must never be treated as factual, medical, legal, or financial certainties."
+  }
+}

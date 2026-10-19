@@ -63,7 +63,10 @@ const suites = [
   { name: "Stage 1 Prediction Records", cwd: BACKEND_DIR, cmd: "node test/test_stage1_prediction_records.mjs" },
   { name: "Stage 3 Feedback Outcomes (11 checks)", cwd: BACKEND_DIR, cmd: "node test/test_stage3_feedback_outcomes.mjs" },
   { name: "Stage 5 Continuous Learning (22 checks)", cwd: BACKEND_DIR, cmd: "node test/test_stage5_continuous_learning.mjs" },
-  { name: "Phase 12 Adversarial Negative Controls", cwd: BACKEND_DIR, cmd: "node test/test_phase12_adversarial_negative_controls.mjs" }
+  { name: "Phase 12 Adversarial Negative Controls", cwd: BACKEND_DIR, cmd: "node test/test_phase12_adversarial_negative_controls.mjs" },
+
+  // 8. Authentic External Benchmark Datasets
+  { name: "Celebrity Milestones Dataset Integrity", cwd: FRONTEND_DIR, cmd: "node test_celebrity_milestones_dataset.mjs" }
 ];
 
 console.log("\n" + "=".repeat(80));

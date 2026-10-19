@@ -1,0 +1,106 @@
+{
+  "manifestVersion": "2.0.0",
+  "datasetTitle": "ASTROVERSE Rigorous Celebrity Public Milestones Dataset",
+  "generatedAt": "2026-10-19T18:32:50.296Z",
+  "source": {
+    "name": "Astrodienst Astro-Databank Official Research Export",
+    "exportFile": "c_sample_260919_1519.xml",
+    "sourceXmlSha256": "7d42ac78520685b3013e929f3f238989a78c2f1ae1a360248a9b3b459d93549c",
+    "license": "Public Astronomical/Astrological Research Export"
+  },
+  "verificationStandards": {
+    "zeroFabrication": true,
+    "separatedReliabilityDimensions": true,
+    "noPlaceholderDates": true,
+    "anomalyQuarantineActive": true,
+    "crossCheckedAgainstOverlapManifest": true
+  },
+  "statistics": {
+    "totalSubjects": 6036,
+    "subjectsWithMilestones": 3679,
+    "totalValidMilestones": 8098,
+    "quarantinedAnomalies": 37,
+    "roddenDistribution": {
+      "B": 233,
+      "C": 426,
+      "AA": 3825,
+      "A": 1161,
+      "DD": 52,
+      "X": 338,
+      "AX": 1
+    },
+    "precisionDistribution": {
+      "DAY": 4758,
+      "MONTH": 532,
+      "YEAR": 2808
+    },
+    "verificationDistribution": {
+      "VERIFIED": 2418,
+      "PARTIALLY_VERIFIED": 5452,
+      "UNVERIFIED": 0,
+      "CONTRADICTORY": 3,
+      "REQUIRES_REVIEW": 225
+    },
+    "domains": {
+      "AWARDS_HONORS": {
+        "totalEvents": 664,
+        "uniqueSubjects": 485
+      },
+      "CAREER_BUSINESS": {
+        "totalEvents": 1668,
+        "uniqueSubjects": 830
+      },
+      "FINANCIAL": {
+        "totalEvents": 69,
+        "uniqueSubjects": 58
+      },
+      "HEALTH_WELLNESS": {
+        "totalEvents": 309,
+        "uniqueSubjects": 225
+      },
+      "PROPERTY_RESIDENCE": {
+        "totalEvents": 84,
+        "uniqueSubjects": 71
+      },
+      "FAMILY_CHILDREN": {
+        "totalEvents": 353,
+        "uniqueSubjects": 231
+      },
+      "RELATIONSHIPS": {
+        "totalEvents": 1044,
+        "uniqueSubjects": 648
+      },
+      "LEGAL_MUNDANE": {
+        "totalEvents": 327,
+        "uniqueSubjects": 201
+      },
+      "BEREAVEMENT_FAMILY_LOSS": {
+        "totalEvents": 386,
+        "uniqueSubjects": 285
+      },
+      "DEATH_END_OF_LIFE": {
+        "totalEvents": 2650,
+        "uniqueSubjects": 2636
+      },
+      "POSTHUMOUS_COMMEMORATION": {
+        "totalEvents": 49,
+        "uniqueSubjects": 37
+      },
+      "OTHER": {
+        "totalEvents": 495,
+        "uniqueSubjects": 364
+      }
+    }
+  },
+  "datasetFile": {
+    "fileName": "celebrity_public_milestones_dataset.json",
+    "fileSizeMb": 14.9,
+    "fileSizeBytes": 15625006,
+    "sha256": "c7d6c05b00f8efc1163a6dec3cf4ddea8f782212e318c457bcbc549b4ea7e6ef"
+  },
+  "quarantineFile": {
+    "fileName": "celebrity_milestones_quarantine.json",
+    "quarantinedCount": 37,
+    "sha256": "6b469240186331f8413616809fd700acddb2552bd11ca3b9a4b01309b770bb98"
+  }
+}
