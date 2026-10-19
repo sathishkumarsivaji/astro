@@ -87,6 +87,7 @@ if (shouldPack) {
 
     const manifestPath = path.join(ROOT, "current_release_manifest.json");
     const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
+    const headCommit = execSync("git rev-parse HEAD", { cwd: ROOT, encoding: "utf8" }).trim();
     const attestation = {
       archiveFile: zipName,
       archivePath: zipPath,
