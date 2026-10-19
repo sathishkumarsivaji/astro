@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "ASTROVERSE Empirical Real-World Validation Benchmark Results (V3)",
-    "generatedAt": "2026-10-19T18:59:13.821Z",
+    "generatedAt": "2026-10-19T19:23:59.592Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
     "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
@@ -29,7 +29,7 @@
     "BLIND_TEST": {
       "cohortName": "BLIND_TEST",
       "n": 1634,
-      "actualExecutionDurationSec": 0.48,
+      "actualExecutionDurationSec": 0.46,
       "actualPredictionCount": 1634,
       "cacheHits": 1634,
       "cacheMisses": 0,
@@ -37,7 +37,7 @@
       "errors": 0,
       "excludedCount": 24,
       "unknownCount": 0,
-      "elapsedSeconds": 0.48,
+      "elapsedSeconds": 0.46,
       "occurrence": {
         "n": 1584,
         "censoringBreakdown": {
@@ -360,7 +360,7 @@
     "INTERNAL_HOLDOUT": {
       "cohortName": "INTERNAL_HOLDOUT",
       "n": 1555,
-      "actualExecutionDurationSec": 0.46,
+      "actualExecutionDurationSec": 0.47,
       "actualPredictionCount": 1555,
       "cacheHits": 1555,
       "cacheMisses": 0,
@@ -368,7 +368,7 @@
       "errors": 0,
       "excludedCount": 26,
       "unknownCount": 0,
-      "elapsedSeconds": 0.46,
+      "elapsedSeconds": 0.47,
       "occurrence": {
         "n": 1509,
         "censoringBreakdown": {
@@ -691,7 +691,7 @@
     "EXTERNAL_ASTRO_DATABANK_CERTIFIED": {
       "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
       "n": 3751,
-      "actualExecutionDurationSec": 0.47,
+      "actualExecutionDurationSec": 0.48,
       "actualPredictionCount": 3751,
       "cacheHits": 0,
       "cacheMisses": 3751,
@@ -699,7 +699,7 @@
       "errors": 0,
       "excludedCount": 556,
       "unknownCount": 25,
-      "elapsedSeconds": 0.47,
+      "elapsedSeconds": 0.48,
       "occurrence": {
         "n": 313,
         "censoringBreakdown": {
@@ -1025,7 +1025,7 @@
       "AA_ONLY": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
         "n": 2591,
-        "actualExecutionDurationSec": 0.45,
+        "actualExecutionDurationSec": 0.5,
         "actualPredictionCount": 2591,
         "cacheHits": 0,
         "cacheMisses": 2591,
@@ -1033,7 +1033,7 @@
         "errors": 0,
         "excludedCount": 262,
         "unknownCount": 3,
-        "elapsedSeconds": 0.45,
+        "elapsedSeconds": 0.5,
         "occurrence": {
           "n": 193,
           "censoringBreakdown": {
@@ -1206,7 +1206,7 @@
       "A_ONLY": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
         "n": 1160,
-        "actualExecutionDurationSec": 0.47,
+        "actualExecutionDurationSec": 0.48,
         "actualPredictionCount": 1160,
         "cacheHits": 0,
         "cacheMisses": 1160,
@@ -1214,7 +1214,7 @@
         "errors": 0,
         "excludedCount": 294,
         "unknownCount": 22,
-        "elapsedSeconds": 0.47,
+        "elapsedSeconds": 0.48,
         "occurrence": {
           "n": 120,
           "censoringBreakdown": {
@@ -1387,7 +1387,7 @@
       "ALL_INDEPENDENT": {
         "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
         "n": 4798,
-        "actualExecutionDurationSec": 0.47,
+        "actualExecutionDurationSec": 0.51,
         "actualPredictionCount": 4798,
         "cacheHits": 4798,
         "cacheMisses": 0,
@@ -1395,7 +1395,7 @@
         "errors": 0,
         "excludedCount": 686,
         "unknownCount": 28,
-        "elapsedSeconds": 0.47,
+        "elapsedSeconds": 0.51,
         "occurrence": {
           "n": 428,
           "censoringBreakdown": {
@@ -1568,7 +1568,7 @@
       "REGRESSION_SAMPLE": {
         "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
         "n": 500,
-        "actualExecutionDurationSec": 0.46,
+        "actualExecutionDurationSec": 0.47,
         "actualPredictionCount": 500,
         "cacheHits": 0,
         "cacheMisses": 500,
@@ -1576,7 +1576,7 @@
         "errors": 0,
         "excludedCount": 68,
         "unknownCount": 3,
-        "elapsedSeconds": 0.46,
+        "elapsedSeconds": 0.47,
         "occurrence": {
           "n": 427,
           "censoringBreakdown": {

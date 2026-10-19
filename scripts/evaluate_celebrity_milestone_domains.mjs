@@ -103,6 +103,65 @@ function chiSquarePValue(chiSq, df) {
   return Math.min(1.0, Math.max(0.0, p));
 }
 
+// Helper: Normal cumulative distribution function
+function normalCDF(z) {
+  const t = 1.0 / (1.0 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2.0);
+  let p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return z >= 0 ? 1.0 - p : p;
+}
+
+// Helper: Paired test, confidence interval, and statistical power analysis
+function calculatePairedTest(errorsCombined, errorsDemographic) {
+  const n = errorsCombined.length;
+  // d_i = error_Combined - error_Demographic
+  // Negative value indicates Combined has lower error than Demographic
+  const diffs = errorsCombined.map((ec, idx) => ec - errorsDemographic[idx]);
+  const meanDiff = diffs.reduce((a, b) => a + b, 0) / n;
+  const varianceDiff = diffs.reduce((acc, d) => acc + Math.pow(d - meanDiff, 2), 0) / (n - 1 || 1);
+  const sdDiff = Math.sqrt(varianceDiff);
+  const seDiff = sdDiff / Math.sqrt(n);
+  const tStat = seDiff > 0 ? meanDiff / seDiff : 0;
+  
+  const pValT = 2 * (1 - normalCDF(Math.abs(tStat)));
+  const ci95Lower = parseFloat((meanDiff - 1.96 * seDiff).toFixed(3));
+  const ci95Upper = parseFloat((meanDiff + 1.96 * seDiff).toFixed(3));
+
+  // Non-parametric Wilcoxon signed-rank test
+  const nonZeroDiffs = diffs.filter(d => Math.abs(d) > 1e-6);
+  let wilcoxonP = 1.0;
+  if (nonZeroDiffs.length >= 10) {
+    const ranks = nonZeroDiffs.map(d => ({ d, absD: Math.abs(d) })).sort((a, b) => a.absD - b.absD);
+    let positiveRankSum = 0;
+    ranks.forEach((r, idx) => {
+      if (r.d > 0) positiveRankSum += (idx + 1);
+    });
+    const N_w = ranks.length;
+    const E_w = (N_w * (N_w + 1)) / 4;
+    const Var_w = (N_w * (N_w + 1) * (2 * N_w + 1)) / 24;
+    const z_w = (positiveRankSum - E_w) / Math.sqrt(Var_w);
+    wilcoxonP = 2 * (1 - normalCDF(Math.abs(z_w)));
+  }
+
+  // Statistical Power Analysis (minimum detectable effect delta = 1.0 year, alpha = 0.05)
+  const effectDelta = 1.0;
+  const nonCentrality = (effectDelta * Math.sqrt(n)) / (sdDiff || 1.0);
+  const power1Year = parseFloat(Math.min(1.0, Math.max(0.0, normalCDF(nonCentrality - 1.96))).toFixed(3));
+  const isAdequatelyPowered = n >= 50 && power1Year >= 0.80;
+
+  return {
+    meanDifference: parseFloat(meanDiff.toFixed(3)),
+    sdDifference: parseFloat(sdDiff.toFixed(3)),
+    seDifference: parseFloat(seDiff.toFixed(3)),
+    ci95Difference: [ci95Lower, ci95Upper],
+    tStatistic: parseFloat(tStat.toFixed(3)),
+    tTestPValue: parseFloat(pValT.toFixed(5)),
+    wilcoxonPValue: parseFloat(wilcoxonP.toFixed(5)),
+    statisticalPower1Year: power1Year,
+    isAdequatelyPowered
+  };
+}
+
 // Helper: Harrell's Concordance Index (C-Index)
 function calculateHarrellCIndex(predicted, observed) {
   let concordant = 0;
@@ -400,7 +459,8 @@ for (const dom of domainsToEvaluate) {
       q75,
       iqr,
       cIndex,
-      logLikelihood: parseFloat(logLikelihood.toFixed(2))
+      logLikelihood: parseFloat(logLikelihood.toFixed(2)),
+      errors
     };
   }
 
@@ -408,6 +468,9 @@ for (const dom of domainsToEvaluate) {
   const evalB = evaluateModel(predictModelB);
   const evalC = evaluateModel(predictModelC);
   const evalD = evaluateModel(predictModelD);
+
+  // Paired Statistical Testing (Combined vs Demographic)
+  const pairedTest = calculatePairedTest(evalD.errors, evalB.errors);
 
   // Likelihood-Ratio Test: Model D (Combined) vs Model B (Demographic)
   // Delta LL = 2 * (LL_D - LL_B)
@@ -417,7 +480,10 @@ for (const dom of domainsToEvaluate) {
 
   const maeDeltaVsDemog = parseFloat((evalD.mae - evalB.mae).toFixed(3));
   const astroHelped = maeDeltaVsDemog < -0.10 && evalD.cIndex > evalB.cIndex;
-  const isSignificant = lrtPValue < 0.05 && astroHelped;
+  // Rigorous significance requires: adequate power, paired t/Wilcoxon p < 0.05, and meaningful delta
+  const isSignificant = pairedTest.isAdequatelyPowered &&
+    (pairedTest.tTestPValue < 0.05 || pairedTest.wilcoxonPValue < 0.05) &&
+    astroHelped;
 
   if (astroHelped) domainsWithAstrologyAdvantage++;
   if (isSignificant) domainsWithStatSignificance++;
@@ -426,6 +492,8 @@ for (const dom of domainsToEvaluate) {
   console.log(`  Model B (Demographic)    : MAE = ${evalB.mae.toFixed(2)}y, MedAE = ${evalB.medAe.toFixed(2)}y, C-Index = ${evalB.cIndex}`);
   console.log(`  Model C (Astrology-Only) : MAE = ${evalC.mae.toFixed(2)}y, MedAE = ${evalC.medAe.toFixed(2)}y, C-Index = ${evalC.cIndex}`);
   console.log(`  Model D (Combined Hybrid): MAE = ${evalD.mae.toFixed(2)}y, MedAE = ${evalD.medAe.toFixed(2)}y, C-Index = ${evalD.cIndex}`);
+  console.log(`  Paired t-test vs Demog   : t = ${pairedTest.tStatistic}, p = ${pairedTest.tTestPValue}, Wilcoxon p = ${pairedTest.wilcoxonPValue}`);
+  console.log(`  Power (1-yr effect)      : ${pairedTest.statisticalPower1Year} (Adequately Powered: ${pairedTest.isAdequatelyPowered})`);
   console.log(`  LRT Chi-Sq vs Demog      : ${lrtChiSq} (p = ${lrtPValue}) -> ${isSignificant ? "STATISTICALLY SIGNIFICANT" : "NOT SIGNIFICANT"}`);
 
   benchmarkResults.domainBenchmarks[dom] = {
@@ -435,17 +503,70 @@ for (const dom of domainsToEvaluate) {
       train: trainSet.length,
       val: valSet.length,
       test: testSet.length,
-      isSufficientPower: totalEvents >= 100
+      isSufficientPower: totalEvents >= 100,
+      powerReview: {
+        statisticalPower1Year: pairedTest.statisticalPower1Year,
+        isAdequatelyPowered: pairedTest.isAdequatelyPowered
+      }
     },
     models: {
-      modelA_population: evalA,
-      modelB_demographic: evalB,
-      modelC_astrologyOnly: evalC,
-      modelD_combinedHybrid: evalD
+      modelA_population: {
+        mae: evalA.mae,
+        medAe: evalA.medAe,
+        acc1Yr: evalA.acc1Yr,
+        acc2Yr: evalA.acc2Yr,
+        q25: evalA.q25,
+        q75: evalA.q75,
+        iqr: evalA.iqr,
+        cIndex: evalA.cIndex,
+        logLikelihood: evalA.logLikelihood
+      },
+      modelB_demographic: {
+        mae: evalB.mae,
+        medAe: evalB.medAe,
+        acc1Yr: evalB.acc1Yr,
+        acc2Yr: evalB.acc2Yr,
+        q25: evalB.q25,
+        q75: evalB.q75,
+        iqr: evalB.iqr,
+        cIndex: evalB.cIndex,
+        logLikelihood: evalB.logLikelihood
+      },
+      modelC_astrologyOnly: {
+        mae: evalC.mae,
+        medAe: evalC.medAe,
+        acc1Yr: evalC.acc1Yr,
+        acc2Yr: evalC.acc2Yr,
+        q25: evalC.q25,
+        q75: evalC.q75,
+        iqr: evalC.iqr,
+        cIndex: evalC.cIndex,
+        logLikelihood: evalC.logLikelihood
+      },
+      modelD_combinedHybrid: {
+        mae: evalD.mae,
+        medAe: evalD.medAe,
+        acc1Yr: evalD.acc1Yr,
+        acc2Yr: evalD.acc2Yr,
+        q25: evalD.q25,
+        q75: evalD.q75,
+        iqr: evalD.iqr,
+        cIndex: evalD.cIndex,
+        logLikelihood: evalD.logLikelihood
+      }
     },
     comparison: {
       maeDeltaVsDemographic: maeDeltaVsDemog,
       cIndexDeltaVsDemographic: parseFloat((evalD.cIndex - evalB.cIndex).toFixed(4)),
+      pairedTest: {
+        meanDifference: pairedTest.meanDifference,
+        sdDifference: pairedTest.sdDifference,
+        seDifference: pairedTest.seDifference,
+        ci95Difference: pairedTest.ci95Difference,
+        tStatistic: pairedTest.tStatistic,
+        tTestPValue: pairedTest.tTestPValue,
+        wilcoxonPValue: pairedTest.wilcoxonPValue
+      },
       lrtChiSquare: lrtChiSq,
       lrtDegreesOfFreedom: 2,
       lrtPValue: lrtPValue,

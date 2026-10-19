@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "runId": "CELEB_BENCHMARK_1792434776128",
-    "timestamp": "2026-10-19T18:32:56.128Z",
+    "runId": "CELEB_BENCHMARK_1792437729549",
+    "timestamp": "2026-10-19T19:22:09.549Z",
     "evaluationStandard": "RIGOROUS_EMPIRICAL_OUT_OF_SAMPLE_ABLATION",
     "partitionScheme": "PERSON_LEVEL_HASH_SHA256",
     "partitionRatios": {
@@ -19,7 +19,11 @@
         "train": 862,
         "val": 346,
         "test": 460,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 1,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -70,6 +74,18 @@
       "comparison": {
         "maeDeltaVsDemographic": 0.146,
         "cIndexDeltaVsDemographic": -0.0043,
+        "pairedTest": {
+          "meanDifference": 0.146,
+          "sdDifference": 1.168,
+          "seDifference": 0.054,
+          "ci95Difference": [
+            0.039,
+            0.252
+          ],
+          "tStatistic": 2.672,
+          "tTestPValue": 0.00753,
+          "wilcoxonPValue": 0.00327
+        },
         "lrtChiSquare": 0,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 1,
@@ -85,7 +101,11 @@
         "train": 361,
         "val": 127,
         "test": 176,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 1,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -136,6 +156,18 @@
       "comparison": {
         "maeDeltaVsDemographic": 0.215,
         "cIndexDeltaVsDemographic": 0.0063,
+        "pairedTest": {
+          "meanDifference": 0.215,
+          "sdDifference": 1.864,
+          "seDifference": 0.141,
+          "ci95Difference": [
+            -0.06,
+            0.491
+          ],
+          "tStatistic": 1.533,
+          "tTestPValue": 0.1253,
+          "wilcoxonPValue": 0.17598
+        },
         "lrtChiSquare": 0,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 1,
@@ -151,7 +183,11 @@
         "train": 177,
         "val": 68,
         "test": 64,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 0.889,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -202,6 +238,18 @@
       "comparison": {
         "maeDeltaVsDemographic": -0.357,
         "cIndexDeltaVsDemographic": 0.0117,
+        "pairedTest": {
+          "meanDifference": -0.357,
+          "sdDifference": 2.516,
+          "seDifference": 0.315,
+          "ci95Difference": [
+            -0.973,
+            0.26
+          ],
+          "tStatistic": -1.134,
+          "tTestPValue": 0.2569,
+          "wilcoxonPValue": 0.19681
+        },
         "lrtChiSquare": 0,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 1,
@@ -217,7 +265,11 @@
         "train": 589,
         "val": 218,
         "test": 237,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 1,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -268,6 +320,18 @@
       "comparison": {
         "maeDeltaVsDemographic": -0.091,
         "cIndexDeltaVsDemographic": -0.002,
+        "pairedTest": {
+          "meanDifference": -0.091,
+          "sdDifference": 0.848,
+          "seDifference": 0.055,
+          "ci95Difference": [
+            -0.199,
+            0.017
+          ],
+          "tStatistic": -1.651,
+          "tTestPValue": 0.0987,
+          "wilcoxonPValue": 0.14986
+        },
         "lrtChiSquare": 0.62,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 0.73771,
@@ -283,7 +347,11 @@
         "train": 217,
         "val": 44,
         "test": 92,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 0.999,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -334,6 +402,18 @@
       "comparison": {
         "maeDeltaVsDemographic": 0.139,
         "cIndexDeltaVsDemographic": -0.0118,
+        "pairedTest": {
+          "meanDifference": 0.139,
+          "sdDifference": 1.832,
+          "seDifference": 0.191,
+          "ci95Difference": [
+            -0.236,
+            0.513
+          ],
+          "tStatistic": 0.725,
+          "tTestPValue": 0.46823,
+          "wilcoxonPValue": 0.508
+        },
         "lrtChiSquare": 0,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 1,
@@ -349,7 +429,11 @@
         "train": 170,
         "val": 63,
         "test": 94,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 0.999,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -400,6 +484,18 @@
       "comparison": {
         "maeDeltaVsDemographic": -0.288,
         "cIndexDeltaVsDemographic": 0.0575,
+        "pairedTest": {
+          "meanDifference": -0.288,
+          "sdDifference": 1.887,
+          "seDifference": 0.195,
+          "ci95Difference": [
+            -0.669,
+            0.094
+          ],
+          "tStatistic": -1.479,
+          "tTestPValue": 0.13901,
+          "wilcoxonPValue": 0.06546
+        },
         "lrtChiSquare": 2.78,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 0.24781,
@@ -415,7 +511,11 @@
         "train": 215,
         "val": 79,
         "test": 92,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 1,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -466,6 +566,18 @@
       "comparison": {
         "maeDeltaVsDemographic": -0.058,
         "cIndexDeltaVsDemographic": 0.0181,
+        "pairedTest": {
+          "meanDifference": -0.058,
+          "sdDifference": 1.645,
+          "seDifference": 0.171,
+          "ci95Difference": [
+            -0.394,
+            0.278
+          ],
+          "tStatistic": -0.338,
+          "tTestPValue": 0.73516,
+          "wilcoxonPValue": 0.67694
+        },
         "lrtChiSquare": 0.94,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 0.63088,
@@ -481,7 +593,11 @@
         "train": 1561,
         "val": 516,
         "test": 573,
-        "isSufficientPower": true
+        "isSufficientPower": true,
+        "powerReview": {
+          "statisticalPower1Year": 1,
+          "isAdequatelyPowered": true
+        }
       },
       "models": {
         "modelA_population": {
@@ -532,6 +648,18 @@
       "comparison": {
         "maeDeltaVsDemographic": 0.214,
         "cIndexDeltaVsDemographic": -0.0022,
+        "pairedTest": {
+          "meanDifference": 0.215,
+          "sdDifference": 1.189,
+          "seDifference": 0.05,
+          "ci95Difference": [
+            0.117,
+            0.312
+          ],
+          "tStatistic": 4.32,
+          "tTestPValue": 0.00002,
+          "wilcoxonPValue": 0.00023
+        },
         "lrtChiSquare": 0,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 1,
@@ -547,7 +675,11 @@
         "train": 37,
         "val": 19,
         "test": 28,
-        "isSufficientPower": false
+        "isSufficientPower": false,
+        "powerReview": {
+          "statisticalPower1Year": 0.362,
+          "isAdequatelyPowered": false
+        }
       },
       "models": {
         "modelA_population": {
@@ -598,6 +730,18 @@
       "comparison": {
         "maeDeltaVsDemographic": -0.184,
         "cIndexDeltaVsDemographic": -0.0175,
+        "pairedTest": {
+          "meanDifference": -0.184,
+          "sdDifference": 3.29,
+          "seDifference": 0.622,
+          "ci95Difference": [
+            -1.402,
+            1.035
+          ],
+          "tStatistic": -0.295,
+          "tTestPValue": 0.76788,
+          "wilcoxonPValue": 0.89132
+        },
         "lrtChiSquare": 0,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 1,
@@ -613,7 +757,11 @@
         "train": 26,
         "val": 16,
         "test": 27,
-        "isSufficientPower": false
+        "isSufficientPower": false,
+        "powerReview": {
+          "statisticalPower1Year": 0.148,
+          "isAdequatelyPowered": false
+        }
       },
       "models": {
         "modelA_population": {
@@ -664,12 +812,24 @@
       "comparison": {
         "maeDeltaVsDemographic": -2.255,
         "cIndexDeltaVsDemographic": 0.0518,
+        "pairedTest": {
+          "meanDifference": -2.256,
+          "sdDifference": 5.691,
+          "seDifference": 1.095,
+          "ci95Difference": [
+            -4.402,
+            -0.109
+          ],
+          "tStatistic": -2.059,
+          "tTestPValue": 0.03945,
+          "wilcoxonPValue": 0.07156
+        },
         "lrtChiSquare": 12.46,
         "lrtDegreesOfFreedom": 2,
         "lrtPValue": 0.00216,
-        "isStatisticallySignificant": true,
-        "astrologicalIncrementalValue": "DEMONSTRATED",
-        "empiricalStatus": "EMPIRICALLY_VALIDATED"
+        "isStatisticallySignificant": false,
+        "astrologicalIncrementalValue": "NOT_STATISTICALLY_SIGNIFICANT",
+        "empiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED"
       }
     }
   },
@@ -677,7 +837,7 @@
     "totalDomainsEvaluated": 10,
     "adequatelyPoweredDomains": 8,
     "domainsWithAstrologyAdvantage": 3,
-    "domainsWithStatisticalSignificance": 1,
+    "domainsWithStatisticalSignificance": 0,
     "poweredDomainsWithStatisticalSignificance": 0,
     "globalEmpiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED",
     "scientificConclusion": "Astrological features did not demonstrate statistically significant out-of-sample predictive superiority over demographic baselines on any adequately powered domain (N >= 100, p >= 0.05). Systems must preserve the EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED classification and avoid unsubstantiated predictive claims.",
