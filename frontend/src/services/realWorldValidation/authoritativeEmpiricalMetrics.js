@@ -120,6 +120,54 @@ export function getAuthoritativeEmpiricalMetrics(domain) {
   if (norm === 'MARRIAGE') {
     return AUTHORITATIVE_EMPIRICAL_METRICS.domains.MARRIAGE;
   }
+
+  const celebBenchmarks = latestBenchmarkResults?.celebrityDomainBenchmarks || {};
+  const domainKeyMap = {
+    CAREER: "CAREER_BUSINESS",
+    CAREER_BUSINESS: "CAREER_BUSINESS",
+    JOB: "CAREER_BUSINESS",
+    BUSINESS: "CAREER_BUSINESS",
+    AWARDS: "AWARDS_HONORS",
+    AWARDS_HONORS: "AWARDS_HONORS",
+    LEADERSHIP: "AWARDS_HONORS",
+    HEALTH: "HEALTH_WELLNESS",
+    WELLNESS: "HEALTH_WELLNESS",
+    HEALTH_WELLNESS: "HEALTH_WELLNESS",
+    RELATIONSHIPS: "RELATIONSHIPS",
+    CHILDREN: "FAMILY_CHILDREN",
+    FAMILY: "FAMILY_CHILDREN",
+    FAMILY_CHILDREN: "FAMILY_CHILDREN",
+    LEGAL: "LEGAL_MUNDANE",
+    LEGAL_MUNDANE: "LEGAL_MUNDANE",
+    CAUTION: "BEREAVEMENT_FAMILY_LOSS",
+    BEREAVEMENT: "BEREAVEMENT_FAMILY_LOSS",
+    BEREAVEMENT_FAMILY_LOSS: "BEREAVEMENT_FAMILY_LOSS",
+    LONGEVITY: "DEATH_END_OF_LIFE",
+    DEATH: "DEATH_END_OF_LIFE",
+    DEATH_END_OF_LIFE: "DEATH_END_OF_LIFE",
+    PROPERTY: "PROPERTY_RESIDENCE",
+    PROPERTY_RESIDENCE: "PROPERTY_RESIDENCE",
+    FINANCE: "FINANCIAL",
+    FINANCIAL: "FINANCIAL"
+  };
+
+  const key = domainKeyMap[norm];
+  if (key && celebBenchmarks[key]) {
+    const bm = celebBenchmarks[key];
+    return {
+      domain: norm,
+      benchmarkDomain: key,
+      empiricalOutcomeValidationAvailable: true,
+      empiricalPredictiveResolution: "MULTI_YEAR_RANGE",
+      validationStatus: "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
+      sampleSizeN: bm.sampleSize?.total,
+      testSampleSizeN: bm.sampleSize?.test,
+      models: bm.models,
+      comparison: bm.comparison,
+      disclaimer: "Empirical milestone benchmark evaluated against demographic and population baselines (Astrodienst Astro-Databank N=6,036). Preserved as EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED."
+    };
+  }
+
   return {
     domain: norm,
     empiricalOutcomeValidationAvailable: false,

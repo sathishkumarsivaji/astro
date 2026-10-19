@@ -66,7 +66,8 @@ const suites = [
   { name: "Phase 12 Adversarial Negative Controls", cwd: BACKEND_DIR, cmd: "node test/test_phase12_adversarial_negative_controls.mjs" },
 
   // 8. Authentic External Benchmark Datasets
-  { name: "Celebrity Milestones Dataset Integrity", cwd: FRONTEND_DIR, cmd: "node test_celebrity_milestones_dataset.mjs" }
+  { name: "Celebrity Milestones Dataset Integrity", cwd: FRONTEND_DIR, cmd: "node test_celebrity_milestones_dataset.mjs" },
+  { name: "Celebrity Historical Milestone Pipeline", cwd: FRONTEND_DIR, cmd: "node test_celebrity_historical_milestone_pipeline.mjs" }
 ];
 
 console.log("\n" + "=".repeat(80));
