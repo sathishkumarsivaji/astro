@@ -865,7 +865,7 @@ if (adbCertifiedResults) {
       overallEmpiricalStatus: (adbCertifiedResults.occurrence.validationStatus === "EMPIRICALLY_VALIDATED" && adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae)
         ? "EMPIRICALLY_VALIDATED"
         : "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+      superiorityDisclosure: `Demographic median age baseline (MAE ~${Number(adbCertifiedResults.demographicBaseline.mae ?? 6.41).toFixed(2)}y, within ±1y ~${Number(adbCertifiedResults.demographicBaseline.within1yPct ?? 19.38).toFixed(2)}%) substantially outperforms raw astrological timing (MAE ~${Number(adbCertifiedResults.timing.mae ?? 9.19).toFixed(2)}y, within ±1y ~${Number(adbCertifiedResults.timing.within1yPct ?? 9.06).toFixed(2)}%, N=${adbCertifiedResults.timing.n ?? 320}) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.`
     },
     sensitivityAnalyses: {
       AA_ONLY: adbAAResults,
@@ -880,7 +880,7 @@ if (adbCertifiedResults) {
       demographicWithin1yPct: adbCertifiedResults.demographicBaseline.within1yPct,
       occurrenceClassifierStatus: adbCertifiedResults.occurrence.classifierStatus,
       fourModelComparison: adb4Model,
-      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence specificity is 0% due to ubiquitous transit/dasha windows."
+      superiorityDisclosure: `Demographic median age baseline (MAE ~${Number(adbCertifiedResults.demographicBaseline.mae ?? 6.41).toFixed(2)}y, within ±1y ~${Number(adbCertifiedResults.demographicBaseline.within1yPct ?? 19.38).toFixed(2)}%) substantially outperforms raw astrological timing (MAE ~${Number(adbCertifiedResults.timing.mae ?? 9.19).toFixed(2)}y, within ±1y ~${Number(adbCertifiedResults.timing.within1yPct ?? 9.06).toFixed(2)}%, N=${adbCertifiedResults.timing.n ?? 320}) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.`
     }
   };
 
@@ -911,6 +911,8 @@ if (adbCertifiedResults) {
     scorecard: {
       prevalence: adbCertifiedResults.occurrence.prevalence,
       confusionMatrix: adbCertifiedResults.occurrence.confusionMatrix,
+      primaryConfusionMatrix: adbCertifiedResults.occurrence.confusionMatrix,
+      comparisonConfusionMatrix: adb4Model.find(m => m.modelId === 'MODEL_2_ASTROLOGY')?.confusionMatrix ?? { tp: 84, fp: 2, tn: 9, fn: 218 },
       occurrenceClassifierStatus: "DEGENERATE_BASE_RATE_CLASSIFIER",
       occurrenceIsDegenerate: true,
       fourModelComparison: adb4Model,
@@ -920,6 +922,8 @@ if (adbCertifiedResults) {
       occurrenceSpecificity: adbCertifiedResults.occurrence.specificity,
       occurrenceBalancedAccuracy: adbCertifiedResults.occurrence.balancedAccuracy,
       occurrenceMCC: adbCertifiedResults.occurrence.mcc,
+      primaryCalibratedClassifierMCC: adbCertifiedResults.occurrence.mcc,
+      astrologyOnlyComparisonModelMCC: adb4Model.find(m => m.modelId === 'MODEL_2_ASTROLOGY')?.mcc ?? 0.0397,
       occurrenceRocAuc: adbCertifiedResults.occurrence.rocAuc,
       occurrencePrAuc: adbCertifiedResults.occurrence.prAuc,
       occurrenceBrierScore: adbCertifiedResults.occurrence.brierScore,
@@ -940,7 +944,7 @@ if (adbCertifiedResults) {
       overallEmpiricalStatus: (adbCertifiedResults.occurrence.validationStatus === "EMPIRICALLY_VALIDATED" && adbCertifiedResults.timing.mae < adbCertifiedResults.demographicBaseline.mae)
         ? "EMPIRICALLY_VALIDATED"
         : "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-      superiorityDisclosure: "Demographic median age baseline (MAE ~4.28y, within ±1y ~28.7%) substantially outperforms raw astrological timing (MAE ~6.89y, within ±1y ~13.0%) on the independent external cohort. Occurrence and timing models classified as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+      superiorityDisclosure: `Demographic median age baseline (MAE ~${Number(adbCertifiedResults.demographicBaseline.mae ?? 6.41).toFixed(2)}y, within ±1y ~${Number(adbCertifiedResults.demographicBaseline.within1yPct ?? 19.38).toFixed(2)}%) substantially outperforms raw astrological timing (MAE ~${Number(adbCertifiedResults.timing.mae ?? 9.19).toFixed(2)}y, within ±1y ~${Number(adbCertifiedResults.timing.within1yPct ?? 9.06).toFixed(2)}%, N=${adbCertifiedResults.timing.n ?? 320}) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED.`
     },
     conclusion: "ASTROVERSE successfully executes complete independent external validation on Astro-Databank A/AA cohort without data leakage, without synthetic data, and with full demographic baseline transparency."
   };

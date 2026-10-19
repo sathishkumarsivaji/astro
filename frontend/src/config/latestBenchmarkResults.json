@@ -13,8 +13,8 @@
     "independentAstroDatabank": 4798,
     "certifiedAstroDatabankAAA": 3751,
     "antiLeakageProtocol": "SHA-256 Pre-Cutoff Commitment Hashing",
-    "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
-    "calibrationModelHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4",
+    "predictionEngineHash": "47c0b4cc3964c52c7111d365be3db79b8333c8b8cc92de0da4b88a3f5e2efcf3",
+    "calibrationModelHash": "88ed1976cc721dc84d02c6bb03dc13dcba1859896e6679ac0a57bd7739b69d18",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "validationDatasetHash": "9dc0eb5041f0bf52efd1ab973b02b6fed4e4f1bf5bc958c0b390c42322dac99a",
     "blindDatasetHash": "dc3fbde4531282c862bf8665e9874ace4b4524879529b3341e0574ca270373b2",
@@ -22,7 +22,7 @@
     "modelFitHash": "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03",
     "coefficientHash": "ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f",
     "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-    "generationTimestamp": "2026-10-19T19:23:59.723Z",
+    "generationTimestamp": "2026-10-19T19:55:54.837Z",
     "predictionVersion": "v3.0.0-audited",
     "rulesVersion": "Parashari-v3.0-discrete-hazard"
   },
@@ -63,7 +63,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.016, ROC-AUC=0.5569 (95% CI [0.5086, 0.6052]). Meets basic non-degeneracy criteria (TN=126) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.016, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=126) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 160,
@@ -159,6 +159,7 @@
             "sensitivity": 0.2941,
             "specificity": 0.7482,
             "mcc": 0.0264,
+            "astrologyOnlyComparisonModelMCC": 0.0264,
             "balancedAccuracy": 0.5212,
             "rocAuc": 0.5569,
             "prAuc": 0.9275,
@@ -250,7 +251,8 @@
           "within90DaysPct": 1.76,
           "within180DaysPct": 4.12,
           "within365DaysPct": 8.98
-        }
+        },
+        "baselineComparisonStatus": "STATISTICALLY_TIED"
       },
       "demographicBaseline": {
         "n": 1484,
@@ -383,7 +385,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.019, ROC-AUC=0.5419 (95% CI [0.4909, 0.5929]). Meets basic non-degeneracy criteria (TN=115) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.5%, MCC=0.019, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=115) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 161,
@@ -479,6 +481,7 @@
             "sensitivity": 0.3075,
             "specificity": 0.7717,
             "mcc": 0.0479,
+            "astrologyOnlyComparisonModelMCC": 0.0479,
             "balancedAccuracy": 0.5396,
             "rocAuc": 0.5419,
             "prAuc": 0.9298,
@@ -570,7 +573,8 @@
           "within90DaysPct": 1.83,
           "within180DaysPct": 3.74,
           "within365DaysPct": 8.11
-        }
+        },
+        "baselineComparisonStatus": "STATISTICALLY_TIED"
       },
       "demographicBaseline": {
         "n": 1419,
@@ -703,7 +707,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=0.5072 (95% CI [0.334, 0.6804]). Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 33,
@@ -799,6 +803,7 @@
             "sensitivity": 0.2781,
             "specificity": 0.8182,
             "mcc": 0.0397,
+            "astrologyOnlyComparisonModelMCC": 0.0397,
             "balancedAccuracy": 0.5482,
             "rocAuc": 0.5072,
             "prAuc": 0.9688,
@@ -890,7 +895,8 @@
           "within90DaysPct": 1.56,
           "within180DaysPct": 2.5,
           "within365DaysPct": 5.94
-        }
+        },
+        "baselineComparisonStatus": "STATISTICALLY_TIED"
       },
       "demographicBaseline": {
         "n": 320,
