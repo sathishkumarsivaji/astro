@@ -3,14 +3,14 @@
     "title": "Astro-Databank Independent External Validation Benchmark (V3)",
     "sourceURL": "https://www.astro.com/astro-databank/",
     "exportFormat": "WIKIDUMP_MEDIAWIKI_XML",
-    "generatedAt": "2026-10-19T19:23:59.505Z",
+    "generatedAt": "2026-10-19T20:06:15.349Z",
     "modelVersion": "2.2.0",
     "schemaVersion": "3.0",
     "predictionEngineHash": "47c0b4cc3964c52c7111d365be3db79b8333c8b8cc92de0da4b88a3f5e2efcf3",
     "calibrationModelHash": "88ed1976cc721dc84d02c6bb03dc13dcba1859896e6679ac0a57bd7739b69d18",
     "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
     "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-    "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
+    "benchmarkCodeHash": "d45934dcee184b5ad05b4a0e1df76130c1aec6b51bf1762272d08ffacd4ef34f",
     "totalExportRecords": 6036,
     "totalVedAstroOverlapExcluded": 1238,
     "overlapManifest": {
@@ -26,38 +26,18 @@
     "disclaimer": "ASTRONOMICAL CALCULATION ≠ TRADITIONAL INTERPRETATION ≠ EMPIRICAL PREDICTION. Predictions evaluated against independent historical outcomes.",
     "cacheProvenance": {
       "initialCacheEntries": 20508,
-      "cacheHits": 0,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
+      "cacheHits": 17623,
+      "cacheMisses": 0,
+      "recomputedCount": 0,
       "invalidatedEntries": 0,
       "predictionEngineHash": "47c0b4cc3964c52c7111d365be3db79b8333c8b8cc92de0da4b88a3f5e2efcf3",
-      "calibrationHash": "398c1a0c83d55ca98646ac1c9670b3ce10fae1ebb4d6a84ef465168829c4b930"
-    },
-    "executionRecord": {
-      "runId": "RUN-ADB-EXTERNAL-20261010-001",
-      "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
-      "predictionEngineHash": "47c0b4cc3964c52c7111d365be3db79b8333c8b8cc92de0da4b88a3f5e2efcf3",
-      "calibrationModelHash": "398c1a0c83d55ca98646ac1c9670b3ce10fae1ebb4d6a84ef465168829c4b930",
-      "trainingDatasetHash": "7cdd3611bce0690e2ed21bbf53050bfc15382808c82c748765d1d8bfccbc6849",
-      "evaluationDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
-      "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-      "cacheSnapshotVersion": "v3.0.0-20508",
-      "predictionCount": 3751,
-      "cacheHits": 0,
-      "cacheMisses": 3751,
-      "recomputedCount": 3751,
-      "errors": 0,
-      "recomputationStats": {
-        "cacheHitRate": 0,
-        "missRate": 1,
-        "recomputationRatio": 1
-      }
+      "calibrationHash": "88ed1976cc721dc84d02c6bb03dc13dcba1859896e6679ac0a57bd7739b69d18"
     }
   },
   "primaryBenchmark": {
     "cohortName": "ASTRO_DATABANK_CERTIFIED_AAA",
     "n": 3751,
-    "actualExecutionDurationSec": 0.48,
+    "actualExecutionDurationSec": 1.38,
     "actualPredictionCount": 3751,
     "cacheHits": 0,
     "cacheMisses": 3751,
@@ -65,7 +45,7 @@
     "errors": 0,
     "excludedCount": 556,
     "unknownCount": 25,
-    "elapsedSeconds": 0.48,
+    "elapsedSeconds": 1.38,
     "occurrence": {
       "n": 313,
       "censoringBreakdown": {
@@ -82,7 +62,7 @@
       "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
       "classifierStatus": "NON_DISCRIMINATIVE",
       "isDegenerate": false,
-      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+      "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=0.5072 (95% CI [0.334, 0.6804]). Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
       "status": "NOT_DISCRIMINATIVE",
       "confusionMatrix": {
         "tp": 33,
@@ -97,6 +77,7 @@
       "f1": 0.1964,
       "balancedAccuracy": 0.5092,
       "mcc": 0.0109,
+      "primaryCalibratedClassifierMCC": 0.0109,
       "rocAuc": 0.5072,
       "rocAucCi95": {
         "lower": 0.334,
@@ -178,6 +159,7 @@
           "sensitivity": 0.2781,
           "specificity": 0.8182,
           "mcc": 0.0397,
+          "astrologyOnlyComparisonModelMCC": 0.0397,
           "balancedAccuracy": 0.5482,
           "rocAuc": 0.5072,
           "prAuc": 0.9688,
@@ -224,8 +206,7 @@
             "betaAstrology": 0.3627
           }
         }
-      ],
-      "primaryCalibratedClassifierMCC": 0.0109
+      ]
     },
     "timing": {
       "n": 320,
@@ -270,8 +251,7 @@
         "within90DaysPct": 1.56,
         "within180DaysPct": 2.5,
         "within365DaysPct": 5.94
-      },
-      "baselineComparisonStatus": "STATISTICALLY_TIED"
+      }
     },
     "unionMode": {
       "status": "NOT_AVAILABLE",
@@ -423,13 +403,13 @@
     "demographicBaselineMAE": 6.41,
     "demographicBaselineWithin1yPct": 19.38,
     "overallEmpiricalStatus": "EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED",
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external Astro-Databank cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
   },
   "sensitivityAnalyses": {
     "AA_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_AA_ONLY",
       "n": 2591,
-      "actualExecutionDurationSec": 0.5,
+      "actualExecutionDurationSec": 1.1,
       "actualPredictionCount": 2591,
       "cacheHits": 0,
       "cacheMisses": 2591,
@@ -437,7 +417,7 @@
       "errors": 0,
       "excludedCount": 262,
       "unknownCount": 3,
-      "elapsedSeconds": 0.5,
+      "elapsedSeconds": 1.1,
       "occurrence": {
         "n": 193,
         "censoringBreakdown": {
@@ -469,6 +449,7 @@
         "f1": 0.2075,
         "balancedAccuracy": 0.4332,
         "mcc": -0.0587,
+        "primaryCalibratedClassifierMCC": -0.0587,
         "rocAuc": 0.2884,
         "rocAucCi95": {
           "lower": 0,
@@ -610,7 +591,7 @@
     "A_ONLY": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_A_ONLY",
       "n": 1160,
-      "actualExecutionDurationSec": 0.48,
+      "actualExecutionDurationSec": 1.11,
       "actualPredictionCount": 1160,
       "cacheHits": 0,
       "cacheMisses": 1160,
@@ -618,7 +599,7 @@
       "errors": 0,
       "excludedCount": 294,
       "unknownCount": 22,
-      "elapsedSeconds": 0.48,
+      "elapsedSeconds": 1.11,
       "occurrence": {
         "n": 120,
         "censoringBreakdown": {
@@ -650,6 +631,7 @@
         "f1": 0.1774,
         "balancedAccuracy": 0.5487,
         "mcc": 0.0791,
+        "primaryCalibratedClassifierMCC": 0.0791,
         "rocAuc": 0.6188,
         "rocAucCi95": {
           "lower": 0.4208,
@@ -791,7 +773,7 @@
     "ALL_INDEPENDENT": {
       "cohortName": "ASTRO_DATABANK_SENSITIVITY_ALL_INDEPENDENT",
       "n": 4798,
-      "actualExecutionDurationSec": 0.51,
+      "actualExecutionDurationSec": 1.26,
       "actualPredictionCount": 4798,
       "cacheHits": 4798,
       "cacheMisses": 0,
@@ -799,7 +781,7 @@
       "errors": 0,
       "excludedCount": 686,
       "unknownCount": 28,
-      "elapsedSeconds": 0.51,
+      "elapsedSeconds": 1.26,
       "occurrence": {
         "n": 428,
         "censoringBreakdown": {
@@ -831,6 +813,7 @@
         "f1": 0.1806,
         "balancedAccuracy": 0.5185,
         "mcc": 0.0236,
+        "primaryCalibratedClassifierMCC": 0.0236,
         "rocAuc": 0.4892,
         "rocAucCi95": {
           "lower": 0.3439,
@@ -972,7 +955,7 @@
     "ASTRO_DATABANK_REGRESSION_SAMPLE": {
       "cohortName": "ASTRO_DATABANK_REGRESSION_SAMPLE",
       "n": 500,
-      "actualExecutionDurationSec": 0.47,
+      "actualExecutionDurationSec": 1.13,
       "actualPredictionCount": 500,
       "cacheHits": 0,
       "cacheMisses": 500,
@@ -980,7 +963,7 @@
       "errors": 0,
       "excludedCount": 68,
       "unknownCount": 3,
-      "elapsedSeconds": 0.47,
+      "elapsedSeconds": 1.13,
       "occurrence": {
         "n": 427,
         "censoringBreakdown": {
@@ -1012,6 +995,7 @@
         "f1": 0.122,
         "balancedAccuracy": 0.5143,
         "mcc": 0.0287,
+        "primaryCalibratedClassifierMCC": 0.0287,
         "rocAuc": 0.5308,
         "rocAucCi95": {
           "lower": 0.4364,
@@ -1269,6 +1253,6 @@
         }
       }
     ],
-    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external Astro-Databank cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
+    "superiorityDisclosure": "Demographic median age baseline (MAE ~6.41y, within ±1y ~19.38%) substantially outperforms raw astrological timing (MAE ~9.19y, within ±1y ~9.06%, N=320) on the independent external cohort. Model quality gate classifies occurrence and timing models as EXPERIMENTAL / NOT_EMPIRICALLY_VALIDATED."
   }
 }

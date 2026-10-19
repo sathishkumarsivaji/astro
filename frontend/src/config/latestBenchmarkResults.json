@@ -21,8 +21,8 @@
     "externalDatasetHash": "116595d3a3cbdd61b78a4424b579d53f58610e16beb12085451ea0a31b59d392",
     "modelFitHash": "c13c1d9a0ea4c3c5269636a0e061c0e04f7579631230d419ec7854897661ac03",
     "coefficientHash": "ce15d202c56d9b2a56c3a25e76b46dcf9585f1e52c307054ef438ef1a8a9240f",
-    "benchmarkCodeHash": "b00bca32c0a0cc147bb6c3726ea8845b06ad15aa6b370caa0ccdb95ce0289898",
-    "generationTimestamp": "2026-10-19T19:55:54.837Z",
+    "benchmarkCodeHash": "d45934dcee184b5ad05b4a0e1df76130c1aec6b51bf1762272d08ffacd4ef34f",
+    "generationTimestamp": "2026-10-19T20:06:16.071Z",
     "predictionVersion": "v3.0.0-audited",
     "rulesVersion": "Parashari-v3.0-discrete-hazard"
   },
@@ -63,7 +63,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.016, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=126) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.016, ROC-AUC=0.5569 (95% CI [0.5086, 0.6052]). Meets basic non-degeneracy criteria (TN=126) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 160,
@@ -78,6 +78,7 @@
         "f1": 0.1978,
         "balancedAccuracy": 0.5086,
         "mcc": 0.0156,
+        "primaryCalibratedClassifierMCC": 0.0156,
         "rocAuc": 0.5569,
         "rocAucCi95": {
           "lower": 0.5086,
@@ -251,8 +252,7 @@
           "within90DaysPct": 1.76,
           "within180DaysPct": 4.12,
           "within365DaysPct": 8.98
-        },
-        "baselineComparisonStatus": "STATISTICALLY_TIED"
+        }
       },
       "demographicBaseline": {
         "n": 1484,
@@ -385,7 +385,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.5%, MCC=0.019, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=115) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.6%, MCC=0.019, ROC-AUC=0.5419 (95% CI [0.4909, 0.5929]). Meets basic non-degeneracy criteria (TN=115) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 161,
@@ -400,6 +400,7 @@
         "f1": 0.2071,
         "balancedAccuracy": 0.511,
         "mcc": 0.0192,
+        "primaryCalibratedClassifierMCC": 0.0192,
         "rocAuc": 0.5419,
         "rocAucCi95": {
           "lower": 0.4909,
@@ -573,8 +574,7 @@
           "within90DaysPct": 1.83,
           "within180DaysPct": 3.74,
           "within365DaysPct": 8.11
-        },
-        "baselineComparisonStatus": "STATISTICALLY_TIED"
+        }
       },
       "demographicBaseline": {
         "n": 1419,
@@ -707,7 +707,7 @@
         "validationStatus": "NOT_EMPIRICALLY_VALIDATED",
         "classifierStatus": "NON_DISCRIMINATIVE",
         "isDegenerate": false,
-        "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=N/A. Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
+        "degeneracyReason": "Non-discriminative classifier: Specificity=90.9%, MCC=0.011, ROC-AUC=0.5072 (95% CI [0.334, 0.6804]). Meets basic non-degeneracy criteria (TN=10) but performance does not statistically or substantively exceed chance level.",
         "status": "NOT_DISCRIMINATIVE",
         "confusionMatrix": {
           "tp": 33,
@@ -722,6 +722,7 @@
         "f1": 0.1964,
         "balancedAccuracy": 0.5092,
         "mcc": 0.0109,
+        "primaryCalibratedClassifierMCC": 0.0109,
         "rocAuc": 0.5072,
         "rocAucCi95": {
           "lower": 0.334,
@@ -895,8 +896,7 @@
           "within90DaysPct": 1.56,
           "within180DaysPct": 2.5,
           "within365DaysPct": 5.94
-        },
-        "baselineComparisonStatus": "STATISTICALLY_TIED"
+        }
       },
       "demographicBaseline": {
         "n": 320,

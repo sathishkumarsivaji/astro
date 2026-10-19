@@ -1,16 +1,16 @@
 {
   "archiveFile": "ASTRO.zip",
   "archivePath": "D:\\ASTRO\\ASTRO.zip",
-  "sha256": "9ff3e8acb5c0dafb770a1d5b5777df03f97a9a712414368dd4ad352b7c61025d",
-  "sizeBytes": 37558983,
+  "sha256": "8ff7175d5a9f19c8f5b7d218b502766bf579b0bbbf34892316b829d0ee1f0fe0",
+  "sizeBytes": 37560342,
   "sizeMb": 35.82,
-  "packagedAt": "2026-10-19T19:26:37.133Z",
-  "gitCommit": "e18931fac76889040fcdf7e994c09cac76021770",
-  "predictionEngineHash": "14e73c08255cbf7744658c1f60c2a49af5682f99015d6546c50b363207f90703",
-  "calibrationModelHash": "aa78c0e4ad1a6daf6e9f260e084d8700851940a7a150c2581bc2c067bc8d56b4",
+  "packagedAt": "2026-10-19T20:02:56.009Z",
+  "gitCommit": "23ad85500af43874ba15ca2473fb108689901ec7",
+  "predictionEngineHash": "47c0b4cc3964c52c7111d365be3db79b8333c8b8cc92de0da4b88a3f5e2efcf3",
+  "calibrationModelHash": "88ed1976cc721dc84d02c6bb03dc13dcba1859896e6679ac0a57bd7739b69d18",
   "releaseCertified": true,
   "mandatoryGatesPassed": 17,
-  "totalRegressionSuitesPassed": 33,
+  "totalRegressionSuitesPassed": 35,
   "zeroNodeModulesBundled": true,
   "notes": "Detached post-packaging attestation eliminating the circular archive hash paradox."
 }
