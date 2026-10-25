@@ -67,7 +67,7 @@ export function checkMalformedQuestion(text) {
 
   // Pattern: Lottery / random gambling speculation ("Will I win the lottery ticket next Tuesday?")
   if (/\b(?:lottery|lotto|roulette|gambling|random\s*draw|win\s+the\s+lottery|without\s+studying)\b/i.test(lower) ||
-      /லாட்டரி|சூதாட்டம்|தேர்வில்\s*வெற்றி|படிக்காமலேயே|பாஸ்/i.test(text)) {
+      /லாட்டரி|சூதாட்டம்|படிக்காமலேயே|படிக்காமல்\s*(?:பாஸ்|வெற்றி)/i.test(text)) {
     return {
       isMalformed: true,
       detectedIssue: "Astrological charts cannot calculate random numerical draw sequences or gambling speculation",
@@ -79,7 +79,7 @@ export function checkMalformedQuestion(text) {
 
   // Pattern: Guaranteed financial returns / stock ticker picking
   if (/\b(?:exact\s+stock\s+ticker|guarantee.*profit|100%\s*(?:gain|profit|return|unconditionally)|500%\s*profit|sure\s*profit)\b/i.test(lower) ||
-      /பங்கு|500%|100%\s*லாபம்/i.test(text)) {
+      /(?:100%|500%)\s*(?:நிச்சய\s*)?லாபம்/i.test(text)) {
     return {
       isMalformed: true,
       detectedIssue: "Commercial financial return guarantees prohibited",
@@ -91,7 +91,7 @@ export function checkMalformedQuestion(text) {
 
   // Pattern: Exact geographic distance fabrication
   if (/\b(?:exact\s*(?:kilometer|km|mile)\s*distance|exact\s*distance\s*between)\b/i.test(lower) ||
-      /கிலோமீட்டர்|தூரம்/i.test(text)) {
+      /துல்லியமான\s*கிலோமீட்டர்|துல்லியமான\s*தூரம்/i.test(text)) {
     return {
       isMalformed: true,
       detectedIssue: "Astrology provides qualitative directional indications only; exact kilometer distances cannot be established",
@@ -103,7 +103,7 @@ export function checkMalformedQuestion(text) {
 
   // Pattern: Medical diagnosis & pharmaceutical drug prescribing
   if (/\b(?:diagnose|prescribe|pharmaceutical|cure\s*cancer)\b/i.test(lower) ||
-      /நோய்|மருந்து/i.test(text)) {
+      /(?:புற்றுநோய்\s*குணமாகுமா|மருந்து\s*சீட்டு|மருத்துவ\s*சிகிச்சை\s*பரிந்துரை|மருந்து\s*எழுத)/i.test(text)) {
     return {
       isMalformed: true,
       detectedIssue: "Medical diagnosis and pharmaceutical drug prescribing strictly prohibited",
@@ -115,7 +115,7 @@ export function checkMalformedQuestion(text) {
 
   // Pattern: Fatalistic mortality and accident prediction
   if (/\b(?:exact\s*(?:day|minute|second).*(?:death|die|car\s*crash)|cause\s*of\s*my\s*death)\b/i.test(lower) ||
-      /விபத்|மரண/i.test(text)) {
+      /(?:துல்லியமான\s*மரணம்|விபத்து\s*நாள்|எப்போது\s*சாவேன்)/i.test(text)) {
     return {
       isMalformed: true,
       detectedIssue: "Fatalistic predictions of mortality or precise accident timing prohibited",
@@ -139,7 +139,7 @@ export function checkMalformedQuestion(text) {
 
   // Pattern: Guaranteed legal trial verdict
   if (/\b(?:court\s*case.*(?:100%|guarantee)|guarantee.*court|guarantee\s+100%)\b/i.test(lower) ||
-      /வழக்கு|நீதிமன்ற/i.test(text)) {
+      /(?:வழக்கில்\s*(?:100%|கண்டிப்பாக|உறுதியாக)\s*வெற்றி|நீதிமன்ற\s*தீர்ப்பு\s*உறுதி|100%\s*(?:வெற்றி|தீர்ப்பு))/i.test(text)) {
     return {
       isMalformed: true,
       detectedIssue: "Guaranteed legal trial outcomes prohibited",

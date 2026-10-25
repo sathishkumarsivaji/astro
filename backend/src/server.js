@@ -83,7 +83,7 @@ export function validateProductionConfig(env = process.env) {
 validateProductionConfig(process.env);
 
 // Strict Production Secrets Enforcement
-let ADMIN_METRICS_KEY = process.env.ADMIN_METRICS_KEY;
+export let ADMIN_METRICS_KEY = process.env.ADMIN_METRICS_KEY;
 if (!ADMIN_METRICS_KEY) {
   ADMIN_METRICS_KEY = crypto.randomBytes(32).toString('hex');
   console.warn('[SECURITY] Using ephemeral random secrets — set env vars for persistent dev sessions.');
@@ -302,7 +302,8 @@ export function createSignedSessionToken(userId = null, accountSecret = null, is
     userId: effectiveUserId,
     createdAt: new Date(payload.createdAt).toISOString()
   };
-  activeSessions.set(sessionToken, session);
+  const tokenHash = crypto.createHash('sha256').update(sessionToken).digest('hex');
+  activeSessions.set(tokenHash, session);
   db.createSessionRecord(sessionToken, effectiveUserId, payload.createdAt + SESSION_TTL_MS);
   getOrCreateEntitlements(effectiveUserId);
   return session;
@@ -311,34 +312,36 @@ export function createSignedSessionToken(userId = null, accountSecret = null, is
 export function verifySignedSessionToken(token) {
   if (!token || typeof token !== 'string') return null;
 
-  // 1. Check if token has been revoked in database
-  if (db.isSessionRevoked(token)) {
-    activeSessions.delete(token);
-    return null;
-  }
-
-  if (activeSessions.has(token)) {
-    const session = activeSessions.get(token);
-    const sessionAge = Date.now() - new Date(session.createdAt).getTime();
-    if (sessionAge < SESSION_TTL_MS) {
-      // Verify user still exists in database
-      const user = db.getUser(session.userId);
-      if (!user) {
-        activeSessions.delete(token);
-        return null;
-      }
-      return session;
-    }
-    activeSessions.delete(token);
-    return null;
-  }
-
-  // Stateless Verification with DB Revocation Check
-  const parts = token.split('.');
-  if (parts.length !== 2) return null;
-  const [b64Payload, signature] = parts;
-
   try {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // 1. Check if token has been revoked in database
+    if (db.isSessionRevoked(token)) {
+      activeSessions.delete(tokenHash);
+      return null;
+    }
+
+    if (activeSessions.has(tokenHash)) {
+      const session = activeSessions.get(tokenHash);
+      const sessionAge = Date.now() - new Date(session.createdAt).getTime();
+      if (sessionAge < SESSION_TTL_MS) {
+        // Verify user still exists in database
+        const user = db.getUser(session.userId);
+        if (!user) {
+          activeSessions.delete(tokenHash);
+          return null;
+        }
+        return session;
+      }
+      activeSessions.delete(tokenHash);
+      return null;
+    }
+
+    // Stateless Verification with DB Revocation Check
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    const [b64Payload, signature] = parts;
+
     const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(b64Payload).digest('base64url');
     const sigBuf = Buffer.from(signature);
     const expBuf = Buffer.from(expectedSig);
@@ -362,7 +365,7 @@ export function verifySignedSessionToken(token) {
       userId: payload.userId,
       createdAt: new Date(payload.createdAt).toISOString()
     };
-    activeSessions.set(token, session);
+    activeSessions.set(tokenHash, session);
     return session;
   } catch (err) {
     return null;
@@ -490,46 +493,101 @@ app.post('/api/auth/guest', authRateLimiter, requireDatabaseReady, (req, res) =>
 });
 
 // User Registration Endpoint (Converts guest or creates registered account)
-app.post('/api/auth/register', authRateLimiter, requireDatabaseReady, (req, res) => {
+app.post('/api/auth/register', authRateLimiter, requireDatabaseReady, async (req, res) => {
   try {
     const { name, email, password, existingUserId } = req.body || {};
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return res.status(400).json({ error: 'Valid email address is required.' });
-    }
-    if (!password || typeof password !== 'string' || password.length < 12) {
-      return res.status(400).json({ error: 'Password must be at least 12 characters long for security compliance.' });
-    }
 
+    // 1. Strict Input Validation (Types and Formats)
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Valid email address is required.', code: 'INVALID_EMAIL' });
+    }
     const normEmail = email.trim().toLowerCase();
-    const existing = db.getUserByEmail(normEmail);
-    if (existing) {
-      return res.status(409).json({ error: 'An account with this email already exists. Please log in.' });
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (normEmail.length < 5 || normEmail.length > 254 || !emailRegex.test(normEmail)) {
+      return res.status(400).json({ error: 'Valid email address format is required.', code: 'INVALID_EMAIL_FORMAT' });
     }
 
-    // Reuse existingUserId if provided and valid, otherwise generate new
-    const targetUserId = existingUserId || `usr_${crypto.randomBytes(8).toString('hex')}`;
-    const user = getOrCreateEntitlements(targetUserId);
-    user.email = normEmail;
-    user.name = name?.trim() || 'Astrology Seeker';
-    user.passwordHash = db.hashPassword(password);
-    user.isRegistered = true;
-    user.subscriptionTier = (user.subscriptionTier === 'unregistered' || !user.subscriptionTier) ? 'registered_free' : user.subscriptionTier;
-    user.monthlyCredits = Math.max(user.monthlyCredits || 0, 5);
-    user.availableCredits = Math.max(user.availableCredits || 0, 5);
-    db.saveUser(targetUserId, user);
+    if (!password || typeof password !== 'string' || password.length < 12) {
+      return res.status(400).json({ error: 'Password must be at least 12 characters long for security compliance.', code: 'PASSWORD_TOO_SHORT' });
+    }
+    if (password.length > 128) {
+      return res.status(400).json({ error: 'Password exceeds maximum length limit of 128 characters.', code: 'PASSWORD_TOO_LONG' });
+    }
 
-    const session = createSignedSessionToken(targetUserId, null, true);
+    if (name !== undefined && (typeof name !== 'string' || name.length > 100)) {
+      return res.status(400).json({ error: 'Name must be a valid string up to 100 characters.', code: 'INVALID_NAME' });
+    }
+
+    // 2. Verified Caller Session Derivation (Client-supplied ID is never proof of ownership)
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const headerToken = req.headers['x-session-token'];
+    const cookieToken = getCookieValue(req.headers.cookie, 'astro_session_token');
+    const token = bearerToken || headerToken || cookieToken;
+    const callerSession = token ? verifySignedSessionToken(token) : null;
+
+    let isGuestConversion = false;
+    let callerSessionUserId = null;
+
+    if (existingUserId) {
+      // Conversion targeting existing user ID requires verified session proof of that exact ID
+      if (!callerSession) {
+        return res.status(401).json({
+          error: 'Unauthenticated conversion attempt: Guest conversion requires an active, verified session.',
+          code: 'UNAUTHENTICATED_CONVERSION'
+        });
+      }
+      if (callerSession.userId !== existingUserId) {
+        return res.status(403).json({
+          error: 'Forbidden: Cannot convert or overwrite an account belonging to another user.',
+          code: 'FORBIDDEN_USER_CONVERSION'
+        });
+      }
+      isGuestConversion = true;
+      callerSessionUserId = callerSession.userId;
+    } else if (callerSession) {
+      // Active session present without explicit existingUserId
+      const existingUser = db.getUser(callerSession.userId);
+      if (existingUser && (existingUser.isRegistered || existingUser.passwordHash)) {
+        return res.status(409).json({
+          error: 'An account is already associated with this session. Please log in.',
+          code: 'ALREADY_REGISTERED'
+        });
+      }
+      isGuestConversion = true;
+      callerSessionUserId = callerSession.userId;
+    }
+
+    const passwordHash = db.hashPassword(password);
+    const result = await db.atomicRegisterOrConvertUser({
+      targetUserId: existingUserId || null,
+      callerSessionUserId,
+      email: normEmail,
+      passwordHash,
+      name: name ? name.trim() : 'Astrology Seeker',
+      isGuestConversion
+    });
+
+    const session = createSignedSessionToken(result.userId, null, true);
     const isProd = process.env.NODE_ENV === 'production';
     const secureFlag = isProd ? '; Secure' : '';
     res.setHeader('Set-Cookie', `astro_session_token=${session.sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secureFlag}`);
 
+    // Redact password hash from response
+    const sanitizedUser = { ...result.user };
+    delete sanitizedUser.passwordHash;
+
     res.json({
       success: true,
-      userId: targetUserId,
-      user
+      userId: result.userId,
+      user: sanitizedUser
     });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Registration failed' });
+    const status = err.status || (err.code === 'EMAIL_ALREADY_EXISTS' || err.code === 'ALREADY_REGISTERED' ? 409 : 500);
+    res.status(status).json({
+      error: err.message || 'Registration failed',
+      code: err.code || 'REGISTRATION_ERROR'
+    });
   }
 });
 
@@ -537,8 +595,8 @@ app.post('/api/auth/register', authRateLimiter, requireDatabaseReady, (req, res)
 app.post('/api/auth/login', authRateLimiter, requireDatabaseReady, (req, res) => {
   try {
     const { email, password } = req.body || {};
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Valid email and password strings are required.' });
     }
 
     const normEmail = email.trim().toLowerCase();
@@ -557,10 +615,13 @@ app.post('/api/auth/login', authRateLimiter, requireDatabaseReady, (req, res) =>
     const secureFlag = isProd ? '; Secure' : '';
     res.setHeader('Set-Cookie', `astro_session_token=${session.sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secureFlag}`);
 
+    const sanitizedUser = { ...user };
+    delete sanitizedUser.passwordHash;
+
     res.json({
       success: true,
       userId: user.userId,
-      user
+      user: sanitizedUser
     });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Login failed' });
@@ -570,10 +631,12 @@ app.post('/api/auth/login', authRateLimiter, requireDatabaseReady, (req, res) =>
 // Current User Profile / Auth State
 app.get('/api/auth/me', authenticateSession, (req, res) => {
   const user = getOrCreateEntitlements(req.user.userId);
+  const sanitizedUser = { ...user };
+  delete sanitizedUser.passwordHash;
   res.json({
     success: true,
     userId: req.user.userId,
-    user
+    user: sanitizedUser
   });
 });
 
@@ -1023,7 +1086,7 @@ app.delete('/api/user/delete', authenticateSession, requireDatabaseReady, async 
 // 9. Protected System Metrics & Observability (Audit Point 48)
 // ---------------------------------------------------------------------------
 app.get('/api/system/metrics', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || req.query.adminKey;
+  const adminKey = req.headers['x-admin-key'];
   if (!adminKey || typeof adminKey !== 'string') {
     return res.status(401).json({
       error: 'Unauthorized. Admin key required to view system metrics.',
@@ -1351,7 +1414,7 @@ app.post('/api/outcomes/report', authenticateSession, (req, res) => {
 // Verify observed outcome (Quality gate / Admin or verification system)
 app.post('/api/outcomes/verify', authenticateSession, (req, res) => {
   try {
-    const adminKey = req.headers['x-admin-key'] || req.query.adminKey;
+    const adminKey = req.headers['x-admin-key'];
     const hasValidAdminKey = Boolean(adminKey && typeof adminKey === 'string' && ADMIN_METRICS_KEY &&
       adminKey.length === ADMIN_METRICS_KEY.length &&
       crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(ADMIN_METRICS_KEY)));

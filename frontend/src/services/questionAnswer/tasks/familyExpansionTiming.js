@@ -50,7 +50,7 @@ export function evaluateFamilyExpansionTiming({ question = "", context = {}, isT
       limitation: "Astrological timing is symbolic and does not assess medical fertility or guarantee childbirth.",
       recommendation: null,
       candidateWindows: [],
-      timingResolution: "INSUFFICIENT_DATA",
+      timingResolution: null,
       supportingRuleResults: [],
       limitingRuleResults: [],
       evaluatedRuleResults: [],

@@ -9,6 +9,7 @@
  */
 
 import { computeTimingWindows } from "../timingEngine.js";
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
 
 /**
  * Classifies the travel category requested in the inquiry.
@@ -39,6 +40,19 @@ export function classifyTravelType(text = "") {
 export function evaluateForeignTripTiming({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_FOREIGN_TRIP_TIMING";
   const travelType = classifyTravelType(question);
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "FOREIGN_TRIP_TIMING",
+      taskType: "TRAVEL_TIMING_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "dashaTimeline"],
+      traditionalMethod: "3rd/9th/12th Bhava and Moon-Rahu Activation under Vimshottari Dasha",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate foreign travel timing. Accurate window calculation requires a verified birth chart and dasha progression.",
+      customDirectAnswerTa: "வெளிநாட்டுப் பயண காலக்கணிப்பிற்கு தேவையான பிறப்பு ஜாதக மற்றும் தசா கணிப்புத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
 
   const chart = context.chartData || context.chart || {};
   const dashaTimeline = chart.dashaTimeline || chart.dashas || chart.dashaTable || context.dashaTimeline || [];

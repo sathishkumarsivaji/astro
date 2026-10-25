@@ -63,6 +63,7 @@ class AstroDatabase {
 
     this.pgPool = null;
     this.pgConnected = false;
+    this._registrationLocks = new Set();
 
     // Load file-backed cache initially
     this.load();
@@ -546,6 +547,19 @@ class AstroDatabase {
     } else {
       this.persist();
     }
+
+    // Safe session migration: store by tokenHash and remove raw sessionToken
+    if (this.state.user_sessions && typeof this.state.user_sessions === "object") {
+      const migrated = {};
+      for (const [key, sess] of Object.entries(this.state.user_sessions)) {
+        if (!sess || typeof sess !== "object") continue;
+        const hash = sess.tokenHash || crypto.createHash("sha256").update(sess.sessionToken || key).digest("hex");
+        const cleanSess = { ...sess, tokenHash: hash };
+        delete cleanSess.sessionToken;
+        migrated[hash] = cleanSess;
+      }
+      this.state.user_sessions = migrated;
+    }
   }
 
   persist() {
@@ -621,6 +635,155 @@ class AstroDatabase {
     }
 
     return record;
+  }
+
+  /**
+   * Atomically registers a new user or converts an authenticated guest session.
+   * Guarantees email uniqueness and prevents arbitrary user ID hijacking/overwriting.
+   */
+  async atomicRegisterOrConvertUser({
+    targetUserId = null,
+    callerSessionUserId = null,
+    email,
+    passwordHash,
+    name = "Astrology Seeker",
+    isGuestConversion = false
+  }) {
+    if (!this._registrationLocks) {
+      this._registrationLocks = new Set();
+    }
+
+    const normEmail = (typeof email === "string" ? email.trim().toLowerCase() : "");
+    if (!normEmail || !normEmail.includes("@")) {
+      const err = new Error("Valid email address is required.");
+      err.status = 400;
+      err.code = "INVALID_EMAIL";
+      throw err;
+    }
+
+    // Atomic lock per email
+    const lockKey = `reg_email_${normEmail}`;
+    if (this._registrationLocks.has(lockKey)) {
+      const err = new Error("A registration request with this email is currently being processed.");
+      err.status = 409;
+      err.code = "CONCURRENT_REGISTRATION";
+      throw err;
+    }
+
+    this._registrationLocks.add(lockKey);
+
+    try {
+      // 1. Email uniqueness verification
+      const existingUserByEmail = this.getUserByEmail(normEmail);
+      if (existingUserByEmail) {
+        const err = new Error("An account with this email already exists. Please log in.");
+        err.status = 409;
+        err.code = "EMAIL_ALREADY_EXISTS";
+        throw err;
+      }
+
+      // Check PostgreSQL if connected
+      if (this.pgConnected && this.pgPool) {
+        const pgCheck = await this.pgPool.query(
+          "SELECT user_id FROM users WHERE LOWER(email) = $1 LIMIT 1",
+          [normEmail]
+        );
+        if (pgCheck.rows && pgCheck.rows.length > 0) {
+          const err = new Error("An account with this email already exists. Please log in.");
+          err.status = 409;
+          err.code = "EMAIL_ALREADY_EXISTS";
+          throw err;
+        }
+      }
+
+      // 2. Conversion vs Fresh Registration
+      let effectiveUserId = null;
+      let userRecord = null;
+
+      if (isGuestConversion) {
+        if (!callerSessionUserId) {
+          const err = new Error("Unauthenticated conversion attempt: Guest conversion requires an active, verified session.");
+          err.status = 401;
+          err.code = "UNAUTHENTICATED_CONVERSION";
+          throw err;
+        }
+
+        if (targetUserId && targetUserId !== callerSessionUserId) {
+          const err = new Error("Forbidden: Cannot convert or overwrite an account belonging to another user.");
+          err.status = 403;
+          err.code = "FORBIDDEN_USER_CONVERSION";
+          throw err;
+        }
+
+        effectiveUserId = callerSessionUserId;
+        userRecord = this.getUser(effectiveUserId);
+
+        if (userRecord && (userRecord.isRegistered || userRecord.passwordHash)) {
+          const err = new Error("Conflict: This account is already registered. Please log in.");
+          err.status = 409;
+          err.code = "ALREADY_REGISTERED";
+          throw err;
+        }
+
+        if (!userRecord) {
+          userRecord = {
+            userId: effectiveUserId,
+            isRegistered: false,
+            subscriptionTier: "unregistered",
+            availableCredits: 2,
+            monthlyCredits: 0,
+            bonusCredits: 2,
+            lockedCredits: 0,
+            createdAt: new Date().toISOString()
+          };
+        }
+
+        // Convert guest record in place
+        userRecord.isRegistered = true;
+        userRecord.email = normEmail;
+        userRecord.name = typeof name === "string" && name.trim().length > 0 ? name.trim().slice(0, 100) : "Astrology Seeker";
+        userRecord.passwordHash = passwordHash;
+        userRecord.subscriptionTier = (userRecord.subscriptionTier === "unregistered" || !userRecord.subscriptionTier)
+          ? "registered_free"
+          : userRecord.subscriptionTier;
+        userRecord.monthlyCredits = Math.max(userRecord.monthlyCredits || 0, 5);
+        userRecord.availableCredits = Math.max(userRecord.availableCredits || 0, 5);
+        userRecord.convertedAt = new Date().toISOString();
+      } else {
+        // Fresh registration — client-supplied targetUserId without verified session is strictly prohibited!
+        if (targetUserId && targetUserId !== callerSessionUserId) {
+          const err = new Error("Unauthorized: Client-supplied user ID cannot be claimed without an authenticated session.");
+          err.status = 403;
+          err.code = "FORBIDDEN_USER_ID_SUPPLIED";
+          throw err;
+        }
+
+        effectiveUserId = `usr_${crypto.randomBytes(8).toString("hex")}`;
+        userRecord = {
+          userId: effectiveUserId,
+          email: normEmail,
+          name: typeof name === "string" && name.trim().length > 0 ? name.trim().slice(0, 100) : "Astrology Seeker",
+          passwordHash,
+          isRegistered: true,
+          subscriptionTier: "registered_free",
+          monthlyCredits: 5,
+          availableCredits: 5,
+          bonusCredits: 0,
+          lockedCredits: 0,
+          createdAt: new Date().toISOString(),
+          transactionHistory: []
+        };
+      }
+
+      this.saveUser(effectiveUserId, userRecord);
+
+      return {
+        userId: effectiveUserId,
+        user: userRecord
+      };
+    } finally {
+      this._registrationLocks.delete(lockKey);
+    }
   }
 
   getAccountSecret(userId) {
@@ -942,14 +1105,17 @@ class AstroDatabase {
     const now = new Date().toISOString();
     const expiresAt = new Date(expiresAtMs).toISOString();
     const record = {
-      sessionToken: token,
       userId,
       tokenHash,
       createdAt: now,
       expiresAt,
       revokedAt: null
     };
-    this.state.user_sessions[token] = record;
+    // Key by tokenHash rather than raw bearer token
+    this.state.user_sessions[tokenHash] = record;
+    if (this.state.user_sessions[token]) {
+      delete this.state.user_sessions[token];
+    }
     this.persist();
 
     if (this.pgConnected && this.pgPool) {
@@ -959,29 +1125,39 @@ class AstroDatabase {
          ON CONFLICT (session_token) DO UPDATE SET
           expires_at = EXCLUDED.expires_at,
           revoked_at = NULL`,
-        [token, userId, tokenHash, now, expiresAt]
+        [tokenHash, userId, tokenHash, now, expiresAt]
       ).catch(err => console.warn("[POSTGRESQL] Session insert warning:", err.message));
     }
     return record;
   }
 
   isSessionRevoked(token) {
-    const session = this.state.user_sessions[token];
-    if (session && session.revokedAt) {
-      return true;
+    if (!token || typeof token !== "string") return true;
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const session = this.state.user_sessions[tokenHash] || this.state.user_sessions[token];
+    if (session) {
+      if (session.revokedAt) return true;
+      if (session.expiresAt && new Date(session.expiresAt).getTime() < Date.now()) return true;
+      return false;
     }
     return false;
   }
 
   revokeSession(token) {
-    const session = this.state.user_sessions[token];
+    if (!token || typeof token !== "string") return false;
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const session = this.state.user_sessions[tokenHash] || this.state.user_sessions[token];
     const now = new Date().toISOString();
     if (session) {
       session.revokedAt = now;
+      delete session.sessionToken;
+      this.state.user_sessions[tokenHash] = session;
+      if (this.state.user_sessions[token]) {
+        delete this.state.user_sessions[token];
+      }
     } else {
-      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-      this.state.user_sessions[token] = {
-        sessionToken: token,
+      this.state.user_sessions[tokenHash] = {
+        userId: null,
         tokenHash,
         revokedAt: now
       };
@@ -990,8 +1166,8 @@ class AstroDatabase {
 
     if (this.pgConnected && this.pgPool) {
       this.pgPool.query(
-        "UPDATE user_sessions SET revoked_at = NOW() WHERE session_token = $1",
-        [token]
+        "UPDATE user_sessions SET revoked_at = NOW() WHERE session_token = $1 OR token_hash = $1",
+        [tokenHash]
       ).catch(err => console.warn("[POSTGRESQL] Session revoke warning:", err.message));
     }
     return true;
@@ -1000,7 +1176,7 @@ class AstroDatabase {
   revokeAllUserSessions(userId) {
     const now = new Date().toISOString();
     for (const s of Object.values(this.state.user_sessions)) {
-      if (s.userId === userId) {
+      if (s && s.userId === userId) {
         s.revokedAt = now;
       }
     }

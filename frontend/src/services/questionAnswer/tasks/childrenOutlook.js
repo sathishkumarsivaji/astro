@@ -77,7 +77,7 @@ export function evaluateChildrenOutlook({ question = "", context = {}, isTamil =
       limitation,
       recommendation: null,
       candidateWindows: [],
-      timingResolution: "INSUFFICIENT_DATA",
+      timingResolution: null,
       supportingRuleResults: [],
       limitingRuleResults: [],
       evaluatedRuleResults: [],

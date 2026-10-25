@@ -45,6 +45,7 @@ import {
   computeReportInputHash,
   invalidateReportCacheEntry
 } from "./reportCacheManager.js";
+import { generateNatalReport } from "./natalReportGenerator.js";
 import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 
 // Re-export key components for clean public API
@@ -57,6 +58,7 @@ export * from "./reportSafetyGate.js";
 export * from "./customerNarrativeEngine.js";
 export * from "./reportValidator.js";
 export * from "./reportCacheManager.js";
+export * from "./natalReportGenerator.js";
 
 /**
  * Derives personalized, evidence-backed executive themes grounded strictly in
@@ -795,6 +797,13 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
   const validationAudit = validateLifeReport(lifeReport, { lang });
   lifeReport.validationAudit = validationAudit;
   lifeReport.isCertified = validationAudit.isValid;
+
+  // 17. Attach Authoritative 11-Section Natal Report
+  try {
+    lifeReport.natalReport = generateNatalReport(chartData, options);
+  } catch (err) {
+    console.warn("Natal report attachment encountered non-fatal notice:", err?.message);
+  }
 
   // Persist into deterministic cache
   setCachedLifeReport(chartData, options, lifeReport);

@@ -10,6 +10,7 @@
 
 import { computeTimingWindows } from "../timingEngine.js";
 import { humanizeEvidenceToken } from "../evidenceGraph.js";
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
 
 /**
  * Evaluates the vehicle acquisition timing task.
@@ -22,6 +23,19 @@ import { humanizeEvidenceToken } from "../evidenceGraph.js";
  */
 export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_VEHICLE_PURCHASE_TIMING";
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "VEHICLE_PURCHASE_TIMING",
+      taskType: "VEHICLE_TIMING_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "dashaTimeline"],
+      traditionalMethod: "4th Bhava (Vahana Sthana) & Venus Activation under Vimshottari Dasha",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate vehicle acquisition timing. A verified birth chart and calculated dasha periods are required.",
+      customDirectAnswerTa: "வாகனம் வாங்குவதற்கான காலக்கணிப்பிற்கு தேவையான பிறப்பு ஜாதக மற்றும் தசா கணிப்புத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
 
   const chart = context.chartData || context.chart || {};
   const dashaTimeline = chart.dashaTimeline || chart.dashas || chart.dashaTable || context.dashaTimeline || [];
@@ -71,7 +85,7 @@ export function evaluateVehicleAcquisitionTiming({ question = "", context = {}, 
       vehicleType: "ORDINARY_VEHICLE",
       answerState: "NO_DISCRIMINATING_WINDOW",
       timingStatus: "NOT_DISCRIMINATING",
-      timingResolution: "NOT_DISCRIMINATING",
+      timingResolution: null,
       timingWindow: null,
       directAnswer,
       reason,

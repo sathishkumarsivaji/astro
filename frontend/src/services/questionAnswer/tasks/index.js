@@ -5,7 +5,7 @@
  * Guarantees direct-answer-first output contract.
  */
 
-import { TASK_INTENTS, CHILDREN_TASKS } from "../intentClassifier.js";
+import { TASK_INTENTS, CHILDREN_TASKS, QUESTION_INTENTS } from "../intentClassifier.js";
 import { evaluateDailyDressColor } from "./dailyDressColor.js";
 import { evaluateResearchSubmissionElection } from "./researchSubmissionElection.js";
 import { evaluateBusinessExpansionElection } from "./businessExpansionElection.js";
@@ -21,6 +21,11 @@ import { evaluateFamilyExpansionTiming } from "./familyExpansionTiming.js";
 import { evaluateJobTransitionDecision } from "./jobTransitionDecision.js";
 import { evaluateWealthAccumulationDecision } from "./wealthAccumulationDecision.js";
 import { evaluateWellnessVitalityCycle } from "./wellnessVitalityCycle.js";
+import { evaluateMarriageRelationshipOutlook } from "./marriageRelationshipOutlook.js";
+import { evaluateSpouseFamilyComparison } from "./spouseFamilyComparison.js";
+import { evaluateHouseholdArrangement } from "./householdArrangement.js";
+import { evaluateForeignEmployment } from "./foreignEmployment.js";
+import { evaluateNamedExamination } from "./namedExamination.js";
 
 export {
   TASK_INTENTS,
@@ -42,7 +47,12 @@ export {
   evaluateFamilyExpansionTiming,
   evaluateJobTransitionDecision,
   evaluateWealthAccumulationDecision,
-  evaluateWellnessVitalityCycle
+  evaluateWellnessVitalityCycle,
+  evaluateMarriageRelationshipOutlook,
+  evaluateSpouseFamilyComparison,
+  evaluateHouseholdArrangement,
+  evaluateForeignEmployment,
+  evaluateNamedExamination
 };
 
 /**
@@ -160,6 +170,23 @@ export function dispatchTaskEvaluation({ intent, question, context = {}, isTamil
 
       case TASK_INTENTS.WELLNESS_VITALITY_CYCLE:
         return evaluateWellnessVitalityCycle({ question, context, isTamil });
+
+      case TASK_INTENTS.MARRIAGE_RELATIONSHIP_OUTLOOK:
+        return evaluateMarriageRelationshipOutlook({ question, context, isTamil });
+
+      case TASK_INTENTS.SPOUSE_FAMILY_ECONOMIC_COMPARISON:
+      case QUESTION_INTENTS.SPOUSE_FAMILY:
+        return evaluateSpouseFamilyComparison({ question, context, isTamil });
+
+      case TASK_INTENTS.HOUSEHOLD_RESIDENCE_ARRANGEMENT:
+      case QUESTION_INTENTS.JOINT_VS_SEPARATE:
+        return evaluateHouseholdArrangement({ question, context, isTamil });
+
+      case TASK_INTENTS.FOREIGN_EMPLOYMENT:
+        return evaluateForeignEmployment({ question, context, isTamil });
+
+      case TASK_INTENTS.NAMED_EXAMINATION_OUTLOOK:
+        return evaluateNamedExamination({ question, context, isTamil });
 
       default:
         return buildUnsupportedTaskAnswer({

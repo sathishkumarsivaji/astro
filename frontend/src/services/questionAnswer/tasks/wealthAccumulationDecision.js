@@ -9,8 +9,23 @@
  * Strictly enforces statutory financial disclaimers.
  */
 
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
+
 export function evaluateWealthAccumulationDecision({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_WEALTH_ACCUMULATION_DECISION";
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "WEALTH_ACCUMULATION_DECISION",
+      taskType: "FINANCIAL_DECISION_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "planetaryPositions"],
+      traditionalMethod: "2nd/11th/5th/8th Bhavas, Jupiter & Venus Dhana Synthesis",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate financial capital allocation. A verified birth chart with calculated 2nd and 11th houses is required to assess traditional wealth indicators.",
+      customDirectAnswerTa: "நிதி முதலீடு அல்லது சேமிப்பு தொடர்பான ஜோதிட மதிப்பீட்டிற்கு தேவையான பிறப்பு ஜாதகத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
   const raw = String(question || "").toLowerCase();
 
   const isInvestExplicit = /\b(invest|investment|stocks|trading|mutual\s+fund|crypto|real\s+estate\s+investment|முதலீடு|பங்குச்சந்தை)\b/i.test(raw);

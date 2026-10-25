@@ -18,6 +18,8 @@ const MONTH_NAMES_TA = [
   "ஜூலை", "ஆகஸ்ட்", "செப்டம்பர்", "அக்டோபர்", "நவம்பர்", "டிசம்பர்"
 ];
 
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
+
 /**
  * Derives active Dasha for a specific year and month date.
  */
@@ -47,6 +49,19 @@ function getActiveDashaForDate(dashaTimeline, dateStr) {
  */
 export function evaluateMonthlyOutlook({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_MONTHLY_OUTLOOK";
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "MONTHLY_OUTLOOK",
+      taskType: "MONTHLY_TIMELINE_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "dashaTimeline"],
+      traditionalMethod: "Vimshottari Dasha Sub-periods & Gochara Transits",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate upcoming monthly forecast. A verified birth chart and calculated dasha periods are required.",
+      customDirectAnswerTa: "மாதாந்திர பலன்களை கணிக்க தேவையான பிறப்பு ஜாதக மற்றும் தசா கணிப்புத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
 
   const chart = context.chartData || context.chart || {};
   const dashaTimeline = chart.dashaTimeline || chart.dashas || chart.dashaTable || context.dashaTimeline || [];

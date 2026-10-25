@@ -374,7 +374,6 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
   const domain = (isTamil ? chartData.domainPredictionsTamil : chartData.domainPredictions) || {};
   const yogas = (isTamil ? chartData.detectedYogasTamil : chartData.detectedYogas) || [];
   const bhavas = (isTamil ? chartData.bhavasDetailedTamil : chartData.bhavasDetailed) || [];
-  const dosha = (isTamil ? chartData.tridoshaBalanceTamil : chartData.tridoshaBalance) || {};
   const remedies = (isTamil ? chartData.personalizedRemediesTamil : chartData.personalizedRemedies) || {};
   const auspicious = (isTamil ? chartData.auspiciousTimelinesTamil : chartData.auspiciousTimelines) || {};
   const riskData = (isTamil ? chartData.riskMatrixTamil : chartData.riskMatrix) || {};
@@ -469,7 +468,6 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
     { id: "politics", label: isTamil ? "8. பொது சேவை & தலைமைத்துவ கூறுகள்" : "8. Public Leadership & Governance", icon: Landmark },
     { id: "relationships", label: isTamil ? "9. திருமணம் & குடும்பம்" : "9. Marriage & Progeny", icon: Heart },
     { id: "foreign", label: isTamil ? "10. வெளிநாடு & ஆன்மீகம்" : "10. Foreign Travel & Spiritual Themes", icon: Globe2 },
-    { id: "dosha", label: isTamil ? "11. திரிதோஷ சமநிலை" : "11. Tridosha Balance", icon: Flame },
     { id: "remedies", label: isTamil ? "12. பரிகாரங்கள் & ரத்தினம்" : "12. Remedies & Gem Associations", icon: Gem },
     { id: "auspicious", label: isTamil ? "13. சுப முகூர்த்த காலங்கள்" : "13. Auspicious Timing Principles", icon: Clock },
     { id: "risks", label: isTamil ? "14. எச்சரிக்கை காலங்கள் & பரிகாரம்" : "14. Traditional Caution Indicators & Timing Windows", icon: ShieldAlert },
@@ -2050,87 +2048,6 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
               </div>
             )}
 
-            {/* CHAPTER 11: Ayurvedic Dosha & Health Vitality */}
-            {isChapterApplicable("dosha") && (activeTab === "all" || activeTab === "dosha") && (
-              <div className="space-y-4">
-                <h3 className="text-base font-serif font-bold text-amber-900 flex items-center gap-2 border-b border-amber-300 pb-2">
-                  <Flame className="w-4 h-4 text-orange-600" />
-                  {isTamil ? "11. ஆயுர்வேத திரிதோஷ சமநிலை & ஆரோக்கிய வழிகாட்டல்" : "11. Ayurvedic Tridosha Balance & Somatic Health Guidance"}
-                </h3>
-
-                <div className="p-5 rounded-2xl bg-white border border-amber-200 shadow-sm space-y-4">
-                  {/* Elemental Distribution Summary */}
-                  {dosha.elementalDistribution && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                      <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200">
-                        <span className="text-[10px] uppercase font-bold text-orange-800 block">{isTamil ? "நெருப்பு (Fire/Pitta)" : "Fire Elements"}</span>
-                        <span className="text-sm font-bold text-stone-900">{dosha.elementalDistribution.fire} {isTamil ? "கிரகங்கள்" : "Grahas"}</span>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                        <span className="text-[10px] uppercase font-bold text-emerald-800 block">{isTamil ? "காற்று (Air/Vata)" : "Air Elements"}</span>
-                        <span className="text-sm font-bold text-stone-900">{dosha.elementalDistribution.air} {isTamil ? "கிரகங்கள்" : "Grahas"}</span>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-cyan-50 border border-cyan-200">
-                        <span className="text-[10px] uppercase font-bold text-cyan-800 block">{isTamil ? "நீர் (Water/Kapha)" : "Water Elements"}</span>
-                        <span className="text-sm font-bold text-stone-900">{dosha.elementalDistribution.water} {isTamil ? "கிரகங்கள்" : "Grahas"}</span>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                        <span className="text-[10px] uppercase font-bold text-amber-800 block">{isTamil ? "நிலம் (Earth/Kapha)" : "Earth Elements"}</span>
-                        <span className="text-sm font-bold text-stone-900">{dosha.elementalDistribution.earth} {isTamil ? "கிரகங்கள்" : "Grahas"}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Vata */}
-                    <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-emerald-900">
-                          {isTamil ? "வாத தோஷம் (Vata)" : "Vata Dosha (Air/Ether)"}
-                        </span>
-                        <span className="text-xs font-mono font-bold text-emerald-800">{dosha.vata?.status || "Balanced"}</span>
-                      </div>
-                      <p className="text-[11px] text-stone-700 leading-relaxed mt-1">
-                        {dosha.vata?.guidance}
-                      </p>
-                    </div>
-
-                    {/* Pitta */}
-                    <div className="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-rose-900">
-                          {isTamil ? "பித்த தோஷம் (Pitta)" : "Pitta Dosha (Fire/Agni)"}
-                        </span>
-                        <span className="text-xs font-mono font-bold text-rose-800">{dosha.pitta?.status || "Balanced"}</span>
-                      </div>
-                      <p className="text-[11px] text-stone-700 leading-relaxed mt-1">
-                        {dosha.pitta?.guidance}
-                      </p>
-                    </div>
-
-                    {/* Kapha */}
-                    <div className="p-3.5 rounded-xl bg-cyan-50/50 border border-cyan-200 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-cyan-900">
-                          {isTamil ? "கப தோஷம் (Kapha)" : "Kapha Dosha (Water/Earth)"}
-                        </span>
-                        <span className="text-xs font-mono font-bold text-cyan-800">{dosha.kapha?.status || "Balanced"}</span>
-                      </div>
-                      <p className="text-[11px] text-stone-700 leading-relaxed mt-1">
-                        {dosha.kapha?.guidance}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Ayurvedic Disclaimer */}
-                  <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200 text-[10px] text-stone-600">
-                    <span className="font-semibold">{isTamil ? "சாஸ்திரக் குறிப்பு:" : "Traditional Disclaimer:"} </span>
-                    {dosha.disclaimer || (isTamil ? "இந்த ஆயுர்வேத தோஷ பகுப்பாய்வு பாரம்பரிய ஜோதிட தத்துவத்தின் அடிப்படையிலானது; மருத்துவ சிகிச்சைக்கானது அல்ல." : "This Tridosha evaluation is based on traditional astrological principles and does not constitute medical diagnosis or therapy.")}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* CHAPTER 12: Vedic Remedies & Gemstone Prescription */}
             {isChapterApplicable("remedies") && (activeTab === "all" || activeTab === "remedies") && (
               <div className="space-y-4">
@@ -2325,60 +2242,6 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                         </p>
                       </div>
                     </div>
-
-                    {/* Planetary Hora Activity Matrix */}
-                    {auspicious.dayToDayMuhurthaGuide?.planetaryHoraGuide && (
-                      <div className="space-y-2 pt-2 border-t border-amber-200">
-                        <span className="text-xs font-bold text-purple-900 block">
-                          {isTamil ? "காரிய சித்தி தரும் நவகிரக ஹோரை அட்டவணை (Planetary Horas for Daily Tasks)" : "Planetary Hora Alignment for Everyday Tasks"}
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {auspicious.dayToDayMuhurthaGuide.planetaryHoraGuide.map((h, i) => (
-                            <div key={i} className="p-2.5 rounded-xl bg-white border border-amber-200 space-y-1 shadow-sm">
-                              <span className="text-[11px] font-bold text-amber-900 block">{h.hora}</span>
-                              <p className="text-[10px] text-stone-700 leading-snug">{isTamil ? h.ideal : (h.idealTa || h.ideal)}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Rahu Kalam Weekly Avoidance Guide */}
-                    {auspicious.dayToDayMuhurthaGuide?.rahuKalamAvoidance && (
-                      <div className="space-y-2 pt-2 border-t border-amber-200">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                            {isTamil ? "தவிர்க்க வேண்டிய ராகு காலம் & எமகண்டம் (Rahu Kalam Avoidance)" : "Inauspicious Rahu Kalam & Yamagandam Timing Guide"}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-stone-600 leading-relaxed">
-                          {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance?.rule}
-                        </p>
-                        <div className="overflow-x-auto bg-white rounded-xl border border-amber-200 p-2 shadow-sm">
-                          <table className="w-full text-[10px] text-left border-collapse">
-                            <thead>
-                              <tr className="border-b border-amber-200 text-stone-700 font-mono">
-                                <th className="py-1 px-2">{isTamil ? "கிழமை" : "Day"}</th>
-                                <th className="py-1 px-2 text-rose-800 font-bold">{isTamil ? "ராகு காலம்" : "Rahu Kalam"}</th>
-                                <th className="py-1 px-2 text-amber-800 font-bold">{isTamil ? "எமகண்டம்" : "Yamagandam"}</th>
-                                <th className="py-1 px-2 text-cyan-800 font-bold">{isTamil ? "குளிகை" : "Gulika"}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {auspicious.dayToDayMuhurthaGuide.rahuKalamAvoidance?.weeklyTable?.map((row, idx) => (
-                                <tr key={idx} className="border-b border-amber-100 last:border-0 font-mono">
-                                  <td className="py-1.5 px-2 font-bold text-stone-800">{row.day}</td>
-                                  <td className="py-1.5 px-2 text-rose-700 font-medium">{row.rahu}</td>
-                                  <td className="py-1.5 px-2 text-amber-700 font-medium">{row.yama}</td>
-                                  <td className="py-1.5 px-2 text-cyan-700 font-medium">{row.gulika}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -3364,7 +3227,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                       <strong className="text-stone-900">
                         {chartData.dailyPanchang?.tithi
                           ? (typeof chartData.dailyPanchang.tithi === "object"
-                            ? `${chartData.dailyPanchang.tithi.name || "N/A"} (${chartData.dailyPanchang.tithi.paksha || ""})${chartData.dailyPanchang.tithi.until ? ` until ${chartData.dailyPanchang.tithi.until}` : ""}`
+                            ? `${chartData.dailyPanchang.tithi.name || "N/A"} (${chartData.dailyPanchang.tithi.paksha || ""})${chartData.dailyPanchang.tithi.until12 ? ` until ${chartData.dailyPanchang.tithi.until12}` : chartData.dailyPanchang.tithi.until ? ` until ${chartData.dailyPanchang.tithi.until}` : ""}`
                             : chartData.dailyPanchang.tithi)
                           : "N/A"}
                       </strong>
@@ -3374,7 +3237,7 @@ export default function DetailedReportModal({ isOpen, onClose, chartData, lang =
                       <strong className="text-stone-900">
                         {chartData.dailyPanchang?.nakshatra
                           ? (typeof chartData.dailyPanchang.nakshatra === "object"
-                            ? `${chartData.dailyPanchang.nakshatra.name || "N/A"}${chartData.dailyPanchang.nakshatra.until ? ` until ${chartData.dailyPanchang.nakshatra.until}` : ""}`
+                            ? `${chartData.dailyPanchang.nakshatra.name || "N/A"}${chartData.dailyPanchang.nakshatra.until12 ? ` until ${chartData.dailyPanchang.nakshatra.until12}` : chartData.dailyPanchang.nakshatra.until ? ` until ${chartData.dailyPanchang.nakshatra.until}` : ""}`
                             : chartData.dailyPanchang.nakshatra)
                           : "N/A"}
                       </strong>

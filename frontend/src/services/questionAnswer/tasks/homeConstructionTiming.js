@@ -11,6 +11,7 @@
  */
 
 import { computeTimingWindows } from "../timingEngine.js";
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
 
 /**
  * Classifies the property/construction inquiry type.
@@ -47,6 +48,19 @@ export function classifyPropertyType(text = "") {
 export function evaluateHomeConstructionTiming({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_HOME_CONSTRUCTION_TIMING";
   const propertyType = classifyPropertyType(question);
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "HOME_CONSTRUCTION_TIMING",
+      taskType: "PROPERTY_TIMING_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "dashaTimeline"],
+      traditionalMethod: "4th Bhava (Bhumi/Vastu) & Mars Activation under Vimshottari Dasha",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate property and home construction timing. A verified birth chart and calculated dasha periods are required.",
+      customDirectAnswerTa: "வீடு கட்டுதல் அல்லது சொத்து வாங்குவதற்கான காலக்கணிப்பிற்கு தேவையான பிறப்பு ஜாதக மற்றும் தசா கணிப்புத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
 
   const chart = context.chartData || context.chart || {};
   const dashaTimeline = chart.dashaTimeline || chart.dashas || chart.dashaTable || context.dashaTimeline || [];
@@ -115,7 +129,7 @@ export function evaluateHomeConstructionTiming({ question = "", context = {}, is
       stage: propertyType,
       answerState: "NO_DISCRIMINATING_WINDOW",
       timingStatus: "NOT_DISCRIMINATING",
-      timingResolution: "NOT_DISCRIMINATING",
+      timingResolution: null,
       timingWindow: null,
       directAnswer,
       reason,

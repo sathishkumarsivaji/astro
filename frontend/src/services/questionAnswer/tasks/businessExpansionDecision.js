@@ -9,6 +9,8 @@
  * Implements Section 5C & Section 6 of the User-Facing Task Answering Mandate.
  */
 
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
+
 /**
  * Evaluates the business decision task with distinct comparative paths.
  *
@@ -27,10 +29,10 @@ export function evaluateBusinessExpansionDecision({ question = "", context = {},
   const isNewExplicit = /\b(new\s+business|start\s+business|new\s+industry|another\s+field|diversif|வேறு\s*தொழில்|புதிய\s*துறை|புதிய\s*தொழில்)\b/i.test(raw);
   const isComparative = ((isBranchExplicit || isExistingExplicit) && isNewExplicit) || /(?:expand.*or.*(?:new|start)|(?:new|start).*or.*expand|வேறு.*அல்லது.*விரிவாக்கம்)/i.test(raw);
 
-  const hasChart = Boolean(context.chartData || context.chart);
+  const hasChart = hasChartData(context);
   const isAmbiguousQuery = /\b(more\s+business|expand\s+to\s+more)\b/i.test(raw);
 
-  // If question is ambiguous (e.g. "expand to more business") or if no chart context is provided for comparative analysis
+  // If question is ambiguous (e.g. "expand to more business")
   if (isAmbiguousQuery || (!hasChart && !isBranchExplicit && !isExistingExplicit && !isNewExplicit)) {
     const directAnswer = isTamil
       ? "நீங்கள் ஏற்கனவே உள்ள தொழிலில் மற்றொரு கிளையைத் திறக்க விரும்புகிறீர்களா, அல்லது முற்றிலும் வேறுபட்ட புதிய தொழிலைத் தொடங்க விரும்புகிறீர்களா?"
@@ -63,6 +65,20 @@ export function evaluateBusinessExpansionDecision({ question = "", context = {},
       traditionalMethod: "JYOTISH_COMMERCIAL_SYNTHESIS",
       empiricalStatus: "NOT_VALIDATED"
     };
+  }
+
+  // If specific branch/new question but chart is completely missing
+  if (!hasChart) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "BUSINESS_EXPANSION_DECISION",
+      taskType: "BUSINESS_DECISION_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "planetaryPositions"],
+      traditionalMethod: "3rd/5th/7th/10th/11th Bhavas Enterprise Synthesis",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate business expansion prospects. Assessing commercial timing and branch viability requires a verified birth chart.",
+      customDirectAnswerTa: "வணிக விரிவாக்கத்தை மதிப்பீடு செய்ய தேவையான பிறப்பு ஜாதகத் தரவுகள் கிடைக்கவில்லை."
+    });
   }
 
   // Decision breakdown profiles

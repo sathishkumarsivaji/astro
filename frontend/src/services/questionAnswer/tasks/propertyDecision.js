@@ -13,6 +13,8 @@
  * Explicitly states when available astrological evidence cannot distinguish them.
  */
 
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
+
 /**
  * Evaluates the comparative property decision: Buy vs Build.
  *
@@ -24,6 +26,19 @@
  */
 export function evaluatePropertyBuyVsBuildDecision({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_PROPERTY_BUY_VS_BUILD";
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "PROPERTY_BUY_VS_BUILD_DECISION",
+      taskType: "PROPERTY_DECISION_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "planetaryPositions"],
+      traditionalMethod: "4th Bhava, Mars (Bhumi Karaka) & Venus Synthesis",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate whether to buy or build a house. A verified birth chart with calculated 4th house and planetary positions is required.",
+      customDirectAnswerTa: "வீடு வாங்குவதா அல்லது கட்டுவதா என்பதை மதிப்பிட தேவையான பிறப்பு ஜாதகத் தரவுகள் (4-ம் பாவகம் மற்றும் கிரக நிலைகள்) கிடைக்கவில்லை."
+    });
+  }
 
   const chart = context.chartData || context.chart || {};
   const planets = Array.isArray(chart.planets) ? chart.planets : [];

@@ -19,6 +19,7 @@ export const TASK_INTENTS = Object.freeze({
   BUSINESS_EXPANSION_DECISION: "BUSINESS_EXPANSION_DECISION",
   BUSINESS_DIVERSIFICATION_DECISION: "BUSINESS_DIVERSIFICATION_DECISION",
   FOREIGN_TRIP_TIMING: "FOREIGN_TRIP_TIMING",
+  FOREIGN_EMPLOYMENT: "FOREIGN_EMPLOYMENT",
   PROPERTY_BUY_VS_BUILD_DECISION: "PROPERTY_BUY_VS_BUILD_DECISION",
   HOME_CONSTRUCTION_TIMING: "HOME_CONSTRUCTION_TIMING",
   VEHICLE_PURCHASE_TIMING: "VEHICLE_PURCHASE_TIMING",
@@ -26,6 +27,10 @@ export const TASK_INTENTS = Object.freeze({
   JOB_TRANSITION_DECISION: "JOB_TRANSITION_DECISION",
   WEALTH_ACCUMULATION_DECISION: "WEALTH_ACCUMULATION_DECISION",
   WELLNESS_VITALITY_CYCLE: "WELLNESS_VITALITY_CYCLE",
+  MARRIAGE_RELATIONSHIP_OUTLOOK: "MARRIAGE_RELATIONSHIP_OUTLOOK",
+  SPOUSE_FAMILY_ECONOMIC_COMPARISON: "SPOUSE_FAMILY_ECONOMIC_COMPARISON",
+  HOUSEHOLD_RESIDENCE_ARRANGEMENT: "HOUSEHOLD_RESIDENCE_ARRANGEMENT",
+  NAMED_EXAMINATION_OUTLOOK: "NAMED_EXAMINATION_OUTLOOK",
   ...CHILDREN_TASKS
 });
 
@@ -171,10 +176,21 @@ export function classifyIntent(normalizedQ, history = []) {
   }
 
   // 1. Specialized Spouse & Relationship Intents
-  if (/spouse.*family|family.*wealth|wife.*family|husband.*family|துணையின்\s*குடும்பம்|மாமியார்|மாமனார்/i.test(text) ||
+  if (/spouse.*family.*wealth|compare.*spouse.*family|wealthier.*spouse|in-laws.*wealth|மாமனார்.*பொருளாதாரம்|துணையின்\s*குடும்ப\s*செல்வம்|குடும்பத்தை\s*விட\s*துணை/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.SPOUSE_FAMILY_ECONOMIC_COMPARISON);
+    detectedIntents.add(QUESTION_INTENTS.SPOUSE_FAMILY);
+    detectedIntents.add(QUESTION_INTENTS.COMPARISON);
+  } else if (/spouse.*family|family.*wealth|wife.*family|husband.*family|துணையின்\s*குடும்பம்|மாமியார்|மாமனார்/i.test(text) ||
       (cues.isComparison && /spouse|துணை|partner|wife|husband/i.test(text))) {
+    detectedIntents.add(TASK_INTENTS.SPOUSE_FAMILY_ECONOMIC_COMPARISON);
     detectedIntents.add(QUESTION_INTENTS.SPOUSE_FAMILY);
     if (cues.isComparison) detectedIntents.add(QUESTION_INTENTS.COMPARISON);
+  }
+
+  // Marital Relationship Improvement / Reconciliation (Distinguished from marriage formation)
+  if (/(?:reconcil|harmony.*(?:marriage|relationship)|improve.*(?:relationship|marriage)|relationship.*improve|marriage.*improve|better.*relationship|relationship.*better|scope\s*for\s*reconciliation|patch\s*up|ஒற்றுமை|சீரடையுமா|சேர்வார்களா|சமரசம்|உறவு\s*மேம்படுமா)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.MARRIAGE_RELATIONSHIP_OUTLOOK);
+    detectedIntents.add(QUESTION_INTENTS.MARRIAGE);
   }
 
   if (cues.isDirection || /direction|திசை|எந்த\s*திசை/i.test(text)) {
@@ -193,7 +209,8 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.SPOUSE_CHARACTERISTICS);
   }
 
-  if (/(joint\s*family|separate\s*(?:house|household|home)|nuclear\s*family|live\s+with\s+(?:my\s+)?parents|தனிக்குடித்தனம்|கூட்டுக்\s*குடும்பம்)/i.test(text)) {
+  if (/(joint\s*family|separate\s*(?:house|household|home)|nuclear\s*family|live\s+with\s+(?:my\s+)?parents|live\s+separately|தனி[க்\s]*குடித்தன|கூட்டுக்\s*குடும்ப|மாமியார்\s*வீடு|தனி\s*வீடு)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.HOUSEHOLD_RESIDENCE_ARRANGEMENT);
     detectedIntents.add(QUESTION_INTENTS.JOINT_VS_SEPARATE);
   }
 
@@ -277,7 +294,8 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.EDUCATION);
   }
 
-  if (/(competitive\s*exam|entrance|neet|upsc|போட்டித்\s*தேர்வு)/i.test(text)) {
+  if (/(?:ugc\s*net|upsc|neet|gate|cat|iit|jee|ias|ips|tnpsc|bank\s*exam|ca\s*exam|sat|gre|gmat|competitive\s*exam|entrance|போட்டித்\s*தேர்வு|தேர்வில்\s*வெற்றி)/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.NAMED_EXAMINATION_OUTLOOK);
     detectedIntents.add(QUESTION_INTENTS.COMPETITIVE_EXAMS);
     detectedIntents.add(QUESTION_INTENTS.EDUCATION);
   }
@@ -359,7 +377,11 @@ export function classifyIntent(normalizedQ, history = []) {
     }
   }
 
-  if (/foreign|travel|abroad|overseas|visa|relocation|settlement|வெளிநாடு|பயணம்|குடியேற்றம்/i.test(text)) {
+  if (/(?:job\s*abroad|work\s*abroad|foreign\s*job|overseas\s*(?:job|employment|career|posting|deputation)|employment\s*abroad|வெளிநாட்டு.*(?:வேலை|பணி|உத்தியோகம்)|வெளிநாட்டில்.*(?:வேலை|பணி))/i.test(text)) {
+    detectedIntents.add(TASK_INTENTS.FOREIGN_EMPLOYMENT);
+    detectedIntents.add(QUESTION_INTENTS.FOREIGN_TRAVEL);
+    detectedIntents.add(QUESTION_INTENTS.CAREER);
+  } else if (/foreign|travel|abroad|overseas|visa|relocation|settlement|வெளிநாடு|பயணம்|குடியேற்றம்/i.test(text)) {
     detectedIntents.add(QUESTION_INTENTS.FOREIGN_TRAVEL);
   }
 
@@ -457,6 +479,11 @@ export function classifyIntent(normalizedQ, history = []) {
   // Prioritize primary intent
   let primaryIntent = QUESTION_INTENTS.GENERAL_INTERPRETATION;
   const priorityList = [
+    TASK_INTENTS.NAMED_EXAMINATION_OUTLOOK,
+    TASK_INTENTS.FOREIGN_EMPLOYMENT,
+    TASK_INTENTS.HOUSEHOLD_RESIDENCE_ARRANGEMENT,
+    TASK_INTENTS.SPOUSE_FAMILY_ECONOMIC_COMPARISON,
+    TASK_INTENTS.MARRIAGE_RELATIONSHIP_OUTLOOK,
     TASK_INTENTS.DAILY_DRESS_COLOR,
     TASK_INTENTS.RESEARCH_SUBMISSION_ELECTION,
     TASK_INTENTS.BUSINESS_EXPANSION_ELECTION,

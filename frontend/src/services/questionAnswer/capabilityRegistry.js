@@ -164,6 +164,76 @@ export const CAPABILITY_REGISTRY = [
     outputSchema: "DecisionSupportAnswer",
     empiricalStatus: "NOT_VALIDATED",
     description: "Evaluates branch scaling vs new industry diversification, asking clarification when ambiguous."
+  },
+
+  // 6. Relationship Harmony & Reconciliation
+  {
+    domain: SPEC_DOMAINS.RELATIONSHIPS,
+    event: SPEC_EVENTS.RELATIONSHIP_HARMONY,
+    task: SPEC_TASKS.INTERPRETATION,
+    implementationStatus: "IMPLEMENTED",
+    evaluatorId: "marriageRelationshipOutlook",
+    requiredInputs: ["birthProfile", "calculationSettings"],
+    requiredCalculations: ["natalFacts", "7thHouseLord", "venusJupiterDignity", "dashaTimeline"],
+    outputSchema: "RelationshipHarmonyAnswer",
+    empiricalStatus: "NOT_VALIDATED",
+    description: "Evaluates relational harmony, mutual communication, and reconciliation scope distinct from marriage formation."
+  },
+
+  // 7. Spouse Family Economic Comparison
+  {
+    domain: SPEC_DOMAINS.MARRIAGE,
+    event: SPEC_EVENTS.SPOUSE_CHARACTERISTICS,
+    task: SPEC_TASKS.COMPARISON,
+    implementationStatus: "IMPLEMENTED",
+    evaluatorId: "spouseFamilyComparison",
+    requiredInputs: ["birthProfile", "calculationSettings"],
+    requiredCalculations: ["2ndHouseNative", "8thHouseSpouseFamily", "jupiterVenusDispositions"],
+    outputSchema: "SocioEconomicComparisonAnswer",
+    empiricalStatus: "NOT_VALIDATED",
+    description: "Evaluates 2nd vs 8th house traditional assets without fabricating currency figures or declaring unverified parity."
+  },
+
+  // 8. Household Residence Arrangement
+  {
+    domain: SPEC_DOMAINS.FAMILY,
+    event: SPEC_EVENTS.GENERAL_EVENT,
+    task: SPEC_TASKS.INTERPRETATION,
+    implementationStatus: "IMPLEMENTED",
+    evaluatorId: "householdArrangement",
+    requiredInputs: ["birthProfile", "calculationSettings"],
+    requiredCalculations: ["4thHouseResidence", "2ndHouseKutumba", "moonNodalInfluences"],
+    outputSchema: "ResidenceArrangementAnswer",
+    empiricalStatus: "NOT_VALIDATED",
+    description: "Evaluates joint family vs independent nuclear living without substituting D10 career commentary."
+  },
+
+  // 9. Foreign Employment
+  {
+    domain: SPEC_DOMAINS.EMPLOYMENT,
+    event: SPEC_EVENTS.WORK_ABROAD,
+    task: SPEC_TASKS.TIMING,
+    implementationStatus: "IMPLEMENTED",
+    evaluatorId: "foreignEmployment",
+    requiredInputs: ["birthProfile", "calculationSettings"],
+    requiredCalculations: ["10th6thCareer", "9th12thForeign", "rahuActivation", "dashaTimeline"],
+    outputSchema: "EventTimingAnswer",
+    empiricalStatus: "NOT_VALIDATED",
+    description: "Requires simultaneous career (10th/6th) and foreign residence (9th/12th/Rahu) activation; travel alone does not entail employment."
+  },
+
+  // 10. Named Examination Outlook
+  {
+    domain: SPEC_DOMAINS.EDUCATION,
+    event: SPEC_EVENTS.EXAM_SUCCESS,
+    task: SPEC_TASKS.INTERPRETATION,
+    implementationStatus: "IMPLEMENTED",
+    evaluatorId: "namedExamination",
+    requiredInputs: ["birthProfile", "calculationSettings", "examName", "targetSession"],
+    requiredCalculations: ["5thHouseDiscernment", "6thHouseCompetition", "mercuryJupiterDignity", "dashaTimeline"],
+    outputSchema: "ExaminationOutlookAnswer",
+    empiricalStatus: "NOT_VALIDATED",
+    description: "Preserves exact exam name and target session, refuses pass/fail guarantees, and emphasizes syllabus mastery and mock tests."
   }
 ];
 

@@ -8,8 +8,23 @@
  * 3. Appends statutory medical notices in English and Tamil.
  */
 
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
+
 export function evaluateWellnessVitalityCycle({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_WELLNESS_VITALITY_CYCLE";
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "WELLNESS_VITALITY_CYCLE",
+      taskType: "VITALITY_RHYTHM_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "planetaryPositions"],
+      traditionalMethod: "1st & 6th Bhavas, Sun & Moon Vitality Karakas",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate personal vitality rhythms. A verified birth chart with calculated Ascendant and Sun/Moon placements is required.",
+      customDirectAnswerTa: "உடல் சக்தி மற்றும் புத்துணர்ச்சி சுழற்சியை மதிப்பிட தேவையான பிறப்பு ஜாதகத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
 
   // Statutory Medical Disclaimer
   const statutoryNotice = {

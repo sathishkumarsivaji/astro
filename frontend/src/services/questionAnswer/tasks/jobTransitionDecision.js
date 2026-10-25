@@ -9,8 +9,23 @@
  * and actionable career realities without fabricating guaranteed hiring outcomes.
  */
 
+import { hasChartData, buildInsufficientDataAnswer } from "../../chartAccessors.js";
+
 export function evaluateJobTransitionDecision({ question = "", context = {}, isTamil = false } = {}) {
   const questionId = context.questionId || "TASK_JOB_TRANSITION_DECISION";
+
+  if (!hasChartData(context)) {
+    return buildInsufficientDataAnswer({
+      questionId,
+      intent: "JOB_TRANSITION_DECISION",
+      taskType: "CAREER_DECISION_EVALUATION",
+      isTamil,
+      missingInputs: ["birthChart", "planetaryPositions"],
+      traditionalMethod: "10th/6th/3rd Bhavas, Mercury & Saturn Career Synthesis",
+      customDirectAnswerEn: "Insufficient birth chart data to evaluate career transition prospects. Evaluating job change vs retention requires calculated career house positions from a verified birth chart.",
+      customDirectAnswerTa: "வேலை மாற்றம் அல்லது பணியில் தொடர்வதை மதிப்பிட தேவையான பிறப்பு ஜாதகத் தரவுகள் கிடைக்கவில்லை."
+    });
+  }
   const raw = String(question || "").toLowerCase();
 
   const isSwitchExplicit = /\b(switch|change\s+job|new\s+job|new\s+company|leave|resign|move\s+out|மாற|வேலை\s*மாற்ற|புதிய\s*பணி)\b/i.test(raw);

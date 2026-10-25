@@ -300,8 +300,12 @@ export function computeTimingWindows({
         startYear,
         window: {
           id: windowId,
+          domain: canonicalDomain,
+          category: factors.category || canonicalDomain,
           windowStart: dasha.startDate || String(startYear),
           windowEnd: dasha.endDate || String(endYear),
+          yearStart: startYear,
+          yearEnd: endYear,
           resolution: windowResolution,
           triggerType,
           confidenceClass: (isMdKaraka && (isAdKaraka || transitEval.hasConvergence)) ? "HIGH" : "MODERATE",

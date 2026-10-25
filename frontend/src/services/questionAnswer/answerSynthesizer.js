@@ -165,14 +165,20 @@ export function synthesizeAnswer({
       ? tr.supportingClaims
       : [tr.traditionalMethod || "Traditional Task Guidance"];
     
-    if (tr.intent === "FOREIGN_TRIP_TIMING") {
-      relevantSections = ["travel", "overview"];
+    if (tr.intent === "FOREIGN_TRIP_TIMING" || tr.intent === "FOREIGN_EMPLOYMENT") {
+      relevantSections = ["travel", "career", "overview"];
     } else if (tr.intent === "HOME_CONSTRUCTION_TIMING" || tr.intent === "PROPERTY_BUY_VS_BUILD_DECISION") {
       relevantSections = ["property", "overview"];
     } else if (tr.intent === "VEHICLE_PURCHASE_TIMING") {
       relevantSections = ["vehicles", "overview"];
     } else if (tr.intent === "MONTHLY_OUTLOOK") {
       relevantSections = ["timeline", "overview"];
+    } else if (tr.intent === "MARRIAGE_RELATIONSHIP_OUTLOOK" || tr.intent === "SPOUSE_FAMILY_ECONOMIC_COMPARISON") {
+      relevantSections = ["relationships", "overview"];
+    } else if (tr.intent === "HOUSEHOLD_RESIDENCE_ARRANGEMENT") {
+      relevantSections = ["relationships", "family", "overview"];
+    } else if (tr.intent === "NAMED_EXAMINATION_OUTLOOK") {
+      relevantSections = ["education", "career", "overview"];
     } else {
       relevantSections = ["dailyGuidance"];
     }
@@ -197,6 +203,10 @@ export function synthesizeAnswer({
       timingWindow = tr.recommendation?.preferredWindow
         || (tr.candidateWindows?.[0] && tr.candidateWindows[0].windowStart ? `${tr.candidateWindows[0].windowStart} – ${tr.candidateWindows[0].windowEnd}` : "")
         || (tr.evaluatedRange ? `${tr.evaluatedRange.start} – ${tr.evaluatedRange.end}` : null);
+      if (resolution && tr.timingResolution) {
+        resolution.timingResolution = tr.timingResolution;
+        resolution.timingStatus = tr.timingStatus || "CONVERGENCE_ESTABLISHED";
+      }
     }
   }
 
@@ -419,11 +429,11 @@ export function synthesizeAnswer({
         const d9Lord = varga.lagnaLord;
         const d97thSign = varga.seventhHouseSign;
         const d97thLord = varga.seventhLord;
-        const win = evidence.timingWindows?.find(w => w.domain === "marriage" || w.category === "RELATIONSHIPS") || null;
-        const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (win.yearStart && win.yearEnd)));
-        const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : null);
-        const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : null);
+        const win = evidence.timingWindows?.find(w => w.domain === "marriage" || w.category === "RELATIONSHIPS") || evidence.timingWindows?.[0] || null;
+        const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : (win?.windowStart ? String(win.windowStart).slice(0, 4) : null));
+        const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : (win?.windowEnd ? String(win.windowEnd).slice(0, 4) : null));
         const winYearsStr = (startYear && endYear) ? `${startYear}–${endYear}` : (win?.years || null);
+        const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (startYear && endYear)));
 
         if (isTamil) {
           directAnswer = `உங்கள் நவாம்சம் (D9) ${toTamilRasi(d9Lagna)} லக்னமாக அமைந்து, அதன் லக்னாதிபதி ${toTamilPlanet(d9Lord)} ஆவார். நவாம்ச 7-ம் பாவகம் ${toTamilRasi(d97thSign)} ஆக அமைந்து அதன் அதிபதியாக ${toTamilPlanet(d97thLord)} விளங்குகிறார்.${hasCalculatedWindow ? ` தசா மற்றும் கோச்சார கணிதத்தின்படி சாதகமான திருமண காலக்கோடு ${winYearsStr} காலகட்டத்தில் சுட்டிக்காட்டப்படுகிறது.` : " தசா மற்றும் கோச்சார இணைவு அடிப்படையில் திருமண வாய்ப்பு காலங்கள் பகுப்பாய்வு செய்யப்படுகின்றன."} களத்திரகாரகன் சுக்கிரன் மற்றும் நவாம்ச அமைப்புகள் திருமண பந்தத்திற்கான பாரம்பரிய சாதக நிலையை வெளிப்படுத்துகின்றன.`;
@@ -627,11 +637,11 @@ export function synthesizeAnswer({
   else if (domainResult.domains?.includes("property") || intentResult.intents?.includes("PROPERTY")) {
     const h4 = hMap[4] || {};
     const mars = pMap["Mars"] || {};
-    const win = evidence.timingWindows?.find(w => w.domain === "property" || w.category === "ASSETS") || null;
-    const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (win.yearStart && win.yearEnd)));
-    const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : null);
-    const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : null);
+    const win = evidence.timingWindows?.find(w => w.domain === "property" || w.category === "ASSETS") || evidence.timingWindows?.[0] || null;
+    const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : (win?.windowStart ? String(win.windowStart).slice(0, 4) : null));
+    const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : (win?.windowEnd ? String(win.windowEnd).slice(0, 4) : null));
     const winYearsStr = (startYear && endYear) ? `${startYear}–${endYear}` : (win?.years || null);
+    const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (startYear && endYear)));
 
     // Classify property inquiry subtype: BUY_LAND, BUILD_HOUSE, or BUY_EXISTING_PROPERTY
     let propType = "BUY_EXISTING_PROPERTY";
@@ -805,11 +815,11 @@ export function synthesizeAnswer({
     const sun = pMap["Sun"] || {};
     const merc = pMap["Mercury"] || {};
     const sat = pMap["Saturn"] || {};
-    const win = evidence.timingWindows?.find(w => w.domain === "career" || w.category === "CAREER") || null;
-    const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (win.yearStart && win.yearEnd)));
-    const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : null);
-    const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : null);
+    const win = evidence.timingWindows?.find(w => w.domain === "career" || w.category === "CAREER") || evidence.timingWindows?.[0] || null;
+    const startYear = win?.yearStart || (win?.years ? String(win.years).split("-")[0]?.trim() : (win?.windowStart ? String(win.windowStart).slice(0, 4) : null));
+    const endYear = win?.yearEnd || (win?.years ? String(win.years).split("-")[1]?.trim() : (win?.windowEnd ? String(win.windowEnd).slice(0, 4) : null));
     const winYearsStr = (startYear && endYear) ? `${startYear}–${endYear}` : (win?.years || null);
+    const hasCalculatedWindow = Boolean(win && (win.years || win.calendarYears || (startYear && endYear)));
     const activeD = evidence.activeDasha;
     const dashaSummaryEn = activeD?.mahadasha ? `during the active ${activeD.mahadasha} Mahadasha${activeD.antardasha ? ` — ${activeD.antardasha} Antardasha` : ""}` : "under operative planetary periods";
     const dashaSummaryTa = activeD?.mahadasha ? `நடப்பு ${toTamilPlanet(activeD.mahadasha)} மகா தசை${activeD.antardasha ? ` — ${toTamilPlanet(activeD.antardasha)} புக்தி` : ""} காலத்தில்` : "நடப்பு தசா சுழற்சி காலத்தில்";

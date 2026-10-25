@@ -395,6 +395,11 @@ export default function App() {
             onOpenCert={() => setIsCertOpen(true)}
             onSelectPrompt={handleSelectPromptFromHome}
             userCredits={userCredits}
+            onNavigate={(tab, subTab) => {
+              setActiveTab(tab);
+              if (tab === "explore" && subTab) setExploreSubTab(subTab);
+              if (tab === "timeline" && subTab) setTimelineSubTab(subTab);
+            }}
           />
         )}
 
@@ -609,7 +614,24 @@ export default function App() {
             )}
 
             {exploreSubTab === "panchang" && (
-              <PanchangMuhurta chartData={chartData} lang={lang} />
+              <PanchangMuhurta
+                chartData={chartData}
+                lang={lang}
+                onNavigate={(tab, subTab) => {
+                  setActiveTab(tab);
+                  if (tab === "explore" && subTab) setExploreSubTab(subTab);
+                  if (tab === "timeline" && subTab) setTimelineSubTab(subTab);
+                }}
+                onSelectPrompt={handleSelectPromptFromHome}
+                onOpenAsk={() => {
+                  if (!isRegistered) {
+                    setAuthInitialMode("register");
+                    setIsAuthOpen(true);
+                  } else {
+                    setActiveTab("ask");
+                  }
+                }}
+              />
             )}
 
             {exploreSubTab === "recovery" && (

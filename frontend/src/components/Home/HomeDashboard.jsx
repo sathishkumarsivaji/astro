@@ -35,7 +35,8 @@ export default function HomeDashboard({
   onOpenAsk,
   onOpenCert,
   onSelectPrompt,
-  userCredits
+  userCredits,
+  onNavigate
 }) {
   const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState("career");
@@ -185,9 +186,20 @@ export default function HomeDashboard({
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2.5">
+                {onNavigate && (
+                  <button
+                    onClick={() => onNavigate("explore", "panchang")}
+                    className="px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold text-xs shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+                    title="View Daily Panchang & Muhurta"
+                  >
+                    <Clock className="w-4 h-4 text-amber-700" />
+                    <span>{isTamil ? "பஞ்சாங்கம் & சுப நேரம்" : "Panchang & Timings"}</span>
+                  </button>
+                )}
+
                 <button
                   onClick={onOpenCert}
-                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-stone-800 border border-amber-300 font-bold text-xs shadow-sm flex items-center gap-2 transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-stone-800 border border-amber-300 font-bold text-xs shadow-sm flex items-center gap-2 transition-all cursor-pointer"
                   title="View Verified Calculation Certificate"
                 >
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
@@ -196,7 +208,7 @@ export default function HomeDashboard({
 
                 <button
                   onClick={onOpenReport}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-500/20 hover:brightness-105 flex items-center gap-2 transition-all"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-500/20 hover:brightness-105 flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <FileText className="w-4 h-4 text-amber-100" />
                   <span>{isTamil ? "முழு அறிக்கை (Full Dossier)" : "View Full Report"}</span>
