@@ -33,8 +33,12 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Temporary archives
+# Temporary archives & detached release attestations
 *.zip
+*.zip.sha256
+RELEASE_ATTESTATION.json
+RELEASE_ATTESTATION.sha256
+ENVIRONMENT_PREPARATION_LOG.json
 
 # Database & runtime stores
 backend/data/*.json

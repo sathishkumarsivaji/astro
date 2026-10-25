@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Traditional Rule Provenance Registry
+ * SKR ASTRO — Traditional Rule Provenance Registry
  *
  * Every predictive/interpretive rule must carry full provenance.
  * This registry defines the schema and provides utilities for rule metadata.
@@ -17,7 +17,7 @@
  * @property {string} ruleTextSummary - Brief summary of the rule in plain language
  * @property {string} implementationFormula - How the rule is computationally implemented
  * @property {string[]} knownAlternativeConventions - Other traditions' versions of this rule
- * @property {string} selectedConvention - Which convention ASTROVERSE uses and why
+ * @property {string} selectedConvention - Which convention SKR ASTRO uses and why
  * @property {string} validationStatus - One of: TRADITIONAL_RULE_ONLY, INTERNALLY_TESTED, EXTERNALLY_VALIDATED
  */
 

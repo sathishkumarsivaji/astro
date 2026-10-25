@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Timeline Applicability Pipeline
+ * SKR ASTRO — Timeline Applicability Pipeline
  * ============================================
  * Version: 2.1.0
  * 

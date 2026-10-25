@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Expert Prediction System Entry Point
+ * SKR ASTRO — Expert Prediction System Entry Point
  * ===================================================
  *
  * Public API for the Expert Mode prediction layer.

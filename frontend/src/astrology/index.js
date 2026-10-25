@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Master Multi-System Computational Astrology Orchestrator
+ * SKR ASTRO — Master Multi-System Computational Astrology Orchestrator
  *
  * Provides unified access to all 4 astrological calculation profiles:
  * - Lahiri (Chitrapaksha Sidereal)

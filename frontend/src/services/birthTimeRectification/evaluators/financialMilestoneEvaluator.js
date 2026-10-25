@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Financial Milestone Event Evaluator
+ * SKR ASTRO — Financial Milestone Event Evaluator
  *
  * Evaluates timing and structural alignment for financial gains, investments, and wealth milestones:
  * 1. D1: 2nd house (Dhana), 11th house (Labha), 5th/9th houses (Lakshmi sthanas), Jupiter, Venus, Mercury

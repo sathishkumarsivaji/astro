@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — High-Precision Ephemeris & Astronomical Observation Layer
+ * SKR ASTRO — High-Precision Ephemeris & Astronomical Observation Layer
  *
  * Wraps astronomy-engine for geocentric ecliptic coordinates, velocities,
  * lunar node calculations (Mean and True), and ayanamsha evaluation.

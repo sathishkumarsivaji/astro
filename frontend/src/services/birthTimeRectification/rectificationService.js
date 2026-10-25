@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Master Birth-Time Rectification Service
+ * SKR ASTRO — Master Birth-Time Rectification Service
  *
  * Coordinates the full evidence-based birth-time rectification workflow:
  * 1. Multi-Stage Progressive Search (Coarse Scan -> Local Maxima -> Fine Refinement)

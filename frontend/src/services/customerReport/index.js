@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Customer Life Intelligence Report Service
+ * SKR ASTRO — Customer Life Intelligence Report Service
  * ========================================================
  * Unified entry point orchestrating the complete customer report pipeline:
  *
@@ -525,7 +525,7 @@ export function generateLifeIntelligenceReport(chartData, options = {}) {
     houseSystem: chartData.houseSystem || (chartData.system === "western" ? "Placidus" : "Equal / Whole Sign"),
     lunarNodeConvention: chartData.nodeType || chartData.lunarNodeConvention || "Mean Node",
     ephemeris: chartData.ephemeris || "AstronomyEngine/VSOP87",
-    calculationEngine: chartData.calculationEngine || (releaseManifest?.astronomyEngineVersion ? `ASTROVERSE Core v${releaseManifest.astronomyEngineVersion}` : "ASTROVERSE Core v4.2.0"),
+    calculationEngine: chartData.calculationEngine || (releaseManifest?.astronomyEngineVersion ? `SKR ASTRO Core v${releaseManifest.astronomyEngineVersion}` : "SKR ASTRO Core v4.2.0"),
     generatedAt: new Date().toISOString(),
     reportFingerprint,
     releaseVersion: chartData.releaseVersion || releaseManifest?.releaseVersion || "unknown",

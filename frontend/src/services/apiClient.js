@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Authoritative Unified API Client
+ * SKR ASTRO — Authoritative Unified API Client
  *
  * Single environment-aware HTTP client for all frontend API communication.
  * Eliminates ad-hoc localhost URL fallbacks and provides standard timeouts,

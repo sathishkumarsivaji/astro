@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Foreign Employment Task Evaluator
+ * SKR ASTRO — Foreign Employment Task Evaluator
  * ===============================================
  * Evaluates overseas job and foreign employment opportunities.
  *

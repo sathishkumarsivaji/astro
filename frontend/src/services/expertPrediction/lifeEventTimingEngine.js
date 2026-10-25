@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Life Event Timing Engine
+ * SKR ASTRO — Life Event Timing Engine
  * =====================================
  * Canonical alias for the life-event domain timing engine, providing
  * architectural separation from the MuhurtaEngine.

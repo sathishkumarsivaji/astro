@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Education & Academic Milestone Event Evaluator
+ * SKR ASTRO — Education & Academic Milestone Event Evaluator
  *
  * Evaluates timing and structural alignment for education events:
  * 1. D1: 4th house (Vidya), 5th house (intellect), 9th house (higher learning), Mercury, Jupiter

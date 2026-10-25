@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Server-Side AI Evidence Gate & Universal Semantic Claim Firewall
+ * SKR ASTRO — Server-Side AI Evidence Gate & Universal Semantic Claim Firewall
  * ==============================================================================
  * Backend must NEVER return ungrounded, contradictory, or safety-violating AI text.
  * Every AI response passes through:

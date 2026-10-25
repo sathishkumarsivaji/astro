@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Canonical Chart Accessors Service
+ * SKR ASTRO — Canonical Chart Accessors Service
  * ===============================================
  * Re-exports canonical chart data accessors for services.
  */

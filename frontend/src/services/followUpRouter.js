@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Follow-Up Question Router
+ * SKR ASTRO — Follow-Up Question Router
  *
  * Directs follow-up questions to either:
  * 1. FACTUAL: Instant, deterministic answer from calculated chart facts (0 AI cost, 0 hallucination risk)

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Permutation & Null Distribution Test Engine
+ * SKR ASTRO — Permutation & Null Distribution Test Engine
  *
  * Evaluates whether peak candidate score statistically exceeds random noise
  * by comparing against a null distribution of permuted (shuffled) event dates & types.

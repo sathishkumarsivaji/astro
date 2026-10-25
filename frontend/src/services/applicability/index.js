@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Applicability & Prerequisite Engine Exports
+ * SKR ASTRO — Applicability & Prerequisite Engine Exports
  * ========================================================
  */
 

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Multi-System Astrological Comparison & Cross-System Agreement Engine
+ * SKR ASTRO — Multi-System Astrological Comparison & Cross-System Agreement Engine
  *
  * Compares calculated charts across Lahiri, KP, Raman, and Tropical:
  * - Planetary position & house differences

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Chart Calculation Convention Registry
+ * SKR ASTRO — Chart Calculation Convention Registry
  *
  * Provides formal convention metadata for every calculation result,
  * enabling full auditability and reproducibility.

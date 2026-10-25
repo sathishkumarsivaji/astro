@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Current Period Engine (Section 21)
+ * SKR ASTRO — Current Period Engine (Section 21)
  * ================================================
  * Computes CURRENT LIFE PHASE calculated from actual current date.
  * Guarantees that childhood periods are never presented as current,

@@ -957,7 +957,7 @@ Connections between the 2nd (wealth), 6th (service), 10th (profession), and 11th
       }).join("\n")
     : (isTamil ? "நிலையான நவகிரக அமைப்புகளின் வழியே சுப பலன்கள் வெளிப்படுகின்றன." : "Standard planetary alignments govern life outcomes without major adverse yoga impediments.");
 
-  const stagesText = timelineStages.slice(0, 9).map(s => {
+  const stagesText = timelineStages.map(s => {
     const sLord = isTamil ? (s.lordTamil || toTamilPlanet(s.lord || s.dashaTrigger)) : (s.lord || s.dashaTrigger);
     const trans = (s.transitCrossings || []).map(t => typeof t === "string" ? t : (isTamil ? (t.summaryTa || t.summaryEn || "") : (t.summaryEn || t.title || ""))).filter(Boolean).join(" | ");
     return `- **${isTamil ? `பருவம் ${s.stageNum}: வயது ${s.ageRange}` : `Stage ${s.stageNum}: Ages ${s.ageRange}`} (${s.calendarYears || ''})** — *${isTamil ? (s.themeTamil || s.title) : s.title}* [${isTamil ? `தசை: ${sLord}` : `Dasha: ${s.dashaTrigger}`}]${trans ? `\n  - ${isTamil ? "கோசாரம்" : "Transits"}: ${trans}` : ""}`;
@@ -972,7 +972,7 @@ Connections between the 2nd (wealth), 6th (service), 10th (profession), and 11th
     : (remedies.avoidGemstones || (isTamil ? "மறைவு ஸ்தான அதிபதிகளின் ரத்தினங்கள்" : "Dusthana Lord Gemstones"));
 
   if (isTamil) {
-    return `# ஆஸ்ட்ரோவர்ஸ் — வேத ஜோதிட மகா ஜாதக ஆயுள் வழிகாட்டி
+    return `# SKR ASTRO — வேத ஜோதிட மகா ஜாதக ஆயுள் வழிகாட்டி
 
 **ஜாதகர் பெயர்:** ${name} | **பிறந்த தேதி:** ${bDate} | **நேரம்:** ${bTime} | **இடம்:** ${bPlace}
 **ஜோதிட முறை:** ${sysName} | **லக்னம்:** ${ascSignTamil} (${ascDegStr}) | **ராசி:** ${moonSignTamil} | **நட்சத்திரம்:** ${moonNakTamil} பாதம் ${moonPada} | **சூரியன்:** ${sunSignTamil}

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Spherical Astronomy & House Cusp Engines
+ * SKR ASTRO — Spherical Astronomy & House Cusp Engines
  *
  * Implements high-precision coordinate transformations and house systems:
  * - True Obliquity of the Ecliptic (Laskar 1986 polynomial)

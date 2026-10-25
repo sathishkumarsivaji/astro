@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Follow-Up Report Context Builder (Strict Anti-Fabrication)
+ * SKR ASTRO — Follow-Up Report Context Builder (Strict Anti-Fabrication)
  *
  * Constructs a normalized, comprehensive context object from the already-generated
  * horoscope report. Extracts the genuine active section data and cross-domain findings.

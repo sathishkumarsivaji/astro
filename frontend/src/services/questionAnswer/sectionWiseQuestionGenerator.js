@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Dynamic Section-Wise Report Q&A Generator
+ * SKR ASTRO — Dynamic Section-Wise Report Q&A Generator
  * ========================================================
  * Generates dynamically adapted suggested questions for each report section
  * (Marriage, Career, Property, Finance) customized to actual chart configurations.

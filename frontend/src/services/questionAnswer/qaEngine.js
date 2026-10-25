@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Precision Evidence-Linked Q&A Engine Orchestrator
+ * SKR ASTRO — Precision Evidence-Linked Q&A Engine Orchestrator
  * ==============================================================
  * Orchestrates the end-to-end precision astrological question-answering chain:
  * QUESTION
@@ -20,7 +20,7 @@
  * → INDEPENDENT QUALITY SCORE EVALUATION
  * → FINAL ANSWER
  *
- * Implements the complete ASTROVERSE Precision Q&A Engine Mandate.
+ * Implements the complete SKR ASTRO Precision Q&A Engine Mandate.
  */
 
 import { normalizeQuestion } from "./questionNormalizer.js";

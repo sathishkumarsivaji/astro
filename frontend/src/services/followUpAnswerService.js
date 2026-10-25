@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Follow-Up Answer Generation Service (100% Report-Grounded)
+ * SKR ASTRO — Follow-Up Answer Generation Service (100% Report-Grounded)
  *
  * Grounded strictly in the calculated report context and evidence ledger.
  * Never hallucinates planetary degrees, dashas, or uncalculated techniques.

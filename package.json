@@ -1,7 +1,7 @@
 {
-  "name": "astroverse",
+  "name": "skr-astro",
   "version": "3.0.0",
-  "description": "ASTROVERSE — Production-Grade Astrological Research & Precision Q&A Engine",
+  "description": "SKR ASTRO — Production-Grade Astrological Research & Precision Q&A Engine",
   "type": "module",
   "scripts": {
     "dev": "npm --prefix frontend run dev",

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Expert Mode Generic Domain Timing Engine
+ * SKR ASTRO — Expert Mode Generic Domain Timing Engine
  * ======================================================
  * Orchestrates the complete domain timing pipeline:
  *   1. Extract relevant dasha periods

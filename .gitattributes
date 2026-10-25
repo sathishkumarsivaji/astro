@@ -14,3 +14,11 @@
 *.txt text eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# Release integrity: exclude release artifacts and detached attestations from distribution archives
+RELEASE_ATTESTATION.json export-ignore
+RELEASE_ATTESTATION.sha256 export-ignore
+ASTRO.zip export-ignore
+ASTRO*.zip export-ignore
+ENVIRONMENT_PREPARATION_LOG.json export-ignore
+

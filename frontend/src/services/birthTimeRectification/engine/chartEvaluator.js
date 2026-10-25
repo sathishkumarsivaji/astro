@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Rectification Chart Evaluator & Cache
+ * SKR ASTRO — Rectification Chart Evaluator & Cache
  *
  * Calls existing validated astronomical / astrological calculation functions:
  * - calculatePlanetaryPositions (from astroEngine.js)

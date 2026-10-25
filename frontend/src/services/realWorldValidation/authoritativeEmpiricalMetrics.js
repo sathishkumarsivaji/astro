@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Single Authoritative Empirical Metrics Provider
+ * SKR ASTRO — Single Authoritative Empirical Metrics Provider
  * =============================================================
  * Enforces Requirements P0-2 & P0-6:
  * - Never hardcode empirical performance statistics inside domain timing or reporting logic.

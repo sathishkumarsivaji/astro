@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Follow-Up Question Generation Engine
+ * SKR ASTRO — Follow-Up Question Generation Engine
  *
  * Dynamically produces relevant, verified, and deduplicated follow-up questions
  * for any given report section or the full report.

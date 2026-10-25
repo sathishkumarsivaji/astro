@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — High-Precision Time & Coordinate Normalization Engine
+ * SKR ASTRO — High-Precision Time & Coordinate Normalization Engine
  *
  * Implements strict UTC instant creation, Julian Day (JD), Julian Centuries (T),
  * and Greenwich/Local Sidereal Time (GMST / LMST) according to IAU-76 / IAU-2000 standards.

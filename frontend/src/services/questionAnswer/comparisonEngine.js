@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Dedicated Comparison Engine
+ * SKR ASTRO — Dedicated Comparison Engine
  * ==========================================
  * Evaluates comparative questions (Option A vs Option B) using
  * deterministic multi-factor scoring, astrological significator alignment,

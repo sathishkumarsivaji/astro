@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Multi-System Astrology Definitions & Metadata
+ * SKR ASTRO — Multi-System Astrology Definitions & Metadata
  *
  * Authoritative registry of supported astrology systems:
  * 1. Lahiri / Chitrapaksha (Sidereal)

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Property, Real Estate & Conveyance Event Evaluator
+ * SKR ASTRO — Property, Real Estate & Conveyance Event Evaluator
  *
  * Evaluates timing and structural alignment for property events:
  * 1. D1: 4th house (Bhumi/Griha), 4th lord, Mars (Bhoomi Karaka), Venus (Comforts/Vahana)

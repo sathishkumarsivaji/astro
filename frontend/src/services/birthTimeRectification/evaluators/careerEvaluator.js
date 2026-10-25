@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Career & Professional Event Evaluator
+ * SKR ASTRO — Career & Professional Event Evaluator
  *
  * Evaluates timing and structural alignment for career milestones:
  * 1. D1: 10th house, 10th lord, 1st/6th/11th houses, Sun (authority), Saturn (karma/vocation)

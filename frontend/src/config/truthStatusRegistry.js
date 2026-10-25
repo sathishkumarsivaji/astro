@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Evidence Truth Status Registry
+ * SKR ASTRO — Evidence Truth Status Registry
  *
  * Every evidence item must carry a specific truth status.
  * The generic "VERIFIED" is prohibited — use one of these specific statuses.

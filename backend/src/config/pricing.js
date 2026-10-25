@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Canonical Backend Pricing & Subscription Plans
+ * SKR ASTRO — Canonical Backend Pricing & Subscription Plans
  *
  * Authoritative Indian Rupee (₹) & Global Pricing Architecture:
  * - Basic Report: ₹20

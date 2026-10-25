@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Monthly Outlook Task Evaluator
+ * SKR ASTRO — Monthly Outlook Task Evaluator
  * ============================================
  * Resolves upcoming months forecast requests (defaulting to next 3 calendar months).
  * Produces structured month-by-month cards with operating Dasha sub-periods,

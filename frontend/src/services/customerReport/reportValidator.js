@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Report Validator & Quality Auditor (Sections 33 & 34)
+ * SKR ASTRO — Report Validator & Quality Auditor (Sections 33 & 34)
  * ==================================================================
  * Implements the mandatory 16-check validation suite before customer report
  * and PDF generation. Calculates internal Report Quality Score across 8

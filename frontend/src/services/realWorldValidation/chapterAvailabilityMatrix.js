@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Complete Chapter Availability & Empirical Validation Matrix
+ * SKR ASTRO — Complete Chapter Availability & Empirical Validation Matrix
  *
  * Implements Requirements 8 & 19:
  * - Automatically generates the complete availability and empirical validation matrix across all 20 chapters.

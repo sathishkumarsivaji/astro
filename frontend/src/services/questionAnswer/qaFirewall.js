@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Post-Generation LLM Firewall & Grounding Verifier
+ * SKR ASTRO — Post-Generation LLM Firewall & Grounding Verifier
  * ===============================================================
  * Validates generated answer text against the structured Answer Object.
  * Enforces zero fabrication of uncalculated planets, ungrounded dates,

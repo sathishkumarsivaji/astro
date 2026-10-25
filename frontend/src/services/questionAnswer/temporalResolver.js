@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Temporal Resolver for Actionable Tasks
+ * SKR ASTRO — Temporal Resolver for Actionable Tasks
  * ====================================================
  * Resolves local dates, weeks, and timeframes for action-oriented tasks.
  * Distinguishes action location / timezone from birthplace timezone.

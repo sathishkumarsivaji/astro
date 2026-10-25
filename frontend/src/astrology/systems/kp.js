@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Krishnamurti Padhdhati (KP) Astrology Engine
+ * SKR ASTRO — Krishnamurti Padhdhati (KP) Astrology Engine
  *
  * Implements genuine KP System:
  * - KP Ayanamsha (precession rate 50.2388475"/year)

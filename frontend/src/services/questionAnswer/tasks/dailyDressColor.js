@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Daily Dress Colour Task Evaluator
+ * SKR ASTRO — Daily Dress Colour Task Evaluator
  * ===============================================
  * Evaluates clothing colour recommendations using disclosed traditional methods.
  * Never substitutes natal chart overviews for a colour recommendation.

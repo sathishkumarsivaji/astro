@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Evidence Retriever
+ * SKR ASTRO — Evidence Retriever
  * =================================
  * Retrieves structured chart facts, divisional placements, planetary periods,
  * directional convergence, and report findings strictly aligned with the Evidence Plan.

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — High-Precision Vedic Panchanga & Timing Enrichment Engine
+ * SKR ASTRO — High-Precision Vedic Panchanga & Timing Enrichment Engine
  *
  * Provides:
  * 1. 12-hour AM/PM and Next-Day aware formatting for all 5 Panchanga Angas
@@ -11,7 +11,6 @@
 
 import {
   calculateDailyPanchang,
-  calculateEventMuhurta,
   NAKSHATRAS
 } from "./astroEngine.js";
 
@@ -91,7 +90,7 @@ function formatDecimalHours12(h) {
   return `${String(h12).padStart(2, "0")}:${String(actualM).padStart(2, "0")} ${ampm}`;
 }
 
-function formatDecimalHours24(h) {
+export function formatDecimalHours24(h) {
   const normH = (h + 24) % 24;
   const hrs = Math.floor(normH);
   const mins = Math.round((normH % 1) * 60);
@@ -301,6 +300,168 @@ export function calculateEnrichedDailyPanchang(date, lat, lng, tz, timezoneId) {
   };
 }
 
+export const MUHURTA_EVENT_CONFIGS = {
+  marriage: {
+    id: "marriage",
+    nameEn: "Vivaha (Marriage)",
+    nameTa: "திருமண முகூர்த்தம் (Marriage)",
+    descEn: "Auspicious Venus/Jupiter & shubha nakshatra alignment",
+    descTa: "குரு, சுக்கிரன் மற்றும் சுப திதி/நட்சத்திரங்கள்",
+    shubhaNakshatras: [
+      "Rohini", "Mrigashira", "Magha", "Uttara Phalguni", "Hasta",
+      "Chitra", "Swati", "Anuradha", "Mula", "Uttara Ashadha",
+      "Uttara Bhadrapada", "Revati"
+    ],
+    ashubhaNakshatras: [
+      "Bharani", "Krittika", "Ardra", "Ashlesha", "Jyeshtha",
+      "Purva Phalguni", "Purva Ashadha", "Purva Bhadrapada", "Shatabhisha"
+    ],
+    shubhaVaras: [1, 3, 4, 5], // Mon, Wed, Thu, Fri
+    ashubhaVaras: [0, 2, 6],   // Sun, Tue, Sat
+    shubhaTithis: [2, 3, 5, 7, 10, 11, 13],
+    varjyaTithis: [4, 8, 9, 14, 0, 15],
+    beneficHoras: ["Jupiter", "Venus", "Mercury", "Moon"],
+    primaryRationaleEn: "Evaluates classical Vivaha Shuddhi: Auspicious lunar mansions (Rohini, Mriga, Uttara, Anuradha, Revati), avoidance of Rikta/Ashtami tithis and malefic varas, and alignment of Jupiter & Venus horas.",
+    primaryRationaleTa: "பாரம்பரிய விவாக சுத்தி: சுப திருமண நட்சத்திரங்கள் (மிருகசீரிஷம், ரோகிணி, உத்திரம், அனுஷம், ரேவதி), ரிக்தா/அஷ்டமி தவிர்ப்பு மற்றும் குரு/சுக்கிர ஹோரைகளின் சுப சேர்க்கை."
+  },
+
+  griha_pravesh: {
+    id: "griha_pravesh",
+    nameEn: "Griha Pravesham (Housewarming)",
+    nameTa: "கிரகப்பிரவேசம் (Housewarming)",
+    descEn: "Fixed sign Ascendant & auspicious lunar day",
+    descTa: "வாஸ்து புருஷர் விழிப்பு & ஸ்திர லக்ன சுபம்",
+    shubhaNakshatras: [
+      "Rohini", "Mrigashira", "Pushya", "Uttara Phalguni", "Hasta",
+      "Chitra", "Anuradha", "Uttara Ashadha", "Shravana", "Dhanishta",
+      "Shatabhisha", "Uttara Bhadrapada", "Revati"
+    ],
+    ashubhaNakshatras: [
+      "Bharani", "Krittika", "Ardra", "Ashlesha", "Jyeshtha", "Mula",
+      "Purva Phalguni", "Purva Ashadha", "Purva Bhadrapada"
+    ],
+    shubhaVaras: [1, 3, 4, 5],
+    ashubhaVaras: [0, 2], // Sun, Tue
+    shubhaTithis: [2, 3, 5, 7, 10, 11, 13],
+    varjyaTithis: [4, 9, 14, 0, 15],
+    preferShukla: true,
+    beneficHoras: ["Jupiter", "Venus", "Moon", "Mercury"],
+    primaryRationaleEn: "Evaluates Sthira (Fixed) stability, Vaastu alignment, Shukla Paksha auspicious lunar days, and daytime Sthira Rasi ascendant / Abhijit Muhurta windows.",
+    primaryRationaleTa: "ஸ்திர ராசி பலம், வாஸ்து புருஷர் சுபம், வளர்பிறை சுப திதிகள் மற்றும் அபிஜித் முகூர்த்த சுப காலங்கள் ஒருங்கிணைப்பு."
+  },
+
+  vehicle: {
+    id: "vehicle",
+    nameEn: "Vahana (Vehicle Purchase)",
+    nameTa: "வாகனம் வாங்குதல் (Vehicle Purchase)",
+    descEn: "Benefic Venus/Moon transit & auspicious vara",
+    descTa: "சுக்கிரன் & சந்திரன் சுப சஞ்சாரம்",
+    shubhaNakshatras: [
+      "Ashwini", "Rohini", "Punarvasu", "Pushya", "Hasta",
+      "Chitra", "Swati", "Shravana", "Dhanishta", "Shatabhisha", "Revati"
+    ],
+    ashubhaNakshatras: [
+      "Bharani", "Krittika", "Ardra", "Ashlesha", "Jyeshtha", "Mula", "Purva Phalguni"
+    ],
+    shubhaVaras: [5, 3, 4, 1], // Fri, Wed, Thu, Mon
+    ashubhaVaras: [2, 0], // Tue, Sun
+    shubhaTithis: [2, 3, 5, 7, 10, 11, 13, 15],
+    varjyaTithis: [4, 9, 14, 0],
+    beneficHoras: ["Venus", "Mercury", "Moon", "Jupiter"],
+    primaryRationaleEn: "Focuses on Venus (Vahana Karaka) and Moon hora resonance, swift (Kshipra/Chara) nakshatras for accident-free longevity, and avoiding malefic Mars/Saturn hours.",
+    primaryRationaleTa: "வாகன காரகன் சுக்கிரன் & சந்திரன் பலம், விபத்து தவிர்ப்பதற்கான சுப நட்சத்திரங்கள் (அசுவினி, புஷ்யம், ஹஸ்தம், சுவாதி) மற்றும் சுப ஹோரை நேரம்."
+  },
+
+  property: {
+    id: "property",
+    nameEn: "Bhumi (Property Purchase)",
+    nameTa: "பூமி / சொத்து கிரயம் (Property Purchase)",
+    descEn: "Mars & 4th house lord auspicious aspect",
+    descTa: "செவ்வாய், பூமி காரக சுப பார்வை",
+    shubhaNakshatras: [
+      "Mrigashira", "Punarvasu", "Magha", "Uttara Phalguni", "Hasta",
+      "Chitra", "Swati", "Anuradha", "Uttara Ashadha", "Shravana",
+      "Dhanishta", "Shatabhisha", "Uttara Bhadrapada", "Revati"
+    ],
+    ashubhaNakshatras: [
+      "Bharani", "Krittika", "Ardra", "Ashlesha", "Jyeshtha"
+    ],
+    shubhaVaras: [4, 5, 3, 1], // Thu, Fri, Wed, Mon
+    ashubhaVaras: [2, 6], // Tue, Sat
+    shubhaTithis: [2, 3, 5, 7, 10, 11, 13, 15],
+    varjyaTithis: [4, 9, 14, 0],
+    beneficHoras: ["Jupiter", "Venus", "Mars", "Mercury"],
+    primaryRationaleEn: "Requires Bhumi Karaka (Mars) and 4th house asset stability, favorable documentation tithis, and strictly avoiding Vishti Karana (Bhadra - litigation trigger).",
+    primaryRationaleTa: "பூமி காரகன் செவ்வாய் பலம், சொத்து கிரய சுப நட்சத்திரங்கள் மற்றும் பத்திர பதிவிற்கு உகந்த வியாழன்/வெள்ளி/புதன் சுப தினங்கள்."
+  },
+
+  business: {
+    id: "business",
+    nameEn: "Vyapar (Business Launch)",
+    nameTa: "தொழில் தொடங்குதல் (Business Launch)",
+    descEn: "Mercury/Jupiter commercial yoga timing",
+    descTa: "புதன், குரு சுப யோக காலம்",
+    shubhaNakshatras: [
+      "Ashwini", "Rohini", "Mrigashira", "Pushya", "Uttara Phalguni",
+      "Hasta", "Chitra", "Anuradha", "Uttara Ashadha", "Shravana",
+      "Dhanishta", "Revati"
+    ],
+    ashubhaNakshatras: [
+      "Bharani", "Krittika", "Ardra", "Ashlesha", "Jyeshtha", "Mula"
+    ],
+    shubhaVaras: [3, 4, 5, 1], // Wed, Thu, Fri, Mon
+    ashubhaVaras: [0, 2, 6], // Sun, Tue, Sat
+    shubhaTithis: [2, 3, 5, 7, 10, 11, 13, 15],
+    varjyaTithis: [4, 9, 14, 0],
+    shubhaYogas: ["Siddha", "Amrita", "Shubha", "Saubhagya", "Sukarma", "Brahma", "Indra", "Vriddhi", "Dhruva", "Sadhya"],
+    ashubhaYogas: ["Vyaghata", "Vajra", "Vyatipata", "Vaidhriti", "Shula", "Ganda", "Atiganda"],
+    beneficHoras: ["Mercury", "Jupiter", "Venus"],
+    primaryRationaleEn: "Synthesizes Mercury (Vyapar Karaka) and Jupiter (Dhana Karaka) commercial wealth yogas, Pushya/Hasta merchant nakshatras, and prosperous Pratishtha timing.",
+    primaryRationaleTa: "வியாபார காரகன் புதன் மற்றும் தனகாரகன் குருவின் வர்த்தக யோகங்கள், புஷ்யம்/ஹஸ்தம்/ரேவதி சுப நட்சத்திரங்கள் மற்றும் வாடிக்கையாளர் ஈர்ப்பு சுப காலம்."
+  },
+
+  travel: {
+    id: "travel",
+    nameEn: "Yatra (Auspicious Travel)",
+    nameTa: "சுப பிரயாணம் (Travel / Relocation)",
+    descEn: "Moon strength & auspicious directional alignment",
+    descTa: "சந்திர பலம் & சுப திசை முகூர்த்தம்",
+    shubhaNakshatras: [
+      "Ashwini", "Mrigashira", "Punarvasu", "Pushya", "Hasta",
+      "Anuradha", "Shravana", "Dhanishta", "Revati"
+    ],
+    ashubhaNakshatras: [
+      "Bharani", "Krittika", "Ardra", "Ashlesha", "Jyeshtha", "Mula"
+    ],
+    shubhaVaras: [1, 3, 4, 5], // Mon, Wed, Thu, Fri
+    ashubhaVaras: [2, 6], // Tue, Sat
+    shubhaTithis: [2, 3, 5, 7, 10, 11, 13],
+    varjyaTithis: [1, 4, 8, 9, 14, 0, 15],
+    dishashool: {
+      0: { direction: "West", directionTa: "மேற்கு" },
+      1: { direction: "East", directionTa: "கிழக்கு" },
+      2: { direction: "North", directionTa: "வடக்கு" },
+      3: { direction: "North", directionTa: "வடக்கு" },
+      4: { direction: "South", directionTa: "தெற்கு" },
+      5: { direction: "West", directionTa: "மேற்கு" },
+      6: { direction: "East", directionTa: "கிழக்கு" }
+    },
+    beneficHoras: ["Moon", "Jupiter", "Venus", "Mercury"],
+    primaryRationaleEn: "Calculates Chandra Balam for safe journey, directional Dishashool avoidance, swift Chara/Kshipra nakshatras, and protection from travel delay tithis.",
+    primaryRationaleTa: "சந்திர பலம், திசாசூலை (தவிர்க்க வேண்டிய திசைகள்) எச்சரிக்கை, அசுவினி/புஷ்யம்/ஹஸ்தம் பயண நட்சத்திரங்கள் மற்றும் தடையற்ற சுப பிரயாண காலங்கள்."
+  }
+};
+
+const MONTH_NAMES_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const MONTH_NAMES_TA = [
+  "ஜனவரி", "பிப்ரவரி", "மார்ச்", "ஏப்ரல்", "மே", "ஜூன்",
+  "ஜூலை", "ஆகஸ்ட்", "செப்டம்பர்", "அக்டோபர்", "நவம்பர்", "டிசம்பர்"
+];
+
 export function searchAuspiciousMuhurtas(eventType, startDate, daysAhead = 30, lat = null, lng = null, tz = null, timezoneId = null) {
   const startYmd = (typeof startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(startDate))
     ? startDate
@@ -308,6 +469,18 @@ export function searchAuspiciousMuhurtas(eventType, startDate, daysAhead = 30, l
 
   const totalDays = Math.max(1, Math.min(365, parseInt(daysAhead, 10) || 30));
   const startD = new Date(startYmd + "T12:00:00Z");
+
+  // Normalize event
+  const rawKey = String(eventType || "marriage").toLowerCase().trim();
+  let eventKey = "marriage";
+  if (rawKey.includes("griha") || rawKey.includes("house")) eventKey = "griha_pravesh";
+  else if (rawKey.includes("vehic") || rawKey.includes("vahan") || rawKey.includes("car")) eventKey = "vehicle";
+  else if (rawKey.includes("prop") || rawKey.includes("bhum") || rawKey.includes("land")) eventKey = "property";
+  else if (rawKey.includes("busin") || rawKey.includes("vyapar") || rawKey.includes("shop")) eventKey = "business";
+  else if (rawKey.includes("trav") || rawKey.includes("yatra")) eventKey = "travel";
+  else if (MUHURTA_EVENT_CONFIGS[rawKey]) eventKey = rawKey;
+
+  const config = MUHURTA_EVENT_CONFIGS[eventKey] || MUHURTA_EVENT_CONFIGS.marriage;
   const candidates = [];
 
   for (let i = 0; i <= totalDays; i++) {
@@ -315,75 +488,234 @@ export function searchAuspiciousMuhurtas(eventType, startDate, daysAhead = 30, l
     const ymd = cur.toISOString().split("T")[0];
     const panchang = calculateEnrichedDailyPanchang(ymd, lat, lng, tz, timezoneId);
 
-    let score = 70;
+    const dayIdx = cur.getUTCDay(); // 0: Sun ... 6: Sat
+    let score = 60;
     const positiveFactors = [];
     const negativeFactors = [];
+    const positiveFactorsTa = [];
+    const negativeFactorsTa = [];
 
-    if (panchang.yoga?.isAuspicious) {
-      score += 10;
-      positiveFactors.push(`Auspicious Yoga (${panchang.yoga.name})`);
+    // 1. Nakshatra Evaluation (Weight: 25)
+    const nakName = panchang.nakshatra?.name || "";
+    const nakTamil = panchang.nakshatra?.tamil || nakName;
+    if (config.shubhaNakshatras.includes(nakName)) {
+      score += 20;
+      positiveFactors.push(`Auspicious Nakshatra for ${config.nameEn} (${nakName})`);
+      positiveFactorsTa.push(`${config.nameTa} உகந்த சுப நட்சத்திரம் (${nakTamil})`);
+    } else if (config.ashubhaNakshatras.includes(nakName)) {
+      score -= 25;
+      negativeFactors.push(`Forbidden / Inauspicious Nakshatra for ${config.nameEn} (${nakName})`);
+      negativeFactorsTa.push(`${config.nameTa} தவிர்க்க வேண்டிய நட்சத்திரம் (${nakTamil})`);
     } else {
-      score -= 15;
-      negativeFactors.push(`Inauspicious Yoga (${panchang.yoga.name})`);
+      score += 5;
+      positiveFactors.push(`Neutral Nakshatra Alignment (${nakName})`);
+      positiveFactorsTa.push(`இயல்பான நட்சத்திர அமைப்பு (${nakTamil})`);
     }
 
-    if (!panchang.karana?.isBhadra) {
+    // 2. Vara (Day of Week) Evaluation (Weight: 20)
+    const varaName = panchang.vara?.name || panchang.varaName;
+    const varaTamil = panchang.vara?.tamil || varaName;
+    if (config.shubhaVaras.includes(dayIdx)) {
+      score += 15;
+      positiveFactors.push(`Benefic Planetary Day for ${config.nameEn} (${varaName})`);
+      positiveFactorsTa.push(`${config.nameTa} உகந்த சுப கிழமை (${varaTamil})`);
+    } else if (config.ashubhaVaras.includes(dayIdx)) {
+      score -= 20;
+      negativeFactors.push(`Malefic / Caution Day for ${config.nameEn} (${varaName})`);
+      negativeFactorsTa.push(`${config.nameTa} எச்சரிக்கைக்குரிய கிழமை (${varaTamil})`);
+    }
+
+    // 3. Tithi (Lunar Day) Evaluation (Weight: 25)
+    const tNum = (panchang.tithi?.index ? ((panchang.tithi.index - 1) % 15) + 1 : 1);
+    const isShukla = panchang.tithi?.paksha === "Shukla";
+    const tithiName = panchang.tithi?.name || "Tithi";
+    const tithiTamil = panchang.tithi?.nameTamil || tithiName;
+
+    if (config.shubhaTithis.includes(tNum)) {
+      score += 10;
+      positiveFactors.push(`Auspicious Lunar Tithi (${tithiName})`);
+      positiveFactorsTa.push(`சுப திதி அமைப்பு (${tithiTamil})`);
+    }
+    if (config.varjyaTithis.includes(tNum) || [4, 9, 14].includes(tNum)) {
+      score -= 25;
+      negativeFactors.push(`Forbidden / Rikta Tithi (${tithiName})`);
+      negativeFactorsTa.push(`ரிக்தா / விலக்க வேண்டிய திதி (${tithiTamil})`);
+    }
+    if (config.preferShukla && isShukla) {
+      score += 10;
+      positiveFactors.push("Shukla Paksha (Waxing Phase — Highly Beneficial)");
+      positiveFactorsTa.push("சுக்கில பட்சம் (வளர்பிறை சுப காலம்)");
+    }
+
+    // 4. Yoga Evaluation (Weight: 15)
+    const yogaName = panchang.yoga?.name || "";
+    if (config.shubhaYogas && config.shubhaYogas.includes(yogaName)) {
+      score += 15;
+      positiveFactors.push(`Commercial Prosperity Yoga (${yogaName})`);
+      positiveFactorsTa.push(`வர்த்தக விருத்தி சுப யோகம் (${yogaName})`);
+    } else if (panchang.yoga?.isAuspicious) {
+      score += 10;
+      positiveFactors.push(`Auspicious Yoga (${yogaName})`);
+      positiveFactorsTa.push(`சுப யோகம் (${yogaName})`);
+    } else {
+      score -= 20;
+      negativeFactors.push(`Inauspicious Yoga (${yogaName})`);
+      negativeFactorsTa.push(`அசுப யோகம் (${yogaName})`);
+    }
+
+    // 5. Karana Evaluation (Weight: 20)
+    if (panchang.karana?.isBhadra) {
+      score -= 25;
+      negativeFactors.push("Vishti (Bhadra) Karana present — Avoid initiating ventures");
+      negativeFactorsTa.push("விஷ்டி (பத்ரா) கரணம் உள்ளது — காரிய தொடக்கத்தை தவிர்க்கவும்");
+    } else {
       score += 10;
       positiveFactors.push("Free from Vishti/Bhadra Karana");
+      positiveFactorsTa.push("விஷ்டி / பத்ரா தோஷமற்ற சுப கரணம்");
+    }
+
+    // 6. Directional Shoola (Travel)
+    if (eventKey === "travel" && config.dishashool && config.dishashool[dayIdx]) {
+      const ds = config.dishashool[dayIdx];
+      negativeFactors.push(`Dishashool Warning: Avoid travelling toward ${ds.direction} today`);
+      negativeFactorsTa.push(`திசாசூலை எச்சரிக்கை: இன்று ${ds.directionTa} திசை பிரயாணத்தை தவிர்க்கவும்`);
+    }
+
+    // 7. Abhijit & Amrita Muhurtas
+    if (panchang.abhijitMuhurta12 && !panchang.abhijitMuhurta12.includes("Unavailable")) {
+      score += 5;
+      positiveFactors.push(`Abhijit Muhurta Available (${panchang.abhijitMuhurta12})`);
+      positiveFactorsTa.push(`அபிஜித் முகூர்த்த சுப நேரம் (${panchang.abhijitMuhurta12})`);
+    }
+
+    // Clamp score
+    const finalScore = Math.max(10, Math.min(100, score));
+
+    let recommendationEn = "Favorable Date Window";
+    let recommendationTa = "சுப முகூர்த்த நாள்";
+    let tier = "FAVORABLE";
+
+    if (finalScore >= 85) {
+      recommendationEn = `Highly Auspicious (Uttama) for ${config.nameEn}`;
+      recommendationTa = `${config.nameTa} உத்தம சுப முகூர்த்த நாள்`;
+      tier = "EXCELLENT";
+    } else if (finalScore >= 70) {
+      recommendationEn = `Favorable (Madhyama) for ${config.nameEn}`;
+      recommendationTa = `${config.nameTa} மத்திம சுப முகூர்த்த நாள்`;
+      tier = "FAVORABLE";
     } else {
-      score -= 20;
-      negativeFactors.push("Vishti (Bhadra) Karana present");
+      recommendationEn = `Requires Strict Lagna Shuddhi (Cautionary)`;
+      recommendationTa = `எச்சரிக்கையுடன் லக்ன சுத்தி செய்ய வேண்டிய நாள்`;
+      tier = "CAUTION";
     }
 
-    const tNum = (panchang.tithi?.index || 1) % 15;
-    if ([4, 9, 14, 0].includes(tNum)) {
-      score -= 20;
-      negativeFactors.push(`Rikta / Forbidden Tithi (${panchang.tithi?.name})`);
-    } else {
-      score += 10;
-      positiveFactors.push(`Benefic Tithi (${panchang.tithi?.name})`);
-    }
-
-    if (eventType.toLowerCase() === "marriage" && ["Ravivara (Sunday)", "Shanivara (Saturday)", "Mangalavara (Tuesday)"].some(v => panchang.vara?.name?.includes(v.split(" ")[0]))) {
-      score -= 5;
-    }
-
-    let recommendation = "Favorable Date Window";
-    if (score >= 85) recommendation = "Favorable Panchanga Date (Preliminary Screening)";
-    else if (score >= 70) recommendation = "Moderate Panchanga Date (Preliminary Screening)";
-    else recommendation = "Challenging Panchanga Factors (Requires Exact Lagna Shuddhi)";
+    // Extract month key (e.g. "2026-11")
+    const monthKey = ymd.slice(0, 7);
+    const monthNum = parseInt(ymd.slice(5, 7), 10) - 1;
+    const yearNum = ymd.slice(0, 4);
 
     candidates.push({
       date: panchang.date,
+      monthKey,
+      monthLabelEn: `${MONTH_NAMES_EN[monthNum]} ${yearNum}`,
+      monthLabelTa: `${MONTH_NAMES_TA[monthNum]} ${yearNum}`,
       day: panchang.vara?.name,
       dayTamil: panchang.vara?.tamil,
       tithi: panchang.tithi?.name,
       tithiTamil: panchang.tithi?.nameTamil,
       tithiUntil12: panchang.tithi?.until12,
+      tithiUntilDetailedEn: panchang.tithi?.untilDetailedEn,
+      tithiUntilDetailedTa: panchang.tithi?.untilDetailedTa,
       nakshatra: `${panchang.nakshatra?.name} (Pada ${panchang.nakshatra?.pada})`,
-      nakshatraTamil: panchang.nakshatra?.tamil,
+      nakshatraTamil: `${panchang.nakshatra?.tamil} (பாதம் ${panchang.nakshatra?.pada})`,
       nakshatraUntil12: panchang.nakshatra?.until12,
+      nakshatraUntilDetailedEn: panchang.nakshatra?.untilDetailedEn,
+      nakshatraUntilDetailedTa: panchang.nakshatra?.untilDetailedTa,
       yoga: panchang.yoga?.name,
       karana: panchang.karana?.name,
       abhijitMuhurta12: panchang.abhijitMuhurta12,
+      brahmaMuhurta12: panchang.brahmaMuhurta12,
+      amritaKalam12: panchang.amritaKalam12,
       rahuKalam12: panchang.rahuKalam12,
       yamagandam12: panchang.yamagandam12,
       gulikaKalam12: panchang.gulikaKalam12,
       durmuhurtham12: panchang.durmuhurtham12,
-      amritaKalam12: panchang.amritaKalam12,
-      muhurtaScore: score,
-      recommendation,
+      sunrise: panchang.sunrise,
+      sunset: panchang.sunset,
+      muhurtaScore: finalScore,
+      tier,
+      recommendation: recommendationEn,
+      recommendationEn,
+      recommendationTa,
       positiveFactors,
-      negativeFactors
+      negativeFactors,
+      positiveFactorsTa,
+      negativeFactorsTa,
+      eventConfig: {
+        id: config.id,
+        nameEn: config.nameEn,
+        nameTa: config.nameTa
+      }
     });
   }
 
-  candidates.sort((a, b) => b.muhurtaScore - a.muhurtaScore);
+  // Sort candidates by score descending
+  const candidatesByScore = [...candidates].sort((a, b) => b.muhurtaScore - a.muhurtaScore);
+  // Sort candidates chronologically
+  const candidatesByDate = [...candidates].sort((a, b) => a.date.localeCompare(b.date));
+
+  // Dynamic slice limit scaling with daysAhead:
+  // 14 days: 8
+  // 30 days: 12
+  // 60 days: 20
+  // 90 days: 30
+  // 180 days: 48
+  let topCount = 12;
+  if (totalDays <= 14) topCount = 8;
+  else if (totalDays <= 30) topCount = 12;
+  else if (totalDays <= 60) topCount = 20;
+  else if (totalDays <= 90) topCount = 30;
+  else topCount = 48;
+
+  // Filter prime candidates (score >= 70) or top N
+  const primeCandidates = candidatesByScore.filter(c => c.muhurtaScore >= 70);
+  const selectedCandidates = primeCandidates.length >= 6
+    ? primeCandidates.slice(0, topCount)
+    : candidatesByScore.slice(0, Math.max(6, topCount));
+
+  // Group candidate dates by month
+  const monthlyDistribution = {};
+  for (const c of selectedCandidates) {
+    if (!monthlyDistribution[c.monthKey]) {
+      monthlyDistribution[c.monthKey] = [];
+    }
+    monthlyDistribution[c.monthKey].push(c);
+  }
+
+  const months = Object.keys(monthlyDistribution).sort().map(mKey => {
+    const list = monthlyDistribution[mKey];
+    return {
+      key: mKey,
+      labelEn: list[0]?.monthLabelEn || mKey,
+      labelTa: list[0]?.monthLabelTa || mKey,
+      count: list.length,
+      primeCount: list.filter(c => c.muhurtaScore >= 85).length
+    };
+  });
+
   return {
-    eventType,
+    eventType: eventKey,
+    eventConfig: config,
     daysScreened: totalDays,
+    startDate: startYmd,
+    endDate: candidates[candidates.length - 1]?.date || startYmd,
     totalDatesEvaluated: candidates.length,
-    topScreenedDates: candidates.slice(0, 6),
-    allCandidates: candidates
+    favorableCount: primeCandidates.length,
+    topScreenedDates: selectedCandidates,
+    allCandidates: candidates,
+    candidatesByDate,
+    candidatesByScore,
+    monthlyDistribution,
+    months
   };
 }

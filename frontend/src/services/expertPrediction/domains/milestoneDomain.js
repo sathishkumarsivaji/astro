@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Major Life Milestones Domain Adapter
+ * SKR ASTRO — Major Life Milestones Domain Adapter
  * =================================================
  * Synthesizes monumental life pivot points across Kendra houses (1, 4, 7, 10),
  * Jupiter-Saturn double transits, and karmic crossroads.

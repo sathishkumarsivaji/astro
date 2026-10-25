@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Task Evaluator Registry & Dispatcher
+ * SKR ASTRO — Task Evaluator Registry & Dispatcher
  * ==================================================
  * Directs task-level questions to their dedicated evaluators.
  * Guarantees direct-answer-first output contract.

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Custom / Generic Event Evaluator
+ * SKR ASTRO — Custom / Generic Event Evaluator
  *
  * Evaluates general life events using strictly discriminating astrological triggers:
  * - Natal Ascendant Lord activation in operating Vimshottari Dasha

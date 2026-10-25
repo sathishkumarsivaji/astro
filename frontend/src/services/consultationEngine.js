@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Master Consultation & Question-Driven Astrological Inference Engine
+ * SKR ASTRO — Master Consultation & Question-Driven Astrological Inference Engine
  *
  * Implements:
  * 1. 4 Certainty Layers (Astronomical Certainty, Astrological Convention, Interpretive Inference, Prediction)

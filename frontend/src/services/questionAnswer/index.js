@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Precision Evidence-Linked Q&A Engine
+ * SKR ASTRO — Precision Evidence-Linked Q&A Engine
  * ===================================================
  * Main barrel export for the complete Q&A pipeline and all supporting subsystems.
  */

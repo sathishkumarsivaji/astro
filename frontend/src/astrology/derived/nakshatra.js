@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Authoritative Nakshatra, Pada & KP Sub-Lord Engine
+ * SKR ASTRO — Authoritative Nakshatra, Pada & KP Sub-Lord Engine
  *
  * Implements:
  * - 27 Vedic Nakshatras & 108 Padas (Exact 13°20' and 3°20' mathematics)

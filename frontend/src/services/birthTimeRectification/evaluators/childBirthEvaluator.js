@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Child Birth (Progeny) Event Evaluator
+ * SKR ASTRO — Child Birth (Progeny) Event Evaluator
  *
  * Evaluates timing and structural alignment for childbirth milestones:
  * 1. D1: 5th house, 5th lord, 2nd house (family growth), 9th house, Jupiter (Putrakaraka)

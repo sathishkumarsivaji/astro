@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Answer Synthesizer
+ * SKR ASTRO — Answer Synthesizer
  * =================================
  * Assembles the standardized 9-section answer strictly grounded in
  * structured chart evidence, resolution gates, and anti-template rules.

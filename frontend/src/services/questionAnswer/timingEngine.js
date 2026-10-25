@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Dedicated Deterministic Timing Engine
+ * SKR ASTRO — Dedicated Deterministic Timing Engine
  * ====================================================
  * Evaluates event timing strictly from multi-factor convergence:
  * Natal Potential + Dasha Activation + Transit Triggers + Varga Confirmation.

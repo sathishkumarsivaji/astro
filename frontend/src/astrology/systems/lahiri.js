@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Lahiri / Chitrapaksha Sidereal Engine
+ * SKR ASTRO — Lahiri / Chitrapaksha Sidereal Engine
  *
  * Implements traditional Vedic calculations using the Chitrapaksha / Lahiri Ayanamsha:
  * - Whole Sign / Sripati house cusps

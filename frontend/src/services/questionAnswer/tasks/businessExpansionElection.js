@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Business Expansion Election Task Evaluator
+ * SKR ASTRO — Business Expansion Election Task Evaluator
  * ========================================================
  * Evaluates business expansion requests for a specific requested week timeframe.
  * Strictly avoids promising "good luck", profits, or commercial success.

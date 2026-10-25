@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Privacy, Consent, Data Export & Right-to-be-Forgotten Service
+ * SKR ASTRO — Privacy, Consent, Data Export & Right-to-be-Forgotten Service
  *
  * Implements:
  * 1. Complete User Data Export (`GET /api/user/export`)

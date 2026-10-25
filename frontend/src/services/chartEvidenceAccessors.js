@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Chart Evidence Accessors
+ * SKR ASTRO — Chart Evidence Accessors
  * =====================================
  * Shared accessors for divisional charts (D9, D10), KP data, Dasha,
  * and timing windows. Extracted to break circular dependency between

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Authoritative Candidate Birth-Time Generator
+ * SKR ASTRO — Authoritative Candidate Birth-Time Generator
  *
  * Generates discrete candidate birth times as full DateTime objects with:
  * - Midnight boundary safety (automatically increments/decrements civil date)

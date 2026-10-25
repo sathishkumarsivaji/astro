@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Personalized Daily Transit & Calendar Engine
+ * SKR ASTRO — Personalized Daily Transit & Calendar Engine
  *
  * Implements:
  * 1. Daily Moon transit tracking across 27 Nakshatras & 12 Signs

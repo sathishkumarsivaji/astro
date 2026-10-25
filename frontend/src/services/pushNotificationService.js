@@ -1,7 +1,7 @@
 import { apiFetch } from "./apiClient.js";
 
 /**
- * AstroVerse Push Notification Service
+ * SKR ASTRO Push Notification Service
  * Manages Service Worker registration, Web Push subscriptions, and real-time transit alerts.
  */
 
@@ -72,7 +72,7 @@ export async function subscribeUserToPushNotifications(userId = "anonymous") {
     let subscription = await reg.pushManager.getSubscription();
 
     if (!subscription) {
-      // Dedicated AstroVerse VAPID Public Key
+      // Dedicated SKR ASTRO VAPID Public Key
       let vapidKey = "BBNLBC7fF0N92_s5Y3W--qNIzJP2oZ04mH7bg578sq7Um9Hiou9k-_mKy8aUufmMv6yGwQAHzY8y2PFOC03pvjw";
       try {
         const keyRes = await apiFetch("/api/notifications/vapid-public-key");
@@ -123,7 +123,7 @@ export async function dispatchLocalTransitNotification({ title, body, url = "/" 
 
   try {
     const reg = await navigator.serviceWorker.ready;
-    await reg.showNotification(title || "AstroVerse Planetary Alert", {
+    await reg.showNotification(title || "SKR ASTRO Planetary Alert", {
       body: body || "A significant planetary transit window is currently active.",
       icon: "/favicon.ico",
       badge: "/favicon.ico",

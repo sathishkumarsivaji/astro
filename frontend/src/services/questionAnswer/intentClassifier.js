@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Question Intent Classifier
+ * SKR ASTRO — Question Intent Classifier
  * ========================================
  * Maps user queries to fine-grained intent categories.
  * Supports all 33 mandated canonical intents.
@@ -294,7 +294,7 @@ export function classifyIntent(normalizedQ, history = []) {
     detectedIntents.add(QUESTION_INTENTS.EDUCATION);
   }
 
-  if (/(?:ugc\s*net|upsc|neet|gate|cat|iit|jee|ias|ips|tnpsc|bank\s*exam|ca\s*exam|sat|gre|gmat|competitive\s*exam|entrance|போட்டித்\s*தேர்வு|தேர்வில்\s*வெற்றி)/i.test(text)) {
+  if (/\b(?:ugc\s*net|upsc|neet|gate|cat|iit|jee|ias|ips|tnpsc|bank\s*exam|ca\s*exam|sat|gre|gmat|competitive\s*exam|entrance)\b|போட்டித்\s*தேர்வு|தேர்வில்\s*வெற்றி/i.test(text)) {
     detectedIntents.add(TASK_INTENTS.NAMED_EXAMINATION_OUTLOOK);
     detectedIntents.add(QUESTION_INTENTS.COMPETITIVE_EXAMS);
     detectedIntents.add(QUESTION_INTENTS.EDUCATION);

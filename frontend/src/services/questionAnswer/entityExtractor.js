@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Entity / Factor Extractor
+ * SKR ASTRO — Entity / Factor Extractor
  * =======================================
  * Extracts astrological entities, divisional charts, planetary periods,
  * query targets, and requested quantities from normalized questions.

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Domain Classifier
+ * SKR ASTRO — Domain Classifier
  * ===============================
  * Maps questions to one or more specific life domains.
  * Ensures questions are answered strictly within relevant domain boundaries.

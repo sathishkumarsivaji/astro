@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Durable Transactional Storage Engine & PostgreSQL Adapter
+ * SKR ASTRO — Durable Transactional Storage Engine & PostgreSQL Adapter
  *
  * Provides dual-layer transactional storage for production backend:
  * 1. Primary / Durable: PostgreSQL connection pool (pg) with automated table DDL & indexing
@@ -85,7 +85,7 @@ class AstroDatabase {
         : {
             user: process.env.PGUSER || "postgres",
             host: process.env.PGHOST || "localhost",
-            database: process.env.PGDATABASE || "astroverse",
+            database: process.env.PGDATABASE || "skr_astro",
             password: typeof process.env.PGPASSWORD === "string" ? process.env.PGPASSWORD : "",
             port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : 5432,
             connectionTimeoutMillis: 1000,

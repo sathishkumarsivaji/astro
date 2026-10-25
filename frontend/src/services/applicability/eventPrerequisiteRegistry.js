@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Event Prerequisite Registry
+ * SKR ASTRO — Event Prerequisite Registry
  * =========================================
  * Version: 2.1.0
  * 

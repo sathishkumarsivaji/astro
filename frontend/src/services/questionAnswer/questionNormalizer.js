@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Question Normalizer
+ * SKR ASTRO — Question Normalizer
  * =================================
  * Cleans, sanitizes, and analyzes input question strings in English and Tamil.
  * Extracts grammatical question cues, linguistic intent markers, and targets.

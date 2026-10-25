@@ -472,8 +472,56 @@ try {
       }
 
       if (!nodeModulesExists || !backendModulesExists || missingPackages.length > 0 || missingBinaries.length > 0) {
-        npmCiClean = false;
-        npmCiDetail = `BLOCKED_DEPENDENCIES: Clean dependency installation required before running release certification gate. Run 'node scripts/prepare_environment.mjs'. Missing packages: [${missingPackages.join(", ")}]; missing binaries: [${missingBinaries.join(", ")}].`;
+        // Attempt automatic clean dependency installation if not explicitly disabled
+        const autoInstall = process.env.NO_AUTO_INSTALL !== "1" && process.env.NO_AUTO_INSTALL !== "true";
+        if (autoInstall) {
+          console.log("      ℹ Clean dependency installation required. Executing 'node scripts/prepare_environment.mjs'...");
+          try {
+            execSync("node scripts/prepare_environment.mjs", { cwd: ROOT, stdio: "inherit" });
+          } catch (prepErr) {
+            console.warn("      ⚠ Automatic prepare_environment failed:", prepErr.message);
+          }
+        }
+
+        // Re-check installation state
+        const nodeModulesReExists = fs.existsSync(nodeModulesDir);
+        const backendModulesReExists = fs.existsSync(backendModulesDir);
+        missingPackages = [];
+        missingBinaries = [];
+
+        if (nodeModulesReExists) {
+          for (const pkgName of requiredFrontendPackages) {
+            if (!fs.existsSync(path.join(nodeModulesDir, pkgName, "package.json"))) {
+              missingPackages.push(`frontend:${pkgName}`);
+            }
+          }
+          const binDir = path.join(nodeModulesDir, ".bin");
+          const requiredBins = process.platform === "win32" ? ["vite.cmd", "oxlint.cmd"] : ["vite", "oxlint"];
+          for (const binName of requiredBins) {
+            if (!fs.existsSync(path.join(binDir, binName))) {
+              missingBinaries.push(binName);
+            }
+          }
+        } else {
+          missingPackages.push(...requiredFrontendPackages.map(p => `frontend:${p}`));
+        }
+
+        if (backendModulesReExists) {
+          for (const pkgName of requiredBackendPackages) {
+            if (!fs.existsSync(path.join(backendModulesDir, pkgName, "package.json"))) {
+              missingPackages.push(`backend:${pkgName}`);
+            }
+          }
+        } else {
+          missingPackages.push(...requiredBackendPackages.map(p => `backend:${p}`));
+        }
+
+        if (!nodeModulesReExists || !backendModulesReExists || missingPackages.length > 0 || missingBinaries.length > 0) {
+          npmCiClean = false;
+          npmCiDetail = `BLOCKED_DEPENDENCIES: Clean dependency installation required before running release certification gate. Run 'node scripts/prepare_environment.mjs'. Missing packages: [${missingPackages.join(", ")}]; missing binaries: [${missingBinaries.join(", ")}].`;
+        } else {
+          npmCiDetail = `package.json and lockfile verified; all ${requiredFrontendPackages.length + requiredBackendPackages.length} frontend and backend dependencies verified in node_modules; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
+        }
       } else {
         npmCiDetail = `package.json and lockfile verified; all ${requiredFrontendPackages.length + requiredBackendPackages.length} frontend and backend dependencies verified in node_modules; zero node_modules/dist/stores across ${zipFiles.length} distribution archive(s)`;
       }
@@ -495,28 +543,46 @@ check(
 // ─────────────────────────────────────────────────────────────────────────────
 let buildSucceeds = true;
 let buildDetail = "";
-try {
-  const distDir = path.join(FRONTEND_DIR, "dist");
-  if (fs.existsSync(distDir)) {
-    fs.rmSync(distDir, { recursive: true, force: true });
-  }
-  execSync("npm run build", { cwd: FRONTEND_DIR, stdio: "pipe" });
-  const distIndex = path.join(FRONTEND_DIR, "dist/index.html");
-  if (fs.existsSync(distIndex)) {
-    const html = fs.readFileSync(distIndex, "utf8");
-    if (html.includes("<!DOCTYPE html>") || html.includes("<html")) {
-      buildDetail = "dist cleaned and compiled freshly; dist/index.html verified";
+if (!npmCiClean) {
+  buildSucceeds = false;
+  buildDetail = "BLOCKED_DEPENDENCY: Prerequisite Gate 12 failed (frontend dependencies not installed)";
+} else {
+  try {
+    const distDir = path.join(FRONTEND_DIR, "dist");
+    if (fs.existsSync(distDir)) {
+      fs.rmSync(distDir, { recursive: true, force: true });
+    }
+    if (process.platform !== "win32") {
+      try {
+        execSync("chmod +x node_modules/.bin/* node_modules/vite/bin/vite.js node_modules/oxlint/bin/oxlint 2>/dev/null", { cwd: FRONTEND_DIR });
+      } catch {}
+    }
+    try {
+      execSync("npm run build", { cwd: FRONTEND_DIR, stdio: "pipe" });
+    } catch (buildErr) {
+      if (buildErr.message && (buildErr.message.includes("Permission denied") || buildErr.message.includes("EACCES"))) {
+        execSync("node node_modules/vite/bin/vite.js build", { cwd: FRONTEND_DIR, stdio: "pipe" });
+      } else {
+        throw buildErr;
+      }
+    }
+    const distIndex = path.join(FRONTEND_DIR, "dist/index.html");
+    if (fs.existsSync(distIndex)) {
+      const html = fs.readFileSync(distIndex, "utf8");
+      if (html.includes("<!DOCTYPE html>") || html.includes("<html")) {
+        buildDetail = "dist cleaned and compiled freshly; dist/index.html verified";
+      } else {
+        buildSucceeds = false;
+        buildDetail = "dist/index.html missing HTML structure";
+      }
     } else {
       buildSucceeds = false;
-      buildDetail = "dist/index.html missing HTML structure";
+      buildDetail = "dist/index.html not generated";
     }
-  } else {
+  } catch (err) {
     buildSucceeds = false;
-    buildDetail = "dist/index.html not generated";
+    buildDetail = err.message;
   }
-} catch (err) {
-  buildSucceeds = false;
-  buildDetail = err.message;
 }
 check(
   13,
@@ -530,33 +596,54 @@ check(
 // ─────────────────────────────────────────────────────────────────────────────
 let lintSucceeds = true;
 let lintDetail = "";
-try {
-  const lintOutput = execSync("npm run lint", { cwd: FRONTEND_DIR, encoding: "utf8" });
-  if (!lintOutput.includes("0 errors")) {
-    lintSucceeds = false;
-    lintDetail = "npm run lint reported errors";
-  } else {
-    // Check for banned synthetic heuristic identifiers using word boundaries
-    const bannedPatterns = [
-      "\\bstrengthPercentage\\b",
-      "\\baScore\\b",
-      "\\bsupportTier\\b",
-      "\\bprobabilityTier\\b",
-      "\\bbestBukthi\\b",
-      "\\bnetBalance\\b"
-    ];
-    const bannedMatches = scanForBannedPatterns(path.join(FRONTEND_DIR, "src/services"), bannedPatterns);
-
-    if (bannedMatches.length === 0) {
-      lintDetail = "npm run lint passed with 0 errors; zero banned synthetic heuristics";
-    } else {
-      lintSucceeds = false;
-      lintDetail = `Banned heuristic identifiers found: ${bannedMatches.join("; ").slice(0, 100)}`;
-    }
-  }
-} catch (err) {
+if (!npmCiClean) {
   lintSucceeds = false;
-  lintDetail = err.message;
+  lintDetail = "BLOCKED_DEPENDENCY: Prerequisite Gate 12 failed (frontend dependencies not installed)";
+} else {
+  try {
+    if (process.platform !== "win32") {
+      try {
+        execSync("chmod +x node_modules/.bin/* node_modules/oxlint/bin/oxlint 2>/dev/null", { cwd: FRONTEND_DIR });
+      } catch {}
+    }
+    let lintOutput = "";
+    try {
+      lintOutput = execSync("npm run lint", { cwd: FRONTEND_DIR, encoding: "utf8" });
+    } catch (lintErr) {
+      if (lintErr.message && (lintErr.message.includes("Permission denied") || lintErr.message.includes("EACCES"))) {
+        lintOutput = execSync("node node_modules/oxlint/bin/oxlint", { cwd: FRONTEND_DIR, encoding: "utf8" });
+      } else if (lintErr.stdout) {
+        lintOutput = lintErr.stdout.toString();
+      } else {
+        throw lintErr;
+      }
+    }
+    if (!lintOutput.includes("0 errors")) {
+      lintSucceeds = false;
+      lintDetail = "npm run lint reported errors";
+    } else {
+      // Check for banned synthetic heuristic identifiers using word boundaries
+      const bannedPatterns = [
+        "\\bstrengthPercentage\\b",
+        "\\baScore\\b",
+        "\\bsupportTier\\b",
+        "\\bprobabilityTier\\b",
+        "\\bbestBukthi\\b",
+        "\\bnetBalance\\b"
+      ];
+      const bannedMatches = scanForBannedPatterns(path.join(FRONTEND_DIR, "src/services"), bannedPatterns);
+
+      if (bannedMatches.length === 0) {
+        lintDetail = "npm run lint passed with 0 errors; zero banned synthetic heuristics";
+      } else {
+        lintSucceeds = false;
+        lintDetail = `Banned heuristic identifiers found: ${bannedMatches.join("; ").slice(0, 100)}`;
+      }
+    }
+  } catch (err) {
+    lintSucceeds = false;
+    lintDetail = err.message;
+  }
 }
 check(
   14,
@@ -570,55 +657,60 @@ check(
 // ─────────────────────────────────────────────────────────────────────────────
 let corePass = true;
 let coreDetail = "";
-try {
-  const {
-    calculatePlanetaryPositions,
-    calculateD1,
-    calculateD9,
-    calculateD10,
-    getUtcInstantFromLocal,
-    getJulianDateFromUtc,
-    julianDateToDate
-  } = await import("./src/services/astroEngine.js");
-
-  // A. Julian Date conversion invariant
-  const utc = getUtcInstantFromLocal("1990-05-15", "14:30", "Asia/Kolkata");
-  if (!utc || isNaN(utc.getTime())) throw new Error("UTC instant resolution invalid");
-  const jd = getJulianDateFromUtc(utc);
-  if (!jd || isNaN(jd)) throw new Error("JD calculation invalid");
-  const roundtripDate = julianDateToDate(jd);
-  if (Math.abs(roundtripDate.getTime() - utc.getTime()) > 1000) {
-    throw new Error("Meeus JD roundtrip exceeds tolerance");
-  }
-
-  // B. Planetary calculation invariant
-  const chart = calculatePlanetaryPositions("1990-05-15", "14:30", 13.0827, 80.2707, "vedic", "Asia/Kolkata");
-  if (!chart || !Array.isArray(chart.planets) || chart.planets.length < 7) {
-    throw new Error("Planetary positions array invalid");
-  }
-
-  // C. D1, D9, D10 separation invariant
-  const sunLong = chart.planets[0].longitude;
-  const d1 = calculateD1(sunLong);
-  const d9 = calculateD9(sunLong);
-  const d10 = calculateD10(sunLong);
-  if (!d1 || !d9 || !d10) throw new Error("Divisional calculations failed");
-
-  // D. Spouse direction null contract
-  const { evaluateSpouseDirection } = await import("./src/services/consultationEngine.js");
-  const nullDir = evaluateSpouseDirection(null);
-  if (
-    nullDir.primaryDirection !== null ||
-    nullDir.secondaryDirection !== null ||
-    nullDir.confidenceCategory !== "INSUFFICIENT_DATA"
-  ) {
-    throw new Error("Spouse direction null contract violated");
-  }
-
-  coreDetail = "Astronomical calculations, divisional charts (D1/D9/D10), and null contracts verified";
-} catch (err) {
+if (!npmCiClean) {
   corePass = false;
-  coreDetail = err.message;
+  coreDetail = "BLOCKED_DEPENDENCY: Prerequisite Gate 12 failed (astronomy-engine not installed in node_modules)";
+} else {
+  try {
+    const {
+      calculatePlanetaryPositions,
+      calculateD1,
+      calculateD9,
+      calculateD10,
+      getUtcInstantFromLocal,
+      getJulianDateFromUtc,
+      julianDateToDate
+    } = await import("./src/services/astroEngine.js");
+
+    // A. Julian Date conversion invariant
+    const utc = getUtcInstantFromLocal("1990-05-15", "14:30", "Asia/Kolkata");
+    if (!utc || isNaN(utc.getTime())) throw new Error("UTC instant resolution invalid");
+    const jd = getJulianDateFromUtc(utc);
+    if (!jd || isNaN(jd)) throw new Error("JD calculation invalid");
+    const roundtripDate = julianDateToDate(jd);
+    if (Math.abs(roundtripDate.getTime() - utc.getTime()) > 1000) {
+      throw new Error("Meeus JD roundtrip exceeds tolerance");
+    }
+
+    // B. Planetary calculation invariant
+    const chart = calculatePlanetaryPositions("1990-05-15", "14:30", 13.0827, 80.2707, "vedic", "Asia/Kolkata");
+    if (!chart || !Array.isArray(chart.planets) || chart.planets.length < 7) {
+      throw new Error("Planetary positions array invalid");
+    }
+
+    // C. D1, D9, D10 separation invariant
+    const sunLong = chart.planets[0].longitude;
+    const d1 = calculateD1(sunLong);
+    const d9 = calculateD9(sunLong);
+    const d10 = calculateD10(sunLong);
+    if (!d1 || !d9 || !d10) throw new Error("Divisional calculations failed");
+
+    // D. Spouse direction null contract
+    const { evaluateSpouseDirection } = await import("./src/services/consultationEngine.js");
+    const nullDir = evaluateSpouseDirection(null);
+    if (
+      nullDir.primaryDirection !== null ||
+      nullDir.secondaryDirection !== null ||
+      nullDir.confidenceCategory !== "INSUFFICIENT_DATA"
+    ) {
+      throw new Error("Spouse direction null contract violated");
+    }
+
+    coreDetail = "Astronomical calculations, divisional charts (D1/D9/D10), and null contracts verified";
+  } catch (err) {
+    corePass = false;
+    coreDetail = err.message;
+  }
 }
 check(
   15,
@@ -632,49 +724,54 @@ check(
 // ─────────────────────────────────────────────────────────────────────────────
 let secPass = true;
 let secDetail = "";
-try {
-  // A. No secret env files or runtime DB in distribution or git index
-  const trackedFiles = getTrackedFilesOrScan();
-  const trackedLines = trackedFiles.split("\n");
-  if (trackedLines.some(f => f === ".env" || f.endsWith("/.env") || f.endsWith(".env.local"))) {
-    throw new Error("Secret .env found in distribution or git index");
-  }
-  if (trackedLines.some(f => f.endsWith("astroverse_store.json"))) {
-    throw new Error("astroverse_store.json found in distribution or git index");
-  }
-
-  // B. Exact-date / deterministic prediction firewall
-  const { verifyAndSanitizeAiNarrative } = await import("./src/services/aiEvidenceGate.js");
-  const groundlessClaim = "Marriage will happen on 14 June 2028.";
-  const res = verifyAndSanitizeAiNarrative(groundlessClaim, {
-    planets: [{ name: "Sun", house: 1 }]
-  });
-  if (res.isValid) {
-    throw new Error("Claim firewall failed to intercept exact-date life-event claim");
-  }
-
-  // C. Post-generation LLM firewall
-  const { verifyGeneratedAnswer } = await import("./src/services/questionAnswer/qaFirewall.js");
-  const tamperedCheck = verifyGeneratedAnswer({
-    text: "This is guaranteed to be a highly favorable period.",
-    answerObject: { answerability: "INSUFFICIENT_DATA", timingWindows: [] },
-    isTamil: false
-  });
-  if (tamperedCheck.isValid || !tamperedCheck.sanitizedText.includes("INSUFFICIENT_DATA")) {
-    throw new Error("Post-generation firewall failed to neutralize deterministic assertion on INSUFFICIENT_DATA");
-  }
-
-  // D. Domain safety validator
-  const { validateSafety } = await import("./src/services/questionAnswer/qaSafetyValidator.js");
-  const healthCheck = validateSafety("Patient will undergo emergency surgery for tumor.", "health");
-  if (healthCheck.isValid || healthCheck.violations.length === 0) {
-    throw new Error("Health safety validator failed to block medical diagnosis/surgery");
-  }
-
-  secDetail = "No repository secrets, semantic claim firewall, LLM post-generation firewall, and health safety verified";
-} catch (err) {
+if (!npmCiClean) {
   secPass = false;
-  secDetail = err.message;
+  secDetail = "BLOCKED_DEPENDENCY: Prerequisite Gate 12 failed (astronomy-engine not installed in node_modules)";
+} else {
+  try {
+    // A. No secret env files or runtime DB in distribution or git index
+    const trackedFiles = getTrackedFilesOrScan();
+    const trackedLines = trackedFiles.split("\n");
+    if (trackedLines.some(f => f === ".env" || f.endsWith("/.env") || f.endsWith(".env.local"))) {
+      throw new Error("Secret .env found in distribution or git index");
+    }
+    if (trackedLines.some(f => f.endsWith("astroverse_store.json"))) {
+      throw new Error("astroverse_store.json found in distribution or git index");
+    }
+
+    // B. Exact-date / deterministic prediction firewall
+    const { verifyAndSanitizeAiNarrative } = await import("./src/services/aiEvidenceGate.js");
+    const groundlessClaim = "Marriage will happen on 14 June 2028.";
+    const res = verifyAndSanitizeAiNarrative(groundlessClaim, {
+      planets: [{ name: "Sun", house: 1 }]
+    });
+    if (res.isValid) {
+      throw new Error("Claim firewall failed to intercept exact-date life-event claim");
+    }
+
+    // C. Post-generation LLM firewall
+    const { verifyGeneratedAnswer } = await import("./src/services/questionAnswer/qaFirewall.js");
+    const tamperedCheck = verifyGeneratedAnswer({
+      text: "This is guaranteed to be a highly favorable period.",
+      answerObject: { answerability: "INSUFFICIENT_DATA", timingWindows: [] },
+      isTamil: false
+    });
+    if (tamperedCheck.isValid || !tamperedCheck.sanitizedText.includes("INSUFFICIENT_DATA")) {
+      throw new Error("Post-generation firewall failed to neutralize deterministic assertion on INSUFFICIENT_DATA");
+    }
+
+    // D. Domain safety validator
+    const { validateSafety } = await import("./src/services/questionAnswer/qaSafetyValidator.js");
+    const healthCheck = validateSafety("Patient will undergo emergency surgery for tumor.", "health");
+    if (healthCheck.isValid || healthCheck.violations.length === 0) {
+      throw new Error("Health safety validator failed to block medical diagnosis/surgery");
+    }
+
+    secDetail = "No repository secrets, semantic claim firewall, LLM post-generation firewall, and health safety verified";
+  } catch (err) {
+    secPass = false;
+    secDetail = err.message;
+  }
 }
 check(
   16,

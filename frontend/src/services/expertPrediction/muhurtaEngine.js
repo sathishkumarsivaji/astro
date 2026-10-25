@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Muhurta Engine (Electional Timing Layer)
+ * SKR ASTRO — Muhurta Engine (Electional Timing Layer)
  * =====================================================
  * Distinct from the LifeEventTimingEngine.
  *

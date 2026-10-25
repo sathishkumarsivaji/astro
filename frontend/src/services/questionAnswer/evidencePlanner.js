@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Question-Specific Evidence Planner
+ * SKR ASTRO — Question-Specific Evidence Planner
  * =================================================
  * Determines the precise astrological facts and chart factors required
  * to answer a specific query without indiscriminate data dumping.

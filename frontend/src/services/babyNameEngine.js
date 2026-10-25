@@ -717,7 +717,10 @@ export function generatePhoneticNamesForPada(nakName, pada, syllableEn, syllable
       meaningTa: `${nakName} நட்சத்திர அருளோடு கூடிய ${suf.meanTa}`,
       nakshatra: nakName,
       pada,
-      isDynamicallyGenerated: true
+      isDynamicallyGenerated: true,
+      isCreative: true,
+      provenance: "CREATIVE_SYNTHESIS",
+      etymologyType: "CONSTRUCTED_MEANING"
     };
   });
 }

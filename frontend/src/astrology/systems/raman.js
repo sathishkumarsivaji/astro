@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — B.V. Raman Sidereal Engine
+ * SKR ASTRO — B.V. Raman Sidereal Engine
  *
  * Implements genuine B.V. Raman sidereal recalculation:
  * - Ayanamsha calculated from 397 AD zero-year epoch: (Year - 397) * (50⅓" / 3600) (≈50.333333"/year)

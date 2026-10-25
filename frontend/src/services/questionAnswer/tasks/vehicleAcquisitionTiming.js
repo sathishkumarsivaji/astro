@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Vehicle Acquisition Timing Task Evaluator
+ * SKR ASTRO — Vehicle Acquisition Timing Task Evaluator
  * ========================================================
  * Evaluates ordinary vehicle (car / automobile) acquisition timing requests.
  * Evaluates 4th house (Vahana sthana), Venus, and Mars without imposing

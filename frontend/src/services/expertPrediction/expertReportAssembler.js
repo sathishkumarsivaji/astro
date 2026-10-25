@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Expert Report Assembler
+ * SKR ASTRO — Expert Report Assembler
  * ======================================
  * Top-level orchestrator that runs ALL domain adapters,
  * assembles the complete Expert Mode report, and performs

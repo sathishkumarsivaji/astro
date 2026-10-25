@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Chart Uncertainty Perturbation Engine
+ * SKR ASTRO — Chart Uncertainty Perturbation Engine
  *
  * Implements rigorous birth-time sensitivity analysis across systematic offsets:
  * ±1, ±5, ±10, ±15, ±30, ±60 minutes.

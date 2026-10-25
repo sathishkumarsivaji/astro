@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Dynamic Domain Prominence & Section Ranking Engine
+ * SKR ASTRO — Dynamic Domain Prominence & Section Ranking Engine
  * ===============================================================
  * Dynamically ranks the 17 comprehensive report domains based on
  * authentic chart calculations: active Dasha rulerships, Ashtakavarga bindu

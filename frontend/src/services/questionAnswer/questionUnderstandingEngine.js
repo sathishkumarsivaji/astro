@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Dedicated Question Understanding Engine
+ * SKR ASTRO — Dedicated Question Understanding Engine
  * =====================================================
  * Analyzes user questions with deterministic semantic and syntactic parsing.
  * Extracts comprehensive metadata, entity bindings, intent taxonomy,

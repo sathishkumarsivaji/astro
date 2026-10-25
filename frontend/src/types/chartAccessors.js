@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Canonical Chart Data Accessors
+ * SKR ASTRO — Canonical Chart Data Accessors
  *
  * Provides authoritative, schema-agnostic accessors for horoscope chart data.
  * Supports legacy and current data formats but strictly returns `null` when a

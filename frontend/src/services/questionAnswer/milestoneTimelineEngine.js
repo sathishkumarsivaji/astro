@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Multi-Year Milestone Timeline Engine
+ * SKR ASTRO — Multi-Year Milestone Timeline Engine
  * =================================================
  * Generates structured, year-by-year, domain-by-domain life milestone roadmaps
  * computed strictly from authentic Vimshottari dasha sub-periods, house lordships,

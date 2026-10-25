@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Authoritative Natal Report Generator
+ * SKR ASTRO — Authoritative Natal Report Generator
  * ===================================================
  * Generates an end-to-end chart-specific, evidence-traceable, tense-correct,
  * non-redundant 11-section natal report.

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Conversational Follow-Up Memory Engine
+ * SKR ASTRO — Conversational Follow-Up Memory Engine
  * ====================================================
  * Preserves conversational state, domain context, entity referents,
  * and astrological evidence chains across multi-turn interactions.

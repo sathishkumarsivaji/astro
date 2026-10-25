@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Health & Vitality Event Evaluator
+ * SKR ASTRO — Health & Vitality Event Evaluator
  *
  * Evaluates timing and structural alignment for health/wellness milestones:
  * 1. D1: 6th house (Roga/disease), 8th house (vulnerability), 12th house (treatment/rest), Lagna Lord, Sun

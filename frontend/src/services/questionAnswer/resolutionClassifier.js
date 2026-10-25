@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Resolution & Answerability Classifier
+ * SKR ASTRO — Resolution & Answerability Classifier
  * ====================================================
  * Clamps timing resolution to epistemically validated boundaries:
  * YEAR, YEAR_RANGE, SEASON, MONTH_RANGE, DATE_RANGE, DATE, TIME, NOT_DISCRIMINATING, INSUFFICIENT_DATA.

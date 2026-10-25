@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Spouse Family Economic Comparison Task Evaluator
+ * SKR ASTRO — Spouse Family Economic Comparison Task Evaluator
  * ==============================================================
  * Evaluates comparative economic status between the native's ancestral family
  * and the spouse's family.

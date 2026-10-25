@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Legal & Litigation Domain Adapter
+ * SKR ASTRO — Legal & Litigation Domain Adapter
  * ==============================================
  * Analyzes legal disputes, arbitration, litigation pressure,
  * and favorable resolution windows via 6th, 7th, 8th, and 12th houses.

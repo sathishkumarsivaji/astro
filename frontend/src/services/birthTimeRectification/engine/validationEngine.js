@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Out-of-Sample Cross-Validation Engine
+ * SKR ASTRO — Out-of-Sample Cross-Validation Engine
  *
  * Implements strict out-of-sample statistical validation:
  * 1. Leave-One-Event-Out (LOEO) Cross-Validation:

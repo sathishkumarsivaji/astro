@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Sensitivity & Perturbation Analyzer for Birth-Time Rectification
+ * SKR ASTRO — Sensitivity & Perturbation Analyzer for Birth-Time Rectification
  *
  * Tests the peak candidate against small perturbations (±1m, ±5m, ±10m)
  * and measures whether fundamental astrological conclusions or divisional lagnas change.

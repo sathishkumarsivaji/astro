@@ -1,5 +1,5 @@
 /**
- * AstroVerse Pure Tamil Astrological Localization Engine
+ * SKR ASTRO Pure Tamil Astrological Localization Engine
  * Provides authentic, classical Tamil astrological terminology without English mixing.
  */
 

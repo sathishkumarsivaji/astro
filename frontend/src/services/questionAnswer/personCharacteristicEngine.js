@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Bounded Person-Characteristic Engine
+ * SKR ASTRO — Bounded Person-Characteristic Engine
  * ====================================================
  * Evaluates person characteristics (Spouse, Child, Partner, Employer)
  * using specific relational Bhavas, dispositors, karakas, and varga placements.

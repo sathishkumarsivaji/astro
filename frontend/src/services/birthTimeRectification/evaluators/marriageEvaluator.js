@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Marriage & Relationship Event Evaluator
+ * SKR ASTRO — Marriage & Relationship Event Evaluator
  *
  * Evaluates timing and structural alignment for marriage events:
  * 1. D1: 7th house, 7th lord, Venus (Karaka for males/general), Jupiter (Karaka for females)

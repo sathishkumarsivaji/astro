@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Wellness & Vitality Rhythm Evaluator
+ * SKR ASTRO — Wellness & Vitality Rhythm Evaluator
  * =================================================
  * Evaluates personal vitality rhythms, physical energy cycles, and lifestyle restoration.
  * Strictly adheres to health safety mandates:

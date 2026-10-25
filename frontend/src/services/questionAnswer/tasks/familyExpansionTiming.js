@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Family Expansion & Children Timing Task Evaluator
+ * SKR ASTRO — Family Expansion & Children Timing Task Evaluator
  * ===============================================================
  * Evaluates timing questions for children/family expansion ("When will I have a child?",
  * follow-up "When?" after a children outlook question, "எப்போது குழந்தை பிறக்கும்?").

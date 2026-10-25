@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Answer Completeness Validator
+ * SKR ASTRO — Answer Completeness Validator
  * ============================================
  * Compares questionEntities against answeredEntities to verify
  * that every component requested by the user was directly answered.

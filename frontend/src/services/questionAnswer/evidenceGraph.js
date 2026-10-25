@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Canonical Evidence Graph
+ * SKR ASTRO — Canonical Evidence Graph
  * =======================================
  * Manages the structured directed acyclic graph linking:
  * Question -> Intent -> Chart Facts -> Rules -> Counter-Evidence -> Timing Windows -> Resolution -> Answer.

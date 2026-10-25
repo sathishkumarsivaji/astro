@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Children Count Task Evaluator
+ * SKR ASTRO — Children Count Task Evaluator
  * ============================================
  * Enforces the strict non-fabrication policy for child-count questions
  * ("how many children will we give birth", "எத்தனை குழந்தைகள் பிறக்கும்").

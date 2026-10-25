@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Research Paper Submission Election Task Evaluator
+ * SKR ASTRO — Research Paper Submission Election Task Evaluator
  * ===============================================================
  * Evaluates academic action election timing (muhurta) while strictly separating:
  * 1. Practical manuscript & submission readiness checklist (not inferable from chart)

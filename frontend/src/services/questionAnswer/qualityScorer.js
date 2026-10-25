@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Independent Q&A Quality Scorer
+ * SKR ASTRO — Independent Q&A Quality Scorer
  * =============================================
  * Evaluates the 8 independent dimensions of precision Q&A quality:
  * EvidenceAccuracy, CalculationAccuracy, QuestionIntentAccuracy, TimingAccuracy,

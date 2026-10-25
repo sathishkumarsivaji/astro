@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Domain Report Engine
+ * SKR ASTRO — Domain Report Engine
  * ===================================
  * Generates rich, evidence-linked, non-fabricated domain reports
  * covering all 17 domains with mandatory sections A through K.

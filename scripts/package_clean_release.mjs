@@ -108,6 +108,38 @@ if (shouldPack) {
     const attestationPath = path.join(ROOT, "RELEASE_ATTESTATION.json");
     fs.writeFileSync(attestationPath, JSON.stringify(attestation, null, 2) + "\n", "utf8");
     console.log(`✓ Detached release attestation written to: ${attestationPath}`);
+
+    const shaFile = path.join(ROOT, "RELEASE_ATTESTATION.sha256");
+    const zipShaFile = path.join(ROOT, `${zipName}.sha256`);
+    fs.writeFileSync(shaFile, `${hash}  ${zipName}\n`, "utf8");
+    fs.writeFileSync(zipShaFile, `${hash}  ${zipName}\n`, "utf8");
+    console.log(`✓ Detached sha256 checksums written to: ${shaFile} & ${zipShaFile}`);
+
+    // 5. Automated Post-Packaging Verification
+    console.log(`\nVerifying packaged archive integrity...`);
+    const entries = execSync(`tar -tf "${zipPath}"`, { encoding: "utf8", maxBuffer: 50 * 1024 * 1024 }).split("\n");
+    const embeddedAttestation = entries.some(e => e.trim() === "RELEASE_ATTESTATION.json" || e.trim().endsWith("/RELEASE_ATTESTATION.json"));
+    if (embeddedAttestation) {
+      console.error("FAIL: RELEASE_ATTESTATION.json was bundled inside ASTRO.zip! Must remain strictly detached.");
+      process.exit(1);
+    }
+    console.log("✓ Archive verified detached: RELEASE_ATTESTATION.json is NOT embedded in the archive.");
+
+    const hasNodeModules = entries.some(e => e.includes("node_modules/"));
+    const hasDist = entries.some(e => e.includes("/dist/") || e.startsWith("dist/"));
+    if (hasNodeModules || hasDist) {
+      console.error(`FAIL: Archive contains forbidden artifacts (node_modules: ${hasNodeModules}, dist: ${hasDist})`);
+      process.exit(1);
+    }
+    console.log("✓ Archive clean: 0 node_modules, 0 dist artifacts.");
+
+    // Verify hash matches
+    const verifyHash = crypto.createHash("sha256").update(fs.readFileSync(zipPath)).digest("hex");
+    if (verifyHash !== hash) {
+      console.error(`FAIL: Post-packaging hash check failed: ${verifyHash} !== ${hash}`);
+      process.exit(1);
+    }
+    console.log(`✓ Post-packaging hash verified 100%: ${verifyHash}`);
   } catch (err) {
     console.error(`FAIL: Could not generate clean archive: ${err.message}`);
     process.exit(1);

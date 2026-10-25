@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Real-World Empirical Accuracy & Scientific Validation Dashboard
+ * SKR ASTRO — Real-World Empirical Accuracy & Scientific Validation Dashboard
  *
  * Implements Requirements 16 & 25:
  * - Displays empirical validation results on frozen blind test and external holdout cohorts.
@@ -7,7 +7,7 @@
  *   1. Dataset Architecture & Split Hashes (TRAIN, VAL, BLIND_TEST, EXTERNAL_HOLDOUT)
  *   2. Occurrence Metrics: Accuracy, Precision, Recall, Specificity, F1, Balanced Acc, Brier, ECE, 95% CI
  *   3. Timing Metrics: Exact year, ±1y, ±2y, ±3y, MAE, MedAE, RMSE, Conformal 80% Coverage
- *   4. ASTROVERSE vs Population Demographic Baseline (Actuarial Prior)
+ *   4. SKR ASTRO vs Population Demographic Baseline (Actuarial Prior)
  *   5. Discrete-Time Hazard Survival Architecture (V3 Time-to-Event Model)
  *   6. Real-World Ablation Study (Models A through G)
  *   7. Negative Controls (10,000 Permutations)

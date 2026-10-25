@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Wealth Accumulation & Financial Decision Evaluator
+ * SKR ASTRO — Wealth Accumulation & Financial Decision Evaluator
  * ===============================================================
  * Evaluates financial decision questions:
  * 1. Aggressive Investment & Capital Allocation (Path A: ACTIVE_INVESTMENT)

@@ -5,7 +5,7 @@ import DisclaimerBanner from "./components/Common/DisclaimerBanner";
 import HomeDashboard from "./components/Home/HomeDashboard";
 
 // Lazy-loaded feature modules — only downloaded when the user navigates to them
-const AskAstroVerseView = lazy(() => import("./components/Ask/AskAstroVerseView"));
+const AskSKRAstroView = lazy(() => import("./components/Ask/AskSKRAstroView"));
 const BirthChartForm = lazy(() => import("./components/Horoscope/BirthChartForm"));
 const ChartViewer = lazy(() => import("./components/Horoscope/ChartViewer"));
 const LifeTimeline = lazy(() => import("./components/Horoscope/LifeTimeline"));
@@ -167,11 +167,6 @@ export default function App() {
   };
 
   const handleSelectPromptFromHome = (queryText) => {
-    if (!isRegistered) {
-      setAuthInitialMode("register");
-      setIsAuthOpen(true);
-      return;
-    }
     setAskInitialQuery(queryText);
     setActiveTab("ask");
   };
@@ -436,7 +431,7 @@ export default function App() {
         {/* EXPERIENCE 3: ASK SKR ASTRO (Conversational AI Copilot)  */}
         {/* ======================================================== */}
         {activeTab === "ask" && (
-          <AskAstroVerseView
+          <AskSKRAstroView
             chartData={chartData}
             lang={lang}
             initialQuery={askInitialQuery}
@@ -650,6 +645,7 @@ export default function App() {
                     telemetry={palmTelemetry}
                     onRetake={() => setPalmTelemetry(null)}
                     lang={lang}
+                    chartData={chartData}
                   />
                 )}
               </div>

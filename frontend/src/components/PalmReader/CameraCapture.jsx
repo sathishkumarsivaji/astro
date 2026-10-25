@@ -1,7 +1,74 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Camera, RefreshCw, Eye, Sparkles, CheckCircle2, Sliders, AlertTriangle, Upload, X } from "lucide-react";
-import { analyzePalmTelemetry, analyzePalmImage, MAJOR_LINES, PALM_MOUNTS } from "../../services/palmistryEngine";
+import { Camera, RefreshCw, Eye, Sparkles, CheckCircle2, Sliders, AlertTriangle, Upload, X, Hand, Compass, Layers } from "lucide-react";
+import { analyzePalmTelemetry, analyzePalmImage, MAJOR_LINES, PALM_MOUNTS, HAND_ELEMENTS } from "../../services/palmistryEngine";
 import { TRANSLATIONS } from "../../services/localization";
+
+export const SAMPLE_PALM_PRESETS = [
+  {
+    id: "air_intellect",
+    name: "Air Hand — Intellectual & Communicative",
+    tamilName: "காற்று பூத கை — அறிவு & விவேகம்",
+    element: "air",
+    handShape: "Air Hand (Vayu Tatva - Intellectual Archetype)",
+    description: "Square palm with long fingers, sloping head line, and prominent Mercury & Jupiter mounts.",
+    telemetry: {
+      luminance: 135,
+      contrast: 48,
+      edgeDensity: 24,
+      lineConfidence: { heart: 85, head: 92, life: 88, fate: 80, sun: 75, mercury: 78 },
+      imageQualityScore: 88,
+      landmarkDetectionConfidence: 90
+    }
+  },
+  {
+    id: "earth_builder",
+    name: "Earth Hand — Grounded & Resilient",
+    tamilName: "நில பூத கை — திடமான உழைப்பாளர்",
+    element: "earth",
+    handShape: "Earth Hand (Prithvi Tatva - Practical Archetype)",
+    description: "Square palm with short fingers, wide sweeping life line, and fortified Venus mount.",
+    telemetry: {
+      luminance: 125,
+      contrast: 42,
+      edgeDensity: 20,
+      lineConfidence: { heart: 82, head: 84, life: 94, fate: 75, sun: null, mercury: 70 },
+      imageQualityScore: 84,
+      landmarkDetectionConfidence: 86
+    }
+  },
+  {
+    id: "fire_leader",
+    name: "Fire Hand — Dynamic Executive & Visionary",
+    tamilName: "நெருப்பு பூத கை — தலைமை & துணிச்சல்",
+    element: "fire",
+    handShape: "Fire Hand (Agni Tatva - Dynamic Executive)",
+    description: "Long palm with short fingers, ascending fate line, and strong Mars & Sun mounts.",
+    telemetry: {
+      luminance: 140,
+      contrast: 45,
+      edgeDensity: 22,
+      lineConfidence: { heart: 88, head: 80, life: 90, fate: 85, sun: 82, mercury: 72 },
+      imageQualityScore: 86,
+      landmarkDetectionConfidence: 88
+    }
+  },
+  {
+    id: "water_mystic",
+    name: "Water Hand — Intuitive Mystic & Artist",
+    tamilName: "நீர் பூத கை — உள்ளுணர்வு & கலைஞர்",
+    element: "water",
+    handShape: "Water Hand (Jala Tatva - Intuitive Mystic)",
+    description: "Long narrow palm with delicate fingers, curved heart line, and expansive Luna mount.",
+    telemetry: {
+      luminance: 130,
+      contrast: 50,
+      edgeDensity: 26,
+      lineConfidence: { heart: 94, head: 88, life: 80, fate: 70, sun: 85, mercury: 76 },
+      imageQualityScore: 90,
+      landmarkDetectionConfidence: 92
+    }
+  }
+];
 
 export default function CameraCapture({ onScanComplete, lang = "en" }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -18,6 +85,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
   const [capturedImage, setCapturedImage] = useState(null);
   const [activeLineTab, setActiveLineTab] = useState("heart");
   const [showConsentModal, setShowConsentModal] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -44,7 +112,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" }
         });
-      } catch (envErr) {
+      } catch {
         stream = await navigator.mediaDevices.getUserMedia({
           video: true
         });
@@ -109,19 +177,12 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
     }
   };
 
-  const loadSamplePalmImage = () => {
+  const loadPresetPalm = (preset) => {
+    setSelectedPreset(preset.id);
     setCapturedImage("sample");
     setInsufficientEvidence(null);
-    const baselineTelemetry = {
-      luminance: 128,
-      contrast: 42,
-      edgeDensity: 18,
-      lineConfidence: { heart: 80, head: 82, life: 85, fate: null },
-      imageQualityScore: 82,
-      landmarkDetectionConfidence: 86
-    };
-    setOpticalTelemetry(baselineTelemetry);
-    simulateScanning(baselineTelemetry, null);
+    setOpticalTelemetry(preset.telemetry);
+    simulateScanning(preset.telemetry, null, preset);
   };
 
   const handleFileUpload = (e) => {
@@ -131,6 +192,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
     reader.onload = (event) => {
       const dataUrl = event.target.result;
       setCapturedImage(dataUrl);
+      setSelectedPreset(null);
       stopCamera();
 
       // Analyze vision properties from uploaded image using offscreen canvas
@@ -143,7 +205,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         ctx.drawImage(img, 0, 0, offCanvas.width, offCanvas.height);
         const data = analyzeCanvasVision(offCanvas);
         if (data) {
-          simulateScanning(data.tele, data.vision);
+          simulateScanning(data.tele, data.vision, null);
         }
       };
       img.src = dataUrl;
@@ -161,15 +223,16 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL("image/jpeg");
     setCapturedImage(dataUrl);
+    setSelectedPreset(null);
     stopCamera();
 
     const data = analyzeCanvasVision(canvas);
     if (data) {
-      simulateScanning(data.tele, data.vision);
+      simulateScanning(data.tele, data.vision, null);
     }
   };
 
-  const simulateScanning = (teleData = null, visionData = null) => {
+  const simulateScanning = (teleData = null, visionData = null, preset = null) => {
     setScanning(true);
     setScanProgress(10);
     const interval = setInterval(() => {
@@ -184,6 +247,11 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
           if (teleData) {
             results.opticalMeasurements = teleData;
           }
+          if (preset) {
+            results.handShape = preset.handShape;
+            results.element = preset.element;
+            results.presetName = preset.name;
+          }
           if (visionData) {
             results.visionPipeline = visionData;
           } else {
@@ -196,7 +264,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         }
         return prev + 15;
       });
-    }, 250);
+    }, 200);
   };
 
   useEffect(() => {
@@ -219,7 +287,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
         <div className="space-y-0.5">
           <span className="font-bold text-amber-950 block">
-            {isTamil ? "சாமுத்ரிகா லட்சண மாதிரிக் குறிப்பு (Cultural Reference)" : "Samudrika Shastra Illustrative Framework"}
+            {isTamil ? "சாமுத்ரிகா லட்சண மாதிரிக் குறிப்பு (Samudrika Shastra Framework)" : "Samudrika Shastra Illustrative Framework"}
           </span>
           <p className="text-[11px] text-stone-600 leading-relaxed">
             {isTamil
@@ -252,11 +320,15 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
             </span>
           </div>
           <p className="text-stone-700 leading-relaxed">{insufficientEvidence.message}</p>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-stone-600 bg-amber-100/60 px-3 py-1.5 rounded-lg border border-amber-200">
-            <span>Status: <strong>{insufficientEvidence.failureReason}</strong></span>
-            {insufficientEvidence.qualityMetrics && (
-              <span>Quality Score: <strong>{insufficientEvidence.imageQualityScore}/100</strong></span>
-            )}
+          <div className="p-2.5 rounded-lg bg-amber-100/70 border border-amber-200 text-[11px] space-y-1">
+            <span className="font-bold text-stone-800 block">
+              {isTamil ? "தெளிவான படம் எடுப்பதற்கான வழிகாட்டுதல்கள்:" : "Recapture Guidance:"}
+            </span>
+            <ul className="list-disc list-inside space-y-0.5 text-stone-600">
+              <li>{isTamil ? "நல்ல வெளிச்சம் உள்ள இடத்தில் கையை வையுங்கள் (நிழல் தவிர்க்கவும்)." : "Ensure bright, even lighting across the entire palm surface."}</li>
+              <li>{isTamil ? "உள்ளங்கையை தட்டையாகவும், விரல்களை நேராகவும் வையுங்கள்." : "Flatten the hand naturally with fingers straight and clearly visible."}</li>
+              <li>{isTamil ? "கேமராவை அசையாமல் பிடித்து தெளிவான கவனம் (focus) பெறுங்கள்." : "Hold camera steady to avoid motion blur and ensure sharp contrast."}</li>
+            </ul>
           </div>
         </div>
       )}
@@ -373,7 +445,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
             <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={requestCameraAccess}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/25 hover:brightness-110 flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/25 hover:brightness-110 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Camera className="w-4 h-4" />
                 {t.launchCamera}
@@ -381,7 +453,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-stone-800 font-semibold text-xs border border-amber-300 flex items-center justify-center gap-2 transition-all shadow-xs"
+                className="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-stone-800 font-semibold text-xs border border-amber-300 flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
               >
                 <Upload className="w-3.5 h-3.5 text-amber-700" />
                 {t.uploadPalm}
@@ -394,14 +466,6 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
                 onChange={handleFileUpload}
                 className="hidden"
               />
-
-              <button
-                onClick={loadSamplePalmImage}
-                className="w-full py-2 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 font-semibold text-xs border border-purple-200 flex items-center justify-center gap-2 transition-all"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                {t.demoScan}
-              </button>
             </div>
           </div>
         )}
@@ -418,7 +482,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
 
               <button
                 onClick={stopCamera}
-                className="pointer-events-auto p-2 rounded-full bg-stone-900/90 border border-stone-700 text-stone-200 hover:text-white"
+                className="pointer-events-auto p-2 rounded-full bg-stone-900/90 border border-stone-700 text-stone-200 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -430,7 +494,7 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
               <button
                 onClick={capturePhoto}
                 disabled={scanning}
-                className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 p-1 shadow-xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+                className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 p-1 shadow-xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
               >
                 <div className="w-full h-full rounded-full border-2 border-stone-900 bg-white flex items-center justify-center">
                   <Camera className="w-7 h-7 text-amber-600" />
@@ -468,6 +532,52 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
+      {/* Classical Archetype Presets */}
+      <div className="p-5 rounded-2xl bg-[#FFFDF9] border border-amber-300 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-900">
+              {isTamil ? "முன்மாதிரி பூத கை அமைப்புகள் (Classical Archetype Presets)" : "Classical Archetype Presets"}
+            </h4>
+          </div>
+          <span className="text-[11px] text-stone-500">
+            {isTamil ? "உடனடி மாதிரி ஆய்வு செய்ய" : "Explore instantly"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {SAMPLE_PALM_PRESETS.map((preset) => {
+            const isSelected = selectedPreset === preset.id;
+            return (
+              <button
+                key={preset.id}
+                onClick={() => loadPresetPalm(preset)}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  isSelected
+                    ? "bg-amber-100/90 border-amber-500 shadow-sm ring-2 ring-amber-400/40"
+                    : "bg-amber-50/50 hover:bg-amber-100/60 border-amber-200"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-xs text-stone-900">
+                    {isTamil ? preset.tamilName : preset.name}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-600 line-clamp-2 leading-relaxed">
+                  {preset.description}
+                </p>
+                <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-amber-800">
+                  <span>{isTamil ? "மாதிரி ஆய்வு" : "Explore Archetype"}</span>
+                  <Hand className="w-3.5 h-3.5 text-amber-600" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Manual Touch-Up Selector when image loaded */}
       {capturedImage && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -552,13 +662,13 @@ export default function CameraCapture({ onScanComplete, lang = "en" }) {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setShowConsentModal(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-semibold"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-semibold cursor-pointer"
               >
                 {isTamil ? "ரத்து செய்" : "Cancel"}
               </button>
               <button
                 onClick={handleConfirmStartCamera}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-white text-xs font-bold shadow-md shadow-amber-500/25"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-white text-xs font-bold shadow-md shadow-amber-500/25 cursor-pointer"
               >
                 {isTamil ? "தொடரவும் & துவக்குக" : "Allow & Launch"}
               </button>

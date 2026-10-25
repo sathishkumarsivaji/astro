@@ -1,7 +1,7 @@
 import { find as geoTzFind } from 'geo-tz';
 
 /**
- * ASTROVERSE — Server-Side Authoritative Geocoding Proxy Service
+ * SKR ASTRO — Server-Side Authoritative Geocoding Proxy Service
  *
  * Implements:
  * 1. Offline pre-indexed catalog of Tamil Nadu & major Indian/global cities
@@ -159,7 +159,7 @@ export async function geocodePlace(query, lang = "en") {
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=6`;
     const response = await fetch(nominatimUrl, {
       headers: {
-        "User-Agent": "AstroVerse-Astrology-Platform/2.0 (contact@astroverse.app)"
+        "User-Agent": "SKR-Astro-Platform/4.2 (contact@skr-astro.app)"
       }
     });
 

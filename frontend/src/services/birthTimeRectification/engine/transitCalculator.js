@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Historical Transit Calculator for Birth-Time Rectification
+ * SKR ASTRO — Historical Transit Calculator for Birth-Time Rectification
  *
  * Implements genuine historical astronomical transit calculations for every life event:
  * - Computes exact sidereal coordinates of transiting Grahas (Jupiter, Saturn, Rahu,

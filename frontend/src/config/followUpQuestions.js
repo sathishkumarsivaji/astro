@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Follow-Up Questions Configuration
+ * SKR ASTRO — Follow-Up Questions Configuration
  *
  * Canonical mapping linking Report Chapters to contextual follow-up question templates.
  * Uses canonical chapter IDs from src/config/reportChapters.js:

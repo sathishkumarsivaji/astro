@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Structured Claim Graph & Reasoning Engine (Audit Points 14, 47, 51)
+ * SKR ASTRO — Structured Claim Graph & Reasoning Engine (Audit Points 14, 47, 51)
  *
  * Implements:
  * 1. Directed Acyclic Graph (DAG) representation of astrological reasoning

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Contradiction Engine for Birth-Time Rectification
+ * SKR ASTRO — Contradiction Engine for Birth-Time Rectification
  *
  * Distinguishes unsupporting evidence from active contradictions:
  * - Unsupporting evidence: Neutral absence of a specific planetary configuration

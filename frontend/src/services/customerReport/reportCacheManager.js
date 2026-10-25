@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Deterministic Customer Life Intelligence Report Cache Manager
+ * SKR ASTRO — Deterministic Customer Life Intelligence Report Cache Manager
  * ===========================================================================
  * Provides high-performance, deterministic multi-tier caching for certified
  * LifeReportModel artifacts.
@@ -25,7 +25,7 @@ import { POLICY_VERSION } from "../applicability/applicabilityPolicyEngine.js";
 import { EVENT_REGISTRY_VERSION } from "../applicability/eventPrerequisiteRegistry.js";
 
 // Authoritative frozen baseline versions and hashes
-export const DEFAULT_ENGINE_VERSION = "ASTROVERSE Core v4.2.0";
+export const DEFAULT_ENGINE_VERSION = "SKR ASTRO Core v4.2.0";
 export const DEFAULT_PREDICTION_ENGINE_HASH = releaseManifest?.authoritativeHashes?.predictionEngineHash || "a298a6e77f6aa4b488e4a7eec971a32332d1c786c923314e6876f02010df5a38";
 export const DEFAULT_CALIBRATION_MODEL_HASH = releaseManifest?.authoritativeHashes?.calibrationModelHash || "5a127557a6a06fe9d8cc3a73b10f21f2765aeb92c9e0e965b664eae538a10277";
 export const DEFAULT_SCHEMA_VERSION = releaseManifest?.schemaVersion || "3.0";

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Foreign Trip Timing Task Evaluator
+ * SKR ASTRO — Foreign Trip Timing Task Evaluator
  * ================================================
  * Evaluates foreign travel timing requests.
  * Distinguishes temporary travel (FOREIGN_TRIP), overseas employment (WORK_ABROAD),

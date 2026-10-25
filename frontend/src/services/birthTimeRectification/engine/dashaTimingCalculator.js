@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Dasha Timing Calculator for Birth-Time Rectification
+ * SKR ASTRO — Dasha Timing Calculator for Birth-Time Rectification
  *
  * Evaluates authentic 3-tier Vimshottari Dasha timing (Mahadasha, Antardasha,
  * and Pratyantardasha) active at the exact historical event date.

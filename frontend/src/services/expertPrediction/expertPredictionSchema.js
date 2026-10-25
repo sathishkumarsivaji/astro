@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Expert Mode Prediction Schema
+ * SKR ASTRO — Expert Mode Prediction Schema
  * ============================================
  * Central canonical schema for Expert Mode predictions.
  * ALL domain adapters, engines, and report components MUST import from this file.

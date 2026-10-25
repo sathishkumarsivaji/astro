@@ -1,9 +1,9 @@
 /**
- * AstroVerse Web Push Notification & Service Worker (sw.js)
+ * SKR ASTRO Web Push Notification & Service Worker (sw.js)
  * Handles offline caching, background transit alerts, panchang notifications, and push messages.
  */
 
-const CACHE_NAME = 'astroverse-cache-v1';
+const CACHE_NAME = 'skr-astro-cache-v1';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -63,7 +63,7 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: data.icon || '/favicon.ico',
     badge: data.badge || '/favicon.ico',
-    tag: data.tag || 'astroverse-transit-alert',
+    tag: data.tag || 'skr-astro-transit-alert',
     vibrate: [100, 50, 100],
     data: data.data || { url: '/' },
     actions: data.actions || [

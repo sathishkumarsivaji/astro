@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Canonical 19-Chapter Report Architecture
+ * SKR ASTRO — Canonical 19-Chapter Report Architecture
  *
  * Defines the structural schema for comprehensive astrological reports,
  * ensuring strict synchronization across the deterministic engine, UI tabs,

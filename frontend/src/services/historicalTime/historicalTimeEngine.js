@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Historical Time-Standard & Multi-Epoch Temporal Engine
+ * SKR ASTRO — Historical Time-Standard & Multi-Epoch Temporal Engine
  * 
  * Accurately models historical time conventions across global eras:
  * 1. STANDARD_TIME: Modern civil zone time

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Structured Answer Object Model & Validator
+ * SKR ASTRO — Structured Answer Object Model & Validator
  * ========================================================
  * Formal data contract representing the validated pre-synthesis astrological answer.
  * Strictly separates calculated facts from traditional interpretations.

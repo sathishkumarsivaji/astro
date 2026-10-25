@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Official Capability & Feature Registry
+ * SKR ASTRO — Official Capability & Feature Registry
  *
  * Epistemically declares the exact development and validation status of every
  * feature across the platform:

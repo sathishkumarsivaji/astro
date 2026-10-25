@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Expert Mode Narrative Builder
+ * SKR ASTRO — Expert Mode Narrative Builder
  * ============================================
  * Generates bilingual (English + Tamil) plain-language narratives
  * for Expert Mode domain predictions.

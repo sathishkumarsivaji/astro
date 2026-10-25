@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Production Entitlement & Payment Webhook Service
+ * SKR ASTRO — Production Entitlement & Payment Webhook Service
  *
  * Implements:
  * 1. Granular entitlement records backed by PostgreSQL & dual-layer database storage

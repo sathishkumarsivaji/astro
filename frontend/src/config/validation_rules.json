@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "name": "AstroVerse Formal Validation Rules & Model Specifications",
+  "name": "SKR ASTRO Formal Validation Rules & Model Specifications",
   "version": "1.0.0",
   "lastUpdated": "2026-10-01T00:00:00.000Z",
   "disclaimer": "All weights represent pre-specified classical Jyotish heuristics and ablation model weights for epistemic clarity. Predictions are rule-based hypotheses, not deterministic certainty.",

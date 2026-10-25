@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Applicability Policy Engine
+ * SKR ASTRO — Applicability Policy Engine
  * =========================================
  * Version: 2.1.0
  * 
@@ -33,6 +33,15 @@ export const APPLICABILITY_STATUS = Object.freeze({
  * @param {Date|string} targetDateInput - Target date / ISO string
  * @returns {Object} { years: number, months: number, days: number, fractionalYears: number, totalMonths: number }
  */
+/**
+ * Calculates exact chronological calendar age with explicit month-end semantics.
+ * Handles month-end clamping (e.g. Jan 31 -> Feb 28 is 1 month; Jan 31 -> Mar 1 is 1 month, 1 day)
+ * and guarantees zero negative day or month components.
+ *
+ * @param {string|Date} birthDateInput
+ * @param {string|Date} targetDateInput
+ * @returns {Object|null}
+ */
 export function calculateExactCalendarAge(birthDateInput, targetDateInput) {
   if (!birthDateInput || !targetDateInput) return null;
 
@@ -52,7 +61,8 @@ export function calculateExactCalendarAge(birthDateInput, targetDateInput) {
     months -= 1;
     // Days in previous month
     const prevMonthDays = new Date(Date.UTC(tDate.getUTCFullYear(), tDate.getUTCMonth(), 0)).getUTCDate();
-    days += prevMonthDays;
+    const anchorDay = Math.min(bDate.getUTCDate(), prevMonthDays);
+    days = (prevMonthDays - anchorDay) + tDate.getUTCDate();
   }
 
   if (months < 0) {

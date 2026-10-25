@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Customer Narrative Engine (Sections 26 & 28)
+ * SKR ASTRO — Customer Narrative Engine (Sections 26 & 28)
  * ==========================================================
  * Translates complex Jyotisha terminology into accessible, premium,
  * customer-friendly language. Provides deterministic narrative generation

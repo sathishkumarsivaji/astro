@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Named Competitive Examination Task Evaluator
+ * SKR ASTRO — Named Competitive Examination Task Evaluator
  * ==========================================================
  * Evaluates academic and competitive examination prospects.
  *

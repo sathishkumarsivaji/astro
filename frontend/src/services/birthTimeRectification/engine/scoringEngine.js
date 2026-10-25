@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Transparent Scoring Engine for Birth-Time Rectification
+ * SKR ASTRO — Transparent Scoring Engine for Birth-Time Rectification
  *
  * Implements deterministic scoring without magic numbers or default fallbacks:
  * Score = Positive Evidence (capped groups) - Contradiction Penalty - Overfit Penalty + Domain Diversity Bonus

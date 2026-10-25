@@ -93,7 +93,29 @@ export function transliterateTamilToLatin(input) {
   return out;
 }
 
-export function calculateNumerology(birthDateStr, fullName = "", system = "pythagorean") {
+export function calculateNumerology(birthDateStr, fullName = "", system = "pythagorean", targetDate = null) {
+  const validSystems = ["pythagorean", "chaldean"];
+  if (!validSystems.includes(system)) {
+    throw new Error(`INVALID_SYSTEM: Unsupported numerology system '${system}'. Must be 'pythagorean' or 'chaldean'.`);
+  }
+
+  // Strict Date Validation (No impossible dates like 2026-02-31, malformed dates, or NaN)
+  if (!birthDateStr || typeof birthDateStr !== "string" || !birthDateStr.trim()) {
+    throw new Error("INVALID_DATE: Birth date is required in YYYY-MM-DD format.");
+  }
+  const dateParts = birthDateStr.trim().split("-").map(Number);
+  if (dateParts.length !== 3 || dateParts.some(isNaN)) {
+    throw new Error(`INVALID_DATE: Malformed birth date string '${birthDateStr}'. Expected YYYY-MM-DD.`);
+  }
+  const [year, month, day] = dateParts;
+  if (year < 1000 || year > 3000 || month < 1 || month > 12) {
+    throw new Error(`INVALID_DATE: Month ${month} or Year ${year} out of valid astronomical range.`);
+  }
+  const maxDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day < 1 || day > maxDays) {
+    throw new Error(`INVALID_DATE: Day ${day} is invalid for month ${month} in year ${year} (max ${maxDays} days).`);
+  }
+
   const map = system === "chaldean" ? CHALDEAN_MAP : PYTHAGOREAN_MAP;
   
   // Unicode normalization and Tamil transliteration support
@@ -106,7 +128,6 @@ export function calculateNumerology(birthDateStr, fullName = "", system = "pytha
   const hasName = cleanName.length > 0;
 
   // 1. Life Path Number (Date of Birth)
-  const [year, month, day] = birthDateStr.split("-").map(Number);
   const rYear = reduceNumber(year, false);
   const rMonth = reduceNumber(month, false);
   const rDay = reduceNumber(day, false);
@@ -134,7 +155,8 @@ export function calculateNumerology(birthDateStr, fullName = "", system = "pytha
   const personalityNumber = hasName ? reduceNumber(consonantScore, true) : null;
 
   // 3. Current Personal Year / Month / Day
-  const today = new Date();
+  const today = targetDate ? (targetDate instanceof Date ? targetDate : new Date(targetDate)) : new Date();
+  if (isNaN(today.getTime())) throw new Error("INVALID_TARGET_DATE: Invalid target date provided.");
   const currentYear = today.getFullYear();
   const personalYear = reduceNumber(rDay + rMonth + reduceNumber(currentYear, false), false);
   const personalMonth = reduceNumber(personalYear + (today.getMonth() + 1), false);
@@ -156,8 +178,8 @@ export function calculateNumerology(birthDateStr, fullName = "", system = "pytha
     33: { title: "Master Number 33: The Master Teacher & Healer", traits: "Universal Devotion, Compassion, Transformational Upliftment", planet: "Neptune / Venus", stones: ["Diamond", "Aquamarine"], colors: ["Pure White", "Celestial Blue"], luckyDays: ["Thursday", "Friday"] }
   };
 
-  const lifePathInfo = TRAITS[lifePathNumber] || TRAITS[1];
-  const destinyInfo = TRAITS[destinyNumber] || TRAITS[1];
+  const lifePathInfo = TRAITS[lifePathNumber] || null;
+  const destinyInfo = (hasName && destinyNumber) ? (TRAITS[destinyNumber] || null) : null;
 
   const harmonicNumbers = [lifePathNumber, (lifePathNumber * 3) % 9 || 9, (lifePathNumber * 7) % 9 || 7];
 

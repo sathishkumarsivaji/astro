@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Contradiction & Multi-System Convergence Engine
+ * SKR ASTRO — Contradiction & Multi-System Convergence Engine
  * =============================================================
  * Identifies directional divergences, planetary dignity conflicts,
  * and timing resolution mismatches across retrieved evidence.

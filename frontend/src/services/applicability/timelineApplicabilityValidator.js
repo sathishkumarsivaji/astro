@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Timeline Applicability Validator
+ * SKR ASTRO — Timeline Applicability Validator
  * =============================================
  * Version: 2.1.0
  * 
@@ -97,17 +97,34 @@ export function validateTimelineApplicability(stages = []) {
 
     // General Minor checks (< 18.0 years)
     if (s !== null && s < 18.0) {
-      if (
+      const isCareerViolation =
         titleLower.includes("vocational ascent") ||
         titleLower.includes("leadership & institutional") ||
-        titleLower.includes("உத்தியோக உயர்வு")
-      ) {
+        titleLower.includes("job promotion") ||
+        titleLower.includes("career promotion") ||
+        titleLower.includes("promotion") ||
+        titleLower.includes("business expansion") ||
+        titleLower.includes("உத்தியோக உயர்வு") ||
+        titleLower.includes("பதவி உயர்வு") ||
+        predLower.includes("job promotion") ||
+        predLower.includes("receive a job promotion") ||
+        predLower.includes("expand your business") ||
+        predLower.includes("business expansion") ||
+        predLower.includes("vocational ascent") ||
+        predLower.includes("career promotion") ||
+        predLower.includes("உத்தியோக உயர்வு") ||
+        predLower.includes("பதவி உயர்வு") ||
+        predLower.includes("தொழில் விரிவாக்கம்") ||
+        guidanceLower.includes("job promotion") ||
+        guidanceLower.includes("expand your business");
+
+      if (isCareerViolation) {
         violations.push({
           index: idx,
           stageId: stage.id || `stage_${idx}`,
           age: s,
           rule: "MINOR_NO_CAREER_TITLE",
-          message: `Stage at age ${s} has career promotion title.`
+          message: `Stage at age ${s} has career promotion, job promotion, or business expansion content for minor.`
         });
       }
       if (

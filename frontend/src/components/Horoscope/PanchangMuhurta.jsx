@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Sun,
-  Moon,
   Calendar,
   Clock,
   Sparkles,
@@ -15,22 +14,17 @@ import {
   Landmark,
   Briefcase,
   Plane,
-  ChevronRight,
-  ArrowRight,
   MapPin,
-  RefreshCw,
-  Info,
   CalendarDays,
   MessageSquare,
-  Flame,
-  Check,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
 import { formatDateInTimezone } from "../../services/astroEngine";
 import {
   calculateEnrichedDailyPanchang,
-  searchAuspiciousMuhurtas
+  searchAuspiciousMuhurtas,
+  MUHURTA_EVENT_CONFIGS
 } from "../../services/panchangEngine";
 
 const DEFAULT_PRESET_CITIES = [
@@ -115,6 +109,9 @@ export default function PanchangMuhurta({
   const [panchangDateStr, setPanchangDateStr] = useState(todayStr);
   const [selectedEvent, setSelectedEvent] = useState("marriage");
   const [daysAhead, setDaysAhead] = useState(30);
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [sortBy, setSortBy] = useState("score");
+  const [expandedCardDate, setExpandedCardDate] = useState(null);
   const [muhurtaResults, setMuhurtaResults] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -139,13 +136,20 @@ export default function PanchangMuhurta({
     calculationError = err.message || "Failed to calculate Panchanga for specified date & coordinates.";
   }
 
-  // Find Muhurta with PROPER horizon time limits
-  const handleFindMuhurta = (targetDays = daysAhead) => {
+  // Find Muhurta with PROPER horizon time limits and event-specific rules
+  const handleFindMuhurta = (targetDays = daysAhead, targetEvent = selectedEvent) => {
     setIsCalculating(true);
     try {
       const startDate = panchangDateStr;
-      // Pass targetDays so the horizon calculation functions accurately
-      const results = searchAuspiciousMuhurtas(selectedEvent, startDate, targetDays, activeLat, activeLng, activeTz, activeTzId);
+      const results = searchAuspiciousMuhurtas(
+        targetEvent,
+        startDate,
+        targetDays,
+        activeLat,
+        activeLng,
+        activeTz,
+        activeTzId
+      );
       setMuhurtaResults(results);
     } catch (e) {
       console.error("Muhurta Search Error:", e);
@@ -154,48 +158,67 @@ export default function PanchangMuhurta({
     }
   };
 
+  const handleSelectEvent = (eventId) => {
+    setSelectedEvent(eventId);
+    setSelectedMonth("all");
+    handleFindMuhurta(daysAhead, eventId);
+  };
+
+  const handleSelectHorizon = (d) => {
+    setDaysAhead(d);
+    setSelectedMonth("all");
+    handleFindMuhurta(d, selectedEvent);
+  };
+
   const EVENT_OPTIONS = [
     {
       id: "marriage",
-      label: isTamil ? "திருமண முகூர்த்தம் (Marriage)" : "Vivaha (Marriage)",
+      label: isTamil ? MUHURTA_EVENT_CONFIGS.marriage.nameTa : MUHURTA_EVENT_CONFIGS.marriage.nameEn,
       icon: Heart,
-      desc: isTamil ? "குரு, சுக்கிரன் மற்றும் சுப திதி/நட்சத்திரங்கள்" : "Auspicious Venus/Jupiter & shubha nakshatra alignment"
+      desc: isTamil ? MUHURTA_EVENT_CONFIGS.marriage.descTa : MUHURTA_EVENT_CONFIGS.marriage.descEn
     },
     {
       id: "griha_pravesh",
-      label: isTamil ? "கிரகப்பிரவேசம் (Housewarming)" : "Griha Pravesham (Housewarming)",
+      label: isTamil ? MUHURTA_EVENT_CONFIGS.griha_pravesh.nameTa : MUHURTA_EVENT_CONFIGS.griha_pravesh.nameEn,
       icon: Home,
-      desc: isTamil ? "வாஸ்து புருஷர் விழிப்பு & ஸ்திர லக்ன சுபம்" : "Fixed sign Ascendant & auspicious lunar day"
+      desc: isTamil ? MUHURTA_EVENT_CONFIGS.griha_pravesh.descTa : MUHURTA_EVENT_CONFIGS.griha_pravesh.descEn
     },
     {
       id: "vehicle",
-      label: isTamil ? "வாகனம் வாங்குதல் (Vehicle Purchase)" : "Vahana (Vehicle Purchase)",
+      label: isTamil ? MUHURTA_EVENT_CONFIGS.vehicle.nameTa : MUHURTA_EVENT_CONFIGS.vehicle.nameEn,
       icon: Car,
-      desc: isTamil ? "சுக்கிரன் & சந்திரன் சுப சஞ்சாரம்" : "Benefic Venus/Moon transit & auspicious vara"
+      desc: isTamil ? MUHURTA_EVENT_CONFIGS.vehicle.descTa : MUHURTA_EVENT_CONFIGS.vehicle.descEn
     },
     {
       id: "property",
-      label: isTamil ? "பூமி / சொத்து கிரயம் (Property Purchase)" : "Bhumi (Property Purchase)",
+      label: isTamil ? MUHURTA_EVENT_CONFIGS.property.nameTa : MUHURTA_EVENT_CONFIGS.property.nameEn,
       icon: Landmark,
-      desc: isTamil ? "செவ்வாய், பூமி காரக சுப பார்வை" : "Mars & 4th house lord auspicious aspect"
+      desc: isTamil ? MUHURTA_EVENT_CONFIGS.property.descTa : MUHURTA_EVENT_CONFIGS.property.descEn
     },
     {
       id: "business",
-      label: isTamil ? "தொழில் தொடங்குதல் (Business Launch)" : "Vyapar (Business Launch)",
+      label: isTamil ? MUHURTA_EVENT_CONFIGS.business.nameTa : MUHURTA_EVENT_CONFIGS.business.nameEn,
       icon: Briefcase,
-      desc: isTamil ? "புதன், குரு சுப யோக காலம்" : "Mercury/Jupiter commercial yoga timing"
+      desc: isTamil ? MUHURTA_EVENT_CONFIGS.business.descTa : MUHURTA_EVENT_CONFIGS.business.descEn
     },
     {
       id: "travel",
-      label: isTamil ? "சுப பிரயாணம் (Travel / Relocation)" : "Yatra (Auspicious Travel)",
+      label: isTamil ? MUHURTA_EVENT_CONFIGS.travel.nameTa : MUHURTA_EVENT_CONFIGS.travel.nameEn,
       icon: Plane,
-      desc: isTamil ? "சந்திர பலம் & சுப திசை முகூர்த்தம்" : "Moon strength & auspicious directional alignment"
+      desc: isTamil ? MUHURTA_EVENT_CONFIGS.travel.descTa : MUHURTA_EVENT_CONFIGS.travel.descEn
     }
   ];
 
-  const candidateList = muhurtaResults
-    ? (Array.isArray(muhurtaResults) ? muhurtaResults : (muhurtaResults.topScreenedDates || muhurtaResults.bestWindows || muhurtaResults.allCandidates || []))
-    : [];
+  // Candidates filtered by month and sorted by user choice
+  const rawCandidates = muhurtaResults?.topScreenedDates || [];
+  const filteredCandidates = selectedMonth === "all"
+    ? rawCandidates
+    : rawCandidates.filter((c) => c.monthKey === selectedMonth);
+
+  const candidateList = [...filteredCandidates].sort((a, b) => {
+    if (sortBy === "date") return a.date.localeCompare(b.date);
+    return b.muhurtaScore - a.muhurtaScore;
+  });
 
   const handleSelectCityPreset = (city) => {
     setActiveLocation({
@@ -228,14 +251,33 @@ export default function PanchangMuhurta({
   // Inspect Panchang for a candidate date
   const handleInspectCandidatePanchang = (date) => {
     setPanchangDateStr(date);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const topEl = document.getElementById("daily-panchang-top");
+    if (topEl) {
+      topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   // Ask AI about this candidate date
   const handleAskAboutCandidateDate = (candidate) => {
+    const eventNameTa = selectedEvent === "marriage" ? "திருமணத்திற்கு"
+      : selectedEvent === "griha_pravesh" ? "கிரகப்பிரவேசத்திற்கு"
+      : selectedEvent === "vehicle" ? "வாகனம் வாங்குவதற்கு"
+      : selectedEvent === "property" ? "பூமி / மனை கிரயம் செய்வதற்கு"
+      : selectedEvent === "business" ? "தொழில் தொடங்குவதற்கு"
+      : "சுப பிரயாணத்திற்கு";
+
+    const eventNameEn = selectedEvent === "marriage" ? "marriage"
+      : selectedEvent === "griha_pravesh" ? "housewarming (Griha Pravesham)"
+      : selectedEvent === "vehicle" ? "vehicle purchase (Vahana)"
+      : selectedEvent === "property" ? "property purchase (Bhumi)"
+      : selectedEvent === "business" ? "business launch (Vyapar)"
+      : "travel (Yatra)";
+
     const qText = isTamil
-      ? `${candidate.date} (${candidate.dayTamil || candidate.day}) அன்று எனது ${selectedEvent === "marriage" ? "திருமணத்திற்கு" : selectedEvent === "griha_pravesh" ? "கிரகப்பிரவேசத்திற்கு" : "சுப காரியத்திற்கு"} உகந்த நாளா? விரிவான பஞ்சாங்க விளக்கம் தருக.`
-      : `Is ${candidate.date} (${candidate.day}) favorable for my ${selectedEvent.replace('_', ' ')} milestone based on my chart and Panchanga factors?`;
+      ? `${candidate.date} (${candidate.dayTamil || candidate.day}) அன்று எனது ${eventNameTa} உகந்த நாளா? நட்சத்திரம்: ${candidate.nakshatraTamil}, திதி: ${candidate.tithiTamil}. விரிவான பஞ்சாங்க விளக்கம் தருக.`
+      : `Is ${candidate.date} (${candidate.day}) favorable for my ${eventNameEn} based on my chart and Panchanga factors? (Nakshatra: ${candidate.nakshatra}, Tithi: ${candidate.tithi})`;
 
     if (onSelectPrompt) {
       onSelectPrompt(qText);
@@ -310,7 +352,7 @@ export default function PanchangMuhurta({
       </div>
 
       {/* 1. Daily Panchang Header Banner */}
-      <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-br from-amber-500/15 via-[#FFFDF9] to-orange-500/10 border border-amber-300/80 shadow-md space-y-6">
+      <div id="daily-panchang-top" className="p-6 md:p-8 rounded-3xl bg-gradient-to-br from-amber-500/15 via-[#FFFDF9] to-orange-500/10 border border-amber-300/80 shadow-md space-y-6">
         {/* Top Control Bar: Title, Location Selector & Date Selector */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-amber-200/80 pb-4">
           <div className="space-y-1">
@@ -870,10 +912,10 @@ export default function PanchangMuhurta({
               <button
                 key={ev.id}
                 type="button"
-                onClick={() => setSelectedEvent(ev.id)}
+                onClick={() => handleSelectEvent(ev.id)}
                 className={`p-4 rounded-2xl border text-left transition-all space-y-1.5 cursor-pointer ${
                   isSelected
-                    ? "bg-amber-50 border-2 border-amber-500 shadow-md"
+                    ? "bg-amber-50 border-2 border-amber-500 shadow-md ring-2 ring-amber-300/40"
                     : "bg-white border-stone-200 hover:border-amber-300 hover:bg-stone-50/60"
                 }`}
               >
@@ -902,15 +944,10 @@ export default function PanchangMuhurta({
                 <button
                   key={d}
                   type="button"
-                  onClick={() => {
-                    setDaysAhead(d);
-                    if (muhurtaResults) {
-                      handleFindMuhurta(d);
-                    }
-                  }}
+                  onClick={() => handleSelectHorizon(d)}
                   className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     daysAhead === d
-                      ? "bg-amber-600 text-white shadow-sm"
+                      ? "bg-amber-600 text-white shadow-sm ring-2 ring-amber-300/50"
                       : "bg-white text-stone-700 border border-amber-200 hover:bg-amber-100/60"
                   }`}
                 >
@@ -922,7 +959,7 @@ export default function PanchangMuhurta({
 
           <button
             type="button"
-            onClick={() => handleFindMuhurta(daysAhead)}
+            onClick={() => handleFindMuhurta(daysAhead, selectedEvent)}
             disabled={isCalculating}
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-bold text-xs shadow-md shadow-amber-500/25 hover:brightness-110 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
@@ -938,19 +975,81 @@ export default function PanchangMuhurta({
         {/* Muhurta Candidates Result List with Active Action Links */}
         {muhurtaResults && (
           <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-2">
-                <Award className="w-4 h-4 text-amber-600" />
-                <span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-2">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-amber-600" />
+                  <span>
+                    {isTamil
+                      ? `கண்டறியப்பட்ட சுப தேதிகள் (${candidateList.length} தேதிகள், அடுத்த ${daysAhead} நாட்களில்)`
+                      : `Ranked Auspicious Dates (${candidateList.length} screened dates across ${daysAhead} days)`}
+                  </span>
+                </h4>
+                <p className="text-[11px] text-stone-500 mt-0.5">
                   {isTamil
-                    ? `கண்டறியப்பட்ட சிறந்த சுப தேதிகள் (${candidateList.length} தேதிகள், அடுத்த ${daysAhead} நாட்களில்)`
-                    : `Ranked Auspicious Dates (${candidateList.length} screened dates across ${daysAhead} days)`}
-                </span>
-              </h4>
-              <span className="text-[11px] text-stone-500">
-                {isTamil ? "விருப்பமான தேதியை கிளிக் செய்து பஞ்சாங்கம் பார்க்கவும்" : "Click any date card to inspect its full Panchanga"}
-              </span>
+                    ? `ஆய்வு செய்யப்பட்ட காலம்: ${muhurtaResults.startDate} முதல் ${muhurtaResults.endDate} வரை (${muhurtaResults.totalDatesEvaluated} தினங்கள்)`
+                    : `Screening horizon: ${muhurtaResults.startDate} to ${muhurtaResults.endDate} (${muhurtaResults.totalDatesEvaluated} days evaluated)`}
+                </p>
+              </div>
+
+              {/* Sort By Controls */}
+              <div className="flex items-center gap-1.5 self-start sm:self-auto bg-stone-100 p-1 rounded-xl text-xs">
+                <span className="text-[10px] text-stone-500 px-1 font-semibold">{isTamil ? "வரிசை:" : "Sort:"}</span>
+                <button
+                  type="button"
+                  onClick={() => setSortBy("score")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    sortBy === "score" ? "bg-white text-amber-900 shadow-2xs" : "text-stone-600 hover:text-stone-900"
+                  }`}
+                >
+                  {isTamil ? "அதிக சுப மதிப்பெண்" : "Highest Rated"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortBy("date")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    sortBy === "date" ? "bg-white text-amber-900 shadow-2xs" : "text-stone-600 hover:text-stone-900"
+                  }`}
+                >
+                  {isTamil ? "தேதி வாரியாக" : "By Date"}
+                </button>
+              </div>
             </div>
+
+            {/* Month Filter Bar for 60, 90, 180 Days Horizons */}
+            {muhurtaResults.months && muhurtaResults.months.length > 1 && (
+              <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-2xl bg-amber-50/50 border border-amber-200">
+                <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1 mr-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                  <span>{isTamil ? "மாதம் வாரியாக வடிகட்டுக:" : "Filter by Month:"}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonth("all")}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    selectedMonth === "all"
+                      ? "bg-amber-600 text-white shadow-xs"
+                      : "bg-white text-stone-700 border border-amber-200 hover:bg-amber-100/60"
+                  }`}
+                >
+                  {isTamil ? "அனைத்து மாதங்கள்" : "All Months"} ({rawCandidates.length})
+                </button>
+                {muhurtaResults.months.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setSelectedMonth(m.key)}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      selectedMonth === m.key
+                        ? "bg-amber-600 text-white shadow-xs"
+                        : "bg-white text-stone-700 border border-amber-200 hover:bg-amber-100/60"
+                    }`}
+                  >
+                    {isTamil ? m.labelTa : m.labelEn} ({m.count})
+                  </button>
+                ))}
+              </div>
+            )}
 
             {candidateList.length === 0 ? (
               <div className="p-6 rounded-2xl bg-stone-50 border border-stone-200 text-center text-xs text-stone-600 space-y-2">
@@ -963,10 +1062,8 @@ export default function PanchangMuhurta({
                   {[60, 90, 180].map((d) => (
                     <button
                       key={d}
-                      onClick={() => {
-                        setDaysAhead(d);
-                        handleFindMuhurta(d);
-                      }}
+                      type="button"
+                      onClick={() => handleSelectHorizon(d)}
                       className="px-3 py-1 rounded-xl bg-amber-100 text-amber-900 text-xs font-bold hover:bg-amber-200 cursor-pointer"
                     >
                       {d} {isTamil ? "நாட்கள் தேடு" : "Days"}
@@ -976,78 +1073,163 @@ export default function PanchangMuhurta({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {candidateList.map((m, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-2xl bg-white border border-amber-200 hover:border-amber-400 transition-all shadow-sm space-y-2.5 flex flex-col justify-between"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                        <div>
-                          <span className="text-xs font-bold text-stone-900 block">{m.date}</span>
-                          <span className="text-[10px] text-amber-700 font-medium">
-                            {isTamil ? (m.dayTamil || m.day) : m.day}
-                          </span>
+                {candidateList.map((m, idx) => {
+                  const isExpanded = expandedCardDate === m.date;
+                  return (
+                    <div
+                      key={idx}
+                      className="p-4 rounded-2xl bg-white border border-amber-200 hover:border-amber-400 transition-all shadow-sm space-y-3 flex flex-col justify-between"
+                    >
+                      <div className="space-y-2.5">
+                        {/* Header: Date, Weekday, Score Badge */}
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                          <div>
+                            <span className="text-xs font-bold text-stone-900 block">{m.date}</span>
+                            <span className="text-[10px] text-amber-700 font-semibold">
+                              {isTamil ? (m.dayTamil || m.day) : m.day} &bull; {isTamil ? m.monthLabelTa : m.monthLabelEn}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              m.muhurtaScore >= 85
+                                ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                                : m.muhurtaScore >= 70
+                                  ? "bg-amber-100 text-amber-900 border-amber-300"
+                                  : "bg-stone-100 text-stone-800 border-stone-300"
+                            }`}>
+                              Score: {m.muhurtaScore}
+                            </span>
+                          </div>
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-bold border border-emerald-300">
-                          Score: {m.muhurtaScore}
-                        </span>
+
+                        {/* Core Panchanga Factors */}
+                        <div className="space-y-1.5 text-xs text-stone-600">
+                          <div className="flex justify-between">
+                            <span className="text-stone-500">{isTamil ? "திதி:" : "Tithi:"}</span>
+                            <strong className="text-stone-900 text-right">
+                              {isTamil ? (m.tithiTamil || m.tithi) : m.tithi}
+                              {m.tithiUntil12 && <span className="text-[10px] text-purple-700 block font-mono">until {m.tithiUntil12}</span>}
+                            </strong>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-stone-500">{isTamil ? "நட்சத்திரம்:" : "Nakshatra:"}</span>
+                            <strong className="text-purple-800 text-right">
+                              {isTamil ? (m.nakshatraTamil || m.nakshatra) : m.nakshatra}
+                              {m.nakshatraUntil12 && <span className="text-[10px] text-stone-500 block font-mono">until {m.nakshatraUntil12}</span>}
+                            </strong>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-stone-500">{isTamil ? "யோகம் / கரணம்:" : "Yoga / Karana:"}</span>
+                            <strong className="text-stone-800 text-right font-medium">
+                              {m.yoga} &bull; {m.karana}
+                            </strong>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-stone-500">{isTamil ? "அபிஜித் முகூர்த்தம்:" : "Abhijit:"}</span>
+                            <strong className="text-emerald-700 font-mono">{m.abhijitMuhurta12 || "—"}</strong>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-stone-500">{isTamil ? "இராகு காலம்:" : "Rahu Kalam:"}</span>
+                            <strong className="text-rose-700 font-mono">{m.rahuKalam12 || "—"}</strong>
+                          </div>
+                        </div>
+
+                        {/* Event Recommendation Banner */}
+                        <div className="text-[11px] p-2 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 font-medium">
+                          {isTamil ? m.recommendationTa : m.recommendationEn}
+                        </div>
+
+                        {/* Expand Details Accordion Button */}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedCardDate(isExpanded ? null : m.date)}
+                          className="w-full py-1 rounded-lg bg-stone-50 hover:bg-stone-100 border border-stone-200 text-[10px] font-bold text-stone-600 flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        >
+                          <span>{isExpanded ? (isTamil ? "விவரங்களை மறைக்க" : "Hide Factors") : (isTamil ? "சுப & எச்சரிக்கை காரணிகள்" : "View Planetary Factors")}</span>
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+
+                        {/* Expanded Factor Details */}
+                        {isExpanded && (
+                          <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200 space-y-2 text-[10px] animate-fadeIn">
+                            {/* Positive Factors */}
+                            {m.positiveFactors && m.positiveFactors.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="font-bold text-emerald-800 uppercase block">
+                                  ✓ {isTamil ? "சுப சாதக காரணங்கள்:" : "Favorable Factors:"}
+                                </span>
+                                {(isTamil && m.positiveFactorsTa ? m.positiveFactorsTa : m.positiveFactors).map((f, fIdx) => (
+                                  <div key={fIdx} className="text-emerald-900 pl-2 border-l-2 border-emerald-400">
+                                    {f}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Cautionary Factors */}
+                            {m.negativeFactors && m.negativeFactors.length > 0 && (
+                              <div className="space-y-1 pt-1 border-t border-stone-200">
+                                <span className="font-bold text-rose-800 uppercase block">
+                                  ⚠ {isTamil ? "எச்சரிக்கை அம்சங்கள்:" : "Cautionary Aspects:"}
+                                </span>
+                                {(isTamil && m.negativeFactorsTa ? m.negativeFactorsTa : m.negativeFactors).map((f, fIdx) => (
+                                  <div key={fIdx} className="text-rose-900 pl-2 border-l-2 border-rose-400">
+                                    {f}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Timing Windows Matrix */}
+                            <div className="pt-1 border-t border-stone-200 space-y-0.5 font-mono text-[9.5px]">
+                              {m.amritaKalam12 && (
+                                <div className="text-emerald-800 flex justify-between">
+                                  <span>{isTamil ? "அமிர்த காலம்:" : "Amrita Kalam:"}</span>
+                                  <span>{m.amritaKalam12}</span>
+                                </div>
+                              )}
+                              {m.yamagandam12 && (
+                                <div className="text-orange-900 flex justify-between">
+                                  <span>{isTamil ? "எமகண்டம்:" : "Yamagandam:"}</span>
+                                  <span>{m.yamagandam12}</span>
+                                </div>
+                              )}
+                              {m.durmuhurtham12 && (
+                                <div className="text-rose-900 flex justify-between">
+                                  <span>{isTamil ? "துர்முகூர்த்தம்:" : "Durmuhurtham:"}</span>
+                                  <span>{m.durmuhurtham12}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="space-y-1.5 text-xs text-stone-600">
-                        <div className="flex justify-between">
-                          <span className="text-stone-500">{isTamil ? "திதி:" : "Tithi:"}</span>
-                          <strong className="text-stone-900 text-right">
-                            {isTamil ? (m.tithiTamil || m.tithi) : m.tithi}
-                            {m.tithiUntil12 && <span className="text-[10px] text-purple-700 block font-mono">until {m.tithiUntil12}</span>}
-                          </strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-stone-500">{isTamil ? "நட்சத்திரம்:" : "Nakshatra:"}</span>
-                          <strong className="text-purple-800 text-right">
-                            {isTamil ? (m.nakshatraTamil || m.nakshatra) : m.nakshatra}
-                            {m.nakshatraUntil12 && <span className="text-[10px] text-stone-500 block font-mono">until {m.nakshatraUntil12}</span>}
-                          </strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-stone-500">{isTamil ? "அபிஜித் முகூர்த்தம்:" : "Abhijit:"}</span>
-                          <strong className="text-emerald-700 font-mono">{m.abhijitMuhurta12 || m.abhijitMuhurta}</strong>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-stone-500">{isTamil ? "இராகு காலம்:" : "Rahu Kalam:"}</span>
-                          <strong className="text-rose-700 font-mono">{m.rahuKalam12 || m.rahuKalam}</strong>
-                        </div>
+                      {/* Working Interactive Action Links on Candidate Card */}
+                      <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleInspectCandidatePanchang(m.date)}
+                          className="text-[11px] font-bold text-amber-800 hover:text-amber-950 flex items-center gap-1 cursor-pointer bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 transition-all"
+                          title="Load this day's full Panchang above"
+                        >
+                          <Sun className="w-3.5 h-3.5 text-amber-600" />
+                          <span>{isTamil ? "பஞ்சாங்கம் பார்க்க" : "View Panchang"}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleAskAboutCandidateDate(m)}
+                          className="text-[11px] font-bold text-purple-800 hover:text-purple-950 flex items-center gap-1 cursor-pointer bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg border border-purple-200 transition-all"
+                          title="Ask AI about this specific date"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-purple-600" />
+                          <span>{isTamil ? "AI-யிடம் கேட்க" : "Ask AI"}</span>
+                        </button>
                       </div>
-
-                      <p className="text-[11px] text-stone-500 italic bg-amber-50/50 p-2 rounded-lg border border-amber-100">
-                        {m.recommendation}
-                      </p>
                     </div>
-
-                    {/* Working Interactive Action Links on Candidate Card */}
-                    <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleInspectCandidatePanchang(m.date)}
-                        className="text-[11px] font-bold text-amber-800 hover:text-amber-950 flex items-center gap-1 cursor-pointer"
-                        title="Load this day's full Panchang above"
-                      >
-                        <Sun className="w-3 h-3 text-amber-600" />
-                        <span>{isTamil ? "பஞ்சாங்கம் பார்க்க" : "View Panchang"}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleAskAboutCandidateDate(m)}
-                        className="text-[11px] font-bold text-purple-800 hover:text-purple-950 flex items-center gap-1 cursor-pointer"
-                        title="Ask AI about this specific date"
-                      >
-                        <MessageSquare className="w-3 h-3 text-purple-600" />
-                        <span>{isTamil ? "AI-யிடம் கேட்க" : "Ask AI"}</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

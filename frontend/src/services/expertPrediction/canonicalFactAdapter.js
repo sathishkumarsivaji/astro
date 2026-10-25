@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Canonical Fact Adapter
+ * SKR ASTRO — Canonical Fact Adapter
  * =====================================
  * Read-only adapter that extracts canonical astrological facts
  * from the existing validated astrology engine output.

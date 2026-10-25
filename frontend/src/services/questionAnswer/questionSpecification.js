@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE / SKR ASTRO — Canonical Question Specification & Schema
+ * SKR ASTRO / SKR ASTRO — Canonical Question Specification & Schema
  * ===================================================================
  * Standardizes the user's query into a strongly-typed, fully-specified
  * QuestionSpecification AST across all supported prediction domains:

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE / SKR ASTRO — Prediction Record & Provenance Service
+ * SKR ASTRO / SKR ASTRO — Prediction Record & Provenance Service
  * ===============================================================
  * Provides immutable lifecycle tracking for life-event predictions:
  * 1. Cryptographic pseudonymization (HMAC-SHA256) of customer identity

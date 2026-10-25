@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Calibration Parameter Provider (Single Source of Truth)
+ * SKR ASTRO — Calibration Parameter Provider (Single Source of Truth)
  *
  * Implements Requirements 6 & 10:
  * 1. Single source of truth for all calibration parameters (Platt scaling slope/intercept,

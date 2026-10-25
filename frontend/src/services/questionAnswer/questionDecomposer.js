@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Question Decomposition Engine
+ * SKR ASTRO — Question Decomposition Engine
  * ============================================
  * Decomposes complex multi-part questions into atomic sub-questions.
  * Each atomic question receives its own focused evidence chain, and

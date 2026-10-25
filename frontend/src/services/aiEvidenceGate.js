@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — AI Evidence Verification & Universal Semantic Claim Firewall
+ * SKR ASTRO — AI Evidence Verification & Universal Semantic Claim Firewall
  * =========================================================================
  * Upgrades AI narrative generation from simple lexical sanitization to a
  * formal Universal Semantic Claim Firewall.

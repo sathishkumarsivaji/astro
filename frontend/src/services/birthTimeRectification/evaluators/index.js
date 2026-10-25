@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Master Event Evaluator Dispatcher
+ * SKR ASTRO — Master Event Evaluator Dispatcher
  *
  * Routes a LifeEvent to its domain-specific evaluator and aggregates structured evaluation results.
  */

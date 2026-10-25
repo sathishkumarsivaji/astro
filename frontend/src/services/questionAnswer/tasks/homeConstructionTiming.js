@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Property & Home Construction Timing Task Evaluator
+ * SKR ASTRO — Property & Home Construction Timing Task Evaluator
  * =================================================================
  * Evaluates house construction and property timing requests.
  * Explicitly separates:

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Anti-Repetition Engine (Section 27)
+ * SKR ASTRO — Anti-Repetition Engine (Section 27)
  * =================================================
  * Enforces semantic anti-repetition rules across all 17 domains.
  * Detects identical template sentences, checks cross-domain phrase similarity,

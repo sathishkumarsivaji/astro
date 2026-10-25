@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Job Transition & Career Movement Decision Evaluator
+ * SKR ASTRO — Job Transition & Career Movement Decision Evaluator
  * ================================================================
  * Evaluates career decision questions:
  * 1. Switching to a New Job / External Pivot (Path A: SWITCH_JOB)

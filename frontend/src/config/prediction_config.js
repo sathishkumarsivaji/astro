@@ -1,6 +1,6 @@
 export const PREDICTION_CONFIG = {
   "version": "1.0.0",
-  "name": "AstroVerse Universal Prediction & Consultation Configuration",
+  "name": "SKR ASTRO Universal Prediction & Consultation Configuration",
   "lastUpdated": "2026-09-29T02:15:00.000Z",
   "disclaimer": "All configuration weights represent traditional astrological heuristic rules for epistemic transparency. Predictions are empirical interpretative hypotheses based on configured traditions, not scientific determinism.",
   "confidenceClasses": {

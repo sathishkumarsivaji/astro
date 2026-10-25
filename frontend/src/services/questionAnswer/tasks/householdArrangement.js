@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Household Residence Arrangement Task Evaluator
+ * SKR ASTRO — Household Residence Arrangement Task Evaluator
  * =============================================================
  * Evaluates questions regarding joint family living vs independent / nuclear household.
  *
@@ -63,10 +63,13 @@ export function evaluateHouseholdArrangement({ question = "", context = {}, isTa
   const h4Occupants = Array.isArray(h4.occupants) ? h4.occupants : [];
 
   let separativeStatus = "UNKNOWN";
-  if (rahu && saturn) {
+  const hasEvaluatablePositions = (rahuHouse !== null && saturnHouse !== null) || h4Occupants.length > 0;
+  if (rahu && saturn && hasEvaluatablePositions) {
     const isRahuSeparative = rahuHouse === 4 || rahuHouse === 12 || h4Occupants.some(o => /rahu|ராகு/i.test(String(o)));
     const isSaturnSeparative = saturnHouse === 4 || h4Occupants.some(o => /saturn|சனி/i.test(String(o)));
     separativeStatus = (isRahuSeparative || isSaturnSeparative) ? "PRESENT" : "ABSENT_AFTER_EVALUATION";
+  } else {
+    separativeStatus = "UNKNOWN";
   }
 
   const calculatedFacts = [

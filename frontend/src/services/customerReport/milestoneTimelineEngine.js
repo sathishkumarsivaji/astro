@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Milestone Timeline Engine (Sections 20 & 22)
+ * SKR ASTRO — Milestone Timeline Engine (Sections 20 & 22)
  * ==========================================================
  * Replaces raw 0–120 year dasha dumping with an intelligent,
  * age-appropriate life timeline structured into:

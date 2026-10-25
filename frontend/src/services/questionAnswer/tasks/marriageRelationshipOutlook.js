@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Marriage & Relationship Outlook Task Evaluator
+ * SKR ASTRO — Marriage & Relationship Outlook Task Evaluator
  * ============================================================
  * Evaluates relationship dynamics, marital harmony, and reconciliation scope.
  * Explicitly distinguishes existing marital relationship improvement / reconciliation

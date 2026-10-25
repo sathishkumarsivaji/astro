@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Children Domain General Outlook Evaluator
+ * SKR ASTRO — Children Domain General Outlook Evaluator
  * ========================================================
  * Evaluates general qualitative children-domain inquiries ("can I have children",
  * "எங்களுக்கு குழந்தை பாக்கியம் உண்டா").

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Q&A Safety & Anti-Fabrication Validator
+ * SKR ASTRO — Q&A Safety & Anti-Fabrication Validator
  * =====================================================
  * Enforces strict safety protocols across life domains.
  * Blocks medical diagnosis, mortality/surgery claims, guaranteed legal wins,

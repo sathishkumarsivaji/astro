@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Property Decision Evaluator: Buy vs Build
+ * SKR ASTRO — Property Decision Evaluator: Buy vs Build
  * ========================================================
  * Evaluates compound property inquiries such as:
  * "Will I buy a house or build a house?"

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Single Report Data Contract: LifeReportModel
+ * SKR ASTRO — Single Report Data Contract: LifeReportModel
  * =========================================================
  * Authoritative customer report data contract covering all 17 domains,
  * deterministic evidence chains, life timeline, safety boundaries,

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Capability Registry
+ * SKR ASTRO — Capability Registry
  * =================================
  * Explicitly declares which (domain × event × task) combinations have dedicated,
  * verified implementations vs planned features.

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Traditional Wellness & Preventive Attention Domain Adapter
+ * SKR ASTRO — Traditional Wellness & Preventive Attention Domain Adapter
  * ========================================================================
  * Implements strict non-clinical safety guardrails.
  * Never diagnoses illnesses, predicts surgery, organ failure, or death.

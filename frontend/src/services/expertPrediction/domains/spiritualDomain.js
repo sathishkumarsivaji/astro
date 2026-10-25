@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Spiritual & Inner Life Domain Adapter
+ * SKR ASTRO — Spiritual & Inner Life Domain Adapter
  * ==================================================
  * Analyzes spiritual awakening, meditation/retreat cycles,
  * devotional deepening, and spiritual teacher/Guru connections.

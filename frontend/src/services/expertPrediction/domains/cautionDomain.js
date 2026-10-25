@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Cross-Domain Caution & Risk Engine
+ * SKR ASTRO — Cross-Domain Caution & Risk Engine
  * ===============================================
  * Aggregates caution windows across all domains without duplication.
  * Identifies high-friction periods, Maraka lord operations,

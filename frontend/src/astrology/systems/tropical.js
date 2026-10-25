@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Tropical / Sayana (Western Astrology) Engine
+ * SKR ASTRO — Tropical / Sayana (Western Astrology) Engine
  *
  * Implements genuine Western Tropical system:
  * - 0° Aries tied strictly to the Vernal Equinox (Zero Ayanamsha)

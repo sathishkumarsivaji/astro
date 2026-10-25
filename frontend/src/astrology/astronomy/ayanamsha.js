@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Authoritative Ayanamsha Module
+ * SKR ASTRO — Authoritative Ayanamsha Module
  *
  * Maximum-Grade Ayanamsha Computation Engine with explicitly locked:
  * - Ayanamsha Model
@@ -63,7 +63,7 @@ export const AYANAMSHA_MODELS = {
     version: "KP-Senthilathiban-2007",
     shastricAuthority: "R. Senthilathiban (KP & Krishman Padhdhati)",
     implementationStatus: "REFERENCE_ONLY",
-    note: "A separately computed KP variant; ASTROVERSE implements KP_ORIGINAL. This entry exists for reference comparison."
+    note: "A separately computed KP variant; SKR ASTRO implements KP_ORIGINAL. This entry exists for reference comparison."
   },
   KP_SWISS_EPHEMERIS: {
     id: "kp_swe",
@@ -102,7 +102,7 @@ export const AYANAMSHA_MODELS = {
     version: "SWE-2.10.03",
     shastricAuthority: "SWE library (Astrodienst)",
     implementationStatus: "REFERENCE_ONLY",
-    note: "SWE anchors 1900.0 to 21°00'00\". ASTROVERSE uses RAMAN_SIDEREAL (classical linear 50⅓\"/year from 397 AD). Difference at J2000.0: ~7.13 arcseconds."
+    note: "SWE anchors 1900.0 to 21°00'00\". SKR ASTRO uses RAMAN_SIDEREAL (classical linear 50⅓\"/year from 397 AD). Difference at J2000.0: ~7.13 arcseconds."
   },
   TROPICAL_SAYANA: {
     id: "tropical",

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Relocation & Travel Event Evaluator
+ * SKR ASTRO — Relocation & Travel Event Evaluator
  *
  * Evaluates timing and structural alignment for relocation and travel milestones:
  * 1. D1: 4th house (domestic residence), 9th house (long distance), 12th house (foreign/distant stay), Moon, Rahu

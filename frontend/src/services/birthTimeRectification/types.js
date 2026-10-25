@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Evidence-Based Birth-Time Rectification Types & Schemas
+ * SKR ASTRO — Evidence-Based Birth-Time Rectification Types & Schemas
  *
  * Defines strictly validated data models and accessor guards:
  * - LifeEvent

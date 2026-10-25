@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — 17-Domain Empirical Validation Registry
+ * SKR ASTRO — 17-Domain Empirical Validation Registry
  * =====================================================
  * Establishes the authoritative epistemic and scientific status for all
  * 17 Expert Mode domains.

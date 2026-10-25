@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Report Safety Gate & Global Resolution Gate
+ * SKR ASTRO — Report Safety Gate & Global Resolution Gate
  * ========================================================
  * Implements strict non-clinical medical filters, non-guarantee legal filters,
  * financial disclaimers, non-fatalistic language sanitization, and the

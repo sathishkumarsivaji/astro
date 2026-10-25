@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Birth-Time Rectification Module
+ * SKR ASTRO — Birth-Time Rectification Module
  *
  * Public API export for Evidence-Based Birth-Time Rectification
  */

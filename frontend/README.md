@@ -1,12 +1,12 @@
-# AstroVerse — Advanced Multi-System Ephemeris & Computational Astrology Platform
+# SKR ASTRO — Advanced Multi-System Ephemeris & Computational Astrology Platform
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![Forensic Audit](https://img.shields.io/badge/forensic%20tests-150%2F150%20passing-brightgreen.svg)]()
 [![Ephemeris Reference](https://img.shields.io/badge/ephemeris%20tests-426%2F426%20passing-brightgreen.svg)]()
-[![Engine](https://img.shields.io/badge/engine-AstroVerse%20v4.2.0-blue.svg)]()
+[![Engine](https://img.shields.io/badge/engine-SKR ASTRO%20v4.2.0-blue.svg)]()
 [![Ephemeris](https://img.shields.io/badge/ephemeris-Astronomy%20Engine%202.1.19%20%2F%20VSOP87%20%2F%20ELP--MPP02-orange.svg)]()
 
-AstroVerse is an advanced computational astrology platform engineered with rigorous astronomical calculations, full 4-system multi-framework support (Lahiri, KP, Raman, Tropical), classical Parashari & Jaimini synthesis, iterative numerical solvers, and an evidence-based multi-tier interpretation engine.
+SKR ASTRO is an advanced computational astrology platform engineered with rigorous astronomical calculations, full 4-system multi-framework support (Lahiri, KP, Raman, Tropical), classical Parashari & Jaimini synthesis, iterative numerical solvers, and an evidence-based multi-tier interpretation engine.
 
 Designed for both seekers (via intuitive plain-language chapters and tooltips) and practicing astrologers/researchers (via complete mathematical evidence ledgers, 16 Shodashavargas, KP 249 Sub-lord tables, Western aspect grids, and structured planetary strength metrics).
 
@@ -18,7 +18,7 @@ Designed for both seekers (via intuitive plain-language chapters and tooltips) a
 - **Ephemeris Standard**: Built on Astronomy Engine 2.1.19 implementing VSOP87 planetary models and ELP/MPP02 lunar ephemeris. All systems consume the identical, verified UTC instant calculated from civil time with exact seconds preservation (`HH:mm:ss`).
 - **4 Astrological Calculation Systems**:
   - **Lahiri (Chitrapaksha Sidereal)**: Classical Chitrapaksha Ayanamsha ($23^\circ 51' 25.5''$ at J2000.0), Whole Sign / Sripati cusps, 16 Divisional Vargas, Parashari 6-fold Shadbala, 337-SAV, Jaimini Chara Karakas, and Vimshottari Dasha.
-  - **KP System (Krishnamurti Padhdhati)**: KP Ayanamsha (precession rate 50.2388475"/year), Placidus Cusps (Siderealized), 249 Star/Sub/Sub-sub Lords for all 12 Cusps & 9 Planets, AstroVerse KP significator prioritization model (4-Tier significators), and Ruling Planets (RP).
+  - **KP System (Krishnamurti Padhdhati)**: KP Ayanamsha (precession rate 50.2388475"/year), Placidus Cusps (Siderealized), 249 Star/Sub/Sub-sub Lords for all 12 Cusps & 9 Planets, SKR ASTRO KP significator prioritization model (4-Tier significators), and Ruling Planets (RP).
   - **Raman Sidereal**: Independent recalculation from the 397 AD zero-point epoch ($22^\circ 24' 51''$ at J2000.0 with precession rate 50⅓"/year), Whole Sign houses, full Vedic harmonic suite.
   - **Tropical / Sayana (Western)**: 0° Aries tied strictly to the Vernal Equinox (Zero Ayanamsha), Tropical Placidus Cusps, Classical Ptolemaic Aspects with Orbs and Applying/Separating dynamics, and Essential Dignities.
 - **Placidus House Cusps**: Iterative semi-diurnal arc trisection across latitudes with high-latitude polar fallbacks.
@@ -49,7 +49,7 @@ Designed for both seekers (via intuitive plain-language chapters and tooltips) a
   6. Real-Time Numerical Gochara Transits & 337-Bindu Sarvashtakavarga
   7. Jaimini Chara Karaka & Arudha Pada Alignment
   8. Mitigation, Cancellation & Affliction Filtering (Combustion, Retrograde, Neechabhanga)
-  9. AstroVerse Qualitative Synthesis & Contradiction Reconciliation
+  9. SKR ASTRO Qualitative Synthesis & Contradiction Reconciliation
 - **Contradiction Reconciliation**: Opposing indications are balanced through an explicit classical tension-resolution matrix rather than flattened heuristics.
 
 ### 5. Dual Lens User Experience & Canonical 20 Chapters
@@ -100,7 +100,7 @@ d:/ASTRO/frontend/
 
 ## 🧪 Verification & Audit Suite
 
-AstroVerse includes a comprehensive automated test suite with **576 total automated tests** verifying classical correctness, mathematical precision, multi-epoch stability, and static codebase cleanliness.
+SKR ASTRO includes a comprehensive automated test suite with **576 total automated tests** verifying classical correctness, mathematical precision, multi-epoch stability, and static codebase cleanliness.
 
 ### Running the Test Suites:
 
@@ -166,4 +166,4 @@ npm run build
 ---
 
 ## ⚖️ License
-Commercial Enterprise License — AstroVerse Platform. All rights reserved.
+Commercial Enterprise License — SKR ASTRO Platform. All rights reserved.

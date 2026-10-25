@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Production Backend Infrastructure & Security Authority
+ * SKR ASTRO — Production Backend Infrastructure & Security Authority
  *
  * Provides:
  * 1. Server-side Gemini AI Gateway with atomic credit lock, debit & rollback
@@ -48,6 +48,7 @@ import {
   LOCAL_INFERENCE_STATUS,
   invokeLocalLLM
 } from './services/localAiService.js';
+import { generateReportPdf, isChromiumAvailable } from './services/pdfExportService.js';
 
 dotenv.config();
 
@@ -108,7 +109,7 @@ export const customOrigins = process.env.ALLOWED_ORIGINS
 
 export const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
   ? customOrigins
-  : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://astroverse.app', 'https://www.astroverse.app', ...customOrigins];
+  : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://skr-astro.app', 'https://www.skr-astro.app', 'https://skrastro.com', 'https://www.skrastro.com', 'https://astroverse.app', 'https://www.astroverse.app', ...customOrigins];
 
 app.use(helmet());
 
@@ -388,6 +389,21 @@ function authenticateSession(req, res, next) {
   }
 
   req.user = session;
+  next();
+}
+
+function optionalAuthenticateSession(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const headerToken = req.headers['x-session-token'];
+  const cookieToken = getCookieValue(req.headers.cookie, 'astro_session_token');
+  const token = bearerToken || headerToken || cookieToken;
+  if (token) {
+    const session = verifySignedSessionToken(token);
+    if (session) {
+      req.user = session;
+    }
+  }
   next();
 }
 
@@ -1083,6 +1099,49 @@ app.delete('/api/user/delete', authenticateSession, requireDatabaseReady, async 
 });
 
 // ---------------------------------------------------------------------------
+// 8b. PDF Report Export (Chromium-Powered True Unicode Print-to-PDF)
+// ---------------------------------------------------------------------------
+app.post('/api/export/pdf', rateLimiter, optionalAuthenticateSession, async (req, res) => {
+  try {
+    const { chartData, lang, tier, audienceMode, options } = req.body || {};
+    if (!chartData || typeof chartData !== 'object') {
+      return res.status(400).json({
+        error: 'INVALID_REQUEST: chartData object is required for PDF export.',
+        code: 'MISSING_CHART_DATA'
+      });
+    }
+
+    if (!isChromiumAvailable()) {
+      return res.status(503).json({
+        error: 'Headless Chromium renderer is not installed on this server.',
+        code: 'RENDERER_UNAVAILABLE'
+      });
+    }
+
+    const exportOptions = {
+      lang: lang || 'en',
+      tier: tier || 'detailed',
+      audienceMode: audienceMode || 'client',
+      ...(options || {})
+    };
+
+    const { pdfBuffer, fileName } = await generateReportPdf(chartData, exportOptions);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    return res.end(pdfBuffer);
+  } catch (err) {
+    console.error('PDF export failed:', err);
+    return res.status(500).json({
+      error: 'Failed to generate PDF report: ' + err.message,
+      code: 'PDF_EXPORT_FAILED'
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 9. Protected System Metrics & Observability (Audit Point 48)
 // ---------------------------------------------------------------------------
 app.get('/api/system/metrics', (req, res) => {
@@ -1133,7 +1192,7 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
   console.warn('[SECURITY] Generated dynamic ephemeral VAPID keypair for development/test mode. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars in production.');
 }
 
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@astroverse.app';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@skr-astro.app';
 
 try {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Business Decision & Expansion Evaluator
+ * SKR ASTRO — Business Decision & Expansion Evaluator
  * ======================================================
  * Evaluates business expansion vs starting a new business venture.
  * Clearly separates:

@@ -1,5 +1,5 @@
 /**
- * ASTROVERSE — Chronological Stability & Multimodal Interval Analyzer
+ * SKR ASTRO — Chronological Stability & Multimodal Interval Analyzer
  *
  * Implements rigorous chronological run-length stability analysis:
  * - Sorts candidates strictly by totalMinutes ascending (NEVER score-sorted).
