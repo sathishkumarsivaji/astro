@@ -1,0 +1,140 @@
+{
+  "title": "ASTROVERSE — astro_dataset Empirical Training & Validation Benchmark",
+  "generatedAt": "2026-10-25T04:29:14.734Z",
+  "datasetProvenance": {
+    "sourceDirectory": "D:/dataset/astro_dataset",
+    "peopleCount": 25,
+    "familyRelationsCount": 185,
+    "lifeEventsCount": 64,
+    "awardsCount": 46,
+    "nobelCount": 1037,
+    "bulkBirthRecordsCount": 40329,
+    "bulkBirthRecordsTimedAA": 33450
+  },
+  "domainEvaluations": [
+    {
+      "domain": "CAREER_AWARDS_TIMING",
+      "cohortSize": 1051,
+      "testSize": 217,
+      "models": {
+        "modelA_Population": {
+          "mae": 10.898,
+          "medAE": 10.228
+        },
+        "modelB_Demographic": {
+          "mae": 10.451,
+          "medAE": 9.914,
+          "cIndex": 0.5652
+        },
+        "modelC_AstrologyOnly": {
+          "mae": 11.289,
+          "medAE": 10.597,
+          "cIndex": 0.4654
+        },
+        "modelD_CombinedHybrid": {
+          "mae": 10.521,
+          "medAE": 9.841,
+          "cIndex": 0.5487
+        }
+      },
+      "statisticalInference": {
+        "pairedTStat": 1.832,
+        "pairedTPValue": 0.06692,
+        "wilcoxonPValue": 0.06613,
+        "power1YearEffect": 1,
+        "lrtChiSquare": 0,
+        "lrtPValue": 1,
+        "nullHypothesisRejected": false
+      }
+    },
+    {
+      "domain": "MARRIAGE_TIMING",
+      "cohortSize": 42,
+      "testSize": 11,
+      "models": {
+        "modelA_Population": {
+          "mae": 7.991,
+          "medAE": 5.619
+        },
+        "modelB_Demographic": {
+          "mae": 6.722,
+          "medAE": 4.441
+        },
+        "modelC_AstrologyOnly": {
+          "mae": 7.419,
+          "medAE": 6.866
+        },
+        "modelD_CombinedHybrid": {
+          "mae": 6.612,
+          "medAE": 4.795
+        }
+      },
+      "statisticalInference": {
+        "pairedTStat": -0.842,
+        "pairedTPValue": 0.39968,
+        "wilcoxonPValue": 0.53369
+      }
+    },
+    {
+      "domain": "CHILDBIRTH_TIMING",
+      "cohortSize": 23,
+      "testSize": 11,
+      "models": {
+        "modelA_Population": {
+          "mae": 6.879,
+          "medAE": 7.333
+        },
+        "modelB_Demographic": {
+          "mae": 7.109,
+          "medAE": 7.133
+        },
+        "modelC_AstrologyOnly": {
+          "mae": 6.595,
+          "medAE": 7.433
+        },
+        "modelD_CombinedHybrid": {
+          "mae": 7.082,
+          "medAE": 6.787
+        }
+      }
+    },
+    {
+      "domain": "LONGEVITY_LIFESPAN",
+      "cohortSize": 712,
+      "testSize": 133,
+      "models": {
+        "modelA_Population": {
+          "mae": 8.851,
+          "medAE": 7.795
+        },
+        "modelB_ActuarialCohort": {
+          "mae": 8.191,
+          "medAE": 6.982
+        },
+        "modelC_AstrologyOnly": {
+          "mae": 8.671,
+          "medAE": 6.985
+        },
+        "modelD_CombinedHybrid": {
+          "mae": 8.149,
+          "medAE": 6.903
+        }
+      },
+      "statisticalInference": {
+        "pairedTStat": -1.788,
+        "pairedTPValue": 0.07376,
+        "wilcoxonPValue": 0.08157
+      }
+    },
+    {
+      "domain": "GAUQUELIN_OCCUPATION_SECTOR",
+      "cohortSize": 33450,
+      "evaluatedCharts": 3000,
+      "chiSquare": 497.3,
+      "degreesOfFreedom": 8,
+      "pValue": 0
+    }
+  ],
+  "globalEmpiricalStatus": "EXPERIMENTAL_NOT_EMPIRICALLY_VALIDATED",
+  "epistemicConclusion": "Across all evaluated life milestone domains, astrological features fail to demonstrate statistically significant, out-of-sample predictive superiority over standard demographic and actuarial baselines. Real-world event timing error remains at ~6 to 12 years MAE."
+}
