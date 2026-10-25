@@ -20,6 +20,7 @@ import { compareSystems } from "./comparison/compareSystems.js";
 import { ASTROLOGY_SYSTEMS, getSystemConfig } from "../config/astrologySystems.js";
 import { REPORT_CHAPTERS, getChaptersForSystem } from "../config/reportChapters.js";
 import { SIGN_NAMES } from "./derived/nakshatra.js";
+import { applyTimelineApplicability } from "../services/applicability/timelineApplicabilityPipeline.js";
 
 /**
  * Calculates a single system chart
@@ -95,6 +96,63 @@ export function calculateChartBySystem(systemId, birthData, options = {}) {
     }
   }
 
+  // Apply timeline applicability governance across English and Tamil timelines
+  let _sanitizedTimelineEn = null;
+  let _sanitizedTimelineTa = null;
+
+  const originalTimelineGetter = Object.getOwnPropertyDescriptor(chart, "timeline")?.get;
+  const originalTimelineTamilGetter = Object.getOwnPropertyDescriptor(chart, "timelineTamil")?.get;
+
+  Object.defineProperty(chart, "timeline", {
+    configurable: true,
+    enumerable: true,
+    get() {
+      if (mergedOptions?.lightweight) return null;
+      if (!_sanitizedTimelineEn) {
+        const raw = originalTimelineGetter ? originalTimelineGetter.call(chart) : chart._timeline;
+        _sanitizedTimelineEn = applyTimelineApplicability(raw, normData, mergedOptions?.context || {}, "en");
+      }
+      return _sanitizedTimelineEn;
+    }
+  });
+
+  Object.defineProperty(chart, "timelineTamil", {
+    configurable: true,
+    enumerable: true,
+    get() {
+      if (mergedOptions?.lightweight) return null;
+      if (!_sanitizedTimelineTa) {
+        const raw = originalTimelineTamilGetter ? originalTimelineTamilGetter.call(chart) : chart._timelineTamil;
+        _sanitizedTimelineTa = applyTimelineApplicability(raw, normData, mergedOptions?.context || {}, "ta");
+      }
+      return _sanitizedTimelineTa;
+    }
+  });
+
+  Object.defineProperty(chart, "chronologicalDashaTimeline", {
+    configurable: true,
+    enumerable: true,
+    get() { return chart.timeline; }
+  });
+
+  Object.defineProperty(chart, "chronologicalDashaTimelineTamil", {
+    configurable: true,
+    enumerable: true,
+    get() { return chart.timelineTamil; }
+  });
+
+  Object.defineProperty(chart, "vimshottariCycleTimeline", {
+    configurable: true,
+    enumerable: true,
+    get() { return chart.timeline; }
+  });
+
+  Object.defineProperty(chart, "vimshottariCycleTimelineTamil", {
+    configurable: true,
+    enumerable: true,
+    get() { return chart.timelineTamil; }
+  });
+
   return chart;
 }
 
@@ -142,3 +200,4 @@ export {
 };
 
 export { SYSTEM_CONVENTIONS, generateCalculationCertificate, getConvention } from "./conventions.js";
+export { applyTimelineApplicability };

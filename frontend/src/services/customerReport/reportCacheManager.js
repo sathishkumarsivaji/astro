@@ -21,6 +21,8 @@
 import releaseManifest from "../../config/current_release_manifest.json" with { type: "json" };
 import { generateChartFingerprint } from "../astroEngine.js";
 import { computeSha256Hex } from "../predictionValidationLab.js";
+import { POLICY_VERSION } from "../applicability/applicabilityPolicyEngine.js";
+import { EVENT_REGISTRY_VERSION } from "../applicability/eventPrerequisiteRegistry.js";
 
 // Authoritative frozen baseline versions and hashes
 export const DEFAULT_ENGINE_VERSION = "ASTROVERSE Core v4.2.0";
@@ -72,7 +74,8 @@ export function computeReportInputHash(chartData, options = {}) {
   const lang = options.lang || "en";
   const name = options.clientName || chartData.clientName || "";
   const currentDate = options.currentDate || chartData.currentDate || "";
-  const payload = `${chartFp}:${lang}:${name}:${currentDate}`;
+  const contextHash = options.context ? computeSha256Hex(JSON.stringify(options.context)) : "no-ctx";
+  const payload = `${chartFp}:${lang}:${name}:${currentDate}:${POLICY_VERSION}:${EVENT_REGISTRY_VERSION}:${contextHash}`;
   return computeSha256Hex(payload);
 }
 
@@ -88,7 +91,7 @@ export function getCachedLifeReport(chartData, options = {}) {
 
   const lang = options.lang || "en";
   const currentDate = options.currentDate || chartData.currentDate || "";
-  const cacheKey = `${chartFp}:${lang}:${currentDate}`;
+  const cacheKey = `${chartFp}:${lang}:${currentDate}:${POLICY_VERSION}:${EVENT_REGISTRY_VERSION}`;
   const entry = reportCache.get(cacheKey);
 
   if (!entry) {
@@ -105,7 +108,9 @@ export function getCachedLifeReport(chartData, options = {}) {
     entry.engineVersion === activeEngineVersion &&
     entry.predictionEngineHash === activePredictionEngineHash &&
     entry.calibrationModelHash === activeCalibrationModelHash &&
-    entry.schemaVersion === activeSchemaVersion;
+    entry.schemaVersion === activeSchemaVersion &&
+    entry.policyVersion === POLICY_VERSION &&
+    entry.eventRegistryVersion === EVENT_REGISTRY_VERSION;
 
   if (!isValid) {
     cacheStats.invalidated++;
@@ -127,7 +132,7 @@ export function setCachedLifeReport(chartData, options = {}, report) {
 
   const lang = options.lang || "en";
   const currentDate = options.currentDate || chartData.currentDate || "";
-  const cacheKey = `${chartFp}:${lang}:${currentDate}`;
+  const cacheKey = `${chartFp}:${lang}:${currentDate}:${POLICY_VERSION}:${EVENT_REGISTRY_VERSION}`;
   const inputHash = computeReportInputHash(chartData, options);
 
   const entry = {
@@ -138,6 +143,8 @@ export function setCachedLifeReport(chartData, options = {}, report) {
     predictionEngineHash: activePredictionEngineHash,
     calibrationModelHash: activeCalibrationModelHash,
     schemaVersion: activeSchemaVersion,
+    policyVersion: POLICY_VERSION,
+    eventRegistryVersion: EVENT_REGISTRY_VERSION,
     inputHash,
     createdAt: new Date().toISOString(),
     report
@@ -156,7 +163,7 @@ export function invalidateReportCacheEntry(chartData, options = {}) {
 
   const lang = options.lang || "en";
   const currentDate = options.currentDate || chartData.currentDate || "";
-  const cacheKey = `${chartFp}:${lang}:${currentDate}`;
+  const cacheKey = `${chartFp}:${lang}:${currentDate}:${POLICY_VERSION}:${EVENT_REGISTRY_VERSION}`;
   const deleted = reportCache.delete(cacheKey);
   if (deleted) {
     cacheStats.invalidated++;

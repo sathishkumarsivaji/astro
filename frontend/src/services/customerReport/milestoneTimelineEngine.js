@@ -105,6 +105,15 @@ export function buildMilestoneLifeTimeline(chartData, domainReports = [], curren
 
     const winYear = sDate.getFullYear();
     const yearsFromNow = winYear - currentYear;
+    const ageAtWindow = currentAge + yearsFromNow;
+
+    // Filter adult domain convergence windows for minors (< 18)
+    if (ageAtWindow < 18) {
+      const dom = (w.domainId || "").toLowerCase();
+      if (dom.includes("marriage") || dom.includes("career") || dom.includes("property")) {
+        return; // Suppress adult domain convergence window for minor
+      }
+    }
 
     const winItem = {
       period: `${w.start} to ${w.end}`,

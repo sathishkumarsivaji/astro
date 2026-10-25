@@ -10,6 +10,7 @@ import {
 } from "./tamilAstrologyUtils.js";
 import { generateChartFingerprint } from "./astroEngine.js";
 import { getAscendantName } from "../types/chartAccessors.js";
+import { applyTimelineApplicability } from "./applicability/timelineApplicabilityPipeline.js";
 
 function safeNum(val, fallback = null) {
   if (val === null || val === undefined) return fallback;
@@ -1212,7 +1213,8 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
 
     // PAGE 9: 120-Year Vimshottari Lifespan Milestones
     const timelineData = (isTamil ? (chartData.chronologicalDashaTimelineTamil || chartData.vimshottariCycleTimelineTamil) : (chartData.chronologicalDashaTimeline || chartData.vimshottariCycleTimeline)) || {};
-    const timelineStages = Array.isArray(timelineData) ? timelineData : (timelineData.stages || []);
+    const rawTimelineStages = Array.isArray(timelineData) ? timelineData : (timelineData.stages || []);
+    const timelineStages = timelineData?.applicabilityCertified ? rawTimelineStages : applyTimelineApplicability(rawTimelineStages, chartData.birthData || {}, {}, isTamil ? "ta" : "en");
     const timelineItems = timelineStages.slice(0, 9).map(st => {
       const pName = isTamil ? (st.lordTamil || toTamilPlanet(st.lord)) : (st.lord || "Dasha");
       const ageStr = st.ageRange || (st.startAge !== undefined && st.endAge !== undefined ? `${st.startAge} - ${st.endAge}` : "N/A");
@@ -1780,7 +1782,8 @@ export async function generateAstrologyReportPDF(chartData, lang = "en", tier = 
 
     // PAGE 9: Vimshottari 120-Year Lifespan Timeline
     const timelineData = (isTamil ? (chartData.chronologicalDashaTimelineTamil || chartData.vimshottariCycleTimelineTamil) : (chartData.chronologicalDashaTimeline || chartData.vimshottariCycleTimeline)) || {};
-    const timelineStages = Array.isArray(timelineData) ? timelineData : (timelineData.stages || []);
+    const rawTimelineStages = Array.isArray(timelineData) ? timelineData : (timelineData.stages || []);
+    const timelineStages = timelineData?.applicabilityCertified ? rawTimelineStages : applyTimelineApplicability(rawTimelineStages, chartData.birthData || {}, {}, isTamil ? "ta" : "en");
     const timelineItems = timelineStages.slice(0, 9).map(st => {
       const pName = isTamil ? (st.lordTamil || toTamilPlanet(st.lord)) : (st.lord || "Dasha");
       const ageStr = st.ageRange || (st.startAge !== undefined && st.endAge !== undefined ? `${st.startAge} - ${st.endAge}` : "N/A");

@@ -17,6 +17,7 @@ import {
   Info
 } from "lucide-react";
 import { TRANSLATIONS } from "../../services/localization";
+import { applyTimelineApplicability } from "../../services/applicability/timelineApplicabilityPipeline.js";
 
 export default function LifeTimeline({ lifeStages, timeline, eventTiming, lang = "en" }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -43,7 +44,10 @@ export default function LifeTimeline({ lifeStages, timeline, eventTiming, lang =
     prediction: isTamil ? (stage.tamilPrediction || stage.prediction) : stage.prediction
   }));
 
-  const timelineList = Array.isArray(timeline) ? timeline : [];
+  const rawStages = Array.isArray(timeline) ? timeline : (timeline?.stages || timeline?.periods || []);
+  const timelineList = timeline?.applicabilityCertified
+    ? rawStages
+    : applyTimelineApplicability(rawStages, {}, {}, lang);
 
   // Gather all event timing domains
   const eventDomains = [
@@ -130,9 +134,14 @@ export default function LifeTimeline({ lifeStages, timeline, eventTiming, lang =
                   <div className="p-5 rounded-2xl bg-[#FFFDF9] border border-amber-200/90 group-hover:border-amber-400 shadow-sm transition-all space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
-                        {isTamil ? `வயது ${stage.ageRange}${stage.years ? ` (${stage.years})` : ''}` : `Age ${stage.ageRange}${stage.years ? ` (${stage.years})` : ''}`}
+                        {stage.ageDisplay ? (isTamil ? `வயது ${stage.ageDisplayTamil || stage.ageDisplay}` : `Age ${stage.ageDisplay}`) : (isTamil ? `வயது ${stage.ageRange}${stage.years ? ` (${stage.years})` : ''}` : `Age ${stage.ageRange}${stage.years ? ` (${stage.years})` : ''}`)}
                       </span>
                       <div className="flex flex-wrap items-center gap-1.5">
+                        {stage.applicabilityStatus === "NOT_APPLICABLE" && (
+                          <span className="px-2 py-0.5 rounded-full bg-stone-100 text-[10px] font-semibold text-stone-600 border border-stone-300">
+                            {isTamil ? "கணக்கிடப்பட்ட தசா காலம்" : "Calculated Period"}
+                          </span>
+                        )}
                         {stage.theme && (
                           <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-[11px] font-bold text-amber-900 border border-amber-300">
                             {stage.theme}
